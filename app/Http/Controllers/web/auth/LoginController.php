@@ -5,7 +5,7 @@ namespace App\Http\Controllers\web\auth;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
-use App\User;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -66,10 +66,10 @@ class LoginController extends Controller
 
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
-                return redirect()->action('web\auth\LoginController@index', ['error' => 'Pengguna Tidak Ditemukan']);
+                return redirect()->action([LoginController::class, 'index'], ['error' => 'Pengguna Tidak Ditemukan']);
             }
         } catch (JWTException $e) {
-            return redirect()->action('web\auth\LoginController@index', ['error' => 'Pengguna Tidak Valid, Tidak Dapat Login.']);
+            return redirect()->action([LoginController::class, 'index'], ['error' => 'Pengguna Tidak Valid, Tidak Dapat Login.']);
         }
         // $user = $this->getAuthenticatedUser();
 
@@ -127,11 +127,11 @@ class LoginController extends Controller
             Session::put('akses_menu', json_encode($result_akses));
 
             if (count($dataRoles) == 1) {
-                return redirect('dashboardnew');
+                return redirect('dashboard');
             }
             return redirect('roles');
         } else {
-            return redirect()->action('web\auth\LoginController@index', ['error' => 'Pengguna Tidak Ditemukan']);
+            return redirect()->action([LoginController::class, 'index'], ['error' => 'Pengguna Tidak Ditemukan']);
         }
     }
 
