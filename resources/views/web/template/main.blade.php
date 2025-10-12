@@ -6,9 +6,9 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>DPI APPS</title>
+    <title>POS APPS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="DPI APPS" name="description" />
+    <meta content="POS APPS" name="description" />
     <meta content="Dodik Rismawan Affrudin" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('main_template/assets/images/favicon.ico') }}">

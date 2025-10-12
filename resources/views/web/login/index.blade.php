@@ -41,10 +41,10 @@
                                     <div class="p-lg-5 p-4 auth-one-bg h-100">
                                         <div class="bg-overlay"></div>
                                         <div class="position-relative h-100 d-flex flex-column">
-                                            <div class="mb-4" style="background-color: white;width: 160px;border-radius: 8px;padding: 8px;box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);">
+                                            <div class="mb-4" style="background-color: white;width: 80px;border-radius: 8px;padding: 8px;box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);">
                                                 <a href="{{ url('/') }}" class="d-block">
-                                                    <img src="{{ asset('assets/images/logo_dpi.png') }}"
-                                                        alt="" height="50" width="150">
+                                                    <img src="{{ asset('assets/images/logo-app-v2.png') }}"
+                                                        alt="" height="70   " width="70">
                                                 </a>
                                             </div>
                                             <div class="mt-auto">
