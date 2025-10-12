@@ -1,0 +1,122 @@
+.bg-yellow-apps {
+    background-color: #fdf7e2;
+}
+
+.bg-yellow-apps-bold {
+    background-color: #fbf3d5;
+}
+
+.th-padd {
+    padding: 3px;
+    font-size: 14px;
+}
+
+.td-padd {
+    padding: 2px;
+    font-size: 12px;
+}
+
+.table-thin {
+    width: 100%;
+}
+
+.hide {
+    display: none;
+}
+
+.page-item {
+    font-size: 12px;
+}
+
+.dataTables_info {
+    font-size: 12px;
+}
+
+.dataTables_length {
+    font-size: 12px;
+}
+
+.dataTables_filter {
+    font-size: 12px;
+}
+
+
+.required {
+    border-color: #ff5b5c;
+}
+
+.btn-primary {
+    background-color: #405189 !important;
+    border-color: #405189 !important;
+}
+
+
+.page-item.active .page-link {
+    background-color: #405189;
+    border-color: #405189;
+}
+
+a {
+    color: #405189;
+}
+
+.auth-form-group-custom .auti-custom-input-icon {
+    color: #405189;
+}
+
+.btn-outline-primary {
+    color: #405189;
+    border-color: #405189;
+}
+
+#orgChart {
+    width: auto;
+    height: auto;
+}
+
+#orgChartContainer {
+    width: 1000px;
+    height: 500px;
+    overflow: auto;
+    background: #eeeeee;
+}
+
+.td_tab {
+    border: 1px solid black;
+    font-family: tahoma;
+    font-size: 12px;
+    text-align: center;
+    padding: 8px;
+}
+
+.td_tab_non_border {
+    font-family: tahoma;
+    font-size: 12px;
+    /* text-align: center; */
+    padding: 8px;
+}
+
+.th_tab {
+    border: 1px solid black;
+    font-family: tahoma;
+    font-size: 12px;
+    text-align: center;
+    padding: 8px;
+}
+
+.dataTables_filter {
+    width: 300px;
+    float: right;
+}
+
+.dt-buttons {
+    margin-right: 50%;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+
+table.dataTable td,
+table.dataTable th {
+  background-color: white !important;
+}
