@@ -25,7 +25,15 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files":[
+            "app/Helper/NoGenerator.php",
+            "app/Helper/NotificationFcm.php",
+            "app/Helper/RoutingPermission.php",
+            "app/Helper/Logger.php",
+            "app/Helper/ArrayGroup.php",
+            "app/Helper/Uploader.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

@@ -7,6 +7,7 @@
 
     <meta charset="utf-8" />
     <title>POS APPS</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="POS APPS" name="description" />
     <meta content="Dodik Rismawan Affrudin" name="author" />
@@ -73,7 +74,6 @@
 
 <body>
     <div class="loader"></div>
-
     <!-- Begin page -->
     <div id="layout-wrapper">
 
