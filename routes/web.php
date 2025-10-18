@@ -3,12 +3,14 @@
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\UnitController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +36,10 @@ Route::get('master/unit', [UnitController::class, 'index']);
 Route::get('master/unit/add', [UnitController::class, 'add']);
 Route::get('master/unit/ubah', [UnitController::class, 'ubah']);
 
+Route::get('master/product', [ProductController::class, 'index']);
+Route::get('master/product/add', [ProductController::class, 'add']);
+Route::get('master/product/ubah', [ProductController::class, 'ubah']);
+
 /*API */
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
@@ -56,4 +62,9 @@ Route::post('api/master/unit/getData', [MasterUnitController::class, 'getData'])
 Route::post('api/master/unit/submit', [MasterUnitController::class, 'submit']);
 Route::post('api/master/unit/delete', [MasterUnitController::class, 'delete']);
 Route::post('api/master/unit/confirmDelete', [MasterUnitController::class, 'confirmDelete']);
+
+Route::post('api/master/product/getData', [MasterProductController::class, 'getData']);
+Route::post('api/master/product/submit', [MasterProductController::class, 'submit']);
+Route::post('api/master/product/delete', [MasterProductController::class, 'delete']);
+Route::post('api/master/product/confirmDelete', [MasterProductController::class, 'confirmDelete']);
 /*API */
