@@ -3,11 +3,13 @@
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\UnitController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -28,6 +30,10 @@ Route::get('master/customer', [CustomerController::class, 'index']);
 Route::get('master/customer/add', [CustomerController::class, 'add']);
 Route::get('master/customer/ubah', [CustomerController::class, 'ubah']);
 
+Route::get('master/unit', [UnitController::class, 'index']);
+Route::get('master/unit/add', [UnitController::class, 'add']);
+Route::get('master/unit/ubah', [UnitController::class, 'ubah']);
+
 /*API */
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
@@ -45,4 +51,9 @@ Route::post('api/master/customer/getData', [MasterCustomerController::class, 'ge
 Route::post('api/master/customer/submit', [MasterCustomerController::class, 'submit']);
 Route::post('api/master/customer/delete', [MasterCustomerController::class, 'delete']);
 Route::post('api/master/customer/confirmDelete', [MasterCustomerController::class, 'confirmDelete']);
+
+Route::post('api/master/unit/getData', [MasterUnitController::class, 'getData']);
+Route::post('api/master/unit/submit', [MasterUnitController::class, 'submit']);
+Route::post('api/master/unit/delete', [MasterUnitController::class, 'delete']);
+Route::post('api/master/unit/confirmDelete', [MasterUnitController::class, 'confirmDelete']);
 /*API */
