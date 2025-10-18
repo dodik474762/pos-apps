@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\web\master\ProductController as MasterProductController;
 use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductLog;
@@ -227,9 +228,9 @@ class ProductController extends Controller
             DB::rollBack();
         }
         if($result['is_valid']){
-            return redirect()->action('web\master\ProductController@index', ['success' => $result['message']]);
+            return redirect()->action([MasterProductController::class, 'index'], ['success' => $result['message']]);
         }else{
-            return redirect()->action('web\master\ProductController@index', ['error' => $result['message']]);
+            return redirect()->action([MasterProductController::class, 'index'], ['error' => $result['message']]);
         }
         // return response()->json($result);
     }

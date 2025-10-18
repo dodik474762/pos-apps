@@ -25,6 +25,7 @@
             <div class="card-body">
                 {{-- <form onsubmit="Product.submit(this, event)" enctype="multipart/form-data"> --}}
                 <form action="{{ url('/api/master/product/submit') }}" method="POST" enctype="multipart/form-data">
+                     @csrf
                     <input type="hidden" id="id" name="id" value="{{ isset($id) ? $id : '' }}">
                     <div class="row">
                         <div class="col-lg-6">
