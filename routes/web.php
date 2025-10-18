@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
 use App\Http\Controllers\web\master\UnitController;
@@ -46,6 +48,10 @@ Route::get('master/product_type', [ProductTypeController::class, 'index']);
 Route::get('master/product_type/add', [ProductTypeController::class, 'add']);
 Route::get('master/product_type/ubah', [ProductTypeController::class, 'ubah']);
 
+Route::get('master/item', [ItemController::class, 'index']);
+Route::get('master/item/add', [ItemController::class, 'add']);
+Route::get('master/item/ubah', [ItemController::class, 'ubah']);
+
 /*API */
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
@@ -73,6 +79,11 @@ Route::post('api/master/product/getData', [MasterProductController::class, 'getD
 Route::post('api/master/product/submit', [MasterProductController::class, 'submit']);
 Route::post('api/master/product/delete', [MasterProductController::class, 'delete']);
 Route::post('api/master/product/confirmDelete', [MasterProductController::class, 'confirmDelete']);
+
+Route::post('api/master/item/getData', [MasterItemController::class, 'getData']);
+Route::post('api/master/item/submit', [MasterItemController::class, 'submit'])->name('item-submit');
+Route::post('api/master/item/delete', [MasterItemController::class, 'delete']);
+Route::post('api/master/item/confirmDelete', [MasterItemController::class, 'confirmDelete']);
 
 Route::post('api/master/product_type/getData', [MasterProductTypeController::class, 'getData']);
 Route::post('api/master/product_type/submit', [MasterProductTypeController::class, 'submit']);
