@@ -6,6 +6,7 @@ use App\Http\Controllers\api\master\CustomerController as MasterCustomerControll
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\CustomerCategory;
+use App\Models\Master\Region;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -60,6 +61,7 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
+        $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -79,6 +81,7 @@ class CustomerController extends Controller
 
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();

@@ -58,12 +58,17 @@
                                         placeholder="Address" value="{{ isset($data->address) ? $data->address : '' }}">
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label>Provinsi</label>
-                                <div>
-                                    <input tabindex="8" type="text" id="provinsi" class="form-control required" error="Provinsi"
-                                        placeholder="Provinsi" value="{{ isset($data->provinsi) ? $data->provinsi : '' }}">
-                                </div>
+                             <div class="mb-3">
+                                <label class="form-label">Provinsi</label>
+                                <select class="form-control select2 required" error="Province" id="provinsi"
+                                    onchange="Customer.getCity(this)">
+                                    <option value=""></option>
+                                    @foreach ($data_province as $item)
+                                        <option value="{{ $item['id'] }}"
+                                            {{ isset($data->provinsi) ? ($data->provinsi == $item['id'] ? 'selected' : '') : '' }}>
+                                            {{ $item['name'] }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label>Currency</label>
@@ -98,12 +103,13 @@
                                         placeholder="Email" value="{{ isset($data->email) ? $data->email : '' }}">
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label>Kota</label>
-                                <div>
-                                    <input tabindex="7" type="text" id="kota" class="form-control required" error="Kota"
-                                        placeholder="Kota" value="{{ isset($data->kota) ? $data->kota : '' }}">
-                                </div>
+                             <div class="mb-3">
+                                <label class="form-label">Kota</label>
+                                <select class="form-control select2" error="Kota" id="kota">
+                                    @if (isset($data->kota))
+                                        <option value="{{ $data->kota }}" selected>{{ $data->city_name }}</option>
+                                    @endif
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label>NPWP</label>

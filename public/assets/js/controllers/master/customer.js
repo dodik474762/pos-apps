@@ -268,6 +268,48 @@ let Customer = {
             },
         });
     },
+
+    getCity: (elm) => {
+        const province = $(elm).val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                province: province,
+            },
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+            url: url.base_url(Customer.moduleApi()) + "getCity",
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    const cityOption = $("select#kota");
+                    cityOption.find("option").remove();
+                    cityOption.append('<option value=""></option>');
+                    $.each(resp.data, function (key, value) {
+                        cityOption.append(
+                            '<option value="' +
+                                value.id +
+                                '">' +
+                                value.name +
+                                "</option>"
+                        );
+                    });
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\Customer;
+use App\Models\Master\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -146,5 +147,17 @@ class CustomerController extends Controller
     {
         $data = $request->all();
         return view('web.customer.modal.confirmdelete', $data);
+    }
+
+    public function getCity(Request $request)
+    {
+        $data = $request->all();
+        $datadb = Region::where('type', 'KOTA')
+            ->where('parent', $data['province'])
+            ->whereNull('deleted')->get()->toArray();
+
+        $result['is_valid'] = true;
+        $result['data'] = $datadb;
+        return response()->json($result);
     }
 }
