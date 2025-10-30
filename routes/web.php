@@ -4,6 +4,7 @@ use App\Http\Controllers\api\master\CompanyController as MasterCompanyController
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
+use App\Http\Controllers\api\master\KaryawanController as MasterKaryawanController;
 use App\Http\Controllers\api\master\MenuController as MasterMenuController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
 use App\Http\Controllers\web\master\ItemController;
+use App\Http\Controllers\web\master\KaryawanController;
 use App\Http\Controllers\web\master\MenuController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
@@ -75,6 +77,10 @@ Route::get('master/roles/ubah', [RolesController::class, 'ubah']);
 Route::get('master/users', [UsersController::class, 'index']);
 Route::get('master/users/add', [UsersController::class, 'add']);
 Route::get('master/users/ubah', [UsersController::class, 'ubah']);
+
+Route::get('master/karyawan', [KaryawanController::class, 'index']);
+Route::get('master/karyawan/add', [KaryawanController::class, 'add']);
+Route::get('master/karyawan/ubah', [KaryawanController::class, 'ubah']);
 
 /*API */
 
@@ -135,4 +141,9 @@ Route::post('api/master/users/submit', [MasterUsersController::class, 'submit'])
 Route::post('api/master/users/delete', [MasterUsersController::class, 'delete']);
 Route::post('api/master/users/confirmDelete', [MasterUsersController::class, 'confirmDelete']);
 Route::post('api/master/users/showDataKaryawan', [MasterUsersController::class, 'showDataKaryawan']);
+
+Route::post('api/master/karyawan/getData', [MasterKaryawanController::class, 'getData']);
+Route::post('api/master/karyawan/submit', [MasterKaryawanController::class, 'submit']);
+Route::post('api/master/karyawan/delete', [MasterKaryawanController::class, 'delete']);
+Route::post('api/master/karyawan/confirmDelete', [MasterKaryawanController::class, 'confirmDelete']);
 /*API */
