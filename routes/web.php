@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\GroupController as MasterGroupController;
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\KaryawanController as MasterKaryawanController;
 use App\Http\Controllers\api\master\MenuController as MasterMenuController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\GroupController;
 use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\KaryawanController;
 use App\Http\Controllers\web\master\MenuController;
@@ -87,6 +89,10 @@ Route::get('master/karyawan/ubah', [KaryawanController::class, 'ubah']);
 Route::get('master/permission', [PermissionsController::class, 'index']);
 Route::get('master/permission/add', [PermissionsController::class, 'add']);
 Route::get('master/permission/ubah', [PermissionsController::class, 'ubah']);
+
+Route::get('master/group', [GroupController::class, 'index']);
+Route::get('master/group/add', [GroupController::class, 'add']);
+Route::get('master/group/ubah', [GroupController::class, 'ubah']);
 
 /*API */
 
@@ -158,4 +164,9 @@ Route::post('api/master/permission/submit', [MasterPermissionsController::class,
 Route::post('api/master/permission/delete', [MasterPermissionsController::class, 'delete']);
 Route::post('api/master/permission/confirmDelete', [MasterPermissionsController::class, 'confirmDelete']);
 Route::post('api/master/permission/showMenu', [MasterPermissionsController::class, 'showMenu']);
+
+Route::post('api/master/group/getData', [MasterGroupController::class, 'getData']);
+Route::post('api/master/group/submit', [MasterGroupController::class, 'submit']);
+Route::post('api/master/group/delete', [MasterGroupController::class, 'delete']);
+Route::post('api/master/group/confirmDelete', [MasterGroupController::class, 'confirmDelete']);
 /*API */
