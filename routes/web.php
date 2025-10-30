@@ -7,6 +7,7 @@ use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\MenuController as MasterMenuController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
+use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\web\auth\LoginController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\MenuController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
+use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +65,10 @@ Route::get('master/warehouse/ubah', [MasterWarehouseController::class, 'ubah']);
 Route::get('master/menu', [MenuController::class, 'index']);
 Route::get('master/menu/add', [MenuController::class, 'add']);
 Route::get('master/menu/ubah', [MenuController::class, 'ubah']);
+
+Route::get('master/roles', [RolesController::class, 'index']);
+Route::get('master/roles/add', [RolesController::class, 'add']);
+Route::get('master/roles/ubah', [RolesController::class, 'ubah']);
 
 /*API */
 
@@ -112,4 +118,9 @@ Route::post('api/master/menu/getData', [MasterMenuController::class, 'getData'])
 Route::post('api/master/menu/submit', [MasterMenuController::class, 'submit']);
 Route::post('api/master/menu/delete', [MasterMenuController::class, 'delete']);
 Route::post('api/master/menu/confirmDelete', [MasterMenuController::class, 'confirmDelete']);
+
+Route::post('api/master/roles/getData', [MasterRolesController::class, 'getData']);
+Route::post('api/master/roles/submit', [MasterRolesController::class, 'submit']);
+Route::post('api/master/roles/delete', [MasterRolesController::class, 'delete']);
+Route::post('api/master/roles/confirmDelete', [MasterRolesController::class, 'confirmDelete']);
 /*API */
