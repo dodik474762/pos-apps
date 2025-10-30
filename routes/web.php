@@ -6,6 +6,7 @@ use App\Http\Controllers\api\master\CustomerController as MasterCustomerControll
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\KaryawanController as MasterKaryawanController;
 use App\Http\Controllers\api\master\MenuController as MasterMenuController;
+use App\Http\Controllers\api\master\PermissionsController as MasterPermissionsController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\web\master\CustomerController;
 use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\KaryawanController;
 use App\Http\Controllers\web\master\MenuController;
+use App\Http\Controllers\web\master\PermissionsController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
 use App\Http\Controllers\web\master\RolesController;
@@ -81,6 +83,10 @@ Route::get('master/users/ubah', [UsersController::class, 'ubah']);
 Route::get('master/karyawan', [KaryawanController::class, 'index']);
 Route::get('master/karyawan/add', [KaryawanController::class, 'add']);
 Route::get('master/karyawan/ubah', [KaryawanController::class, 'ubah']);
+
+Route::get('master/permission', [PermissionsController::class, 'index']);
+Route::get('master/permission/add', [PermissionsController::class, 'add']);
+Route::get('master/permission/ubah', [PermissionsController::class, 'ubah']);
 
 /*API */
 
@@ -146,4 +152,10 @@ Route::post('api/master/karyawan/getData', [MasterKaryawanController::class, 'ge
 Route::post('api/master/karyawan/submit', [MasterKaryawanController::class, 'submit']);
 Route::post('api/master/karyawan/delete', [MasterKaryawanController::class, 'delete']);
 Route::post('api/master/karyawan/confirmDelete', [MasterKaryawanController::class, 'confirmDelete']);
+
+Route::post('api/master/permission/getData', [MasterPermissionsController::class, 'getData']);
+Route::post('api/master/permission/submit', [MasterPermissionsController::class, 'submit']);
+Route::post('api/master/permission/delete', [MasterPermissionsController::class, 'delete']);
+Route::post('api/master/permission/confirmDelete', [MasterPermissionsController::class, 'confirmDelete']);
+Route::post('api/master/permission/showMenu', [MasterPermissionsController::class, 'showMenu']);
 /*API */
