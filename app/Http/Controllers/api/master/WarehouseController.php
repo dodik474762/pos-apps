@@ -59,7 +59,9 @@ class WarehouseController extends Controller
         try {
             //code...
             if($data['id'] == ''){
-                $existName = Warehouse::where('name', $data['name'])->first();
+                $existName = Warehouse::where('name', $data['name'])
+                ->orWhere('code', $data['code'])
+                ->first();
                 if(!empty($existName)){
                     DB::rollBack();
                     $result['message'] = 'Warehouse name already exist';

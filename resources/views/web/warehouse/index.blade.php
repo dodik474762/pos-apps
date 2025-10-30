@@ -34,7 +34,7 @@
                                 @if ($akses->warehouse->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
-                                            id="create-btn" href="javascript:void(0);" onclick="Unit.add(this, event)"><i
+                                            id="create-btn" href="javascript:void(0);" onclick="Warehouse.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
                                     </div>
                                 @endif
@@ -83,7 +83,9 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th class="sort" data-sort="id">No</th>
+                                                    <th class="sort" data-sort="akses">Code</th>
                                                     <th class="sort" data-sort="akses">Nama</th>
+                                                    <th class="sort" data-sort="akses">Lokasi</th>
                                                     <th class="sort" data-sort="action">Action</th>
                                                 </tr>
                                             </thead>

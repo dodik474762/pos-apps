@@ -22,14 +22,28 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form onsubmit="Unit.submit(this, event)">
+                <form onsubmit="Warehouse.submit(this, event)">
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label>Unit</label>
+                                <label>Kode</label>
                                 <div>
-                                    <input type="text" id="name" class="form-control required" error="Unit"
-                                        placeholder="Unit" value="{{ isset($data->name) ? $data->name : '' }}">
+                                    <input type="text" id="code" class="form-control required" error="Kode"
+                                        placeholder="Kode" value="{{ isset($data->code) ? $data->code : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Nama</label>
+                                <div>
+                                    <input type="text" id="name" class="form-control required" error="Nama"
+                                        placeholder="Nama" value="{{ isset($data->name) ? $data->name : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Lokasi</label>
+                                <div>
+                                    <input type="text" id="location" class="form-control required" error="Lokasi"
+                                        placeholder="Lokasi" value="{{ isset($data->location) ? $data->location : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -39,11 +53,11 @@
         </div>
         <div class="text-end">
             <div>
-                <button type="submit" onclick="Unit.submit(this, event)"
+                <button type="submit" onclick="Warehouse.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
-                <button type="reset" onclick="Unit.cancel(this, event)" class="btn waves-effect">
+                <button type="reset" onclick="Warehouse.cancel(this, event)" class="btn waves-effect">
                     Cancel
                 </button>
             </div>
