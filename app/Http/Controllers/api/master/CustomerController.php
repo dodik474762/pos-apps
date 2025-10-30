@@ -70,6 +70,8 @@ class CustomerController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -80,7 +82,8 @@ class CustomerController extends Controller
             }
             // $roles->branch = $data['branch'];
             $roles->pic = $data['pic'];
-            $roles->numbering_code = $data['numbering_code'];
+            $roles->no_ktp = $data['no_ktp'];
+            $roles->price_list = $data['price_list'];
             $roles->nama_customer = $data['nama_customer'];
             $roles->pic = $data['pic'];
             $roles->phone = $data['phone'];
@@ -92,6 +95,8 @@ class CustomerController extends Controller
             $roles->npwp = $data['npwp'];
             $roles->currency = $data['currency'];
             $roles->customer_category = $data['customer_category'];
+            $roles->payment_terms = $data['payment_terms'];
+            $roles->credit_limit = $data['credit_limit'];
             $roles->save();
 
             // $nik_upt = new KaryawanHasUpt();
@@ -137,7 +142,10 @@ class CustomerController extends Controller
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+                'r.name as city_name'
+            ])
+            ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

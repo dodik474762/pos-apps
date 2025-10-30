@@ -46,8 +46,11 @@ let Customer = {
             provinsi: $("#provinsi").val(),
             npwp: $("#npwp").val(),
             currency: $("#currency").val(),
-            numbering_code: $("#numbering_code").val(),
+            price_list: $("#price_list").val(),
+            payment_terms: $("#payment_terms").val(),
+            credit_limit: $("#credit_limit").val(),
             customer_category: $("#customer_category").val(),
+            no_ktp: $("#no_ktp").val(),
         };
 
         return data;

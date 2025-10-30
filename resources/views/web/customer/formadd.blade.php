@@ -80,6 +80,20 @@
                                     </select>
                                 </div>
                             </div>
+                             <div class="mb-3">
+                                <label>Credit Limit</label>
+                                <div>
+                                    <input tabindex="10" type="number" id="credit_limit" class="form-control required" error="Credit Limit"
+                                        placeholder="Credit Limit" value="{{ isset($data->credit_limit) ? $data->credit_limit : '' }}">
+                                </div>
+                            </div>
+                             <div class="mb-3">
+                                <label>No. KTP</label>
+                                <div>
+                                    <input tabindex="9" type="text" id="no_ktp" class="form-control" error="No. KTP"
+                                        placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -119,10 +133,21 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label>Code Project</label>
+                                <label>Payment Terms / TOP</label>
                                 <div>
-                                    <input tabindex="10" type="text" id="numbering_code" class="form-control required" error="Code Project"
-                                        placeholder="Code Project" value="{{ isset($data->numbering_code) ? $data->numbering_code : '' }}">
+                                    <input tabindex="10" type="number" id="payment_terms" class="form-control required" error="Payment Terms"
+                                        placeholder="Payment Terms" value="{{ isset($data->payment_terms) ? $data->payment_terms : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Price List</label>
+                                <div>
+                                    <select name="" id="price_list" class="form-control">
+                                        <option value="">PILIH</option>
+                                        @foreach ($data_price_list as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>

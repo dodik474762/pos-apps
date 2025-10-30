@@ -8,6 +8,7 @@ use App\Models\Master\CompanyModel;
 use App\Models\Master\CustomerCategory;
 use App\Models\Master\Region;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -62,6 +63,7 @@ class CustomerController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['data_price_list'] = $this->getListPriceList();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -82,6 +84,7 @@ class CustomerController extends Controller
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['data_price_list'] = $this->getListPriceList();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -89,5 +92,10 @@ class CustomerController extends Controller
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
+    }
+
+    public function getListPriceList(){
+        $datadb = DB::table('price_list as pl')->whereNull('deleted')->get();
+        return $datadb;
     }
 }
