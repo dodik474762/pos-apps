@@ -9,6 +9,7 @@ use App\Http\Controllers\api\master\ProductController as MasterProductController
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
+use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
 use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\UnitController;
+use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +71,10 @@ Route::get('master/menu/ubah', [MenuController::class, 'ubah']);
 Route::get('master/roles', [RolesController::class, 'index']);
 Route::get('master/roles/add', [RolesController::class, 'add']);
 Route::get('master/roles/ubah', [RolesController::class, 'ubah']);
+
+Route::get('master/users', [UsersController::class, 'index']);
+Route::get('master/users/add', [UsersController::class, 'add']);
+Route::get('master/users/ubah', [UsersController::class, 'ubah']);
 
 /*API */
 
@@ -123,4 +129,10 @@ Route::post('api/master/roles/getData', [MasterRolesController::class, 'getData'
 Route::post('api/master/roles/submit', [MasterRolesController::class, 'submit']);
 Route::post('api/master/roles/delete', [MasterRolesController::class, 'delete']);
 Route::post('api/master/roles/confirmDelete', [MasterRolesController::class, 'confirmDelete']);
+
+Route::post('api/master/users/getData', [MasterUsersController::class, 'getData']);
+Route::post('api/master/users/submit', [MasterUsersController::class, 'submit']);
+Route::post('api/master/users/delete', [MasterUsersController::class, 'delete']);
+Route::post('api/master/users/confirmDelete', [MasterUsersController::class, 'confirmDelete']);
+Route::post('api/master/users/showDataKaryawan', [MasterUsersController::class, 'showDataKaryawan']);
 /*API */
