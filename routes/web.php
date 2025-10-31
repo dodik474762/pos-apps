@@ -11,6 +11,7 @@ use App\Http\Controllers\api\master\PermissionsController as MasterPermissionsCo
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
+use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\WarehouseController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\web\master\PermissionsController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
 use App\Http\Controllers\web\master\RolesController;
+use App\Http\Controllers\web\master\RoutingApprovalController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
@@ -93,6 +95,10 @@ Route::get('master/permission/ubah', [PermissionsController::class, 'ubah']);
 Route::get('master/group', [GroupController::class, 'index']);
 Route::get('master/group/add', [GroupController::class, 'add']);
 Route::get('master/group/ubah', [GroupController::class, 'ubah']);
+
+Route::get('master/routing', [RoutingApprovalController::class, 'index']);
+Route::get('master/routing/add', [RoutingApprovalController::class, 'add']);
+Route::get('master/routing/ubah', [RoutingApprovalController::class, 'ubah']);
 
 /*API */
 
@@ -169,4 +175,10 @@ Route::post('api/master/group/getData', [MasterGroupController::class, 'getData'
 Route::post('api/master/group/submit', [MasterGroupController::class, 'submit']);
 Route::post('api/master/group/delete', [MasterGroupController::class, 'delete']);
 Route::post('api/master/group/confirmDelete', [MasterGroupController::class, 'confirmDelete']);
+
+Route::post('api/master/routing/getData', [MasterRoutingApprovalController::class, 'getData']);
+Route::post('api/master/routing/submit', [MasterRoutingApprovalController::class, 'submit']);
+Route::post('api/master/routing/delete', [MasterRoutingApprovalController::class, 'delete']);
+Route::post('api/master/routing/confirmDelete', [MasterRoutingApprovalController::class, 'confirmDelete']);
+Route::post('api/master/routing/showDataUsers', [MasterRoutingApprovalController::class, 'showDataUsers']);
 /*API */
