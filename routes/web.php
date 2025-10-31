@@ -16,6 +16,7 @@ use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingAp
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\WarehouseController;
+use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\web\master\RoutingApprovalController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
+use App\Http\Controllers\web\master\WorkingHourController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -105,6 +107,10 @@ Route::get('master/routing/ubah', [RoutingApprovalController::class, 'ubah']);
 Route::get('master/dayoff', [DayoffController::class, 'index']);
 Route::get('master/dayoff/add', [DayoffController::class, 'add']);
 Route::get('master/dayoff/ubah', [DayoffController::class, 'ubah']);
+
+Route::get('master/working_hours', [WorkingHourController::class, 'index']);
+Route::get('master/working_hours/add', [WorkingHourController::class, 'add']);
+Route::get('master/working_hours/ubah', [WorkingHourController::class, 'ubah']);
 
 /*API */
 
@@ -192,4 +198,9 @@ Route::post('api/master/dayoff/getData', [MasterDayoffController::class, 'getDat
 Route::post('api/master/dayoff/submit', [MasterDayoffController::class, 'submit']);
 Route::post('api/master/dayoff/delete', [MasterDayoffController::class, 'delete']);
 Route::post('api/master/dayoff/confirmDelete', [MasterDayoffController::class, 'confirmDelete']);
+
+Route::post('api/master/working_hours/getData', [MasterWorkingHourController::class, 'getData']);
+Route::post('api/master/working_hours/submit', [MasterWorkingHourController::class, 'submit']);
+Route::post('api/master/working_hours/delete', [MasterWorkingHourController::class, 'delete']);
+Route::post('api/master/working_hours/confirmDelete', [MasterWorkingHourController::class, 'confirmDelete']);
 /*API */
