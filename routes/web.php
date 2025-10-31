@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\DayoffController as MasterDayoffController;
 use App\Http\Controllers\api\master\GroupController as MasterGroupController;
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\KaryawanController as MasterKaryawanController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\DayoffController;
 use App\Http\Controllers\web\master\GroupController;
 use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\KaryawanController;
@@ -99,6 +101,10 @@ Route::get('master/group/ubah', [GroupController::class, 'ubah']);
 Route::get('master/routing', [RoutingApprovalController::class, 'index']);
 Route::get('master/routing/add', [RoutingApprovalController::class, 'add']);
 Route::get('master/routing/ubah', [RoutingApprovalController::class, 'ubah']);
+
+Route::get('master/dayoff', [DayoffController::class, 'index']);
+Route::get('master/dayoff/add', [DayoffController::class, 'add']);
+Route::get('master/dayoff/ubah', [DayoffController::class, 'ubah']);
 
 /*API */
 
@@ -181,4 +187,9 @@ Route::post('api/master/routing/submit', [MasterRoutingApprovalController::class
 Route::post('api/master/routing/delete', [MasterRoutingApprovalController::class, 'delete']);
 Route::post('api/master/routing/confirmDelete', [MasterRoutingApprovalController::class, 'confirmDelete']);
 Route::post('api/master/routing/showDataUsers', [MasterRoutingApprovalController::class, 'showDataUsers']);
+
+Route::post('api/master/dayoff/getData', [MasterDayoffController::class, 'getData']);
+Route::post('api/master/dayoff/submit', [MasterDayoffController::class, 'submit']);
+Route::post('api/master/dayoff/delete', [MasterDayoffController::class, 'delete']);
+Route::post('api/master/dayoff/confirmDelete', [MasterDayoffController::class, 'confirmDelete']);
 /*API */
