@@ -160,6 +160,8 @@ Route::post('api/master/customer/submit', [MasterCustomerController::class, 'sub
 Route::post('api/master/customer/delete', [MasterCustomerController::class, 'delete']);
 Route::post('api/master/customer/confirmDelete', [MasterCustomerController::class, 'confirmDelete']);
 Route::post('api/master/customer/getCity', [MasterCustomerController::class, 'getCity']);
+Route::post('api/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
+Route::post('api/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
 
 Route::post('api/master/unit/getData', [MasterUnitController::class, 'getData']);
 Route::post('api/master/unit/submit', [MasterUnitController::class, 'submit']);

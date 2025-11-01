@@ -94,6 +94,17 @@
                                         placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Price List</label>
+                                <div>
+                                    <select name="" id="price_list" class="form-control">
+                                        <option value="">PILIH</option>
+                                        @foreach ($data_price_list as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -119,9 +130,25 @@
                             </div>
                              <div class="mb-3">
                                 <label class="form-label">Kota</label>
-                                <select class="form-control select2" error="Kota" id="kota">
+                                <select class="form-control select2" error="Kota" id="kota" onchange="Customer.getKecamatan(this)">
                                     @if (isset($data->kota))
                                         <option value="{{ $data->kota }}" selected>{{ $data->city_name }}</option>
+                                    @endif
+                                </select>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Kecamatan</label>
+                                <select class="form-control select2" error="Kecamatan" id="kecamatan" onchange="Customer.getKelurahan(this)">
+                                    @if (isset($data->kecamatan))
+                                        <option value="{{ $data->kecamatan }}" selected>{{ $data->kecamatan_name }}</option>
+                                    @endif
+                                </select>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Kelurahan</label>
+                                <select class="form-control select2" error="Kelurahan" id="kelurahan">
+                                    @if (isset($data->kelurahan))
+                                        <option value="{{ $data->kelurahan }}" selected>{{ $data->kelurahan_name }}</option>
                                     @endif
                                 </select>
                             </div>
@@ -138,18 +165,7 @@
                                     <input tabindex="10" type="number" id="payment_terms" class="form-control required" error="Payment Terms"
                                         placeholder="Payment Terms" value="{{ isset($data->payment_terms) ? $data->payment_terms : '' }}">
                                 </div>
-                            </div>
-                            <div class="mb-3">
-                                <label>Price List</label>
-                                <div>
-                                    <select name="" id="price_list" class="form-control">
-                                        <option value="">PILIH</option>
-                                        @foreach ($data_price_list as $item)
-                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                            </div>                            
                         </div>
                     </div>
                 </form>

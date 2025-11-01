@@ -97,6 +97,8 @@ class CustomerController extends Controller
             $roles->customer_category = $data['customer_category'];
             $roles->payment_terms = $data['payment_terms'];
             $roles->credit_limit = $data['credit_limit'];
+            $roles->kecamatan = $data['kecamatan'];
+            $roles->kelurahan = $data['kelurahan'];
             $roles->save();
 
             // $nik_upt = new KaryawanHasUpt();
@@ -142,9 +144,13 @@ class CustomerController extends Controller
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-                'r.name as city_name'
+                'r.name as city_name',
+                'k.name as kecamatan_name',
+                'kl.name as kelurahan_name',
             ])
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -162,6 +168,30 @@ class CustomerController extends Controller
         $data = $request->all();
         $datadb = Region::where('type', 'KOTA')
             ->where('parent', $data['province'])
+            ->whereNull('deleted')->get()->toArray();
+
+        $result['is_valid'] = true;
+        $result['data'] = $datadb;
+        return response()->json($result);
+    }
+    
+    public function getKecamatan(Request $request)
+    {
+        $data = $request->all();
+        $datadb = Region::where('type', 'KECAMATAN')
+            ->where('parent', $data['kota'])
+            ->whereNull('deleted')->get()->toArray();
+
+        $result['is_valid'] = true;
+        $result['data'] = $datadb;
+        return response()->json($result);
+    }
+   
+    public function getKelurahan(Request $request)
+    {
+        $data = $request->all();
+        $datadb = Region::where('type', 'KELURAHAN')
+            ->where('parent', $data['kecamatan'])
             ->whereNull('deleted')->get()->toArray();
 
         $result['is_valid'] = true;

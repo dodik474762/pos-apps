@@ -51,6 +51,8 @@ let Customer = {
             credit_limit: $("#credit_limit").val(),
             customer_category: $("#customer_category").val(),
             no_ktp: $("#no_ktp").val(),
+            kecamatan: $("#kecamatan").val(),
+            kelurahan: $("#kelurahan").val(),
         };
 
         return data;
@@ -296,6 +298,90 @@ let Customer = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     const cityOption = $("select#kota");
+                    cityOption.find("option").remove();
+                    cityOption.append('<option value=""></option>');
+                    $.each(resp.data, function (key, value) {
+                        cityOption.append(
+                            '<option value="' +
+                                value.id +
+                                '">' +
+                                value.name +
+                                "</option>"
+                        );
+                    });
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+    
+    getKecamatan: (elm) => {
+        const kota = $(elm).val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                kota: kota,
+            },
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+            url: url.base_url(Customer.moduleApi()) + "getKecamatan",
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    const cityOption = $("select#kecamatan");
+                    cityOption.find("option").remove();
+                    cityOption.append('<option value=""></option>');
+                    $.each(resp.data, function (key, value) {
+                        cityOption.append(
+                            '<option value="' +
+                                value.id +
+                                '">' +
+                                value.name +
+                                "</option>"
+                        );
+                    });
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+   
+    getKelurahan: (elm) => {
+        const kecamatan = $(elm).val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                kecamatan: kecamatan,
+            },
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+            url: url.base_url(Customer.moduleApi()) + "getKelurahan",
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    const cityOption = $("select#kelurahan");
                     cityOption.find("option").remove();
                     cityOption.append('<option value=""></option>');
                     $.each(resp.data, function (key, value) {
