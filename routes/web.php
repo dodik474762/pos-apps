@@ -8,6 +8,7 @@ use App\Http\Controllers\api\master\DayoffController as MasterDayoffController;
 use App\Http\Controllers\api\master\GroupController as MasterGroupController;
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
 use App\Http\Controllers\api\master\KaryawanController as MasterKaryawanController;
+use App\Http\Controllers\api\master\KecamatanController as MasterKecamatanController;
 use App\Http\Controllers\api\master\MenuController as MasterMenuController;
 use App\Http\Controllers\api\master\PermissionsController as MasterPermissionsController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\web\master\DayoffController;
 use App\Http\Controllers\web\master\GroupController;
 use App\Http\Controllers\web\master\ItemController;
 use App\Http\Controllers\web\master\KaryawanController;
+use App\Http\Controllers\web\master\KecamatanController;
 use App\Http\Controllers\web\master\MenuController;
 use App\Http\Controllers\web\master\PermissionsController;
 use App\Http\Controllers\web\master\ProductController;
@@ -123,6 +125,10 @@ Route::get('master/province/ubah', [ProvinceController::class, 'ubah']);
 Route::get('master/city', [CityController::class, 'index']);
 Route::get('master/city/add', [CityController::class, 'add']);
 Route::get('master/city/ubah', [CityController::class, 'ubah']);
+
+Route::get('master/kecamatan', [KecamatanController::class, 'index']);
+Route::get('master/kecamatan/add', [KecamatanController::class, 'add']);
+Route::get('master/kecamatan/ubah', [KecamatanController::class, 'ubah']);
 
 /*API */
 
@@ -225,4 +231,10 @@ Route::post('api/master/city/getData', [MasterCityController::class, 'getData'])
 Route::post('api/master/city/submit', [MasterCityController::class, 'submit']);
 Route::post('api/master/city/delete', [MasterCityController::class, 'delete']);
 Route::post('api/master/city/confirmDelete', [MasterCityController::class, 'confirmDelete']);
+
+Route::post('api/master/kecamatan/getData', [MasterKecamatanController::class, 'getData']);
+Route::post('api/master/kecamatan/submit', [MasterKecamatanController::class, 'submit']);
+Route::post('api/master/kecamatan/delete', [MasterKecamatanController::class, 'delete']);
+Route::post('api/master/kecamatan/confirmDelete', [MasterKecamatanController::class, 'confirmDelete']);
+Route::post('api/master/kecamatan/getCity', [MasterKecamatanController::class, 'getCity']);
 /*API */
