@@ -48,12 +48,17 @@
                                         placeholder="Address" value="{{ isset($data->address) ? $data->address : '' }}">
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label>Regional</label>
-                                <div>
-                                    <input tabindex="8" type="text" id="region" class="form-control required" error="Regional"
-                                        placeholder="Regional" value="{{ isset($data->region) ? $data->region : '' }}">
-                                </div>
+                             <div class="mb-3">
+                                <label class="form-label">Provinsi</label>
+                                <select class="form-control select2 required" error="Province" id="region"
+                                    onchange="Vendor.getCity(this)">
+                                    <option value=""></option>
+                                    @foreach ($data_province as $item)
+                                        <option value="{{ $item['id'] }}"
+                                            {{ isset($data->region) ? ($data->region == $item['id'] ? 'selected' : '') : '' }}>
+                                            {{ $item['name'] }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label>Remarks</label>
@@ -86,11 +91,12 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label>Kota</label>
-                                <div>
-                                    <input tabindex="7" type="text" id="city" class="form-control required" error="Kota"
-                                        placeholder="Kota" value="{{ isset($data->city) ? $data->city : '' }}">
-                                </div>
+                                <label class="form-label">Kota</label>
+                                <select class="form-control select2" error="Kota" id="city">
+                                    @if (isset($data->city))
+                                        <option value="{{ $data->city }}" selected>{{ $data->city_name }}</option>
+                                    @endif
+                                </select>
                             </div>
                         </div>
                     </div>

@@ -259,6 +259,48 @@ let Vendor = {
             },
         });
     },
+
+     getCity: (elm) => {
+        const province = $(elm).val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                province: province,
+            },
+            headers: {
+                "X-CSRF-TOKEN": Vendor.csrf_token(),
+            },
+            url: url.base_url(Vendor.moduleApi()) + "getCity",
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    const cityOption = $("select#city");
+                    cityOption.find("option").remove();
+                    cityOption.append('<option value=""></option>');
+                    $.each(resp.data, function (key, value) {
+                        cityOption.append(
+                            '<option value="' +
+                                value.id +
+                                '">' +
+                                value.name +
+                                "</option>"
+                        );
+                    });
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {

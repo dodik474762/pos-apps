@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Region;
 use App\Models\Master\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -110,7 +111,12 @@ class VendorController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+            'r.name as region_name',
+            'c.name as city_name'
+        ])
+        ->join('region as r', 'r.id', 'm.region')
+        ->join('region as c', 'c.id', 'm.city')
+        ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
@@ -119,5 +125,17 @@ class VendorController extends Controller
     public function delete(Request $request){
         $data = $request->all();
         return view('web.vendor.modal.confirmdelete', $data);
+    }
+
+     public function getCity(Request $request)
+    {
+        $data = $request->all();
+        $datadb = Region::where('type', 'KOTA')
+            ->where('parent', $data['province'])
+            ->whereNull('deleted')->get()->toArray();
+
+        $result['is_valid'] = true;
+        $result['data'] = $datadb;
+        return response()->json($result);
     }
 }

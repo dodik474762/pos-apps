@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web\master;
 
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\Region;
 use Illuminate\Http\Request;
 
 class VendorController extends Controller
@@ -62,6 +63,7 @@ class VendorController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
+        $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -81,6 +83,7 @@ class VendorController extends Controller
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

@@ -261,4 +261,5 @@ Route::post('api/master/vendor/getData', [MasterVendorController::class, 'getDat
 Route::post('api/master/vendor/submit', [MasterVendorController::class, 'submit']);
 Route::post('api/master/vendor/delete', [MasterVendorController::class, 'delete']);
 Route::post('api/master/vendor/confirmDelete', [MasterVendorController::class, 'confirmDelete']);
+Route::post('api/master/vendor/getCity', [MasterVendorController::class, 'getCity']);
 /*API */
