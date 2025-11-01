@@ -19,6 +19,7 @@ use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
+use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\web\auth\LoginController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\RoutingApprovalController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
+use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
 use Illuminate\Support\Facades\Route;
@@ -135,6 +137,10 @@ Route::get('master/kecamatan/ubah', [KecamatanController::class, 'ubah']);
 Route::get('master/kelurahan', [KelurahanController::class, 'index']);
 Route::get('master/kelurahan/add', [KelurahanController::class, 'add']);
 Route::get('master/kelurahan/ubah', [KelurahanController::class, 'ubah']);
+
+Route::get('master/vendor', [VendorController::class, 'index']);
+Route::get('master/vendor/add', [VendorController::class, 'add']);
+Route::get('master/vendor/ubah', [VendorController::class, 'ubah']);
 
 /*API */
 
@@ -250,4 +256,9 @@ Route::post('api/master/kelurahan/delete', [MasterKelurahanController::class, 'd
 Route::post('api/master/kelurahan/confirmDelete', [MasterKelurahanController::class, 'confirmDelete']);
 Route::post('api/master/kelurahan/getCity', [MasterKelurahanController::class, 'getCity']);
 Route::post('api/master/kelurahan/getKecamatan', [MasterKelurahanController::class, 'getKecamatan']);
+
+Route::post('api/master/vendor/getData', [MasterVendorController::class, 'getData']);
+Route::post('api/master/vendor/submit', [MasterVendorController::class, 'submit']);
+Route::post('api/master/vendor/delete', [MasterVendorController::class, 'delete']);
+Route::post('api/master/vendor/confirmDelete', [MasterVendorController::class, 'confirmDelete']);
 /*API */
