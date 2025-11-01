@@ -175,6 +175,7 @@ Route::post('api/master/product/confirmDelete', [MasterProductController::class,
 Route::post('api/master/product/addItemLevel', [MasterProductController::class, 'addItemLevel']);
 Route::post('api/master/product/addItemPrice', [MasterProductController::class, 'addItemPrice']);
 Route::post('api/master/product/showDataCustomer', [MasterProductController::class, 'showDataCustomer']);
+Route::post('api/master/product/removeUom', [MasterProductController::class, 'removeUom']);
 
 Route::post('api/master/item/getData', [MasterItemController::class, 'getData']);
 Route::post('api/master/item/submit', [MasterItemController::class, 'submit'])->name('item-submit');

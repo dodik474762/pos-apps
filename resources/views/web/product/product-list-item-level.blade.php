@@ -26,7 +26,7 @@
                         <input type="hidden" id="level_id" name="level_id[]" value="{{ $v->id }}">
                         <tr data_id="{{ $v->id }}">
                             <td class="text-center">
-                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemLevel(this)"><i class="bx bx-trash-alt"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemLevel(this, event)"><i class="bx bx-trash-alt"></i></button>
                             </td>
                             <td>
                                 <select id="unit_dasar" name="unit_dasar[]" class="form-control required" error="Unit Dasar">

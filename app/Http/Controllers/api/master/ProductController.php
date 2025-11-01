@@ -276,6 +276,34 @@ class ProductController extends Controller
         }
         return response()->json($result);
     }
+    
+    public function removeUom(Request $request)
+    {
+        $data = $request->all();
+        
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            //code...
+            $product_uom = ProductUom::find($data['id']);
+            $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
+            ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
+            if(!empty($product_uom_price)){
+                DB::rollBack();
+                $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di price list';
+                return response()->json($result);
+            }
+
+            ProductUom::find($data['id'])->delete();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
 
     public function getDetailData($id)
     {

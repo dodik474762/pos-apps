@@ -359,10 +359,51 @@ let Product = {
         });
     },    
 
-    removeItemLevel:(elm)=>{
-        $(elm).closest('tr').remove();
+    removeItemLevel:(elm, e)=>{
+        e.preventDefault();
+        const data_id = $(elm).closest('tr').attr('data_id');
+        if(data_id == ''){
+            $(elm).closest('tr').remove();
+        }else{
+           Product.removeUom(data_id);
+        }
     },
 
+    removeUom: (id) => {
+        let params = {
+            id: id,
+            product: $('input#id').val()
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "removeUom",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if(resp.is_valid){
+                    message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                }else{
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+    
     addItemPrice: (elm, e) => {
         e.preventDefault();
         let params = {};
