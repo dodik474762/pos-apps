@@ -3,6 +3,10 @@ let WorkingHour = {
         return "master/working_hours";
     },
 
+    csrf_token: () => {
+        return $('meta[name="csrf-token"]').attr("content");
+    },
+
     moduleApi: () => {
         return "api/" + WorkingHour.module();
     },
@@ -31,7 +35,7 @@ let WorkingHour = {
             day: $("#day").val(),
             start_hour: $("#start_hour").val(),
             end_hour: $("#end_hour").val(),
-            holiday: $("#holiday").is(':checked') ? 1 : 0,
+            holiday: $("#holiday").is(":checked") ? 1 : 0,
             remarks: $("#remarks").val(),
         };
 
@@ -48,6 +52,9 @@ let WorkingHour = {
                 dataType: "json",
                 data: params,
                 url: url.base_url(WorkingHour.moduleApi()) + "submit",
+                headers: {
+                    "X-CSRF-TOKEN": WorkingHour.csrf_token(),
+                },
                 beforeSend: () => {
                     message.loadingProses("Proses Simpan Data...");
                 },
@@ -109,6 +116,9 @@ let WorkingHour = {
             ajax: {
                 url: url.base_url(WorkingHour.moduleApi()) + `getData`,
                 type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": WorkingHour.csrf_token(),
+                },
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -140,7 +150,9 @@ let WorkingHour = {
                             html += `<li class="list-inline-item edit" data-bs-toggle="tooltip"
                             data-bs-trigger="hover" data-bs-placement="top"
                             title="Edit">
-                            <a href='${url.base_url(WorkingHour.module())}ubah?id=${data}' data_id="${row.id}"
+                            <a href='${url.base_url(
+                                WorkingHour.module()
+                            )}ubah?id=${data}' data_id="${row.id}"
                                 class="text-primary d-inline-block edit-item-btn">
                                 <i class="ri-pencil-fill fs-16"></i>
                             </a>
@@ -197,6 +209,9 @@ let WorkingHour = {
             dataType: "html",
             data: params,
             url: url.base_url(WorkingHour.moduleApi()) + "delete",
+            headers: {
+                "X-CSRF-TOKEN": WorkingHour.csrf_token(),
+            },
             beforeSend: () => {
                 message.loadingProses("Proses Pengambilan Data...");
             },
@@ -221,6 +236,9 @@ let WorkingHour = {
             dataType: "json",
             data: params,
             url: url.base_url(WorkingHour.moduleApi()) + "confirmDelete",
+            headers: {
+                "X-CSRF-TOKEN": WorkingHour.csrf_token(),
+            },
             beforeSend: () => {
                 message.loadingProses("Proses Simpan Data...");
             },
@@ -243,9 +261,9 @@ let WorkingHour = {
         });
     },
 
-    setDate:() =>{
-        $('#search-datepicker').flatpickr({});
-    }
+    setDate: () => {
+        $("#search-datepicker").flatpickr({});
+    },
 };
 
 $(function () {
