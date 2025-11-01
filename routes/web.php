@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\master\CityController as MasterCityController;
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
+use App\Http\Controllers\web\master\CityController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
@@ -118,6 +120,10 @@ Route::get('master/province', [ProvinceController::class, 'index']);
 Route::get('master/province/add', [ProvinceController::class, 'add']);
 Route::get('master/province/ubah', [ProvinceController::class, 'ubah']);
 
+Route::get('master/city', [CityController::class, 'index']);
+Route::get('master/city/add', [CityController::class, 'add']);
+Route::get('master/city/ubah', [CityController::class, 'ubah']);
+
 /*API */
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
@@ -214,4 +220,9 @@ Route::post('api/master/province/getData', [MasterProvinceController::class, 'ge
 Route::post('api/master/province/submit', [MasterProvinceController::class, 'submit']);
 Route::post('api/master/province/delete', [MasterProvinceController::class, 'delete']);
 Route::post('api/master/province/confirmDelete', [MasterProvinceController::class, 'confirmDelete']);
+
+Route::post('api/master/city/getData', [MasterCityController::class, 'getData']);
+Route::post('api/master/city/submit', [MasterCityController::class, 'submit']);
+Route::post('api/master/city/delete', [MasterCityController::class, 'delete']);
+Route::post('api/master/city/confirmDelete', [MasterCityController::class, 'confirmDelete']);
 /*API */
