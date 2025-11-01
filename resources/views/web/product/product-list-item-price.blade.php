@@ -58,7 +58,7 @@
                                 <div class="input-group">
                                     <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                         onclick="Product.showDataCustomer(this)">Pilih</button>
-                                    <input readonly id="customer" name="customer[]" type="text" class="form-control"
+                                    <input id="customer" name="customer[]" type="text" class="form-control"
                                         error="Customer" placeholder="Pilih Data Customer" aria-label="Pilih Data Customer"
                                         aria-describedby="button-addon1" value="{{ $v->customer == '' ? '' : $v->customer.'//'.$v->customer_name }}">
                                 </div>
