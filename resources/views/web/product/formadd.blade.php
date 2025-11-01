@@ -56,33 +56,6 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label>Purchase Price</label>
-                                <div>
-                                    <input type="text" onkeyup="Product.setNumeric(this, event)" min="0" id="purchase_price"
-                                        class="form-control required" error="Purchase Price"
-                                        placeholder="Purchase Price" name="purchase_price"
-                                        value="{{ isset($data->purchase_price) ? number_format($data->purchase_price, 0, ',', '.') : '' }}">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label>Sell Price</label>
-                                <div>
-                                    <input type="text" onkeyup="Product.setNumeric(this, event)" min="0" id="selling_price"
-                                        class="form-control required" error="Sell Price" name="selling_price" placeholder="Sell Price"
-                                        value="{{ isset($data->selling_price) ? number_format($data->selling_price, 0, ',', '.') : '' }}">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Unit</label>
-                                <select class="form-control select2 required" error='Unit' id="unit" name="unit">
-                                    @foreach ($product_unit as $item)
-                                        <option value="{{ $item['id'] }}"
-                                            {{ isset($data->unit) ? ($data->unit == $item['id'] ? 'selected' : '') : '' }}>
-                                            {{ $item['name'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-3">
                                 <label>Remarks</label>
                                 <div>
                                     <input type="text" id="remarks" name="remarks" class="form-control required" error="Remarks"
@@ -114,40 +87,61 @@
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="card-title">
-                                <label>Price List Updated</label>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-nowrap align-middle table-sm">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Users</th>
-                                            <th>Purchase Price</th>
-                                            <th>Selling Price</th>
-                                            <th>Updated At</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $no = 1;
-                                        @endphp
-                                        @foreach ($product_logs as $item)
+                    @if (isset($id))                        
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="card-title">
+                                    <label>Product Satuan Level</label>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-nowrap align-middle table-sm" id="table-satuan">
+                                        <thead class="table-light">
                                             <tr>
-                                               <td>{{ $no++ }}</td>
-                                               <td>{{ $item['username'] }}</td>
-                                               <td>{{ number_format($item['purchase_price'], 0, ',', '.') }}</td>
-                                               <td>{{ number_format($item['selling_price'], 0, ',', '.') }}</td>
-                                               <td>{{ date('Y-m-d H:i:s', strtotime($item['created_at'])) }}</td>
+                                                <th style="width: 10%;">#</th>
+                                                <th style="width: 40%;">Satuan Dasar</th>
+                                                <th style="width: 40%;">Satuan Tujuan</th>
+                                                <th style="width: 10%;">Konversi</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody> 
+                                            <tr>
+                                                <td colspan="4">
+                                                    <a href="javascript:;" class="btn btn-primary btn-sm"
+                                                        onclick="Product.addItemLevel(this, event)">Add
+                                                        Item</a>
+                                                </td>
+                                            </tr>    
+                                            
+                                            @foreach ($product_uoms as $v)
+                                                <tr>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-danger" onclick="Product.removeItemLevel(this)"><i class="bx bx-trash-alt"></i></button>
+                                                    </td>
+                                                    <td>
+                                                        <select id="unit_dasar" name="unit_dasar[]" class="form-control required" error="Unit Dasar">
+                                                            @foreach ($data_satuan as $item)
+                                                                <option value="{{ $item->id }}" {{ $v->unit_dasar == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select id="unit_tujuan" name="unit_tujuan[]" class="form-control required" error="Unit Tujuan">
+                                                            @foreach ($data_satuan as $item)
+                                                                <option value="{{ $item->id }}" {{ $v->unit_tujuan == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" id="nilai_konversi" name="nilai_konversi[]" class="form-control required" error="Nilai Konversi" value="{{ $v->nilai_konversi }}">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="text-end">
                         <div>

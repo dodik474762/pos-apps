@@ -151,21 +151,6 @@ let Product = {
                     data: "type",
                 },
                 {
-                    data: "unit_name",
-                },
-                {
-                    data: "purchase_price",
-                    render: function (data, type, row) {
-                        return Product.formatRupiah(data);
-                    },
-                },
-                {
-                    data: "selling_price",
-                    render: function (data, type, row) {
-                        return Product.formatRupiah(data);
-                    },
-                },
-                {
                     data: "model_number",
                 },
                 {
@@ -340,6 +325,38 @@ let Product = {
             delimiterRegExp: /[^0-9\,]/g,
         });
     },
+
+    addItemLevel: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "addItemLevel",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const tableatuan = $('table#table-satuan').find('tbody');
+                tableatuan.append(resp);
+            },
+        });
+    },
+
+    removeItemLevel:(elm)=>{
+        $(elm).closest('tr').remove();
+    }
 };
 
 $(function () {

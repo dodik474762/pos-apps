@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductType;
+use App\Models\Master\ProductUom;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
 
@@ -90,6 +91,14 @@ class ProductController extends Controller
         return $data;
     }
 
+    public function getListProductUom($product){
+        $data = ProductUom::where('product', $product)
+        ->orderBy('level')
+        ->get();
+
+        return $data;
+    }
+
     public function ubah(Request $request)
     {
         $api = new MasterProductController();
@@ -98,9 +107,11 @@ class ProductController extends Controller
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
 
+        $data['data_satuan'] = Unit::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['product_logs'] = $this->getProductLog($data['id']);
+        $data['product_uoms'] = $this->getListProductUom($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

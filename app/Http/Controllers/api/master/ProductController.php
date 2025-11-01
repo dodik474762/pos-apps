@@ -7,6 +7,8 @@ use App\Http\Controllers\web\master\ProductController as MasterProductController
 use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductLog;
+use App\Models\Master\ProductUom;
+use App\Models\Master\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -91,14 +93,14 @@ class ProductController extends Controller
             $value = (array) $value;
             $value['selling_price'] = number_format($value['selling_price'], 0, ',', '.');
             $value['img'] = null;
-            if($value['files'] != ''){
+            if ($value['files'] != '') {
                 $files = explode('.', $value['files']);
                 $typeFle = end($files);
-                if($typeFle != "pdf"){
-                    $value['img'] = url('/').$value['path_files'].$value['files'];
+                if ($typeFle != "pdf") {
+                    $value['img'] = url('/') . $value['path_files'] . $value['files'];
                 }
             }
-            $resultdb [] = $value;
+            $resultdb[] = $value;
         }
 
         $result['data'] = $resultdb;
@@ -133,14 +135,14 @@ class ProductController extends Controller
             $value = (array) $value;
             $value['selling_price'] = 0;
             $value['img'] = null;
-            if($value['files'] != ''){
+            if ($value['files'] != '') {
                 $files = explode('.', $value['files']);
                 $typeFle = end($files);
-                if($typeFle != "pdf"){
-                    $value['img'] = url('/').$value['path_files'].$value['files'];
+                if ($typeFle != "pdf") {
+                    $value['img'] = url('/') . $value['path_files'] . $value['files'];
                 }
             }
-            $resultdb [] = $value;
+            $resultdb[] = $value;
         }
 
         $result['data'] = $resultdb;
@@ -154,14 +156,12 @@ class ProductController extends Controller
     {
         $data = $request->all();
         // $data = json_decode($post['data'], true);
-        // echo '<pre>';
-        // print_r($data);die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
             // New file directory
-            $dir = 'berkas/document/product_catalog/';
+            $dir = 'berkas/document/product/';
             $dir .= date('Y') . '/' . date('m');
             $pathlamp = public_path() . '/' . $dir . '/';
             // Create the directory if it doesn't exist
@@ -169,19 +169,9 @@ class ProductController extends Controller
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
             /*file leave */
-            // $file = $data['file'];
             // Gunakan nama file yang diposting
             $fileName = empty($data['file']) ? '' : $data['file']->getClientOriginalName();
-
-            // if ($data['file'] != '') {
-            //     uploadFileFromBlobString($pathlamp, $fileName, $file);
-            // } else {
-            //     if ($file != '') {
-            //         File::put($pathlamp . $fileName, base64_decode($file));
-            //     }
-            // }
-
-            if(!empty($data['file'])){
+            if (!empty($data['file'])) {
                 $files = $data['file'];
                 $files->move($pathlamp, $fileName);
             }
@@ -196,10 +186,7 @@ class ProductController extends Controller
             $roles->name = $data['name'];
             $roles->model_number = $data['model_number'];
             $roles->product_type = $data['product_type'];
-            $roles->unit = $data['unit'];
             $roles->remarks = $data['remarks'];
-            $roles->purchase_price = str_replace(',', '.', str_replace('.', '', $data['purchase_price']));
-            $roles->selling_price = str_replace(',', '.', str_replace('.', '', $data['selling_price']));
             $roles->files = !empty($data['file']) ? $fileName : $roles->files;
             $roles->path_files = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
             $roles->save();
@@ -210,15 +197,28 @@ class ProductController extends Controller
                 $roles->name = $data['name'];
                 $roles->model_number = $data['model_number'];
                 $roles->product_type = $data['product_type'];
-                $roles->unit = $data['unit'];
                 $roles->remarks = $data['remarks'];
-                $roles->purchase_price = str_replace(',', '.', str_replace('.', '', $data['purchase_price']));
-                $roles->selling_price = str_replace(',', '.', str_replace('.', '', $data['selling_price']));
                 $roles->files = isset($fileName) ? $fileName : $roles->files;
                 $roles->path_files = isset($dbpathlamp) ? $dbpathlamp : $roles->path_files;
                 $roles->creator = session('user_id');
                 $roles->save();
             }
+
+            if (isset($data['unit_dasar'])) {
+                if (!empty($data['unit_dasar'])) {
+                    DB::table('product_uom')->where('product', $data['id'])->delete();
+                    for ($i = 0; $i < count($data['unit_dasar']); $i++) {
+                        $product_uom = new ProductUom();
+                        $product_uom->product = $data['id'];
+                        $product_uom->unit_dasar = $data['unit_dasar'][$i];
+                        $product_uom->unit_tujuan = $data['unit_tujuan'][$i];
+                        $product_uom->nilai_konversi = $data['nilai_konversi'][$i];
+                        $product_uom->level = $i + 1;
+                        $product_uom->save();
+                    }
+                }
+            }
+            
             DB::commit();
             $result['is_valid'] = true;
             $result['message'] = 'Data berhasil disimpan';
@@ -227,9 +227,9 @@ class ProductController extends Controller
             $result['message'] = $th->getMessage();
             DB::rollBack();
         }
-        if($result['is_valid']){
+        if ($result['is_valid']) {
             return redirect()->action([MasterProductController::class, 'index'], ['success' => $result['message']]);
-        }else{
+        } else {
             return redirect()->action([MasterProductController::class, 'index'], ['error' => $result['message']]);
         }
         // return response()->json($result);
@@ -272,5 +272,12 @@ class ProductController extends Controller
     {
         $data = $request->all();
         return view('web.product.modal.confirmdelete', $data);
+    }
+
+    public function addItemLevel(Request $request)
+    {
+        $data = $request->all();
+        $data['data_satuan'] = Unit::whereNull('deleted')->get();
+        return view('web.product.product-item-level', $data);
     }
 }

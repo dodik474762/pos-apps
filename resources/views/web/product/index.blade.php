@@ -97,9 +97,6 @@
                                                     <th>No</th>
                                                     <th>Product</th>
                                                     <th>Type</th>
-                                                    <th>Unit</th>
-                                                    <th>Purchase Price</th>
-                                                    <th>Sell Price</th>
                                                     <th>Model Number</th>
                                                     <th>Action</th>
                                                 </tr>
