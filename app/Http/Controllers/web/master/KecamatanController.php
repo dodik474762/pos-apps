@@ -36,7 +36,7 @@ class KecamatanController extends Controller
 
     public function getTitle()
     {
-        return "City";
+        return "Kecmatan";
     }
 
     public function index()
