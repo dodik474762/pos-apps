@@ -8,6 +8,7 @@ use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
+use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -155,7 +156,9 @@ class ProductController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
-        // $data = json_decode($post['data'], true);
+        
+        // echo '<pre>';
+        // print_r($data);die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -206,9 +209,8 @@ class ProductController extends Controller
 
             if (isset($data['unit_dasar'])) {
                 if (!empty($data['unit_dasar'])) {
-                    DB::table('product_uom')->where('product', $data['id'])->delete();
                     for ($i = 0; $i < count($data['unit_dasar']); $i++) {
-                        $product_uom = new ProductUom();
+                        $product_uom = isset($data['level_id'][$i]) ? ProductUom::find($data['level_id'][$i]) : new ProductUom();
                         $product_uom->product = $data['id'];
                         $product_uom->unit_dasar = $data['unit_dasar'][$i];
                         $product_uom->unit_tujuan = $data['unit_tujuan'][$i];
@@ -218,7 +220,26 @@ class ProductController extends Controller
                     }
                 }
             }
-            
+           
+            if (isset($data['uom_id'])) {
+                if (!empty($data['uom_id'])) {
+                    for ($i = 0; $i < count($data['uom_id']); $i++) {
+                        $product_uom_price = isset($data['price_uom'][$i]) ? ProductUomPrice::find($data['price_uom'][$i]) : new ProductUomPrice();
+                        $product_uom_price->product = $data['id'];
+                        $product_uom_price->unit = $data['uom_id'][$i];
+                        $product_uom_price->price_list = $data['type_price'][$i];
+                        $product_uom_price->price = $data['price'][$i];
+                        $product_uom_price->date_start = $data['date_start'][$i];
+                        if($data['customer'][$i] != ''){
+                            list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
+                            $product_uom_price->customer = $id_cust;
+                            $product_uom_price->customer_name = $name_cust;
+                        }
+                        $product_uom_price->save();
+                    }
+                }
+            }
+
             DB::commit();
             $result['is_valid'] = true;
             $result['message'] = 'Data berhasil disimpan';
@@ -279,5 +300,44 @@ class ProductController extends Controller
         $data = $request->all();
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
         return view('web.product.product-item-level', $data);
+    }
+
+    public function getListPriceList()
+    {
+        $datadb = DB::table('price_list as pl')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
+    public function addItemPrice(Request $request)
+    {
+        $data = $request->all();
+        $product_uoms = ProductUom::where('product', $data['id'])
+            ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
+            ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
+            ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->get();        
+
+        $data_satuan = [];
+        foreach ($product_uoms as $key => $value) {
+            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
+        }
+        $data_satuan = collect($data_satuan)->unique()->values()->all();
+        $result_satuan = [];
+        foreach ($data_satuan as $key => $value) {
+            list($id, $name) = explode('//', $value);
+            $result_satuan[] = [
+                'id'=> trim($id),
+                'name'=> trim($name)
+            ];
+        }
+        $data['data_satuan'] = $result_satuan;
+        $data['tipe_price'] = $this->getListPriceList();
+        return view('web.product.product-item-price', $data);
+    }
+
+      public function showDataCustomer(Request $request){
+        $data = $request->all();
+        return view('web.product.modal.datacustomer', $data);
     }
 }

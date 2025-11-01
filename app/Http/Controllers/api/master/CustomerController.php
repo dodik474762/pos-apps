@@ -27,9 +27,15 @@ class CustomerController extends Controller
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-                'cc.category as customer_category_name'
+                'cc.category as customer_category_name',
+                'r.name as city_name',
+                'k.name as kecamatan_name',
+                'kl.name as kelurahan_name',
             ])
             ->join('customer_category as cc', 'cc.id', 'm.customer_category')
+            ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
             ->whereNull('m.deleted');
 
         if (isset($_POST)) {

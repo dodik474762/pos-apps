@@ -8,8 +8,10 @@ use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductType;
 use App\Models\Master\ProductUom;
+use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -91,12 +93,54 @@ class ProductController extends Controller
         return $data;
     }
 
-    public function getListProductUom($product){
+    public function getListProductUom($product)
+    {
         $data = ProductUom::where('product', $product)
-        ->orderBy('level')
-        ->get();
+            ->orderBy('level')
+            ->get();
 
         return $data;
+    }
+
+    public function getListProductUomPrice($product)
+    {
+        $data = ProductUomPrice::where('product', $product)
+            ->orderBy('id')
+            ->get();
+
+        return $data;
+    }
+
+
+    public function getListPriceList()
+    {
+        $datadb = DB::table('price_list as pl')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
+    public function getListSatuanUom($product)
+    {
+        $product_uoms = ProductUom::where('product', $product)
+            ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
+            ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
+            ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->get();
+
+        $data_satuan = [];
+        foreach ($product_uoms as $key => $value) {
+            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
+        }
+        $data_satuan = collect($data_satuan)->unique()->values()->all();
+        $result_satuan = [];
+        foreach ($data_satuan as $key => $value) {
+            list($id, $name) = explode('//', $value);
+            $result_satuan[] = [
+                'id' => trim($id),
+                'name' => trim($name)
+            ];
+        }
+        return $result_satuan;
     }
 
     public function ubah(Request $request)
@@ -108,10 +152,13 @@ class ProductController extends Controller
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
 
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
+        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['product_logs'] = $this->getProductLog($data['id']);
         $data['product_uoms'] = $this->getListProductUom($data['id']);
+        $data['tipe_price'] = $this->getListPriceList();
+        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

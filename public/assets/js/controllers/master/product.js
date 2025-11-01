@@ -1,7 +1,12 @@
 let filesUpload = null;
+let elmChoose;
 let Product = {
     module: () => {
         return "master/product";
+    },
+
+    moduleApiCustomer: () => {
+        return "api/master/customer";
     },
 
     csrf_token: () => {
@@ -352,11 +357,152 @@ let Product = {
                 tableatuan.append(resp);
             },
         });
-    },
+    },    
 
     removeItemLevel:(elm)=>{
         $(elm).closest('tr').remove();
-    }
+    },
+
+    addItemPrice: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $('input#id').val();
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "addItemPrice",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const tablePrice = $('table#table-price').find('tbody');
+                tablePrice.append(resp);
+            },
+        });
+    },
+
+    showDataCustomer: (elm) => {
+        let params = {};
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "showDataCustomer",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                Product.getDataCustomer();
+            },
+        });
+    },
+
+    getDataCustomer: () => {
+        let tableData = $("table#table-data-modal");
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(Product.moduleApiCustomer()) + `getData`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": Product.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                 {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "customer_category_name",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="Product.pilihData(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+
+     pilihData: (elm, e) => {
+        e.preventDefault();
+        let nama_customer = $(elm).attr("nama_customer");
+        let data_id = $(elm).attr("data_id");
+        $(elmChoose).closest('div').find('input').val(data_id + "//" + nama_customer);
+        $("button.btn-close").trigger("click");
+    },
+
+    removeItemPrice:(elm)=>{
+        $(elm).closest('tr').remove();
+    },
 };
 
 $(function () {

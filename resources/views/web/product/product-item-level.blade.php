@@ -1,4 +1,4 @@
-<tr>
+<tr data_id="">
     <td class="text-center">
         <button class="btn btn-sm btn-danger" onclick="Product.removeItemLevel(this)"><i class="bx bx-trash-alt"></i></button>
     </td>
