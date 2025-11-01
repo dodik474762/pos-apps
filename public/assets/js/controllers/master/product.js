@@ -404,6 +404,41 @@ let Product = {
         });
     },
     
+    removeUomPrice: (id) => {
+        let params = {
+            id: id,
+            product: $('input#id').val()
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "removeUomPrice",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if(resp.is_valid){
+                    message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                }else{
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+    
     addItemPrice: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -542,7 +577,13 @@ let Product = {
     },
 
     removeItemPrice:(elm)=>{
-        $(elm).closest('tr').remove();
+         e.preventDefault();
+        const data_id = $(elm).closest('tr').attr('data_id');
+        if(data_id == ''){
+            $(elm).closest('tr').remove();
+        }else{
+           Product.removeUomPrice(data_id);
+        }
     },
 };
 

@@ -28,7 +28,7 @@
                         <input type="hidden" id="price_uom" name="price_uom[]" value="{{ $v->id }}">
                         <tr data_id="{{ $v->id }}">
                             <td class="text-center">
-                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemPrice(this)"><i
+                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemPrice(this, event)"><i
                                         class="bx bx-trash-alt"></i></button>
                             </td>
                             <td>
