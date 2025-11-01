@@ -11,6 +11,7 @@ use App\Http\Controllers\api\master\MenuController as MasterMenuController;
 use App\Http\Controllers\api\master\PermissionsController as MasterPermissionsController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
+use App\Http\Controllers\api\master\ProvinceController as MasterProvinceController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\web\master\MenuController;
 use App\Http\Controllers\web\master\PermissionsController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
+use App\Http\Controllers\web\master\ProvinceController;
 use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\RoutingApprovalController;
 use App\Http\Controllers\web\master\UnitController;
@@ -111,6 +113,10 @@ Route::get('master/dayoff/ubah', [DayoffController::class, 'ubah']);
 Route::get('master/working_hours', [WorkingHourController::class, 'index']);
 Route::get('master/working_hours/add', [WorkingHourController::class, 'add']);
 Route::get('master/working_hours/ubah', [WorkingHourController::class, 'ubah']);
+
+Route::get('master/province', [ProvinceController::class, 'index']);
+Route::get('master/province/add', [ProvinceController::class, 'add']);
+Route::get('master/province/ubah', [ProvinceController::class, 'ubah']);
 
 /*API */
 
@@ -203,4 +209,9 @@ Route::post('api/master/working_hours/getData', [MasterWorkingHourController::cl
 Route::post('api/master/working_hours/submit', [MasterWorkingHourController::class, 'submit']);
 Route::post('api/master/working_hours/delete', [MasterWorkingHourController::class, 'delete']);
 Route::post('api/master/working_hours/confirmDelete', [MasterWorkingHourController::class, 'confirmDelete']);
+
+Route::post('api/master/province/getData', [MasterProvinceController::class, 'getData']);
+Route::post('api/master/province/submit', [MasterProvinceController::class, 'submit']);
+Route::post('api/master/province/delete', [MasterProvinceController::class, 'delete']);
+Route::post('api/master/province/confirmDelete', [MasterProvinceController::class, 'confirmDelete']);
 /*API */
