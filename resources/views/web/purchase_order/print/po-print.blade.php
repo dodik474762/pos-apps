@@ -55,7 +55,7 @@
             width: 90px;
         }
 
-        /* 🔹 Ukuran font lebih kecil hanya untuk tabel detail barang */
+        /* 🔹 Ukuran font kecil untuk tabel detail barang */
         .table-detail th,
         .table-detail td {
             font-size: 10px;
@@ -73,18 +73,20 @@
     <table class="header-table" style="width:100%;">
         <tr>
             <td style="width: 90px;">
-                {{-- Pastikan path logo benar sesuai lokasi file --}}
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
             </td>
             <td style="text-align: left;">
                 <h3 style="margin:0; padding:0;">{{ $company->nama_company }}</h3>
-                <small>
-                    {!! $company->alamat !!}
-                </small>
+                <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
                 <h4 style="margin:0; padding:0;">PURCHASE ORDER</h4>
                 <small>No: {{ $data->code }}</small>
+                <br>
+                {{-- QR Code (otomatis di-generate) --}}
+                <div style="margin-top:5px;">
+                    {{-- {!! base64_encode(QrCode::format('png')->size(70)->generate($data->code)) !!} --}}
+                </div>
             </td>
         </tr>
     </table>
@@ -161,5 +163,4 @@
         </tr>
     </table>
 </body>
-
 </html>

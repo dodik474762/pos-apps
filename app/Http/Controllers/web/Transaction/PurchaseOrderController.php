@@ -11,6 +11,7 @@ use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PurchaseOrderController extends Controller
 {
@@ -113,6 +114,8 @@ class PurchaseOrderController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = PurchaseOrder::with(['vendors', 'warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
+        $qr = '';
         // echo '<pre>';
         // print_r($data);
         // die;
@@ -120,7 +123,7 @@ class PurchaseOrderController extends Controller
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.purchase_order.print.po-print', compact('data', 'total', 'company'))
+        $pdf = Pdf::loadView('web.purchase_order.print.po-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PO-' . $data->code . '.pdf');
