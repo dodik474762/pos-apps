@@ -26,7 +26,7 @@
         <div class="card">
             <div class="card-body">
                 {{-- <form onsubmit="Product.submit(this, event)" enctype="multipart/form-data"> --}}
-                <form action="{{ url('/api/master/product/submit') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ url('/api/master/product/submit') }}" method="POST" enctype="multipart/form-data" id="form-product">
                      @csrf
                     <input type="hidden" id="id" name="id" value="{{ isset($id) ? $id : '' }}">
                     <div class="row">
@@ -66,7 +66,7 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="">File Catalog</label>
+                                <label for="">File Produk</label>
                                 <div class="input-group">
                                     {{-- <button class="btn btn-outline-secondary" type="button" id="button-addon1"
                                         onclick="Product.addFile(this)">Choose
@@ -78,7 +78,7 @@
                                                 File {{ $data->files }}</a>
                                         @endif
                                     @endif
-                                    <input id="file" name="file" type="file" readonly class="form-control required"
+                                    <input id="file" name="file" type="file" readonly class="form-control"
                                         placeholder="Pilih Data File" aria-label="Pilih Data File" src=""
                                         error="Data File" aria-describedby="button-addon1"
                                         value="{{ isset($data->id) ? $data->files : '' }}">
@@ -89,9 +89,10 @@
                         </div>
                     </div>
 
-                    @if (isset($id))                        
+                    @if (isset($id))
                         @include('web.product.product-list-item-level')
                         @include('web.product.product-list-item-price')
+                        @include('web.product.product-list-disc-strata')
                     @endif
 
                     <div class="text-end">
@@ -101,6 +102,7 @@
                                 Submit
                             </button> --}}
                             <button type="submit"
+                                onclick="Product.submit(this, event)"
                                 class="btn btn-success waves-effect waves-light me-1">
                                 Submit
                             </button>

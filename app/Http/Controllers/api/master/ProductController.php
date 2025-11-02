@@ -4,15 +4,19 @@ namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\web\master\ProductController as MasterProductController;
+use App\Models\Master\CustomerCategory;
 use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
+use App\Models\Master\ProductDisc;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProductController extends Controller
 {
@@ -156,9 +160,8 @@ class ProductController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
-        
-        // echo '<pre>';
-        // print_r($data);die;
+        $user = session()->all();
+
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -220,7 +223,7 @@ class ProductController extends Controller
                     }
                 }
             }
-           
+
             if (isset($data['uom_id'])) {
                 if (!empty($data['uom_id'])) {
                     for ($i = 0; $i < count($data['uom_id']); $i++) {
@@ -230,12 +233,39 @@ class ProductController extends Controller
                         $product_uom_price->price_list = $data['type_price'][$i];
                         $product_uom_price->price = $data['price'][$i];
                         $product_uom_price->date_start = $data['date_start'][$i];
-                        if($data['customer'][$i] != ''){
+                        if ($data['customer'][$i] != '') {
                             list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
                             $product_uom_price->customer = $id_cust;
                             $product_uom_price->customer_name = $name_cust;
                         }
                         $product_uom_price->save();
+                    }
+                }
+            }
+
+            if (isset($data['uom_disc_id'])) {
+                if (!empty($data['uom_disc_id'])) {
+                    for ($i = 0; $i < count($data['uom_disc_id']); $i++) {
+                        $product_disc_strata = isset($data['disc_strata_id'][$i]) ? ProductDisc::find($data['disc_strata_id'][$i]) : new ProductDisc();
+                        $product_disc_strata->product = $data['id'];
+                        $product_disc_strata->unit = $data['uom_disc_id'][$i];
+                        $product_disc_strata->min_qty = $data['min_qty'][$i];
+                        $product_disc_strata->max_qty = $data['max_qty'][$i];
+                        $product_disc_strata->discount_type = $data['disc_type'][$i];
+                        $product_disc_strata->discount_value = $data['disc_value'][$i];
+                        $product_disc_strata->date_start = $data['date_start_disc'][$i];
+                        if ($data['customer_disc'][$i] != '') {
+                            list($id_cust, $name_cust) = explode('//', $data['customer_disc'][$i]);
+                            $product_disc_strata->customer = $id_cust;
+                            $product_disc_strata->customer_name = $name_cust;
+                        }
+                        if ($data['customer_category'][$i] != '') {
+                            $product_disc_strata->customer_category = $data['customer_category'][$i];
+                        }
+                        if(!isset($data['disc_strata_id'][$i])){
+                            $product_disc_strata->created_by = $user['user_id'];
+                        }
+                        $product_disc_strata->save();
                     }
                 }
             }
@@ -276,19 +306,19 @@ class ProductController extends Controller
         }
         return response()->json($result);
     }
-    
+
     public function removeUom(Request $request)
     {
         $data = $request->all();
-        
+
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
             $product_uom = ProductUom::find($data['id']);
             $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
-            ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
-            if(!empty($product_uom_price)){
+                ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
+            if (!empty($product_uom_price)) {
                 DB::rollBack();
                 $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di price list';
                 return response()->json($result);
@@ -304,11 +334,11 @@ class ProductController extends Controller
         }
         return response()->json($result);
     }
-    
+
     public function removeUomPrice(Request $request)
     {
         $data = $request->all();
-        
+
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -372,7 +402,7 @@ class ProductController extends Controller
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
             ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
-            ->get();        
+            ->get();
 
         $data_satuan = [];
         foreach ($product_uoms as $key => $value) {
@@ -384,8 +414,8 @@ class ProductController extends Controller
         foreach ($data_satuan as $key => $value) {
             list($id, $name) = explode('//', $value);
             $result_satuan[] = [
-                'id'=> trim($id),
-                'name'=> trim($name)
+                'id' => trim($id),
+                'name' => trim($name)
             ];
         }
         $data['data_satuan'] = $result_satuan;
@@ -393,7 +423,37 @@ class ProductController extends Controller
         return view('web.product.product-item-price', $data);
     }
 
-      public function showDataCustomer(Request $request){
+    public function addItemDiscStrata(Request $request)
+    {
+        $data = $request->all();
+        $product_uoms = ProductUom::where('product', $data['id'])
+            ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
+            ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
+            ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->get();
+
+        $data_satuan = [];
+        foreach ($product_uoms as $key => $value) {
+            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
+        }
+        $data_satuan = collect($data_satuan)->unique()->values()->all();
+        $result_satuan = [];
+        foreach ($data_satuan as $key => $value) {
+            list($id, $name) = explode('//', $value);
+            $result_satuan[] = [
+                'id' => trim($id),
+                'name' => trim($name)
+            ];
+        }
+        $data['data_satuan'] = $result_satuan;
+        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        $data['data_disc_tipe'] = ['percent', 'nominal'];
+        return view('web.product.product-disc-strata', $data);
+    }
+
+    public function showDataCustomer(Request $request)
+    {
         $data = $request->all();
         return view('web.product.modal.datacustomer', $data);
     }

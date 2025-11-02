@@ -57,42 +57,7 @@ let Product = {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
-            let params = Product.getPostInput();
-            const formData = new FormData();
-            formData.append("data", JSON.stringify(params));
-            formData.append("files[]", filesUpload);
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                // data: params,
-                data: formData,
-                processData: false,
-                contentType: false,
-                url: url.base_url(Product.moduleApi()) + "submit",
-                headers: {
-                    "X-CSRF-TOKEN": Product.csrf_token(),
-                },
-                beforeSend: () => {
-                    message.loadingProses("Proses Simpan Data...");
-                },
-                error: function () {
-                    message.closeLoading();
-                    message.sweetError("Informasi", "Gagal");
-                },
-
-                success: function (resp) {
-                    message.closeLoading();
-                    if (resp.is_valid) {
-                        message.sweetSuccess();
-                        setTimeout(function () {
-                            // window.location.reload();
-                            Product.back();
-                        }, 1000);
-                    } else {
-                        message.sweetError("Informasi", resp.message);
-                    }
-                },
-            });
+            $("form#form-product").submit();
         } else {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }
@@ -353,26 +318,26 @@ let Product = {
 
             success: function (resp) {
                 message.closeLoading();
-                const tableatuan = $('table#table-satuan').find('tbody');
+                const tableatuan = $("table#table-satuan").find("tbody");
                 tableatuan.append(resp);
             },
         });
-    },    
+    },
 
-    removeItemLevel:(elm, e)=>{
+    removeItemLevel: (elm, e) => {
         e.preventDefault();
-        const data_id = $(elm).closest('tr').attr('data_id');
-        if(data_id == ''){
-            $(elm).closest('tr').remove();
-        }else{
-           Product.removeUom(data_id);
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            Product.removeUom(data_id);
         }
     },
 
     removeUom: (id) => {
         let params = {
             id: id,
-            product: $('input#id').val()
+            product: $("input#id").val(),
         };
         $.ajax({
             type: "POST",
@@ -392,22 +357,22 @@ let Product = {
 
             success: function (resp) {
                 message.closeLoading();
-                if(resp.is_valid){
+                if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
-                }else{
+                } else {
                     message.sweetError("Informasi", resp.message);
                 }
             },
         });
     },
-    
+
     removeUomPrice: (id) => {
         let params = {
             id: id,
-            product: $('input#id').val()
+            product: $("input#id").val(),
         };
         $.ajax({
             type: "POST",
@@ -427,22 +392,22 @@ let Product = {
 
             success: function (resp) {
                 message.closeLoading();
-                if(resp.is_valid){
+                if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
-                }else{
+                } else {
                     message.sweetError("Informasi", resp.message);
                 }
             },
         });
     },
-    
+
     addItemPrice: (elm, e) => {
         e.preventDefault();
         let params = {};
-        params.id = $('input#id').val();
+        params.id = $("input#id").val();
         $.ajax({
             type: "POST",
             dataType: "html",
@@ -461,7 +426,7 @@ let Product = {
 
             success: function (resp) {
                 message.closeLoading();
-                const tablePrice = $('table#table-price').find('tbody');
+                const tablePrice = $("table#table-price").find("tbody");
                 tablePrice.append(resp);
             },
         });
@@ -535,7 +500,7 @@ let Product = {
             },
             buttons: ["copy", "excel", "pdf", "colvis"],
             columns: [
-                 {
+                {
                     data: "id",
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
@@ -568,21 +533,62 @@ let Product = {
         });
     },
 
-     pilihData: (elm, e) => {
+    pilihData: (elm, e) => {
         e.preventDefault();
         let nama_customer = $(elm).attr("nama_customer");
         let data_id = $(elm).attr("data_id");
-        $(elmChoose).closest('div').find('input').val(data_id + "//" + nama_customer);
+        $(elmChoose)
+            .closest("div")
+            .find("input")
+            .val(data_id + "//" + nama_customer);
         $("button.btn-close").trigger("click");
     },
 
-    removeItemPrice:(elm)=>{
-         e.preventDefault();
-        const data_id = $(elm).closest('tr').attr('data_id');
-        if(data_id == ''){
-            $(elm).closest('tr').remove();
-        }else{
-           Product.removeUomPrice(data_id);
+    removeItemPrice: (elm) => {
+        e.preventDefault();
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            Product.removeUomPrice(data_id);
+        }
+    },
+
+    addItemDiscStrata: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $("input#id").val();
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "addItemDiscStrata",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const tablePrice = $("table#table-disc-strata").find("tbody");
+                tablePrice.append(resp);
+            },
+        });
+    },
+
+    removeItemDiscStrata: (elm, e) => {
+        e.preventDefault();
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            Product.removeDiscStrata(data_id);
         }
     },
 };

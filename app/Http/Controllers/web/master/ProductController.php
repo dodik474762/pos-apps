@@ -4,7 +4,9 @@ namespace App\Http\Controllers\web\master;
 
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\CustomerCategory;
 use App\Models\Master\ProductCatalog;
+use App\Models\Master\ProductDisc;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductType;
 use App\Models\Master\ProductUom;
@@ -12,6 +14,7 @@ use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProductController extends Controller
 {
@@ -111,6 +114,15 @@ class ProductController extends Controller
         return $data;
     }
 
+    public function getListProductDiscStrata($product)
+    {
+        $data = ProductDisc::where('product', $product)
+            ->orderBy('id')
+            ->get();
+
+        return $data;
+    }
+
 
     public function getListPriceList()
     {
@@ -147,6 +159,7 @@ class ProductController extends Controller
     {
         $api = new MasterProductController();
         $data = $request->all();
+
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
@@ -159,6 +172,9 @@ class ProductController extends Controller
         $data['product_uoms'] = $this->getListProductUom($data['id']);
         $data['tipe_price'] = $this->getListPriceList();
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
+        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        $data['data_disc_tipe'] = ['percent', 'nominal'];
+        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

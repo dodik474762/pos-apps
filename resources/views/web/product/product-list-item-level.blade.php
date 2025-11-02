@@ -13,15 +13,15 @@
                         <th style="width: 10%;">Konversi</th>
                     </tr>
                 </thead>
-                <tbody> 
+                <tbody>
                     <tr>
                         <td colspan="4">
                             <a href="javascript:;" class="btn btn-primary btn-sm"
                                 onclick="Product.addItemLevel(this, event)">Add
                                 Item</a>
                         </td>
-                    </tr>    
-                    
+                    </tr>
+
                     @foreach ($product_uoms as $v)
                         <input type="hidden" id="level_id" name="level_id[]" value="{{ $v->id }}">
                         <tr data_id="{{ $v->id }}">
