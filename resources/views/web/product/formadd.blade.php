@@ -93,6 +93,7 @@
                         @include('web.product.product-list-item-level')
                         @include('web.product.product-list-item-price')
                         @include('web.product.product-list-disc-strata')
+                        @include('web.product.product-list-disc-free')
                     @endif
 
                     <div class="text-end">

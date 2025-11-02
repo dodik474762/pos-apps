@@ -8,6 +8,7 @@ use App\Models\Master\CustomerCategory;
 use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductDisc;
+use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
@@ -50,6 +51,59 @@ class ProductController extends Controller
                     $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
+    public function getDataProduct()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'pt.type',
+                'u.name as unit_name',
+                'uo.name as unit_tujuan_name',
+                'uo.id as unit_tujuan_id',
+                'pu.id as id_uom'
+            ])
+            ->join('product_type as pt', 'pt.id', 'm.product_type')
+            ->join('product_uom as pu', 'pu.product', 'm.id')
+            ->join('unit as uo', 'uo.id', 'pu.unit_tujuan')
+            ->join('unit as u', 'u.id', 'm.unit')
+            ->whereNull('m.deleted')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uo.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -160,6 +214,8 @@ class ProductController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
         $user = session()->all();
 
         $result['is_valid'] = false;
@@ -210,9 +266,13 @@ class ProductController extends Controller
                 $roles->save();
             }
 
+            $unit_dasar_id = 0;
             if (isset($data['unit_dasar'])) {
                 if (!empty($data['unit_dasar'])) {
                     for ($i = 0; $i < count($data['unit_dasar']); $i++) {
+                        if($i == 0){
+                            $unit_dasar_id = $data['unit_dasar'][$i];
+                        }
                         $product_uom = isset($data['level_id'][$i]) ? ProductUom::find($data['level_id'][$i]) : new ProductUom();
                         $product_uom->product = $data['id'];
                         $product_uom->unit_dasar = $data['unit_dasar'][$i];
@@ -222,6 +282,12 @@ class ProductController extends Controller
                         $product_uom->save();
                     }
                 }
+            }
+
+            if($unit_dasar_id != 0){
+                $update = Product::find($data['id']);
+                $update->unit = $unit_dasar_id;
+                $update->save();
             }
 
             if (isset($data['uom_id'])) {
@@ -262,10 +328,43 @@ class ProductController extends Controller
                         if ($data['customer_category'][$i] != '') {
                             $product_disc_strata->customer_category = $data['customer_category'][$i];
                         }
-                        if(!isset($data['disc_strata_id'][$i])){
+                        if (!isset($data['disc_strata_id'][$i])) {
                             $product_disc_strata->created_by = $user['user_id'];
                         }
                         $product_disc_strata->save();
+                    }
+                }
+            }
+
+            if (isset($data['uom_disc_free_id'])) {
+                if (!empty($data['uom_disc_free_id'])) {
+                    for ($i = 0; $i < count($data['uom_disc_free_id']); $i++) {
+                        list($product_uom, $product, $product_name) = explode('//', $data['product_free'][$i]);
+                        list($unit, $unit_name) = explode('//', $data['product_free_unit'][$i]);
+                        $product_disc_free = isset($data['disc_free_id'][$i]) ? ProductFreeGood::find($data['disc_free_id'][$i]) : new ProductFreeGood();
+                        $product_disc_free->product = $data['id'];
+                        $product_disc_free->unit = $data['uom_disc_free_id'][$i];
+                        $product_disc_free->min_qty = $data['min_free_qty'][$i];
+                        $product_disc_free->max_qty = $data['max_free_qty'][$i];
+                        $product_disc_free->product_uom = $product_uom;
+                        $product_disc_free->free_product = $product;
+                        $product_disc_free->product_name = $product_name;
+                        $product_disc_free->free_unit = $unit;
+                        $product_disc_free->free_qty = $data['free_qty'][$i];
+                        $product_disc_free->unit_name = $unit_name;
+                        $product_disc_free->date_start = $data['date_start_free'][$i];
+                        if ($data['customer_disc_free'][$i] != '') {
+                            list($id_cust, $name_cust) = explode('//', $data['customer_disc_free'][$i]);
+                            $product_disc_free->customer = $id_cust;
+                            $product_disc_free->customer_name = $name_cust;
+                        }
+                        if ($data['customer_category_free'][$i] != '') {
+                            $product_disc_free->customer_category = $data['customer_category_free'][$i];
+                        }
+                        if (!isset($data['disc_free_id'][$i])) {
+                            $product_disc_free->created_by = $user['user_id'];
+                        }
+                        $product_disc_free->save();
                     }
                 }
             }
@@ -336,6 +435,35 @@ class ProductController extends Controller
     }
 
     public function removeUomPrice(Request $request)
+    {
+        $data = $request->all();
+
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            //code...
+            //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
+            // $product_uom = ProductUom::find($data['id']);
+            // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
+            // ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
+            // if(!empty($product_uom_price)){
+            //     DB::rollBack();
+            //     $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di price list';
+            //     return response()->json($result);
+            // }
+
+            // ProductUom::find($data['id'])->delete();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function removeDiscStrata(Request $request)
     {
         $data = $request->all();
 
@@ -452,9 +580,43 @@ class ProductController extends Controller
         return view('web.product.product-disc-strata', $data);
     }
 
+    public function addItemDiscFreeGood(Request $request)
+    {
+        $data = $request->all();
+        $product_uoms = ProductUom::where('product', $data['id'])
+            ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
+            ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
+            ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->get();
+
+        $data_satuan = [];
+        foreach ($product_uoms as $key => $value) {
+            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
+        }
+        $data_satuan = collect($data_satuan)->unique()->values()->all();
+        $result_satuan = [];
+        foreach ($data_satuan as $key => $value) {
+            list($id, $name) = explode('//', $value);
+            $result_satuan[] = [
+                'id' => trim($id),
+                'name' => trim($name)
+            ];
+        }
+        $data['data_satuan'] = $result_satuan;
+        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        return view('web.product.product-disc-free', $data);
+    }
+
     public function showDataCustomer(Request $request)
     {
         $data = $request->all();
         return view('web.product.modal.datacustomer', $data);
+    }
+
+    public function showDataProduct(Request $request)
+    {
+        $data = $request->all();
+        return view('web.product.modal.dataproduct', $data);
     }
 }
