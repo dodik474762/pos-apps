@@ -180,7 +180,11 @@ let PurchaseOrder = {
                 {
                     data: "id",
                     render: function (data, type, row) {
-                        var html = "";
+                        var html = `<a href='${url.base_url(
+                                PurchaseOrder.module()
+                            )}cetak?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PurchaseOrder.module()
