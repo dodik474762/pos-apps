@@ -102,27 +102,53 @@
                                 </tr>
                             </thead>
                             <tbody id="detail-body">
-                                <tr class="input" data_id="">
-                                    <td>
-                                        <div class="input-group">
-                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
-                                                onclick="PurchaseOrder.showDataProduct(this)">Pilih</button>
-                                            <input disabled id="product" name="product" type="text" class="form-control required"
-                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
-                                                aria-describedby="button-addon1"
-                                                value="">
-                                        </div>
-                                    </td>
-                                    <td data_id="" id="unit"></td>
-                                    <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control" id="price" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control" id="disc_persen" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control" id="disc_nominal" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
-                                    </td>
-                                </tr>
+                                @if (!empty($data_item))
+                                    @foreach ($data_item as $item)
+                                        <tr class="input" data_id="{{ $item->id }}">
+                                            <td>
+                                                <div class="input-group">
+                                                    <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                        onclick="PurchaseOrder.showDataProduct(this)">Pilih</button>
+                                                    <input disabled id="product" name="product" type="text" class="form-control required"
+                                                        error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                        aria-describedby="button-addon1"
+                                                        value="{{ $item->product_uom.'//'.$item->product.'//'.$item->product_name }}">
+                                                </div>
+                                            </td>
+                                            <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
+                                            <td><input type="number" class="form-control" id="qty" value="{{ $item->qty }}" min="1" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                            <td><input type="number" class="form-control" id="price" value="{{ $item->purchase_price }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                            <td><input type="number" class="form-control" id="disc_persen" value="{{ $item->diskon_persen }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                            <td><input type="number" class="form-control" id="disc_nominal" value="{{ $item->diskon_nominal }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                            <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr class="input" data_id="">
+                                        <td>
+                                            <div class="input-group">
+                                                <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                    onclick="PurchaseOrder.showDataProduct(this)">Pilih</button>
+                                                <input disabled id="product" name="product" type="text" class="form-control required"
+                                                    error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                    aria-describedby="button-addon1"
+                                                    value="">
+                                            </div>
+                                        </td>
+                                        <td data_id="" id="unit"></td>
+                                        <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                        <td><input type="number" class="form-control" id="price" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                        <td><input type="number" class="form-control" id="disc_persen" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                        <td><input type="number" class="form-control" id="disc_nominal" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                        <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                        </td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -130,7 +156,7 @@
                     <button type="button" class="btn btn-sm btn-primary mt-2" onclick="PurchaseOrder.addRow()">+ Tambah Barang</button>
 
                     <div class="text-end mt-4">
-                        <h5>Total: <span id="total-harga">0</span></h5>
+                        <h5>Total: <span id="total-harga">{{ isset($data->grand_total) ? $data->grand_total : 0 }}</span></h5>
                     </div>
 
                 </form>

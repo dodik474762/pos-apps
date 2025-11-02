@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Currency;
 use App\Models\Transaction\ProductUomCost;
 use App\Models\Transaction\ProductUomCostHistory;
 use App\Models\Transaction\PurchaseOrder;
@@ -76,6 +77,13 @@ class PurchaseOrderController extends Controller
         DB::beginTransaction();
         try {
             //code...
+            $currency = Currency::where('code', 'IDR')->first();
+            if(empty($currency)){
+                DB::rollBack();
+                $result['message'] = 'Currency IDR tidak ditemukan';
+                return response()->json($result);
+            }
+
             $roles = $data['id'] == '' ? new PurchaseOrder() : PurchaseOrder::find($data['id']);
             if ($data['id'] == '') {
                 $roles->code = generateNoPO();
@@ -87,6 +95,7 @@ class PurchaseOrderController extends Controller
             $roles->warehouse = $data['warehouse'];
             $roles->status = 'DRAFT';
             $roles->est_received_date = $data['est_received_date'];
+            $roles->currency = $currency->id;
             $roles->save();
             $hdrId = $roles->id;
 
@@ -94,6 +103,11 @@ class PurchaseOrderController extends Controller
             foreach ($data['items'] as $key => $value) {
                 if($value['remove'] == '1'){
                     $items = PurchaseOrderDetail::find($value['id']);
+                    if($items->status != 'open'){
+                        DB::rollBack();
+                        $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
+                        return response()->json($result);
+                    }
                     $items->deleted = now();
                     $items->save();
                 }else{
@@ -113,6 +127,14 @@ class PurchaseOrderController extends Controller
                         $items->qty_received = 0;
                     }
                     $items->save();
+
+                    if($value['id'] != ''){
+                        if($items->status != 'open'){
+                            DB::rollBack();
+                            $result['message'] = 'Tidak dapat diubah karena status sudah tidak open';
+                            return response()->json($result);
+                        }
+                    }
 
 
                     /*uom cost price */
@@ -174,6 +196,11 @@ class PurchaseOrderController extends Controller
         try {
             //code...
             $menu = PurchaseOrder::find($data['id']);
+            if($menu->status != 'DRAFT'){
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
+                return response()->json($result);
+            }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
