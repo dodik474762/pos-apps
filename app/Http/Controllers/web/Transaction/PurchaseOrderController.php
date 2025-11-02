@@ -4,6 +4,8 @@ namespace App\Http\Controllers\web\Transaction;
 
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\Vendor;
+use App\Models\Master\Warehouse;
 use Illuminate\Http\Request;
 
 class PurchaseOrderController extends Controller
@@ -58,10 +60,11 @@ class PurchaseOrderController extends Controller
     public function add()
     {
         $data['data'] = [];
+        $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['vendors'] = [];
-        $data['warehouses'] = [];
+        $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['products'] = [];
         $data['units'] = [];
         $view = view('web.purchase_order.formadd', $data);

@@ -86,6 +86,10 @@
                                                     <th>No</th>
                                                     <th>PO Number</th>
                                                     <th>Tanggal PO</th>
+                                                    <th>Supplier</th>
+                                                    <th>Grand Total</th>
+                                                    <th>Currency</th>
+                                                    <th>Dibuat Oleh</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

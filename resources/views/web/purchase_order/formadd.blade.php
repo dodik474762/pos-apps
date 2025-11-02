@@ -1,4 +1,6 @@
-<input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
+<button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
+  data-bs-target="#data-modal-karyawan"></button>
+<div id="content-modal-form"></div><input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 
 <!-- start page title -->
 <div class="row">
@@ -39,13 +41,19 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Tanggal Estimasi Diterima</label>
+                                <input type="date" id="est_received_date" class="form-control required" error="Tanggal PO"
+                                    value="{{ isset($data->est_received_date) ? $data->est_received_date : date('Y-m-d') }}">
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Vendor</label>
                                 <select class="form-control select2 required" id="vendor" error="Vendor">
                                     <option value=""></option>
                                     @foreach ($vendors as $vendor)
                                         <option value="{{ $vendor->id }}"
                                             {{ isset($data->vendor) && $data->vendor == $vendor->id ? 'selected' : '' }}>
-                                            {{ $vendor->name }}
+                                            {{ $vendor->nama_vendor }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -80,7 +88,7 @@
                     <h5 class="mb-3">Detail Barang</h5>
 
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="po-detail-table">
+                        <table class="table table-bordered" id="table-items">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 25%">Produk</th>
@@ -94,30 +102,25 @@
                                 </tr>
                             </thead>
                             <tbody id="detail-body">
-                                <tr>
+                                <tr class="input" data_id="">
                                     <td>
-                                        <select class="form-control select2 product" onchange="PurchaseOrder.onProductChange(this)">
-                                            <option value=""></option>
-                                            @foreach ($products as $product)
-                                                <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                onclick="PurchaseOrder.showDataProduct(this)">Pilih</button>
+                                            <input disabled id="product" name="product" type="text" class="form-control required"
+                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                aria-describedby="button-addon1"
+                                                value="">
+                                        </div>
                                     </td>
-                                    <td>
-                                        <select class="form-control select2 unit">
-                                            <option value=""></option>
-                                            @foreach ($units as $unit)
-                                                <option value="{{ $unit->id }}">{{ $unit->nama }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="number" class="form-control qty" value="1" min="1" onchange="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control price" value="0" onchange="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control disc_persen" value="0" onchange="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="number" class="form-control disc_nominal" value="0" onchange="PurchaseOrder.calcRow(this)"></td>
-                                    <td><input type="text" class="form-control subtotal" readonly value="0"></td>
+                                    <td data_id="" id="unit"></td>
+                                    <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                    <td><input type="number" class="form-control" id="price" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                    <td><input type="number" class="form-control" id="disc_persen" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                    <td><input type="number" class="form-control" id="disc_nominal" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                    <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)">x</button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
                                     </td>
                                 </tr>
                             </tbody>

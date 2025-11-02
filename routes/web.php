@@ -285,4 +285,5 @@ Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderCon
 Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
 Route::post('api/transaksi/purchase_order/delete', [TransactionPurchaseOrderController::class, 'delete']);
 Route::post('api/transaksi/purchase_order/confirmDelete', [TransactionPurchaseOrderController::class, 'confirmDelete']);
+Route::post('api/transaksi/purchase_order/showDataProduct', [TransactionPurchaseOrderController::class, 'showDataProduct']);
 /*API */
