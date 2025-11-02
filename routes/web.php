@@ -22,6 +22,7 @@ use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
+use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -46,6 +47,7 @@ use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
+use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -141,6 +143,10 @@ Route::get('master/kelurahan/ubah', [KelurahanController::class, 'ubah']);
 Route::get('master/vendor', [VendorController::class, 'index']);
 Route::get('master/vendor/add', [VendorController::class, 'add']);
 Route::get('master/vendor/ubah', [VendorController::class, 'ubah']);
+
+Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
+Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
+Route::get('transaksi/purchase_order/ubah', [PurchaseOrderController::class, 'ubah']);
 
 /*API */
 
@@ -274,4 +280,9 @@ Route::post('api/master/vendor/submit', [MasterVendorController::class, 'submit'
 Route::post('api/master/vendor/delete', [MasterVendorController::class, 'delete']);
 Route::post('api/master/vendor/confirmDelete', [MasterVendorController::class, 'confirmDelete']);
 Route::post('api/master/vendor/getCity', [MasterVendorController::class, 'getCity']);
+
+Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderController::class, 'getData']);
+Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
+Route::post('api/transaksi/purchase_order/delete', [TransactionPurchaseOrderController::class, 'delete']);
+Route::post('api/transaksi/purchase_order/confirmDelete', [TransactionPurchaseOrderController::class, 'confirmDelete']);
 /*API */
