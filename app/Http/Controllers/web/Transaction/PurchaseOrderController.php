@@ -4,14 +4,17 @@ namespace App\Http\Controllers\web\Transaction;
 
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\CompanyModel;
 use App\Models\Master\Vendor;
 use App\Models\Master\Warehouse;
+use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseOrderController extends Controller
 {
-     public $akses_menu = [];
+    public $akses_menu = [];
     public function __construct()
     {
         date_default_timezone_set('Asia/Jakarta');
@@ -84,15 +87,15 @@ class PurchaseOrderController extends Controller
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['data_item'] = PurchaseOrderDetail::where('purchase_order_detail.purchase_order', $data['id'])
-        ->select([
-            'purchase_order_detail.*',
-            'p.id as product_id',
-            'p.name as product_name',
-            'u.name as unit_name',
-        ])
-        ->join('product as p', 'p.id', 'purchase_order_detail.product')
-        ->join('unit as u', 'u.id', 'purchase_order_detail.unit')
-        ->get();
+            ->select([
+                'purchase_order_detail.*',
+                'p.id as product_id',
+                'p.name as product_name',
+                'u.name as unit_name',
+            ])
+            ->join('product as p', 'p.id', 'purchase_order_detail.product')
+            ->join('unit as u', 'u.id', 'purchase_order_detail.unit')
+            ->get();
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -103,5 +106,23 @@ class PurchaseOrderController extends Controller
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
+    }
+
+    public function cetak(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data = PurchaseOrder::with(['vendors', 'warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
+        // echo '<pre>';
+        // print_r($data);
+        // die;
+
+        // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
+        $total = $data->items->sum('subtotal');
+
+        $pdf = Pdf::loadView('web.purchase_order.print.po-print', compact('data', 'total', 'company'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('PO-' . $data->code . '.pdf');
     }
 }

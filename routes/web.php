@@ -147,6 +147,7 @@ Route::get('master/vendor/ubah', [VendorController::class, 'ubah']);
 Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
 Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
 Route::get('transaksi/purchase_order/ubah', [PurchaseOrderController::class, 'ubah']);
+Route::get('transaksi/purchase_order/cetak', [PurchaseOrderController::class, 'cetak']);
 
 /*API */
 
