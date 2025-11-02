@@ -94,7 +94,7 @@
                                         placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
                                 </div>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 d-none">
                                 <label>Price List</label>
                                 <div>
                                     <select name="" id="price_list" class="form-control">
@@ -165,7 +165,7 @@
                                     <input tabindex="10" type="number" id="payment_terms" class="form-control required" error="Payment Terms"
                                         placeholder="Payment Terms" value="{{ isset($data->payment_terms) ? $data->payment_terms : '' }}">
                                 </div>
-                            </div>                            
+                            </div>
                         </div>
                     </div>
                 </form>
