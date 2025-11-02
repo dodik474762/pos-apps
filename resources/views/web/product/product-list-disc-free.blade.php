@@ -28,15 +28,16 @@
                         </td>
                     </tr>
 
-                    {{-- @foreach ($product_disc_strata as $v)
-                        <input type="hidden" id="disc_strata_id" name="disc_strata_id[]" value="{{ $v->id }}">
+                    @foreach ($product_disc_free as $v)
+                        <input type="hidden" id="disc_free_id" name="disc_free_id[]" value="{{ $v->id }}">
                         <tr data_id="{{ $v->id }}">
                             <td class="text-center">
-                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemDiscFreeGood(this, event)"><i
+                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemDiscFree(this, event)"><i
                                         class="bx bx-trash-alt"></i></button>
                             </td>
                             <td>
-                                <select id="uom_disc_id" name="uom_disc_id[]" class="form-control required" error="Unit">
+                                <select id="uom_disc_free_id" name="uom_disc_free_id[]" class="form-control required"
+                                    error="Unit">
                                     @foreach ($data_satuan_uom as $item)
                                         <option value="{{ $item['id'] }}" {{ $v->unit == $item['id'] ? 'selected' : '' }}>
                                             {{ $item['name'] }}
@@ -45,7 +46,7 @@
                                 </select>
                             </td>
                             <td>
-                                <select id="customer_category" name="customer_category[]" class="form-control"
+                                <select id="customer_category_free" name="customer_category_free[]" class="form-control"
                                     error="Kategori">
                                     <option value=""></option>
                                     @foreach ($data_customer_category as $item)
@@ -54,41 +55,48 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" id="min_qty" name="min_qty[]" class="form-control required"
+                                <input type="number" id="min_free_qty" name="min_free_qty[]" class="form-control required"
                                     error="Min Qty" min="1" value="{{ $v->min_qty }}">
                             </td>
                             <td>
-                                <input type="number" id="max_qty" name="max_qty[]" class="form-control required"
+                                <input type="number" id="max_free_qty" name="max_free_qty[]" class="form-control required"
                                     error="Max Qty" min="1" value="{{ $v->max_qty }}">
                             </td>
                             <td>
-                                <select id="disc_type" name="disc_type[]" class="form-control required" error="Disc Tipe">
-                                    @foreach ($data_disc_tipe as $item)
-                                        <option value="{{ $item }}" {{ $v->discount_type == $item ? 'selected' : '' }}>
-                                            {{ strtoupper($item) }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                        onclick="Product.showDataProduct(this)">Pilih</button>
+                                    <input id="product_free" name="product_free[]" type="text" class="form-control required"
+                                        error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                        aria-describedby="button-addon1"
+                                        value="{{ $v->product_uom . '//' . $v->free_product . '//' . $v->product_name }}">
+                                </div>
                             </td>
                             <td>
-                                <input type="number" id="disc_value" name="disc_value[]" class="form-control required"
-                                    error="Disc Nilai" min="1" value="{{ $v->discount_value }}">
+                                <input type="text" id="product_free_unit" name="product_free_unit[]"
+                                    class="form-control required" error="Free Unit"
+                                    value="{{ $v->free_unit . '//' . $v->unit_name }}">
                             </td>
                             <td>
-                                <input type="date" id="date_start" name="date_start_disc[]" class="form-control required"
-                                    error="Tanggal Mulai" value="{{ $v->date_start }}">
+                                <input type="number" id="free_qty" name="free_qty[]" class="form-control required"
+                                    error="Free Qty" min="1" value="{{ $v->free_qty }}">
+                            </td>
+                            <td>
+                                <input type="date" id="date_start_free" name="date_start_free[]"
+                                    class="form-control required" error="Tanggal Mulai" value="{{ $v->date_start }}">
                             </td>
                             <td>
                                 <div class="input-group">
                                     <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                         onclick="Product.showDataCustomer(this)">Pilih</button>
-                                    <input id="customer_disc" name="customer_disc[]" type="text" class="form-control" error="Customer"
-                                        placeholder="Pilih Data Customer" aria-label="Pilih Data Customer"
+                                    <input id="customer_disc_free" name="customer_disc_free[]" type="text" class="form-control"
+                                        error="Customer" placeholder="Pilih Data Customer" aria-label="Pilih Data Customer"
                                         aria-describedby="button-addon1"
                                         value="{{ $v->customer == '' ? '' : $v->customer . '//' . $v->customer_name }}">
                                 </div>
                             </td>
                         </tr>
-                    @endforeach --}}
+                    @endforeach
                 </tbody>
             </table>
         </div>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\CustomerCategory;
 use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductDisc;
+use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductType;
 use App\Models\Master\ProductUom;
@@ -123,6 +124,15 @@ class ProductController extends Controller
         return $data;
     }
 
+    public function getListProductDiscFree($product)
+    {
+        $data = ProductFreeGood::where('product', $product)
+            ->orderBy('id')
+            ->get();
+
+        return $data;
+    }
+
 
     public function getListPriceList()
     {
@@ -175,6 +185,7 @@ class ProductController extends Controller
         $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
+        $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
