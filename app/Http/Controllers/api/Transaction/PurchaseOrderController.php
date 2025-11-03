@@ -122,6 +122,10 @@ class PurchaseOrderController extends Controller
                     $items->diskon_nominal = $value['disc_nominal'];
                     $items->est_received_date = $data['est_received_date'];
                     $items->product_uom = $product_uom;
+                    $items->subtotal = $value['subtotal'];
+                    $items->tax = $value['tax'];
+                    $items->tax_rate = $value['tax_rate'];
+                    $items->tax_amount = $value['tax_amount'];
                     if($value['id'] == ''){
                         $items->status = 'open';
                         $items->qty_received = 0;

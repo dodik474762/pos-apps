@@ -90,16 +90,17 @@
                     <div class="table-responsive">
                         <table class="table table-bordered" id="table-items">
                             <thead class="table-light">
-                                <tr>
-                                    <th style="width: 25%">Produk</th>
-                                    <th style="width: 10%">Satuan</th>
-                                    <th style="width: 10%">Qty</th>
-                                    <th style="width: 15%">Harga Beli</th>
-                                    <th style="width: 10%">Disc (%)</th>
-                                    <th style="width: 10%">Disc (Rp)</th>
-                                    <th style="width: 15%">Subtotal</th>
-                                    <th style="width: 5%"></th>
-                                </tr>
+                                  <tr>
+                                        <th style="width: 20%">Produk</th>
+                                        <th style="width: 10%">Satuan</th>
+                                        <th style="width: 8%">Qty</th>
+                                        <th style="width: 12%">Harga Beli</th>
+                                        <th style="width: 8%">Disc (%)</th>
+                                        <th style="width: 8%">Disc (Rp)</th>
+                                        <th style="width: 12%">Pajak</th>   <!-- ✅ Kolom baru -->
+                                        <th style="width: 12%">Subtotal</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
                             </thead>
                             <tbody id="detail-body">
                                 @if (!empty($data_item))
@@ -120,6 +121,17 @@
                                             <td><input type="number" class="form-control" id="price" value="{{ $item->purchase_price }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
                                             <td><input type="number" class="form-control" id="disc_persen" value="{{ $item->diskon_persen }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
                                             <td><input type="number" class="form-control" id="disc_nominal" value="{{ $item->diskon_nominal }}" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                            <td>
+                                                <select class="form-control" id="tax" onchange="PurchaseOrder.calcRow(this)">
+                                                    <option value="" data-rate="0">Tanpa Pajak</option>
+                                                    @foreach ($taxes as $tax)
+                                                        <option value="{{ $tax->id }}" data-rate="{{ $tax->rate }}"
+                                                            {{ isset($item->tax) && $item->tax == $tax->id ? 'selected' : '' }}>
+                                                            {{ $tax->tax_name }} ({{ $tax->rate }}%)
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
                                             <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
@@ -143,6 +155,16 @@
                                         <td><input type="number" class="form-control" id="price" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
                                         <td><input type="number" class="form-control" id="disc_persen" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
                                         <td><input type="number" class="form-control" id="disc_nominal" value="0" onkeyup="PurchaseOrder.calcRow(this)"></td>
+                                        <td>
+                                            <select class="form-control" id="tax" onchange="PurchaseOrder.calcRow(this)">
+                                                <option value="" data-rate="0">Tanpa Pajak</option>
+                                                @foreach ($taxes as $tax)
+                                                    <option value="{{ $tax->id }}" data-rate="{{ $tax->rate }}">
+                                                        {{ $tax->tax_name }} ({{ $tax->rate }}%)
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
                                         <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-danger" onclick="PurchaseOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>

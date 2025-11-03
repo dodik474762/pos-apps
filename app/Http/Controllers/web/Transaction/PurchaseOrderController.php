@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
+use App\Models\Master\Tax;
 use App\Models\Master\Vendor;
 use App\Models\Master\Warehouse;
 use App\Models\Transaction\PurchaseOrder;
@@ -70,6 +71,10 @@ class PurchaseOrderController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = [];
         $view = view('web.purchase_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -87,6 +92,10 @@ class PurchaseOrderController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = PurchaseOrderDetail::where('purchase_order_detail.purchase_order', $data['id'])
             ->select([
                 'purchase_order_detail.*',

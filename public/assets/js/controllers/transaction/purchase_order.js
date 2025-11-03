@@ -34,20 +34,35 @@ let PurchaseOrder = {
         window.location.href = url.base_url(PurchaseOrder.module()) + "add";
     },
 
-    getPostItem:()=>{
-        const table = $('table#table-items').find('tbody').find('tr.input');
+    getPostItem: () => {
+        const table = $("table#table-items tbody tr.input");
         let result = [];
-        table.each((index, elm)=>{
+
+        table.each((index, elm) => {
             result.push({
-                id: $(elm).attr('data_id'),
-                product: $(elm).find('#product').val(),
-                qty: $(elm).find('#qty').val(),
-                unit: $(elm).find('td#unit').attr('data_id'),
-                price: $(elm).find('#price').val(),
-                disc_persen: $(elm).find('#disc_persen').val() == '' ? 0 : $(elm).find('#disc_persen').val(),
-                disc_nominal: $(elm).find('#disc_nominal').val() == '' ? 0 : $(elm).find('#disc_nominal').val(),
-                subtotal: $(elm).find('#subtotal').val() == '' ? 0 : $(elm).find('#subtotal').val(),
-                remove: $(elm).hasClass('remove') ? 1 : 0,
+                id: $(elm).attr("data_id"),
+                product: $(elm).find("#product").val(),
+                qty: $(elm).find("#qty").val(),
+                unit: $(elm).find("td#unit").attr("data_id"),
+                price: $(elm).find("#price").val(),
+                disc_persen:
+                    $(elm).find("#disc_persen").val() == ""
+                        ? 0
+                        : $(elm).find("#disc_persen").val(),
+                disc_nominal:
+                    $(elm).find("#disc_nominal").val() == ""
+                        ? 0
+                        : $(elm).find("#disc_nominal").val(),
+                subtotal:
+                    $(elm).find("#subtotal").val() == ""
+                        ? 0
+                        : $(elm).find("#subtotal").val(),
+                tax:
+                    $(elm).find("select#tax").val() == "" ? 0 : $(elm).find("select#tax").val(),
+                tax_rate:
+                    $(elm).find("select#tax option:selected").data("rate") || 0,
+                tax_amount: $(elm).data("tax_amount") || 0,
+                remove: $(elm).hasClass("remove") ? 1 : 0,
             });
         });
 
@@ -181,10 +196,10 @@ let PurchaseOrder = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                                PurchaseOrder.module()
-                            )}cetak?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                            PurchaseOrder.module()
+                        )}cetak?id=${data}' data_id="${
+                            row.id
+                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PurchaseOrder.module()
@@ -397,63 +412,90 @@ let PurchaseOrder = {
             .closest("div")
             .find("input")
             .val(product_uom_id + "//" + produk_id + "//" + produk_name);
-            console.log($(elmChoose)
-            .closest("tr")
-            .find("td#unit"));
-        $(elmChoose)
-            .closest("tr")
-            .find("td#unit")
-            .text(unit_name);
-        $(elmChoose)
-            .closest("tr")
-            .find("td#unit").attr('data_id', unit);
+        console.log($(elmChoose).closest("tr").find("td#unit"));
+        $(elmChoose).closest("tr").find("td#unit").text(unit_name);
+        $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
         $("button.btn-close").trigger("click");
     },
 
-    calcRow:(elm)=>{
-        const qty = isNaN(parseFloat($(elm).closest('tr').find('input#qty').val())) ? 0 : parseFloat($(elm).closest('tr').find('input#qty').val());
-        const price = isNaN(parseFloat($(elm).closest('tr').find('input#price').val())) ? 0 : parseFloat($(elm).closest('tr').find('input#price').val());
-        const disc_persen = isNaN(parseFloat($(elm).closest('tr').find('input#disc_persen').val())) ? 0 : parseFloat($(elm).closest('tr').find('input#disc_persen').val());
-        const disc_nominal = isNaN(parseFloat($(elm).closest('tr').find('input#disc_nominal').val())) ? 0 : parseFloat($(elm).closest('tr').find('input#disc_nominal').val());
+    calcRow: (elm) => {
+        const tr = $(elm).closest("tr");
 
+        // Ambil value input
+        const qty = parseFloat(tr.find("input#qty").val()) || 0;
+        const price = parseFloat(tr.find("input#price").val()) || 0;
+        const disc_persen = parseFloat(tr.find("input#disc_persen").val()) || 0;
+        const disc_nominal =
+            parseFloat(tr.find("input#disc_nominal").val()) || 0;
+
+        // Hitung subtotal sebelum pajak
         const subTotal = qty * price;
-        const disc = subTotal * disc_persen / 100;
-        const subtotalResult = subTotal - disc - disc_nominal;
-        $(elm).closest('tr').find('input#subtotal').val(subtotalResult);
+        const disc = subTotal * (disc_persen / 100) + disc_nominal;
+        const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
 
+        // Ambil rate pajak dari option terpilih
+        const taxRate =
+            parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
+        const taxAmount = dpp * (taxRate / 100);
+
+        // Total per baris = DPP + pajak
+        const subtotalResult = dpp + taxAmount;
+
+        // Update input subtotal
+        tr.find("input#subtotal").val(subtotalResult.toFixed(2));
+
+        // Simpan data pajak di row untuk reference
+        tr.data("dpp", dpp);
+        tr.data("tax_amount", taxAmount);
+        tr.data("tax_rate", taxRate);
+
+        // Hitung summary total
         PurchaseOrder.hitungSummaryAll();
     },
 
-    hitungSummaryAll:()=>{
-        const table = $('table#table-items').find('tbody').find('tr.input');
-        let total = 0;
-        table.each((index, elm)=>{
-            const subtotal = isNaN(parseFloat($(elm).find('input#subtotal').val())) ? 0 : parseFloat($(elm).find('input#subtotal').val());
-            total += subtotal;
-        })
+    hitungSummaryAll: () => {
+        const table = $("table#table-items tbody tr.input");
+        let totalDpp = 0;
+        let totalTax = 0;
 
-        $('#total-harga').text(total);
+        table.each((index, elm) => {
+            const subtotal =
+                parseFloat($(elm).find("input#subtotal").val()) || 0;
+            const tax = parseFloat($(elm).data("tax_amount")) || 0;
+            const dpp = parseFloat($(elm).data("dpp")) || 0;
+
+            totalDpp += dpp;
+            totalTax += tax;
+        });
+
+        const grandTotal = totalDpp + totalTax;
+
+        $("#total-harga").text(grandTotal.toFixed(2));
+        $("#total-pajak").text(totalTax.toFixed(2));
     },
 
-    removeRow:(elm)=>{
-        const data_id = $(elm).closest('tr').attr('data_id');
-        if(data_id == ''){
-            $(elm).closest('tr').remove();
-        }else{
-            $(elm).closest('tr').addClass('remove');
-            $(elm).closest('tr').addClass('d-none');
+    removeRow: (elm) => {
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            $(elm).closest("tr").addClass("remove");
+            $(elm).closest("tr").addClass("d-none");
         }
     },
 
-    addRow:()=>{
-        const row = $('table#table-items').find('tbody').find('tr.input:last').clone();
-        row.removeClass('remove');
-        row.removeClass('d-none');
-        row.find('input').val('');
-        row.find('td#unit').text('');
-        row.find('td#unit').attr('data_id', '');
-        row.attr('data_id', '');
-        $('table#table-items').find('tbody').append(row);
+    addRow: () => {
+        const row = $("table#table-items")
+            .find("tbody")
+            .find("tr.input:last")
+            .clone();
+        row.removeClass("remove");
+        row.removeClass("d-none");
+        row.find("input").val("");
+        row.find("td#unit").text("");
+        row.find("td#unit").attr("data_id", "");
+        row.attr("data_id", "");
+        $("table#table-items").find("tbody").append(row);
     },
 };
 
