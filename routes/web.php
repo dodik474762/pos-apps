@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\master\CityController as MasterCityController;
+use App\Http\Controllers\api\master\CoaController as MasterCoaController;
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionP
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
+use App\Http\Controllers\web\master\CoaController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
@@ -143,6 +145,10 @@ Route::get('master/kelurahan/ubah', [KelurahanController::class, 'ubah']);
 Route::get('master/vendor', [VendorController::class, 'index']);
 Route::get('master/vendor/add', [VendorController::class, 'add']);
 Route::get('master/vendor/ubah', [VendorController::class, 'ubah']);
+
+Route::get('master/coa', [CoaController::class, 'index']);
+Route::get('master/coa/add', [CoaController::class, 'add']);
+Route::get('master/coa/ubah', [CoaController::class, 'ubah']);
 
 Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
 Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
@@ -281,6 +287,11 @@ Route::post('api/master/vendor/submit', [MasterVendorController::class, 'submit'
 Route::post('api/master/vendor/delete', [MasterVendorController::class, 'delete']);
 Route::post('api/master/vendor/confirmDelete', [MasterVendorController::class, 'confirmDelete']);
 Route::post('api/master/vendor/getCity', [MasterVendorController::class, 'getCity']);
+
+Route::post('api/master/coa/getData', [MasterCoaController::class, 'getData']);
+Route::post('api/master/coa/submit', [MasterCoaController::class, 'submit']);
+Route::post('api/master/coa/delete', [MasterCoaController::class, 'delete']);
+Route::post('api/master/coa/confirmDelete', [MasterCoaController::class, 'confirmDelete']);
 
 Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderController::class, 'getData']);
 Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
