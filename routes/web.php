@@ -18,6 +18,7 @@ use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeCo
 use App\Http\Controllers\api\master\ProvinceController as MasterProvinceController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
+use App\Http\Controllers\api\master\TaxController as MasterTaxController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\web\master\ProductTypeController;
 use App\Http\Controllers\web\master\ProvinceController;
 use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\RoutingApprovalController;
+use App\Http\Controllers\web\master\TaxController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
@@ -149,6 +151,10 @@ Route::get('master/vendor/ubah', [VendorController::class, 'ubah']);
 Route::get('master/coa', [CoaController::class, 'index']);
 Route::get('master/coa/add', [CoaController::class, 'add']);
 Route::get('master/coa/ubah', [CoaController::class, 'ubah']);
+
+Route::get('master/tax', [TaxController::class, 'index']);
+Route::get('master/tax/add', [TaxController::class, 'add']);
+Route::get('master/tax/ubah', [TaxController::class, 'ubah']);
 
 Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
 Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
@@ -292,6 +298,11 @@ Route::post('api/master/coa/getData', [MasterCoaController::class, 'getData']);
 Route::post('api/master/coa/submit', [MasterCoaController::class, 'submit']);
 Route::post('api/master/coa/delete', [MasterCoaController::class, 'delete']);
 Route::post('api/master/coa/confirmDelete', [MasterCoaController::class, 'confirmDelete']);
+
+Route::post('api/master/tax/getData', [MasterTaxController::class, 'getData']);
+Route::post('api/master/tax/submit', [MasterTaxController::class, 'submit']);
+Route::post('api/master/tax/delete', [MasterTaxController::class, 'delete']);
+Route::post('api/master/tax/confirmDelete', [MasterTaxController::class, 'confirmDelete']);
 
 Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderController::class, 'getData']);
 Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
