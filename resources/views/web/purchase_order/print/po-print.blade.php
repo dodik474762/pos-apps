@@ -85,7 +85,7 @@
                 <br>
                 {{-- QR Code (otomatis di-generate) --}}
                 <div style="margin-top:5px;">
-                    {{-- {!! base64_encode(QrCode::format('png')->size(70)->generate($data->code)) !!} --}}
+                    <img src="data:image/png;base64,{{ $qr }}" alt="" width="70" height="70">
                 </div>
             </td>
         </tr>

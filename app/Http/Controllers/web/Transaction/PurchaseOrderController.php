@@ -123,8 +123,8 @@ class PurchaseOrderController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = PurchaseOrder::with(['vendors', 'warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
-        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
-        $qr = '';
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
+        // $qr = '';
         // echo '<pre>';
         // print_r($data);
         // die;
