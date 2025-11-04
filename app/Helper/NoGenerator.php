@@ -3,37 +3,35 @@
 use App\Http\Controllers\api\Messaging\FcmController;
 use App\Models\Master\Actor;
 use App\Models\Master\DocumentTransaction;
-use App\models\master\MasterDepartemen;
 use App\Models\Master\PricePNBP;
 use App\Models\Master\RoutingPermission;
 use App\Models\Master\RoutingReminder;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
-use App\Models\Own\ProdukSatuan;
-use App\Models\Transaksi\Forecast;
+use App\Models\Transaction\GeneralLedger;
 use App\Models\Transaksi\NotificationCenter;
-use App\Models\Transaksi\Project;
 use App\RequestCertificate;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 function digit_count($length, $value)
 {
-    while (strlen($value) < $length)
-        $value = '0' . $value;
+    while (strlen($value) < $length) {
+        $value = '0'.$value;
+    }
+
     return $value;
 }
 
 function generateNoDocument()
 {
-    $no = 'DOC' . date('y') . strtoupper(date('M'));
-    $data = DB::table('document')->where('no_document', 'LIKE', '%' . $no . '%')->orderBy('no_document', 'desc')->get()->toArray();
+    $no = 'DOC'.date('y').strtoupper(date('M'));
+    $data = DB::table('document')->where('no_document', 'LIKE', '%'.$no.'%')->orderBy('no_document', 'desc')->get()->toArray();
 
     $seq = 1;
-    if (!empty($data)) {
+    if (! empty($data)) {
         $data = current($data);
         $seq = str_replace($no, '', $data->no_document);
         $seq = intval($seq) + 1;
@@ -41,24 +39,26 @@ function generateNoDocument()
 
     $seq = digit_count(4, $seq);
     $no .= $seq;
+
     return $no;
 }
 
-function getRomawiMonth($date = "")
+function getRomawiMonth($date = '')
 {
     $month = $date == '' ? date('m') : date('m', strtotime($date));
     $month = intval($month);
-    $romawi = array("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII");
+    $romawi = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
     return $romawi[$month];
 }
 
 function generateNoPO()
 {
-    $no = 'PO' . strtoupper(date('m')) . date('y');
-    $data = DB::table('purchase_order')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'PO'.strtoupper(date('m')).date('y');
+    $data = DB::table('purchase_order')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
-    if (!empty($data)) {
+    if (! empty($data)) {
         $data = current($data);
         $seq = str_replace($no, '', $data->code);
         $seq = intval($seq) + 1;
@@ -66,6 +66,26 @@ function generateNoPO()
 
     $seq = digit_count(4, $seq);
     $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
+function generateGrNumber()
+{
+    $no = 'GR'.strtoupper(date('m')).date('y');
+    $data = DB::table('goods_receipt_header')->where('gr_number', 'LIKE', '%'.$no.'%')->orderBy('gr_number', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->gr_number);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
     // dd($no);
     return $no;
 }
@@ -86,19 +106,19 @@ function cekStatusRequest($id_req)
     // dd($data_status);
     // Check for DRAFT status and != DRAFT
     if (in_array('DRAFT', $data_status) && array_diff($data_status, ['DRAFT'])) {
-        return "ON PROCESS";
+        return 'ON PROCESS';
     }
     // jika masih ada status APPROVE maka buat APPROVE saja
     if (in_array('APPROVE', $data_status)) {
-        return "ON PROCESS";
+        return 'ON PROCESS';
     }
     // jika masih ada status DONE maka buat DONE saja
     if (in_array('DONE', $data_status)) {
-        return "DONE";
+        return 'DONE';
     }
     // jika masih ada status COMPLETE maka buat COMPLETE saja
     if (in_array('COMPLETE', $data_status)) {
-        return "COMPLETE";
+        return 'COMPLETE';
     }
 
     $mostFrequentStatus = '';
@@ -123,11 +143,11 @@ function cekStatusRequest($id_req)
 
 function generateNoPayment()
 {
-    $no = 'PAY' . strtoupper(date('m')) . date('y');
-    $data = DB::table('payment_invoice')->where('no_payment', 'LIKE', '%' . $no . '%')->orderBy('no_payment', 'desc')->get()->toArray();
+    $no = 'PAY'.strtoupper(date('m')).date('y');
+    $data = DB::table('payment_invoice')->where('no_payment', 'LIKE', '%'.$no.'%')->orderBy('no_payment', 'desc')->get()->toArray();
 
     $seq = 1;
-    if (!empty($data)) {
+    if (! empty($data)) {
         $data = current($data);
         $seq = str_replace($no, '', $data->no_payment);
         $seq = intval($seq) + 1;
@@ -135,13 +155,13 @@ function generateNoPayment()
 
     $seq = digit_count(4, $seq);
     $no .= $seq;
+
     return $no;
 }
 
-
 function sendFonteNotification($phoneNumber, $message)
 {
-    $client = new Client();
+    $client = new Client;
     $apiKey = env('FONTE_API_KEY');
     // dd($apiKey);
     try {
@@ -153,26 +173,24 @@ function sendFonteNotification($phoneNumber, $message)
                 'target' => $phoneNumber,
                 'message' => $message,
                 'countryCode' => '62',
-            ]
+            ],
         ]);
 
         $status = json_decode($response->getBody(), true);
-        Log::info('Fonnte API Response: ' . json_encode($status));
+        Log::info('Fonnte API Response: '.json_encode($status));
 
-        if (!$status['status']) {
+        if (! $status['status']) {
             throw new \Exception('Failed to send WhatsApp message.');
         }
     } catch (\Exception $e) {
-        throw new \Exception('Fonnte API error: ' . $e->getMessage());
+        throw new \Exception('Fonnte API error: '.$e->getMessage());
     }
 }
-
 
 function cari_biaya_barang($nilai_barang)
 {
     // Contoh data array yang diberikan
     $data_biaya = PricePNBP::get()->toArray();
-
 
     // Lakukan pencarian
     foreach ($data_biaya as $row) {
@@ -182,7 +200,7 @@ function cari_biaya_barang($nilai_barang)
     }
 
     // Jika tidak ditemukan data yang cocok
-    return "Nilai barang tidak ditemukan dalam rentang yang ada.";
+    return 'Nilai barang tidak ditemukan dalam rentang yang ada.';
 }
 
 function getEmployee($user_id = 0)
@@ -216,13 +234,14 @@ function routingCreate($menu = 0, $prevState = null, $group = null, $from_id = 0
     }
     $data = $data->first();
 
-    if (!empty($data)) {
-        $apiFcm = new FcmController();
+    if (! empty($data)) {
+        $apiFcm = new FcmController;
         $params['user_id'] = $data->users;
         $params['title'] = 'Informasi';
-        $params['body'] = 'Terdapat Pemberitahuan Approval Module ' . $data->nama_menu . ' Silakan Buka dan Approval Melalui Web';
+        $params['body'] = 'Terdapat Pemberitahuan Approval Module '.$data->nama_menu.' Silakan Buka dan Approval Melalui Web';
         $fcm = $apiFcm->sendFcmNotificationSystem($params);
     }
+
     return $data;
 }
 
@@ -244,13 +263,14 @@ function routingAcc($users = 0, $menu = 0, $prev_step = '', $group = null, $from
     }
     $data = $data->first();
 
-    if (!empty($data)) {
-        $apiFcm = new FcmController();
+    if (! empty($data)) {
+        $apiFcm = new FcmController;
         $params['user_id'] = $data->users;
         $params['title'] = 'Informasi';
-        $params['body'] = 'Terdapat Pemberitahuan Approval Module ' . $data->nama_menu . ' Silakan Buka dan Approval Melalui Web';
+        $params['body'] = 'Terdapat Pemberitahuan Approval Module '.$data->nama_menu.' Silakan Buka dan Approval Melalui Web';
         $apiFcm->sendFcmNotificationSystem($params);
     }
+
     return $data;
 }
 
@@ -271,10 +291,11 @@ function checkIsLastRouting($users = 0, $menu = 0, $prev_step = '', $group = nul
     }
     $data = $data->first();
 
-    if (!empty($data)) {
+    if (! empty($data)) {
         if ($data->prev_state == $prev_step) {
             return true;
         }
+
         return false;
     }
 
@@ -283,14 +304,14 @@ function checkIsLastRouting($users = 0, $menu = 0, $prev_step = '', $group = nul
 
 function createLogTransaction($users = 0, $code = '0', $desc = '', $remarks = null, $state = null)
 {
-    $actor = new Actor();
+    $actor = new Actor;
     $actor->users = $users;
     $actor->content = $desc;
     $actor->action = $desc;
     $actor->save();
     $actorId = $actor->id;
 
-    $log = new DocumentTransaction();
+    $log = new DocumentTransaction;
     $log->actors = $actorId;
     $log->no_document = $code;
     $log->remarks = $remarks;
@@ -298,7 +319,7 @@ function createLogTransaction($users = 0, $code = '0', $desc = '', $remarks = nu
     $log->save();
 }
 
-function routingReminder($users = 0, $menu = 0, $code = "", $state = "COMPLETED", $primary = 0, $remarks = "", $from_id = 0)
+function routingReminder($users = 0, $menu = 0, $code = '', $state = 'COMPLETED', $primary = 0, $remarks = '', $from_id = 0)
 {
     $routingReminder = RoutingReminder::whereNull('routing_reminder.deleted')
         ->select(['routing_reminder.*', 'm.nama as nama_menu'])
@@ -316,7 +337,7 @@ function routingReminder($users = 0, $menu = 0, $code = "", $state = "COMPLETED"
         ->delete();
     $remindersSave = [];
     foreach ($routingReminder as $key => $value) {
-        $notificationCenter = new NotificationCenter();
+        $notificationCenter = new NotificationCenter;
         $notificationCenter->menu = $menu;
         $notificationCenter->no_document = $code;
         $notificationCenter->primary_key = $primary;
@@ -324,15 +345,15 @@ function routingReminder($users = 0, $menu = 0, $code = "", $state = "COMPLETED"
         $notificationCenter->creator = $users;
         $notificationCenter->to_users = $value['users'];
         $notificationCenter->remarks = $remarks;
-        $notificationCenter->redirect_link = $remarks . '/detail?id=' . $primary;
+        $notificationCenter->redirect_link = $remarks.'/detail?id='.$primary;
         $notificationCenter->save();
         $remindersSave[] = $notificationCenter->id;
 
         try {
-            $apiFcm = new FcmController();
+            $apiFcm = new FcmController;
             $params['user_id'] = $value['users'];
             $params['title'] = 'Informasi';
-            $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $value['nama_menu'] . ' Silakan Buka dan Reminder Melalui Web';
+            $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$value['nama_menu'].' Silakan Buka dan Reminder Melalui Web';
             $resultRoutingMessage['fcm_result'] = $apiFcm->sendFcmNotificationSystem($params);
         } catch (\Throwable $th) {
             $resultRoutingMessage['fcm_result'] = $th->getMessage();
@@ -344,7 +365,7 @@ function routingReminder($users = 0, $menu = 0, $code = "", $state = "COMPLETED"
     return $resultRoutingMessage;
 }
 
-function reminderToCreatorTransaction($users = 0, $menu = 0, $code = "", $state = "COMPLETED", $primary = 0, $remarks = "", $to_users = 0)
+function reminderToCreatorTransaction($users = 0, $menu = 0, $code = '', $state = 'COMPLETED', $primary = 0, $remarks = '', $to_users = 0)
 {
     NotificationCenter::where('notification_center.menu', $menu)->where('no_document', $code)
         ->where('notification_center.primary_key', $primary)
@@ -354,8 +375,7 @@ function reminderToCreatorTransaction($users = 0, $menu = 0, $code = "", $state 
         ->where('notification_center.to_users', $users)
         ->delete();
 
-
-    $notificationCenter = new NotificationCenter();
+    $notificationCenter = new NotificationCenter;
     $notificationCenter->menu = $menu;
     $notificationCenter->no_document = $code;
     $notificationCenter->primary_key = $primary;
@@ -363,17 +383,17 @@ function reminderToCreatorTransaction($users = 0, $menu = 0, $code = "", $state 
     $notificationCenter->creator = $users;
     $notificationCenter->to_users = $to_users;
     $notificationCenter->remarks = $remarks;
-    $notificationCenter->redirect_link = $remarks . '/ubah?id=' . $primary;
+    $notificationCenter->redirect_link = $remarks.'/ubah?id='.$primary;
     $notificationCenter->save();
 
-    $apiFcm = new FcmController();
+    $apiFcm = new FcmController;
     $params['user_id'] = $to_users;
     $params['title'] = 'Informasi';
-    $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $remarks . ' Silakan Buka dan Reminder Melalui Web';
+    $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$remarks.' Silakan Buka dan Reminder Melalui Web';
     $apiFcm->sendFcmNotificationSystem($params);
 }
 
-function reminderToRolesTransaction($users = 0, $menu = 0, $code = "", $state = "UPDATED", $primary = 0, $remarks = "", $group = "")
+function reminderToRolesTransaction($users = 0, $menu = 0, $code = '', $state = 'UPDATED', $primary = 0, $remarks = '', $group = '')
 {
     if ($group != '') {
         $dataGroup = Users::whereNull('users.deleted')
@@ -391,10 +411,9 @@ function reminderToRolesTransaction($users = 0, $menu = 0, $code = "", $state = 
             ->whereIn('notification_center.to_users', $idUsers)
             ->delete();
 
-
         foreach ($idUsers as $key => $value) {
             $to_users = $value;
-            $notificationCenter = new NotificationCenter();
+            $notificationCenter = new NotificationCenter;
             $notificationCenter->menu = $menu;
             $notificationCenter->no_document = $code;
             $notificationCenter->primary_key = $primary;
@@ -402,13 +421,13 @@ function reminderToRolesTransaction($users = 0, $menu = 0, $code = "", $state = 
             $notificationCenter->creator = $users;
             $notificationCenter->to_users = $to_users;
             $notificationCenter->remarks = $remarks;
-            $notificationCenter->redirect_link = $remarks . '/detail?id=' . $primary . '&backto=dashboard';
+            $notificationCenter->redirect_link = $remarks.'/detail?id='.$primary.'&backto=dashboard';
             $notificationCenter->save();
 
-            $apiFcm = new FcmController();
+            $apiFcm = new FcmController;
             $params['user_id'] = $to_users;
             $params['title'] = 'Informasi';
-            $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $remarks . ' Silakan Buka dan Reminder Melalui Web';
+            $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$remarks.' Silakan Buka dan Reminder Melalui Web';
             $apiFcm->sendFcmNotificationSystem($params);
         }
     }
@@ -433,7 +452,7 @@ function setSessionUserFromApp($user_id = 0)
             'ut.nama_company',
             'kry.nama_lengkap',
             'kry.group as group_karyawan',
-            'dic.keterangan as group_karyawan_name'
+            'dic.keterangan as group_karyawan_name',
         ])
         ->join('karyawan as kry', 'kry.nik', 'usr.nik')
         ->join('company as ut', 'ut.id', 'kry.company')
@@ -443,11 +462,11 @@ function setSessionUserFromApp($user_id = 0)
         ->whereNull('usr.deleted')
         ->first();
 
-    if (!empty($userdata)) {
+    if (! empty($userdata)) {
         $dataMenu = UsersPermission::where('users_permissions.users_group', $userdata->user_group)
             ->select([
                 'users_permissions.*',
-                'am.nama as menu'
+                'am.nama as menu',
             ])
             ->join('menu as am', 'am.id', '=', 'users_permissions.menu')
             ->whereNull('users_permissions.deleted')
@@ -473,10 +492,9 @@ function setSessionUserFromApp($user_id = 0)
     }
 }
 
-
 function terbilang($angka)
 {
-    $huruf = array(
+    $huruf = [
         '',
         'satu',
         'dua',
@@ -496,24 +514,121 @@ function terbilang($angka)
         'enam belas',
         'tujuh belas',
         'delapan belas',
-        'sembilan belas'
-    );
+        'sembilan belas',
+    ];
 
     if ($angka < 20) {
         return $huruf[$angka];
     } elseif ($angka < 100) {
-        return terbilang(floor($angka / 10)) . ' puluh ' . terbilang($angka % 10);
+        return terbilang(floor($angka / 10)).' puluh '.terbilang($angka % 10);
     } elseif ($angka < 200) {
-        return 'seratus ' . terbilang($angka - 100);
+        return 'seratus '.terbilang($angka - 100);
     } elseif ($angka < 1000) {
-        return terbilang(floor($angka / 100)) . ' ratus ' . terbilang($angka % 100);
+        return terbilang(floor($angka / 100)).' ratus '.terbilang($angka % 100);
     } elseif ($angka < 1000000) {
-        return terbilang(floor($angka / 1000)) . ' ribu ' . terbilang($angka % 1000);
+        return terbilang(floor($angka / 1000)).' ribu '.terbilang($angka % 1000);
     } elseif ($angka < 1000000000) {
-        return terbilang(floor($angka / 1000000)) . ' juta ' . terbilang($angka % 1000000);
+        return terbilang(floor($angka / 1000000)).' juta '.terbilang($angka % 1000000);
     } elseif ($angka < 1000000000000) {
-        return terbilang(floor($angka / 1000000000)) . ' milyar ' . terbilang($angka % 1000000000);
+        return terbilang(floor($angka / 1000000000)).' milyar '.terbilang($angka % 1000000000);
     } elseif ($angka < 1000000000000000) {
-        return terbilang(floor($angka / 1000000000000)) . ' triliun ' . terbilang($angka % 1000000000000);
+        return terbilang(floor($angka / 1000000000000)).' triliun '.terbilang($angka % 1000000000000);
     }
+}
+
+function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '')
+{
+    $postingDate = now();
+
+    $post = new GeneralLedger;
+    $post->posting_date = $postingDate;
+    $post->reference = $reference;
+    $post->account_id = $account_id;
+    $post->account_name = $account_name;
+    $post->dc = $dc;
+    $post->amount = $amount;
+    $post->currency = $currency;
+    $post->description = $desc;
+    $post->created_by = session('user_id');
+    $post->save();
+}
+
+function getSmallestUnit($productId, $fromUnitId, $qty = 1)
+{
+    $multiplier = 1;
+    $currentUnit = $fromUnitId;
+
+    while (true) {
+        // Ambil konversi dari unit saat ini
+        $conversion = DB::table('product_uom')
+            ->where('product', $productId)
+            ->where('unit_tujuan', $currentUnit)
+            ->whereNull('deleted')
+            ->first();
+
+        if (!$conversion || $conversion->level == 1) {
+            // tidak ada konversi lebih lanjut, unit saat ini = unit terkecil
+            $baseUnit = $currentUnit;
+            break;
+        }
+
+        // Kalikan nilai konversi
+        $multiplier *= $conversion->nilai_konversi;
+
+        // Lanjut ke level berikutnya
+        $currentUnit = $conversion->unit_dasar;
+    }
+
+    return [
+        'base_unit' => $baseUnit,
+        'multiplier' => $multiplier,
+        'qty_in_base_unit' => $qty * $multiplier,
+    ];
+}
+
+function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '')
+{
+    // Update stok di gudang
+    $warehouseId = $warehouse; // sesuaikan, atau ambil dari form GR
+
+    $stock = DB::table('product_stock')
+        ->where('product', $value['product'])
+        ->where('unit', $baseUnit)
+        ->where('warehouse', $warehouseId)
+        ->first();
+
+    if ($stock) {
+        // Update qty existing
+        DB::table('product_stock')
+            ->where('id', $stock->id)
+            ->update([
+                'qty' => $type == 'add' ? $stock->qty + $convertedQty : $stock->qty - $convertedQty,
+                'last_purchase_price' => $value['price'] ?? 0,
+                'updated_at' => now(),
+            ]);
+    } else {
+        // Insert baru
+        DB::table('product_stock')->insert([
+            'product' => $value['product'],
+            'unit' => $baseUnit,
+            'warehouse' => $warehouseId,
+            'qty' => $convertedQty,
+            'avg_cost' => $value['price'] ?? 0,
+            'last_purchase_price' => $value['price'] ?? 0,
+            'created_at' => now(),
+        ]);
+    }
+
+    DB::table('product_stock_move')->insert([
+        'product' => $value['product'],
+        'unit' => $baseUnit,
+        'warehouse' => $warehouseId,
+        'qty_in' => $type == 'add' ? $convertedQty : 0,
+        'qty_out' => $type == 'add' ? 0 : $convertedQty,
+        'move_type' => 'good_receipt',
+        'reference_id' => $reference_id,
+        'price' => $value['price'] ?? 0,
+        'created_at' => now(),
+    ]);
+
 }

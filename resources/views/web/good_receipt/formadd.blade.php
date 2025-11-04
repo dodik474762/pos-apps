@@ -40,7 +40,9 @@
                                     <option value=""></option>
                                     @foreach ($purchase_orders as $po)
                                         <option value="{{ $po->id }}"
-                                            {{ isset($data->purchase_order) && $data->purchase_order == $po->id ? 'selected' : '' }}>
+                                            {{ isset($data->purchase_order) && $data->purchase_order == $po->id ? 'selected' : '' }}
+                                            vendor="{{ $po->vendor }}"
+                                            vendor_name="{{ $po->vendors->nama_vendor }}">
                                             {{ $po->code }} - {{ $po->vendors->nama_vendor }} / {{ $po->status }}
                                         </option>
                                     @endforeach
@@ -49,15 +51,10 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Vendor</label>
-                                <select class="form-control select2 required" id="vendor" error="Vendor" disabled>
-                                    <option value=""></option>
-                                    @foreach ($vendors as $vendor)
-                                        <option value="{{ $vendor->id }}"
-                                            {{ isset($data->vendor) && $data->vendor == $vendor->id ? 'selected' : '' }}>
-                                            {{ $vendor->nama_vendor }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="vendor" class="form-control required"
+                                    error="Vendor" placeholder="Vendor" disabled
+                                    data_id="{{ isset($data->vendor) ? $data->vendor : '' }}"
+                                    value="{{ isset($data->nama_vendor) ? $data->nama_vendor : '' }}">
                             </div>
                         </div>
 
@@ -74,6 +71,11 @@
                                 <label class="form-label">Diterima Oleh</label>
                                 <input type="text" id="received_by" class="form-control"
                                     value="{{ session('nama_lengkap') ?? 'User Aktif' }}" readonly>
+                            </div>
+
+                              <div class="mb-3">
+                                <label class="form-label">Keterangan</label>
+                                <textarea id="remarks" class="form-control" placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -110,7 +112,7 @@
                                     <td><input type="number" class="form-control" id="qty_received" value="1" min="1" onkeyup="GoodReceipt.calcRow(this)"></td>
                                     <td data_id="" id="unit"></td>
                                     <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot"></td>
-                                    <td><input type="date" class="form-control" id="expired_date"></td>
+                                    <td><input type="date" class="form-control required" error="Expired Date" id="expired_date"></td>
                                     <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>

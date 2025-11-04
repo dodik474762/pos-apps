@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\AccountMapping;
 use App\Models\Master\Currency;
+use App\Models\Master\ProductUom;
 use App\Models\Transaction\GoodReceipt;
 use App\Models\Transaction\GoodReceiptDtl;
+use App\Models\Transaction\PurchaseOrder;
+use App\Models\Transaction\PurchaseOrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class GoodReceiptController extends Controller
 {
-     public function getTableName()
+    public function getTableName()
     {
-        return "goods_receipt_header";
+        return 'goods_receipt_header';
     }
 
     public function getData()
@@ -22,12 +26,12 @@ class GoodReceiptController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName() . ' as m')
+        $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
                 'v.nama_vendor',
-                'c.code as currency_code'
+                'c.code as currency_code',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('vendor as v', 'v.id', 'm.vendor')
@@ -39,10 +43,10 @@ class GoodReceiptController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.gr_number', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.received_date', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->where('m.gr_number', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.received_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -60,6 +64,7 @@ class GoodReceiptController extends Controller
         $data['data'] = $datadb->get()->toArray();
         $data['draw'] = $_POST['draw'];
         $query = DB::getQueryLog();
+
         // echo '<pre>';
         // print_r($query);die;
         return json_encode($data);
@@ -69,90 +74,196 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
         $users = session('user_id');
-        // echo '<pre>';
-        // print_r($data);die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
-            //code...
+            // code...
             $currency = Currency::where('code', 'IDR')->first();
-            if(empty($currency)){
+            $po = PurchaseOrder::find($data['purchase_order']);
+            $warehouse = $po->warehouse;
+
+            if (empty($currency)) {
                 DB::rollBack();
                 $result['message'] = 'Currency IDR tidak ditemukan';
+
                 return response()->json($result);
             }
 
-            $roles = $data['id'] == '' ? new GoodReceipt() : GoodReceipt::find($data['id']);
+            $roles = $data['id'] == '' ? new GoodReceipt : GoodReceipt::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code = generateNoPO();
+                $roles->gr_number = generateGrNumber();
                 $roles->created_by = $users;
             }
-            $roles->po_date = $data['po_date'];
+            $roles->received_date = $data['received_date'];
+            $roles->purchase_order = $data['purchase_order'];
             $roles->remarks = $data['remarks'];
             $roles->vendor = $data['vendor'];
-            $roles->warehouse = $data['warehouse'];
-            $roles->status = 'DRAFT';
-            $roles->est_received_date = $data['est_received_date'];
+            $roles->received_by = $data['received_by'];
+            $roles->status = 'open';
+            $roles->total_qty = $data['total_qty'];
             $roles->currency = $currency->id;
             $roles->save();
             $hdrId = $roles->id;
 
             $grand_total = 0;
+            $totalFullyReceived = 0;
+            $totalPartlyReceived = 0;
+            $disc_total = 0;
+            $ppnTotal = 0;
+            $poGrandTotal = 0;
             foreach ($data['items'] as $key => $value) {
-                if($value['remove'] == '1'){
-                    $items = GoodReceiptDtl::find($value['id']);
-                    if($items->status != 'open'){
+                if ($value['remove'] == '1') {
+                    $items = GoodReceiptDtl::find($value['id_detail']);
+                    if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
+
                         return response()->json($result);
                     }
                     $items->deleted = now();
                     $items->save();
-                }else{
-                    list($product_uom, $product, $product_name) = explode('//', $value['product']);
-                    $items = $value['id'] == '' ? new GoodReceiptDtl() : GoodReceiptDtl::find($value['id']);
-                    $items->purchase_order = $hdrId;
-                    $items->product = $product;
-                    $items->unit = $value['unit'];
-                    $items->qty = $value['qty'];
-                    $items->purchase_price = $value['price'];
-                    $items->diskon_persen = $value['disc_persen'];
-                    $items->diskon_nominal = $value['disc_nominal'];
-                    $items->est_received_date = $data['est_received_date'];
-                    $items->product_uom = $product_uom;
-                    $items->subtotal = $value['subtotal'];
-                    $items->tax = $value['tax'];
-                    $items->tax_rate = $value['tax_rate'];
-                    $items->tax_amount = $value['tax_amount'];
-                    if($value['id'] == ''){
-                        $items->status = 'open';
-                        $items->qty_received = 0;
+                } else {
+                    $items = $value['id_detail'] == '' ? new GoodReceiptDtl : GoodReceiptDtl::find($value['id_detail']);
+                    $status = $value['id_detail'] == '' ? '' : $items->status;
+
+                     $update = PurchaseOrderDetail::where('id', $value['id'])->first();
+                    if (empty($update)) {
+                        DB::rollBack();
+                        $result['message'] = 'Data PO Item '.$value['product'].' tidak ditemukan';
+
+                        return response()->json($result);
                     }
+
+                    $purchase_price = $update->purchase_price;
+                    $subtotal = $purchase_price * $value['qty_received'];
+                    $diskon_persentase = ($update->diskon_persen / 100) * $subtotal;
+                    $diskon_nominal = $update->diskon_nominal;
+                    $tax_amount = $update->tax_rate / 100 * ($subtotal - $diskon_persentase - $diskon_nominal);
+                    $value['subtotal'] = $subtotal - $diskon_persentase - $diskon_nominal + $tax_amount;
+
+                    $disc_total += ($diskon_persentase + $diskon_nominal);
+                    $ppnTotal += $tax_amount;
+                    $grandTotalPo = $purchase_price * $update->qty;
+                    $poGrandTotal += $grandTotalPo;
+
+                    $items->goods_receipt_header = $hdrId;
+                    $items->purchase_order_detail = $value['id'];
+                    $items->product = $value['product'];
+                    $items->unit = $value['unit'];
+                    $items->unit_name = $value['unit_name'];
+                    $items->qty_received = $value['qty_received'];
+                    $items->lot_number = $value['lot_number'];
+                    $items->expired_date = $value['expired_date'];
+                    $items->subtotal = $value['subtotal'];
+                    $items->status = 'open';
                     $items->save();
 
-                    if($value['id'] != ''){
-                        if($items->status != 'open'){
+                    if ($value['id_detail'] != '') {
+                        if ($status != 'open') {
                             DB::rollBack();
                             $result['message'] = 'Tidak dapat diubah karena status sudah tidak open';
+
                             return response()->json($result);
                         }
                     }
 
-                    $grand_total += $value['subtotal'];
+                    $total_oustanding_qty_po = intval($value['qty_outstanding']) - intval($value['qty_received']);
+
+                    if ($total_oustanding_qty_po < 0) {
+                        DB::rollBack();
+                        $result['message'] = 'Qty outstanding tidak mencukupi';
+
+                        return response()->json($result);
+                    }
+
+
+                    $update->qty_received = $update->qty_received + $value['qty_received'];
+
+                    if ($total_oustanding_qty_po == 0) {
+                        $update->status = 'received';
+                        $totalFullyReceived += 1;
+                    }
+
+                    if ($total_oustanding_qty_po > 0) {
+                        $update->status = 'partial-received';
+                        $totalPartlyReceived += 1;
+                    }
+                    $update->save();
+
+                    $qtyBaseUnit = getSmallestUnit($value['product'], $value['unit'], $value['qty_received']);
+                    $productUomLevel1 = ProductUom::where('product', $value['product'])->where('level', '1')->first();
+                    $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+                    stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add');
+                    $grand_total += $subtotal;
                 }
             }
 
+            if ($totalFullyReceived == count($data['items'])) {
+                $po->status = 'received';
+            }
+            if ($totalPartlyReceived == count($data['items'])) {
+                $po->status = 'partial-received';
+            }
+            $po->save();
+
             $update = GoodReceipt::find($hdrId);
-            $update->grand_total = $grand_total;
+            $update->total_amount = $grand_total;
             $update->save();
+
+            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'inventory')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'grir')
+                ->with('account')
+                ->first();
+
+            $ppnMasukanAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'ppn masukan')
+                ->with('account')
+                ->first();
+
+            $discAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'diskon pembelian')
+                ->with('account')
+                ->first();
+
+            if (! $inventoryAccount || ! $grirAccount) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Good Receipt belum lengkap.',
+                ]);
+            }
+
+            postingGL($update->gr_number, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $grand_total, $update->currency);
+            postingGL($update->gr_number, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total + $ppnTotal - $disc_total), $update->currency);
+
+            if ($ppnMasukanAccount) {
+                $partialRatio = $grand_total / $poGrandTotal;
+
+                $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
+                postingGL($update->gr_number, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $ppnAmount, $update->currency);
+            }
+
+            if ($discAccount) {
+                $partialRatio = $grand_total / $poGrandTotal;
+                $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
+                $discountAmount = $disc_total * $partialRatio; // proporsional diskon
+                postingGL($update->gr_number, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, $discountAmount, $update->currency);
+            }
 
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             $result['message'] = $th->getMessage();
             DB::rollBack();
         }
+
         return response()->json($result);
     }
 
@@ -162,11 +273,12 @@ class GoodReceiptController extends Controller
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
-            //code...
+            // code...
             $menu = GoodReceipt::find($data['id']);
-            if($menu->status != 'DRAFT'){
+            if ($menu->status != 'DRAFT') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
+
                 return response()->json($result);
             }
             $menu->deleted = date('Y-m-d H:i:s');
@@ -175,37 +287,41 @@ class GoodReceiptController extends Controller
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             $result['message'] = $th->getMessage();
             DB::rollBack();
         }
+
         return response()->json($result);
     }
 
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName() . ' as m')
+        $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
             ])->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
+
         return response()->json($data);
     }
 
     public function delete(Request $request)
     {
         $data = $request->all();
+
         return view('web.good_receipt.modal.confirmdelete', $data);
     }
 
     public function showDataPOItem(Request $request)
     {
         $data = $request->all();
+
         return view('web.good_receipt.modal.dataproductpo', $data);
     }
-   
+
     public function getListItemOutstandingPO(Request $request)
     {
         $data = $request->all();
@@ -238,7 +354,8 @@ class GoodReceiptController extends Controller
                 ->orderBy('po.id', 'desc')
                 ->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            exit;
         }
 
         return view('web.good_receipt.dataproductpo', $data);

@@ -41,27 +41,15 @@ let GoodReceipt = {
         table.each((index, elm) => {
             result.push({
                 id: $(elm).attr("data_id"),
-                product: $(elm).find("#product").val(),
-                qty: $(elm).find("#qty").val(),
+                id_detail: $(elm).attr("id_detail"),
+                product: $(elm).find("#po_detail").attr('data_id'),
+                qty_received: $(elm).find("#qty_received").val(),
+                qty_outstanding: $(elm).find("#qty_received").attr('max'),
                 unit: $(elm).find("td#unit").attr("data_id"),
-                price: $(elm).find("#price").val(),
-                disc_persen:
-                    $(elm).find("#disc_persen").val() == ""
-                        ? 0
-                        : $(elm).find("#disc_persen").val(),
-                disc_nominal:
-                    $(elm).find("#disc_nominal").val() == ""
-                        ? 0
-                        : $(elm).find("#disc_nominal").val(),
-                subtotal:
-                    $(elm).find("#subtotal").val() == ""
-                        ? 0
-                        : $(elm).find("#subtotal").val(),
-                tax:
-                    $(elm).find("select#tax").val() == "" ? 0 : $(elm).find("select#tax").val(),
-                tax_rate:
-                    $(elm).find("select#tax option:selected").data("rate") || 0,
-                tax_amount: $(elm).data("tax_amount") || 0,
+                unit_name: $(elm).find("td#unit").text(),
+                lot_number: $(elm).find("#lot_number").val(),
+                expired_date: $(elm).find("#expired_date").val(),
+                subtotal: $(elm).find("#subtotal").val(),
                 remove: $(elm).hasClass("remove") ? 1 : 0,
             });
         });
@@ -72,12 +60,13 @@ let GoodReceipt = {
     getPostInput: () => {
         let data = {
             id: $("input#id").val(),
-            po_date: $("#po_date").val(),
-            vendor: $("#vendor").val(),
-            warehouse: $("#warehouse").val(),
+            received_date: $("#received_date").val(),
+            vendor_name: $("#vendor").val(),
+            vendor: $("#vendor").attr('data_id'),
+            purchase_order: $("#purchase_order").val(),
             remarks: $("#remarks").val(),
-            grand_total: $("#total-harga").text(),
-            est_received_date: $("#est_received_date").val(),
+            received_by: $("#received_by").val(),
+            total_qty: $("#total-qty").text(),
             items: GoodReceipt.getPostItem(),
         };
 
@@ -184,13 +173,16 @@ let GoodReceipt = {
                     data: "nama_vendor",
                 },
                 {
-                    data: "grand_total",
+                    data: "total_amount",
                 },
                 {
                     data: "currency_code",
                 },
                 {
                     data: "created_by_name",
+                },
+                {
+                    data: "status",
                 },
                 {
                     data: "id",
@@ -334,7 +326,7 @@ let GoodReceipt = {
             },
         });
     },
-    
+
     getListItemOutstandingPO: (elm) => {
         let params = {
             po: $('#purchase_order').val()
@@ -361,6 +353,12 @@ let GoodReceipt = {
             success: function (resp) {
                 message.closeLoading();
                 $('table#table-items').find('tbody').html(resp);
+
+                const vendor = $('#purchase_order').find('option:selected').attr('vendor');
+                const vendor_name = $('#purchase_order').find('option:selected').attr('vendor_name');
+                $('input#vendor').val(vendor_name);
+                $('input#vendor').attr('data_id', vendor);
+                GoodReceipt.hitungSummaryAll();
             },
         });
     },
@@ -454,35 +452,32 @@ let GoodReceipt = {
     },
 
     calcRow: (elm) => {
-        const tr = $(elm).closest("tr");
+        // const tr = $(elm).closest("tr");
 
-        // Ambil value input
-        const qty = parseFloat(tr.find("input#qty").val()) || 0;
-        const price = parseFloat(tr.find("input#price").val()) || 0;
-        const disc_persen = parseFloat(tr.find("input#disc_persen").val()) || 0;
-        const disc_nominal =
-            parseFloat(tr.find("input#disc_nominal").val()) || 0;
+        // // Ambil value input
+        // const qty = parseFloat(tr.find("input#qty_received").val()) || 0;
+        // const price = parseFloat(tr.find("input#po_detail").attr('price')) || 0;
 
-        // Hitung subtotal sebelum pajak
-        const subTotal = qty * price;
-        const disc = subTotal * (disc_persen / 100) + disc_nominal;
-        const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
+        // // Hitung subtotal sebelum pajak
+        // const subTotal = qty * price;
+        // const disc = subTotal * (disc_persen / 100) + disc_nominal;
+        // const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
 
-        // Ambil rate pajak dari option terpilih
-        const taxRate =
-            parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
-        const taxAmount = dpp * (taxRate / 100);
+        // // Ambil rate pajak dari option terpilih
+        // const taxRate =
+        //     parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
+        // const taxAmount = dpp * (taxRate / 100);
 
-        // Total per baris = DPP + pajak
-        const subtotalResult = dpp + taxAmount;
+        // // Total per baris = DPP + pajak
+        // const subtotalResult = dpp + taxAmount;
 
-        // Update input subtotal
-        tr.find("input#subtotal").val(subtotalResult.toFixed(2));
+        // // Update input subtotal
+        // tr.find("input#subtotal").val(subtotalResult.toFixed(2));
 
-        // Simpan data pajak di row untuk reference
-        tr.data("dpp", dpp);
-        tr.data("tax_amount", taxAmount);
-        tr.data("tax_rate", taxRate);
+        // // Simpan data pajak di row untuk reference
+        // tr.data("dpp", dpp);
+        // tr.data("tax_amount", taxAmount);
+        // tr.data("tax_rate", taxRate);
 
         // Hitung summary total
         GoodReceipt.hitungSummaryAll();
@@ -490,23 +485,22 @@ let GoodReceipt = {
 
     hitungSummaryAll: () => {
         const table = $("table#table-items tbody tr.input");
-        let totalDpp = 0;
-        let totalTax = 0;
+        let subTotalAll = 0;
+        let qtyTotal = 0;
 
         table.each((index, elm) => {
             const subtotal =
                 parseFloat($(elm).find("input#subtotal").val()) || 0;
-            const tax = parseFloat($(elm).data("tax_amount")) || 0;
-            const dpp = parseFloat($(elm).data("dpp")) || 0;
+            const qty =
+                parseFloat($(elm).find("input#qty_received").val()) || 0;
 
-            totalDpp += dpp;
-            totalTax += tax;
+            subTotalAll += subtotal;
+            qtyTotal += qty;
         });
 
-        const grandTotal = totalDpp + totalTax;
+        const grandTotal = subTotalAll;
 
-        $("#total-harga").text(grandTotal.toFixed(2));
-        $("#total-pajak").text(totalTax.toFixed(2));
+        $("#total-qty").text(qtyTotal.toFixed(2));
     },
 
     removeRow: (elm) => {
