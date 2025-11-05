@@ -58,7 +58,9 @@ let PurchaseOrder = {
                         ? 0
                         : $(elm).find("#subtotal").val(),
                 tax:
-                    $(elm).find("select#tax").val() == "" ? 0 : $(elm).find("select#tax").val(),
+                    $(elm).find("select#tax").val() == ""
+                        ? 0
+                        : $(elm).find("select#tax").val(),
                 tax_rate:
                     $(elm).find("select#tax option:selected").data("rate") || 0,
                 tax_amount: $(elm).data("tax_amount") || 0,
@@ -193,6 +195,9 @@ let PurchaseOrder = {
                     data: "created_by_name",
                 },
                 {
+                    data: "status",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
@@ -201,14 +206,14 @@ let PurchaseOrder = {
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
-                                html += `<a href='${url.base_url(
-                                    PurchaseOrder.module()
-                                )}ubah?id=${data}' data_id="${
-                                    row.id
-                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            html += `<a href='${url.base_url(
+                                PurchaseOrder.module()
+                            )}ubah?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if(row.status == 'draft'){
+                            if (row.status == "draft") {
                                 html += `<button type="button" data_id="${row.id}" onclick="PurchaseOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
