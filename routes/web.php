@@ -26,6 +26,7 @@ use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
+use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -54,6 +55,7 @@ use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseContro
 use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
+use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -167,6 +169,11 @@ Route::get('transaksi/good-receipt', [GoodReceiptController::class, 'index']);
 Route::get('transaksi/good-receipt/add', [GoodReceiptController::class, 'add']);
 Route::get('transaksi/good-receipt/ubah', [GoodReceiptController::class, 'ubah']);
 Route::get('transaksi/good-receipt/cetak', [GoodReceiptController::class, 'cetak']);
+
+Route::get('transaksi/purchase-invoice', [PurchaseInvoiceController::class, 'index']);
+Route::get('transaksi/purchase-invoice/add', [PurchaseInvoiceController::class, 'add']);
+Route::get('transaksi/purchase-invoice/ubah', [PurchaseInvoiceController::class, 'ubah']);
+Route::get('transaksi/purchase-invoice/cetak', [PurchaseInvoiceController::class, 'cetak']);
 
 /*API */
 
@@ -323,4 +330,9 @@ Route::post('api/transaksi/good-receipt/delete', [TransactionGoodReceiptControll
 Route::post('api/transaksi/good-receipt/confirmDelete', [TransactionGoodReceiptController::class, 'confirmDelete']);
 Route::post('api/transaksi/good-receipt/showDataPOItem', [TransactionGoodReceiptController::class, 'showDataPOItem']);
 Route::post('api/transaksi/good-receipt/getListItemOutstandingPO', [TransactionGoodReceiptController::class, 'getListItemOutstandingPO']);
+
+Route::post('api/transaksi/purchase-invoice/getData', [TransactionPurchaseInvoiceController::class, 'getData']);
+Route::post('api/transaksi/purchase-invoice/submit', [TransactionPurchaseInvoiceController::class, 'submit']);
+Route::post('api/transaksi/purchase-invoice/delete', [TransactionPurchaseInvoiceController::class, 'delete']);
+Route::post('api/transaksi/purchase-invoice/confirmDelete', [TransactionPurchaseInvoiceController::class, 'confirmDelete']);
 /*API */
