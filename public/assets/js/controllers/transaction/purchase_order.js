@@ -201,14 +201,16 @@ let PurchaseOrder = {
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
-                            html += `<a href='${url.base_url(
-                                PurchaseOrder.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                                html += `<a href='${url.base_url(
+                                    PurchaseOrder.module()
+                                )}ubah?id=${data}' data_id="${
+                                    row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            html += `<button type="button" data_id="${row.id}" onclick="PurchaseOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            if(row.status == 'draft'){
+                                html += `<button type="button" data_id="${row.id}" onclick="PurchaseOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            }
                         }
                         return html;
                     },

@@ -186,9 +186,17 @@
         </div>
 
         <div class="text-end">
-            <button type="submit" onclick="PurchaseOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
-                Submit
-            </button>
+            @if (isset($id))
+                @if ($data->status == 'draft')
+                    <button type="submit" onclick="PurchaseOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                        Submit
+                    </button>
+                @endif
+            @else
+                <button type="submit" onclick="PurchaseOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                    Submit
+                </button>
+            @endif
             <button type="reset" onclick="PurchaseOrder.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel
             </button>
