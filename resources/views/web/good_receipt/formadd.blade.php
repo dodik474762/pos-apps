@@ -30,7 +30,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Nomor GR</label>
                                 <input type="text" id="gr_number" class="form-control required"
-                                    error="Nomor GR" placeholder="Auto Generate" readonly
+                                    error="Nomor GR" placeholder="Auto Generate" disabled
                                     value="{{ isset($data->gr_number) ? $data->gr_number : 'AUTO' }}">
                             </div>
 
@@ -38,14 +38,18 @@
                                 <label class="form-label">Purchase Order</label>
                                 <select class="form-control select2 required" id="purchase_order" error="Purchase Order" onchange="GoodReceipt.getListItemOutstandingPO(this)">
                                     <option value=""></option>
-                                    @foreach ($purchase_orders as $po)
-                                        <option value="{{ $po->id }}"
-                                            {{ isset($data->purchase_order) && $data->purchase_order == $po->id ? 'selected' : '' }}
-                                            vendor="{{ $po->vendor }}"
-                                            vendor_name="{{ $po->vendors->nama_vendor }}">
-                                            {{ $po->code }} - {{ $po->vendors->nama_vendor }} / {{ $po->status }}
-                                        </option>
-                                    @endforeach
+                                    @if (isset($id))
+                                        <option selected value="{{ $data->purchase_order }}">{{ $data->po_code }} - {{ $data->nama_vendor }} / {{ $data->status_po }}</option>
+                                    @else
+                                        @foreach ($purchase_orders as $po)
+                                            <option value="{{ $po->id }}"
+                                                {{ isset($data->purchase_order) && $data->purchase_order == $po->id ? 'selected' : '' }}
+                                                vendor="{{ $po->vendor }}"
+                                                vendor_name="{{ $po->vendors->nama_vendor }}">
+                                                {{ $po->code }} - {{ $po->vendors->nama_vendor }} / {{ $po->status }}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
 
@@ -99,25 +103,44 @@
                                 </tr>
                             </thead>
                             <tbody id="detail-body">
-                                <tr class="input" data_id="">
-                                    <td>
-                                        <div class="input-group">
-                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
-                                                onclick="GoodReceipt.showDataPOItem(this)">Pilih</button>
-                                            <input disabled id="po_detail" name="po_detail" type="text" class="form-control required"
-                                                error="PO Detail" placeholder="Pilih Item dari PO" aria-label="Pilih Item"
-                                                aria-describedby="button-addon1" value="">
-                                        </div>
-                                    </td>
-                                    <td><input type="number" class="form-control" id="qty_received" value="1" min="1" onkeyup="GoodReceipt.calcRow(this)"></td>
-                                    <td data_id="" id="unit"></td>
-                                    <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot"></td>
-                                    <td><input type="date" class="form-control required" error="Expired Date" id="expired_date"></td>
-                                    <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
-                                    </td>
-                                </tr>
+                                @if (!empty($data_item))
+                                    @foreach ($data_item as $item)
+                                        <tr class="input" data_id="{{ $item->purchase_order_detail }}" id_detail="{{ $item->id }}">
+                                            <td>
+                                                <input disabled id="po_detail" data_id="{{ $item->product }}" name="po_detail" type="text" class="form-control required" error="PO Detail"
+                                                    placeholder="Pilih Item dari PO" aria-label="Pilih Item" aria-describedby="button-addon1"
+                                                    price="{{ $item->purchase_price }}"
+                                                    value="{{ $item->product_code }} / {{ $item->product_name }}">
+                                            </td>
+                                            <td><input type="number" class="form-control" id="qty_received" value="{{ $item->qty_received }}" min="1" max="{{ $item->qty_received }}"
+                                                onkeyup="GoodReceipt.calcRow(this)"></td>
+                                            <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
+                                            <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot" value="{{ $item->lot_number }}"></td>
+                                            <td><input type="date" class="form-control required" error="Expired Date" id="expired_date" value="{{ $item->expired_date }}"></td>
+                                            <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr class="input" data_id="" id_detail="">
+                                        <td>
+                                            <input disabled id="po_detail" data_id="" name="po_detail" type="text" class="form-control required" error="PO Detail"
+                                                    placeholder="Pilih Item dari PO" aria-label="Pilih Item" aria-describedby="button-addon1"
+                                                    price=""
+                                                    value="">
+                                        </td>
+                                        <td><input type="number" class="form-control" id="qty_received" value="1" min="1" onkeyup="GoodReceipt.calcRow(this)"></td>
+                                        <td data_id="" id="unit"></td>
+                                        <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot"></td>
+                                        <td><input type="date" class="form-control required" error="Expired Date" id="expired_date"></td>
+                                        <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                        </td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>

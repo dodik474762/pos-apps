@@ -193,14 +193,18 @@ let GoodReceipt = {
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
-                            html += `<a href='${url.base_url(
-                                GoodReceipt.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            if(row.status == 'open'){
+                                html += `<a href='${url.base_url(
+                                    GoodReceipt.module()
+                                )}ubah?id=${data}' data_id="${
+                                    row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            }
                         }
                         if (deleteAction == 1) {
-                            html += `<button type="button" data_id="${row.id}" onclick="GoodReceipt.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            if(row.status == 'open'){
+                                html += `<button type="button" data_id="${row.id}" onclick="GoodReceipt.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            }
                         }
                         return html;
                     },
@@ -489,16 +493,20 @@ let GoodReceipt = {
         let qtyTotal = 0;
 
         table.each((index, elm) => {
-            const subtotal =
-                parseFloat($(elm).find("input#subtotal").val()) || 0;
-            const qty =
-                parseFloat($(elm).find("input#qty_received").val()) || 0;
+            if(!$(elm).hasClass('remove')){
+                const subtotal =
+                    parseFloat($(elm).find("input#subtotal").val()) || 0;
+                const qty =
+                    parseFloat($(elm).find("input#qty_received").val()) || 0;
 
-            subTotalAll += subtotal;
-            qtyTotal += qty;
+                subTotalAll += subtotal;
+                qtyTotal += qty;
+            }
         });
 
         const grandTotal = subTotalAll;
+
+        console.log('qtyTotal', qtyTotal);
 
         $("#total-qty").text(qtyTotal.toFixed(2));
     },
@@ -511,6 +519,8 @@ let GoodReceipt = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
+
+        GoodReceipt.hitungSummaryAll();
     },
 
     addRow: () => {

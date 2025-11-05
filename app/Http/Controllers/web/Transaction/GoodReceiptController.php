@@ -13,6 +13,7 @@ use App\Models\Transaction\GoodReceiptDtl;
 use App\Models\Transaction\PurchaseOrder;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class GoodReceiptController extends Controller
 {
@@ -100,17 +101,24 @@ class GoodReceiptController extends Controller
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = GoodReceiptDtl::where('goods_receipt_detail.good_receipt_hdr', $data['id'])
+        $data['data_item'] = GoodReceiptDtl::where('goods_receipt_detail.goods_receipt_header', $data['id'])
             ->select([
                 'goods_receipt_detail.*',
                 'p.id as product_id',
                 'p.name as product_name',
                 'u.name as unit_name',
+                'pod.purchase_price',
+                'p.code as product_code',
             ])
+            ->join('purchase_order_detail as pod', 'pod.id', 'goods_receipt_detail.purchase_order_detail')
             ->join('product as p', 'p.id', 'goods_receipt_detail.product')
             ->join('unit as u', 'u.id', 'goods_receipt_detail.unit')
             ->get();
 
+        $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
+            ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
+            ->with(['vendors'])
+            ->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.good_receipt.formadd', $data);
@@ -126,9 +134,9 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = GoodReceipt::with(['vendors', 'warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
-        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
-        $qr = '';
+        $data = GoodReceipt::with(['po','po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
+        // $qr = '';
         // echo '<pre>';
         // print_r($data);
         // die;
@@ -136,7 +144,7 @@ class GoodReceiptController extends Controller
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.good_receipt.print.po-print', compact('data', 'total', 'company', 'qr'))
+        $pdf = Pdf::loadView('web.good_receipt.print.gr-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PO-' . $data->code . '.pdf');

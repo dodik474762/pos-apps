@@ -16,7 +16,7 @@
             <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot"></td>
             <td><input type="date" class="form-control required" error="Expired Date" id="expired_date"></td>
             <td><input disabled type="text" class="form-control" id="subtotal"
-                    value="{{ $item->subtotal }}"></td>
+                    value="{{ $item->purchase_price * $item->qty }}"></td>
             <td class="text-center">
                 <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)">
                     <i class="bx bx-trash-alt"></i>

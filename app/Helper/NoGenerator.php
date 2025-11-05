@@ -540,7 +540,10 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
 {
     $postingDate = now();
 
-    $post = new GeneralLedger;
+    $exist = GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
+    ->where('dc', $dc)->first();
+
+    $post = empty($exist) ? new GeneralLedger() : $exist;
     $post->posting_date = $postingDate;
     $post->reference = $reference;
     $post->account_id = $account_id;
@@ -551,6 +554,12 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $post->description = $desc;
     $post->created_by = session('user_id');
     $post->save();
+}
+
+function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '')
+{
+    GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
+    ->where('dc', $dc)->delete();
 }
 
 function getSmallestUnit($productId, $fromUnitId, $qty = 1)
@@ -586,7 +595,7 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
-function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '')
+function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
 {
     // Update stok di gudang
     $warehouseId = $warehouse; // sesuaikan, atau ambil dari form GR
@@ -625,10 +634,47 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         'warehouse' => $warehouseId,
         'qty_in' => $type == 'add' ? $convertedQty : 0,
         'qty_out' => $type == 'add' ? 0 : $convertedQty,
-        'move_type' => 'good_receipt',
+        'move_type' => $move_type,
         'reference_id' => $reference_id,
         'price' => $value['price'] ?? 0,
         'created_at' => now(),
     ]);
-
 }
+
+function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '')
+{
+    $warehouseId = $warehouse;
+
+    // Ambil data stok
+    $stock = DB::table('product_stock')
+        ->where('product', $product)
+        ->where('unit', $baseUnit)
+        ->where('warehouse', $warehouseId)
+        ->first();
+
+    if ($stock) {
+        // Rollback qty (kebalikan dari type)
+        DB::table('product_stock')
+            ->where('id', $stock->id)
+            ->update([
+                'qty' => $type == 'add'
+                    ? $stock->qty - $convertedQty   // jika sebelumnya add, rollback = kurangi
+                    : $stock->qty + $convertedQty,  // jika sebelumnya reduce, rollback = tambah
+                'updated_at' => now(),
+            ]);
+    }
+
+    // Catat pergerakan rollback di product_stock_move
+    DB::table('product_stock_move')->insert([
+        'product' => $product,
+        'unit' => $baseUnit,
+        'warehouse' => $warehouseId,
+        'qty_in' => $type == 'add' ? 0 : $convertedQty,   // jika sebelumnya add, rollback = keluar
+        'qty_out' => $type == 'add' ? $convertedQty : 0,  // jika sebelumnya reduce, rollback = masuk
+        'move_type' => 'rollback',
+        'reference_id' => $reference_id,
+        'price' => $value['price'] ?? 0,
+        'created_at' => now(),
+    ]);
+}
+
