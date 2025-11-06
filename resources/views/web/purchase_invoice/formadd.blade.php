@@ -1,8 +1,7 @@
 <!-- Modal for Detail -->
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-    data-bs-target="#data-modal-item"></button>
-<div id="content-modal-form"></div>
-<input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
+  data-bs-target="#data-modal-karyawan"></button>
+<div id="content-modal-form"></div><input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 
 <!-- start page title -->
 <div class="row">
@@ -44,12 +43,11 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Vendor</label>
-                                <select class="form-control select2 required" id="vendor"
-                                    onchange="PurchaseInvoice.getVendorData(this)">
+                                <select class="form-control select2 required" id="vendor">
                                     <option value=""></option>
                                     @foreach ($vendors as $vendor)
                                         <option value="{{ $vendor->id }}" {{ isset($data->vendor) && $data->vendor == $vendor->id ? 'selected' : '' }}>
-                                            {{ $vendor->name }}
+                                            {{ $vendor->nama_vendor }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -58,16 +56,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Total Amount</label>
                                 <input type="text" id="total_amount" class="form-control" value="0.00" readonly>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-control select2" id="status">
-                                    <option value="draft" {{ isset($data->status) && $data->status == 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="posted" {{ isset($data->status) && $data->status == 'posted' ? 'selected' : '' }}>Posted</option>
-                                    <option value="paid" {{ isset($data->status) && $data->status == 'paid' ? 'selected' : '' }}>Paid</option>
-                                    <option value="cancelled" {{ isset($data->status) && $data->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                </select>
                             </div>
                         </div>
 
@@ -143,17 +131,25 @@
                                     @endforeach
                                 @else
                                     <tr class="input" data_id="" id_detail="">
-                                        <td><input type="text" class="form-control" id="po_detail"
-                                                placeholder="Select PO Item" disabled></td>
-                                        <td><input type="number" class="form-control" id="qty" value="1" min="1"
+                                        <td>
+                                            <div class="input-group">
+                                                    <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                        onclick="PurchaseInvoice.showDataPoDetail(this)">Pilih</button>
+                                                    <input disabled id="po-detail" name="po-detail" type="text" class="form-control required"
+                                                        error="Data PO Detail" placeholder="Pilih Data PO Detail" aria-label="Pilih Data PO Detail"
+                                                        aria-describedby="button-addon1"
+                                                        value="">
+                                                </div>
+                                        </td>
+                                        <td><input type="number" class="form-control" disabled id="qty" value="1" min="1"
                                                 onkeyup="PurchaseInvoice.calcRow(this)"></td>
                                         <td><input type="text" class="form-control" id="unit" disabled></td>
-                                        <td><input type="number" class="form-control" id="price" value="0" readonly></td>
+                                        <td><input type="number" class="form-control" id="price" value="0" disabled></td>
                                         <td><input type="number" class="form-control" id="discount" value="0"
-                                                onkeyup="PurchaseInvoice.calcRow(this)"></td>
+                                                onkeyup="PurchaseInvoice.calcRow(this)" disabled></td>
                                         <td><input type="number" class="form-control" id="tax" value="0"
-                                                onkeyup="PurchaseInvoice.calcRow(this)"></td>
-                                        <td><input type="number" class="form-control" id="subtotal" value="0" readonly></td>
+                                                onkeyup="PurchaseInvoice.calcRow(this)" disabled></td>
+                                        <td><input type="number" class="form-control" id="subtotal" value="0" disabled></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-danger"
                                                 onclick="PurchaseInvoice.removeRow(this)"><i
@@ -164,6 +160,8 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <button type="button" class="btn btn-sm btn-primary mt-2" onclick="PurchaseInvoice.addRow()">+ Tambah Barang</button>
 
                     <div class="text-end mt-4">
                         <h5>Total Amount: <span id="total-amount">0.00</span></h5>

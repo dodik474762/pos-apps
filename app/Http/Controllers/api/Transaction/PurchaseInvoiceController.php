@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\AccountMapping;
+use App\Models\Master\Currency;
+use App\Models\Transaction\PurchaseInvoiceDtl;
+use App\Models\Transaction\PurchaseInvoiceHeader;
+use App\Models\Transaction\PurchaseOrder;
+use App\Models\Transaction\PurchaseOrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseInvoiceController extends Controller
 {
-     public function getTableName()
+    public function getTableName()
     {
         return 'purchase_invoice_header';
     }
@@ -67,16 +73,12 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
 
-        // echo '<pre>';
-        // print_r($data);die;
         $users = session('user_id');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             // code...
             $currency = Currency::where('code', 'IDR')->first();
-            $po = PurchaseOrder::find($data['purchase_order']);
-            $warehouse = $po->warehouse;
 
             if (empty($currency)) {
                 DB::rollBack();
@@ -85,31 +87,56 @@ class PurchaseInvoiceController extends Controller
                 return response()->json($result);
             }
 
-            $roles = $data['id'] == '' ? new GoodReceipt : GoodReceipt::find($data['id']);
+            $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'hutang usaha')
+                ->with('account')
+                ->first();
+
+            $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'grir')
+                ->with('account')
+                ->first();
+
+            $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'ppn masukan')
+                ->with('account')
+                ->first();
+
+            $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'diskon pembelian')
+                ->with('account')
+                ->first();
+
+            if (! $hutangAccount || ! $grirAccount || ! $ppnMasukanAccount || ! $discAccount) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Purchase Invoice belum lengkap.',
+                ]);
+            }
+
+            $currency_id = $currency->id;
+
+            $roles = $data['id'] == '' ? new PurchaseInvoiceHeader : PurchaseInvoiceHeader::find($data['id']);
             if ($data['id'] == '') {
-                $roles->gr_number = generateGrNumber();
+                $roles->invoice_number = generatePINumber();
                 $roles->created_by = $users;
             }
-            $roles->received_date = $data['received_date'];
-            $roles->purchase_order = $data['purchase_order'];
-            $roles->remarks = $data['remarks'];
+            $roles->invoice_date = $data['invoice_date'];
             $roles->vendor = $data['vendor'];
-            $roles->received_by = $data['received_by'];
-            $roles->status = 'open';
-            $roles->total_qty = $data['total_qty'];
-            $roles->currency = $currency->id;
+            $roles->remarks = $data['remarks'];
+            $roles->total_amount = $data['total_amount'];
+            $roles->status = 'draft';
+            $roles->currency = $currency_id;
             $roles->save();
             $hdrId = $roles->id;
 
-            $grand_total = 0;
-            $totalFullyReceived = 0;
-            $totalPartlyReceived = 0;
-            $disc_total = 0;
-            $ppnTotal = 0;
-            $poGrandTotal = 0;
+            $data_po = [];
             foreach ($data['items'] as $key => $value) {
+                [$po_number, $po_detail_id, $product, $product_name] = explode('//', $value['po_detail']);
                 if ($value['remove'] == '1') {
-                    $items = GoodReceiptDtl::find($value['id_detail']);
+                    $items = PurchaseInvoiceDtl::find($value['id_detail']);
                     if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -119,67 +146,28 @@ class PurchaseInvoiceController extends Controller
                     $items->deleted = now();
                     $items->save();
                 } else {
-                    $items = $value['id_detail'] == '' ? new GoodReceiptDtl : GoodReceiptDtl::find($value['id_detail']);
+                    $items = $value['id_detail'] == '' ? new PurchaseInvoiceDtl : PurchaseInvoiceDtl::find($value['id_detail']);
                     $status = $value['id_detail'] == '' ? '' : $items->status;
 
-                     $update = PurchaseOrderDetail::where('id', $value['id'])->first();
-                    if (empty($update)) {
+                    $purchase_price_detail = PurchaseOrderDetail::find($po_detail_id);
+                    if (empty($purchase_price_detail)) {
                         DB::rollBack();
-                        $result['message'] = 'Data PO Item '.$value['product'].' tidak ditemukan';
+                        $result['message'] = 'Data PO Item '.$product_name.' tidak ditemukan';
 
                         return response()->json($result);
                     }
 
-                    if ($data['id'] != '') {
-                        // Cek data lama di detail GR
-                        $oldDetail = GoodReceiptDtl::find($value['id_detail']);
-                        if ($oldDetail) {
-                            // Hitung qty dalam base unit
-                            $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received);
-                            $qtyBaseUnitOld = $qtyBaseUnitOld['qty_in_base_unit'];
-
-                            // Rollback stok lama
-                            $valueRollback = [
-                                'product' => $oldDetail->product,
-                                'price' => $update->purchase_price ?? 0,
-                            ];
-
-                            $productUomLevel1 = ProductUom::where('product', $oldDetail->product)->where('level', '1')->first();
-
-                            // rollback stok lama (kebalikan dari add)
-                            stockRollback(
-                                $hdrId,
-                                $warehouse,
-                                $oldDetail->product,
-                                $productUomLevel1->unit_tujuan,
-                                $qtyBaseUnitOld,
-                                $valueRollback,
-                                'add' // karena sebelumnya 'add', rollback-nya kebalikannya
-                            );
-                        }
-                    }
-
-                    $purchase_price = $update->purchase_price;
-                    $subtotal = $purchase_price * $value['qty_received'];
-                    $diskon_persentase = ($update->diskon_persen / 100) * $subtotal;
-                    $diskon_nominal = $update->diskon_nominal;
-                    $tax_amount = $update->tax_rate / 100 * ($subtotal - $diskon_persentase - $diskon_nominal);
-                    $value['subtotal'] = $subtotal - $diskon_persentase - $diskon_nominal + $tax_amount;
-
-                    $disc_total += ($diskon_persentase + $diskon_nominal);
-                    $ppnTotal += $tax_amount;
-                    $grandTotalPo = $purchase_price * $update->qty;
-                    $poGrandTotal += $grandTotalPo;
-
-                    $items->goods_receipt_header = $hdrId;
-                    $items->purchase_order_detail = $value['id'];
-                    $items->product = $value['product'];
+                    $items->purchase_invoice_id = $hdrId;
+                    $items->purchase_order_detail_id = $po_detail_id;
+                    $items->product = $product;
                     $items->unit = $value['unit'];
                     $items->unit_name = $value['unit_name'];
-                    $items->qty_received = $value['qty_received'];
-                    $items->lot_number = $value['lot_number'];
-                    $items->expired_date = $value['expired_date'];
-                    $items->subtotal = $subtotal;
+                    $items->qty = $value['qty'];
+                    $items->purchase_price = $value['price'];
+                    $items->discount_percent = $purchase_price_detail->diskon_persen;
+                    $items->discount_amount = $purchase_price_detail->diskon_nominal;
+                    $items->tax = $purchase_price_detail->tax_rate;
+                    $items->subtotal = $purchase_price_detail->subtotal;
                     $items->status = 'open';
                     $items->save();
 
@@ -192,97 +180,26 @@ class PurchaseInvoiceController extends Controller
                         }
                     }
 
-                    $total_oustanding_qty_po = $data['id'] == '' ? intval($value['qty_outstanding']) - intval($value['qty_received']) :
-                        intval($update->qty) - intval($value['qty_received']) ;
+                    $purchase_price_detail->status = 'invoiced';
+                    $purchase_price_detail->save();
 
-                    if ($total_oustanding_qty_po < 0) {
-                        DB::rollBack();
-                        $result['message'] = 'Qty outstanding tidak mencukupi';
+                    $grand_total = $value['qty'] * $value['price'];
+                    $reference = $po_number.'-'.$po_detail_id;
+                    postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total), $currency_id);
+                    postingGL($reference, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, ($value['discount']), $currency_id);
+                    postingGL($reference, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $purchase_price_detail->tax_amount, $currency_id);
+                    postingGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd, $value['subtotal'], $currency_id);
 
-                        return response()->json($result);
-                    }
-
-
-                    $update->qty_received = $data['id'] == '' ? $update->qty_received + $value['qty_received'] : $value['qty_received'];
-
-                    if ($total_oustanding_qty_po == 0) {
-                        $update->status = 'received';
-                        $totalFullyReceived += 1;
-                    }
-
-                    if ($total_oustanding_qty_po > 0) {
-                        $update->status = 'partial-received';
-                        $totalPartlyReceived += 1;
-                    }
-                    $update->save();
-
-                    $qtyBaseUnit = getSmallestUnit($value['product'], $value['unit'], $value['qty_received']);
-                    $productUomLevel1 = ProductUom::where('product', $value['product'])->where('level', '1')->first();
-                    $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
-
-                    $value['price'] = $purchase_price;
-                    stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
-                    $grand_total += $subtotal;
+                    $data_po[] = $po_number;
                 }
             }
 
-            if ($totalFullyReceived == count($data['items'])) {
-                $po->status = 'received';
+            $data_po = array_unique($data_po);
+            $po = PurchaseOrder::whereIn('code', $data_po)->get();
+            foreach ($po as $key => $value) {
+                $value->status = 'invoiced';
+                $value->save();
             }
-            if ($totalPartlyReceived == count($data['items'])) {
-                $po->status = 'partial-received';
-            }
-            $po->save();
-
-            $update = GoodReceipt::find($hdrId);
-            $update->total_amount = $grand_total;
-            $update->save();
-
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'inventory')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            // $ppnMasukanAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-            //     ->where('account_type', 'ppn masukan')
-            //     ->with('account')
-            //     ->first();
-
-            // $discAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-            //     ->where('account_type', 'diskon pembelian')
-            //     ->with('account')
-            //     ->first();
-
-            if (! $inventoryAccount || ! $grirAccount) {
-                DB::rollBack();
-
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Good Receipt belum lengkap.',
-                ]);
-            }
-
-            postingGL($update->gr_number, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $grand_total, $update->currency);
-            postingGL($update->gr_number, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total), $update->currency);
-
-            // if ($ppnMasukanAccount) {
-            //     $partialRatio = $grand_total / $poGrandTotal;
-
-            //     $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
-            //     postingGL($update->gr_number, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $ppnAmount, $update->currency);
-            // }
-
-            // if ($discAccount) {
-            //     $partialRatio = $grand_total / $poGrandTotal;
-            //     $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
-            //     $discountAmount = $disc_total * $partialRatio; // proporsional diskon
-            //     postingGL($update->gr_number, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, $discountAmount, $update->currency);
-            // }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -348,7 +265,6 @@ class PurchaseInvoiceController extends Controller
                     );
                 }
 
-
                 $value->deleted = date('Y-m-d H:i:s');
                 $value->deleted_by = session('user_id');
                 $value->save();
@@ -356,22 +272,21 @@ class PurchaseInvoiceController extends Controller
                 $update = PurchaseOrderDetail::where('id', $value->purchase_order_detail)->first();
                 $update->qty_received = $update->qty_received - $value->qty_received;
 
-                if($update->qty - $update->qty_received == 0){
+                if ($update->qty - $update->qty_received == 0) {
                     $update->status = 'received';
                     $totalFullyReceived += 1;
                 }
 
-                if($update->qty - $update->qty_received > 0){
+                if ($update->qty - $update->qty_received > 0) {
                     $update->status = 'partial-received';
                     $totalPartlyReceived += 1;
                 }
-                if($update->qty_received == 0){
+                if ($update->qty_received == 0) {
                     $update->status = 'open';
                     $totalOpen += 1;
                 }
                 $update->save();
             }
-
 
             $po = PurchaseOrder::find($menu->purchase_order);
             if ($totalFullyReceived == count($items->toArray())) {
@@ -418,7 +333,7 @@ class PurchaseInvoiceController extends Controller
                 'po.code as po_code',
                 'po.vendor',
                 'v.nama_vendor',
-                'po.status as status_po'
+                'po.status as status_po',
             ])
             ->join('purchase_order as po', 'po.id', 'm.purchase_order')
             ->join('vendor as v', 'v.id', 'po.vendor')
@@ -436,7 +351,7 @@ class PurchaseInvoiceController extends Controller
         return view('web.purchase_invoice.modal.confirmdelete', $data);
     }
 
-    public function showDataPOItem(Request $request)
+    public function showDataPoDetail(Request $request)
     {
         $data = $request->all();
 

@@ -323,6 +323,7 @@ Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderCont
 Route::post('api/transaksi/purchase_order/delete', [TransactionPurchaseOrderController::class, 'delete']);
 Route::post('api/transaksi/purchase_order/confirmDelete', [TransactionPurchaseOrderController::class, 'confirmDelete']);
 Route::post('api/transaksi/purchase_order/showDataProduct', [TransactionPurchaseOrderController::class, 'showDataProduct']);
+Route::post('api/transaksi/purchase_order/getDataProductPoDetail', [TransactionPurchaseOrderController::class, 'getDataProductPoDetail']);
 
 Route::post('api/transaksi/good-receipt/getData', [TransactionGoodReceiptController::class, 'getData']);
 Route::post('api/transaksi/good-receipt/submit', [TransactionGoodReceiptController::class, 'submit']);
@@ -335,4 +336,5 @@ Route::post('api/transaksi/purchase-invoice/getData', [TransactionPurchaseInvoic
 Route::post('api/transaksi/purchase-invoice/submit', [TransactionPurchaseInvoiceController::class, 'submit']);
 Route::post('api/transaksi/purchase-invoice/delete', [TransactionPurchaseInvoiceController::class, 'delete']);
 Route::post('api/transaksi/purchase-invoice/confirmDelete', [TransactionPurchaseInvoiceController::class, 'confirmDelete']);
+Route::post('api/transaksi/purchase-invoice/showDataPoDetail', [TransactionPurchaseInvoiceController::class, 'showDataPoDetail']);
 /*API */

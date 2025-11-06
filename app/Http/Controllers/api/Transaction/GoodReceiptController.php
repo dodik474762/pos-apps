@@ -92,6 +92,25 @@ class GoodReceiptController extends Controller
                 return response()->json($result);
             }
 
+            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'inventory')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'grir')
+                ->with('account')
+                ->first();
+
+            if (! $inventoryAccount || ! $grirAccount) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Good Receipt belum lengkap.',
+                ]);
+            }
+
             $roles = $data['id'] == '' ? new GoodReceipt : GoodReceipt::find($data['id']);
             if ($data['id'] == '') {
                 $roles->gr_number = generateGrNumber();
@@ -230,6 +249,10 @@ class GoodReceiptController extends Controller
                     $value['price'] = $purchase_price;
                     stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
                     $grand_total += $subtotal;
+
+                    $reference = $update->gr_number.'-'.$value['id'];
+                    postingGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $subtotal, $update->currency);
+                    postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($subtotal), $update->currency);
                 }
             }
 
@@ -244,52 +267,6 @@ class GoodReceiptController extends Controller
             $update = GoodReceipt::find($hdrId);
             $update->total_amount = $grand_total;
             $update->save();
-
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'inventory')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            // $ppnMasukanAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-            //     ->where('account_type', 'ppn masukan')
-            //     ->with('account')
-            //     ->first();
-
-            // $discAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-            //     ->where('account_type', 'diskon pembelian')
-            //     ->with('account')
-            //     ->first();
-
-            if (! $inventoryAccount || ! $grirAccount) {
-                DB::rollBack();
-
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Good Receipt belum lengkap.',
-                ]);
-            }
-
-            postingGL($update->gr_number, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $grand_total, $update->currency);
-            postingGL($update->gr_number, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total), $update->currency);
-
-            // if ($ppnMasukanAccount) {
-            //     $partialRatio = $grand_total / $poGrandTotal;
-
-            //     $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
-            //     postingGL($update->gr_number, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $ppnAmount, $update->currency);
-            // }
-
-            // if ($discAccount) {
-            //     $partialRatio = $grand_total / $poGrandTotal;
-            //     $ppnAmount = $ppnTotal * $partialRatio; // proporsional PPN
-            //     $discountAmount = $disc_total * $partialRatio; // proporsional diskon
-            //     postingGL($update->gr_number, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, $discountAmount, $update->currency);
-            // }
 
             DB::commit();
             $result['is_valid'] = true;

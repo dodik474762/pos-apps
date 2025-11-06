@@ -1,4 +1,5 @@
 let elmChoose;
+let itemsChoose = [];
 let PurchaseInvoice = {
     module: () => {
         return "transaksi/purchase-invoice";
@@ -42,13 +43,12 @@ let PurchaseInvoice = {
             result.push({
                 id: $(elm).attr("data_id"),
                 id_detail: $(elm).attr("id_detail"),
-                product: $(elm).find("#po_detail").attr('data_id'),
-                qty_received: $(elm).find("#qty_received").val(),
-                qty_outstanding: $(elm).find("#qty_received").attr('max'),
-                unit: $(elm).find("td#unit").attr("data_id"),
-                unit_name: $(elm).find("td#unit").text(),
-                lot_number: $(elm).find("#lot_number").val(),
-                expired_date: $(elm).find("#expired_date").val(),
+                po_detail: $(elm).find("#po-detail").val(),
+                qty: $(elm).find("#qty").val(),
+                unit_name: $(elm).find("#unit").val(),
+                unit: $(elm).find("#unit").attr('data_id'),
+                price: $(elm).find("#price").val(),
+                discount: $(elm).find("#discount").val(),
                 subtotal: $(elm).find("#subtotal").val(),
                 remove: $(elm).hasClass("remove") ? 1 : 0,
             });
@@ -60,13 +60,11 @@ let PurchaseInvoice = {
     getPostInput: () => {
         let data = {
             id: $("input#id").val(),
-            received_date: $("#received_date").val(),
-            vendor_name: $("#vendor").val(),
-            vendor: $("#vendor").attr('data_id'),
-            purchase_order: $("#purchase_order").val(),
+            invoice_date: $("#invoice_date").val(),
+            invoice_number: $("#invoice_number").val(),
+            vendor: $("#vendor").val(),
+            total_amount: $("#total_amount").val(),
             remarks: $("#remarks").val(),
-            received_by: $("#received_by").val(),
-            total_qty: $("#total-qty").text(),
             items: PurchaseInvoice.getPostItem(),
         };
 
@@ -298,16 +296,16 @@ let PurchaseInvoice = {
         });
     },
 
-    showDataPOItem: (elm) => {
+    showDataPoDetail: (elm) => {
         let params = {
-            po: $('#purchase_order').val()
+            vendor: $('#vendor').val()
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(PurchaseInvoice.moduleApi()) + "showDataPOItem",
+            url: url.base_url(PurchaseInvoice.moduleApi()) + "showDataPoDetail",
             headers: {
                 "X-CSRF-TOKEN": PurchaseInvoice.csrf_token(),
             },
@@ -326,7 +324,7 @@ let PurchaseInvoice = {
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
-                PurchaseInvoice.getDataProduct(po);
+                PurchaseInvoice.getDataProduct();
             },
         });
     },
@@ -394,10 +392,11 @@ let PurchaseInvoice = {
             ajax: {
                 url:
                     url.base_url(PurchaseInvoice.moduleApiPo()) +
-                    `getDataProduct`,
+                    `getDataProductPoDetail`,
                 type: "POST",
                 data: {
-                    po: po
+                    vendor: $('#vendor').val(),
+                    itemsChoose: itemsChoose
                 },
                 headers: {
                     "X-CSRF-TOKEN": PurchaseInvoice.csrf_token(),
@@ -416,21 +415,59 @@ let PurchaseInvoice = {
                     },
                 },
                 {
-                    data: "code",
+                    data: "po_code",
                 },
                 {
-                    data: "name",
+                    data: "product_code",
                 },
                 {
-                    data: "unit_tujuan_name",
+                    data: "product_name",
+                },
+                {
+                    data: "unit_name",
+                },
+                {
+                    data: "qty",
+                },
+                {
+                    data: "purchase_price",
+                },
+                {
+                    data: "diskon_persen",
+                },
+                {
+                    data: "diskon_nominal",
+                },
+                {
+                    data: "tax_rate",
+                },
+                {
+                    data: "tax_amount",
+                },
+                {
+                    data: "subtotal",
+                },
+                {
+                    data: "status",
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}" code="${row.code}" produk_name="${row.name}"
+                        html += `<a href='' produk_id="${row.product}" unit="${row.unit}"
+                        unit_name="${row.unit_name}"
+                        po_number="${row.po_code}"
+                        purchase_price="${row.purchase_price}"
+                        qty="${row.qty}"
+                        produk_name="${row.product_name}"
+                        data_id="${row.id}"
+                        diskon_persen="${row.diskon_persen}"
+                        diskon_nominal="${row.diskon_nominal}"
+                        tax_rate="${row.tax_rate}"
+                        tax_amount="${row.tax_amount}"
+                        subtotal="${row.subtotal}"
                         onclick="PurchaseInvoice.pilihDataProduct(this, event)"
-                        data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
@@ -442,17 +479,43 @@ let PurchaseInvoice = {
         e.preventDefault();
         let produk_name = $(elm).attr("produk_name");
         let produk_id = $(elm).attr("produk_id");
+        let qty = $(elm).attr("qty");
         let unit = $(elm).attr("unit");
         let unit_name = $(elm).attr("unit_name");
-        let product_uom_id = $(elm).attr("data_id");
+        let purchase_price = $(elm).attr("purchase_price");
+        let po_number = $(elm).attr("po_number");
+        let purchase_order_detail_id = $(elm).attr("data_id");
+        let tax_amount = $(elm).attr("tax_amount");
+        let tax_rate = $(elm).attr("tax_rate");
+        let diskon_persen = $(elm).attr("diskon_persen");
+        let diskon_nominal = $(elm).attr("diskon_nominal");
+        let subtotal = $(elm).attr("subtotal");
+
+        qty = isNaN(parseFloat(qty)) ? 0 : parseFloat(qty);
+        purchase_price = isNaN(parseFloat(purchase_price)) ? 0 : parseFloat(purchase_price);
+        diskon_persen = isNaN(parseFloat(diskon_persen)) ? 0 : parseFloat(diskon_persen);
+        diskon_nominal = isNaN(parseFloat(diskon_nominal)) ? 0 : parseFloat(diskon_nominal);
+        const grandTotal = qty * purchase_price;
+        const totalDiskonPersen = grandTotal * (diskon_persen / 100);
+        const diskonTotal = totalDiskonPersen + diskon_nominal;
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(product_uom_id + "//" + produk_id + "//" + produk_name);
+            .val(po_number + "//" + purchase_order_detail_id+ "//" + produk_id + "//" + produk_name);
         console.log($(elmChoose).closest("tr").find("td#unit"));
-        $(elmChoose).closest("tr").find("td#unit").text(unit_name);
-        $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
+        $(elmChoose).closest("tr").find("input#qty").val(qty);
+        $(elmChoose).closest("tr").find("input#unit").val(unit_name);
+        $(elmChoose).closest("tr").find("input#unit").attr("data_id", unit);
+        $(elmChoose).closest("tr").find("input#price").val(purchase_price);
+        $(elmChoose).closest("tr").find("input#discount").val(diskonTotal);
+        $(elmChoose).closest("tr").find("input#tax").val(tax_amount);
+        $(elmChoose).closest("tr").find("input#subtotal").val(subtotal);
+        itemsChoose.push({
+            purchase_order_detail_id: purchase_order_detail_id,
+        });
         $("button.btn-close").trigger("click");
+
+        PurchaseInvoice.hitungSummaryAll();
     },
 
     calcRow: (elm) => {
@@ -508,18 +571,33 @@ let PurchaseInvoice = {
 
         console.log('qtyTotal', qtyTotal);
 
-        $("#total-qty").text(qtyTotal.toFixed(2));
+        $("#total-amount").text(subTotalAll.toFixed(2));
+        $("#total_amount").val(subTotalAll.toFixed(2));
     },
 
     removeRow: (elm) => {
-        const data_id = $(elm).closest("tr").attr("data_id");
+        let data_id = $(elm).closest("tr").attr("data_id");
         if (data_id == "") {
+            const po_detail = $(elm).closest("tr").find("input#po-detail").val();
+            if(po_detail != '') {
+                const splitPoDetail = po_detail.split("//");
+                data_id = splitPoDetail[1];
+            }
             $(elm).closest("tr").remove();
         } else {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
 
+
+        if (itemsChoose.length > 0) {
+            for (let i = 0; i < itemsChoose.length; i++) {
+                if (itemsChoose[i].purchase_order_detail_id == data_id) {
+                    itemsChoose.splice(i, 1);
+                    break;
+                }
+            }
+        }
         PurchaseInvoice.hitungSummaryAll();
     },
 
@@ -531,8 +609,7 @@ let PurchaseInvoice = {
         row.removeClass("remove");
         row.removeClass("d-none");
         row.find("input").val("");
-        row.find("td#unit").text("");
-        row.find("td#unit").attr("data_id", "");
+        row.find("input#unit").attr("data_id", "");
         row.attr("data_id", "");
         $("table#table-items").find("tbody").append(row);
     },

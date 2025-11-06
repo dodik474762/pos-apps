@@ -1,7 +1,7 @@
  <!-- First modal dialog -->
  <div class="modal bs-example-modal-lg fade" id="data-modal-karyawan" aria-hidden="true" aria-labelledby="..."
      tabindex="-1">
-     <div class="modal-dialog modal-lg">
+     <div class="modal-dialog modal-xl">
          <div class="modal-content">
              <div class="modal-header">
                  <h5 class="modal-title">Data</h5>
@@ -14,15 +14,24 @@
                          <thead>
                             <tr>
                               <th>No</th>
+                              <th>PO Number</th>
                               <th>Kode Produk</th>
                               <th>Produk</th>
                               <th>Satuan</th>
+                              <th>Qty</th>
+                              <th>Harga</th>
+                              <th>Diskon %</th>
+                              <th>Diskon Nominal</th>
+                              <th>PPN %</th>
+                              <th>PPN Total</th>
+                              <th>Subtotal</th>
+                              <th>Status</th>
                               <th>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="5">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="14">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>

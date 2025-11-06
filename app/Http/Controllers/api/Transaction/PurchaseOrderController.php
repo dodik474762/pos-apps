@@ -67,6 +67,78 @@ class PurchaseOrderController extends Controller
         return json_encode($data);
     }
 
+    public function getDataProductPoDetail(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+
+        $exceptPoDetailId = [];
+        if(!empty($data['itemsChoose'])) {
+            $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
+        }
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table('purchase_order_detail as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'v.nama_vendor',
+                'c.code as currency_code',
+                'uom.name as unit_name',
+                'p.name as product_name',
+                'p.code as product_code',
+                'po.code as po_code'
+            ])
+            ->join('purchase_order as po', 'po.id', 'm.purchase_order')
+            ->join('users as u', 'u.id', 'po.created_by')
+            ->join('vendor as v', 'v.id', 'po.vendor')
+            ->join('currency as c', 'c.id', 'po.currency')
+            ->join('unit as uom', 'uom.id', 'm.unit')
+            ->join('product as p', 'p.id', 'm.product')
+            ->whereNull('m.deleted')
+            ->whereNull('po.deleted')
+            ->where('po.vendor', $data['vendor'])
+            ->orderBy('m.id', 'desc');
+
+        if(!empty($exceptPoDetailId)){
+            $datadb->whereNotIn('m.id', $exceptPoDetailId);
+        }
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function submit(Request $request)
     {
         $data = $request->all();
