@@ -174,6 +174,8 @@
                             class="btn btn-secondary waves-effect">Cancel</button>
                     </div>
                 </form>
+
+                @include('web.general_ledger.list_general_ledger')
             </div>
         </div>
     </div>
