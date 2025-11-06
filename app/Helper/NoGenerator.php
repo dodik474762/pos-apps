@@ -92,7 +92,7 @@ function generateGrNumber()
 
 function generatePINumber()
 {
-    $no = 'GR'.strtoupper(date('m')).date('y');
+    $no = 'PI'.strtoupper(date('m')).date('y');
     $data = DB::table('purchase_invoice_header')->where('invoice_number', 'LIKE', '%'.$no.'%')->orderBy('invoice_number', 'desc')->get()->toArray();
 
     $seq = 1;
@@ -579,6 +579,18 @@ function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = ''
 {
     GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
     ->where('dc', $dc)->delete();
+}
+
+function getGeneralLedger($reference = ''){
+    $general_ledgers = DB::table('general_ledgers as gl')
+    ->join('coa as c', 'c.id', '=', 'gl.account_id')
+    ->select('gl.*', 'c.account_code', 'c.account_name as account_name_coa')
+    ->where('gl.reference', 'like', "%{$reference}%")
+    ->orderBy('gl.posting_date')
+    ->orderBy('gl.id')
+    ->get();
+
+    return $general_ledgers;
 }
 
 function getSmallestUnit($productId, $fromUnitId, $qty = 1)

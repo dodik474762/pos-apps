@@ -6,13 +6,15 @@ use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as Transactio
 use App\Http\Controllers\Controller;
 use App\Models\Master\Tax;
 use App\Models\Master\Vendor;
+use App\Models\Transaction\PurchaseInvoiceDtl;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PurchaseInvoiceController extends Controller
 {
-     public $akses_menu = [];
+    public $akses_menu = [];
+
     public function __construct()
     {
         date_default_timezone_set('Asia/Jakarta');
@@ -21,25 +23,25 @@ class PurchaseInvoiceController extends Controller
 
     public function getHeaderCss()
     {
-        return array(
+        return [
             'js-1' => asset('assets/js/controllers/transaction/purchase_invoice.js'),
             'js-2' => asset('assets/js/controllers/notification.js'),
-        );
+        ];
     }
 
     public function getTitleParent()
     {
-        return "Tagihan";
+        return 'Tagihan';
     }
 
     public function getTableName()
     {
-        return "";
+        return '';
     }
 
     public function getTitle()
     {
-        return "Purchase Invoice";
+        return 'Purchase Invoice';
     }
 
     public function index()
@@ -56,6 +58,7 @@ class PurchaseInvoiceController extends Controller
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
     }
 
@@ -63,64 +66,61 @@ class PurchaseInvoiceController extends Controller
     {
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        // $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
-        // ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
-        // ->with(['vendors'])
-        // ->get();
         $data['data_item'] = [];
+        $data['general_ledgers'] = [];
         $view = view('web.purchase_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
     }
 
     public function ubah(Request $request)
     {
-        $api = new TransactionPurchaseInvoiceController();
+        $api = new TransactionPurchaseInvoiceController;
         $data = $request->all();
-        // $data['data'] = $api->getDetailData($data['id'])->original;
-        // $data['vendors'] = Vendor::whereNull('deleted')->get();
-        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-        // $data['taxes'] = Tax::where('is_active', 1)
-        //     ->whereNull('deleted')
-        //     ->orderBy('tax_name')
-        //     ->get(['id', 'tax_name', 'rate']);
-        // $data['data_item'] = GoodReceiptDtl::where('goods_receipt_detail.goods_receipt_header', $data['id'])
-        //     ->select([
-        //         'goods_receipt_detail.*',
-        //         'p.id as product_id',
-        //         'p.name as product_name',
-        //         'u.name as unit_name',
-        //         'pod.purchase_price',
-        //         'p.code as product_code',
-        //     ])
-        //     ->join('purchase_order_detail as pod', 'pod.id', 'goods_receipt_detail.purchase_order_detail')
-        //     ->join('product as p', 'p.id', 'goods_receipt_detail.product')
-        //     ->join('unit as u', 'u.id', 'goods_receipt_detail.unit')
-        //     ->get();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['data_item'] = PurchaseInvoiceDtl::where('purchase_invoice_detail.purchase_invoice_id', $data['id'])
+            ->select([
+                'purchase_invoice_detail.*',
+                'p.id as product_id',
+                'p.name as product_name',
+                'u.name as unit_name',
+                'pod.purchase_price',
+                'p.code as product_code',
+                'po.code as po_number'
+            ])
+            ->join('purchase_order_detail as pod', 'pod.id', 'purchase_invoice_detail.purchase_order_detail_id')
+            ->join('purchase_order as po', 'po.id', 'pod.purchase_order')
+            ->join('product as p', 'p.id', 'purchase_invoice_detail.product')
+            ->join('unit as u', 'u.id', 'purchase_invoice_detail.unit')
+            ->get();
 
-        // $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
-        //     ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
-        //     ->with(['vendors'])
-        //     ->get();
-        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
         $view = view('web.purchase_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
     }
 
@@ -141,6 +141,6 @@ class PurchaseInvoiceController extends Controller
         $pdf = Pdf::loadView('web.purchase_invoice.print.gr-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('PO-' . $data->code . '.pdf');
+        return $pdf->stream('PO-'.$data->code.'.pdf');
     }
 }

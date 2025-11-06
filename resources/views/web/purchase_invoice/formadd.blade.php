@@ -55,7 +55,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Total Amount</label>
-                                <input type="text" id="total_amount" class="form-control" value="0.00" readonly>
+                                <input type="text" id="total_amount" class="form-control" value="{{ isset($data->total_amount) ? $data->total_amount : '0.00' }}" disabled>
                             </div>
                         </div>
 
@@ -95,32 +95,33 @@
                                             id_detail="{{ $item->id }}">
                                             <td>
                                                 <input type="text" class="form-control" id="po_detail" disabled
-                                                    value="{{ $item->product_code }} / {{ $item->product_name }}">
+                                                    value="{{ $item->po_number }}//{{ $item->purchase_order_detail_id }}//{{ $item->product }}//{{ $item->product_name }}">
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" id="qty" value="{{ $item->qty }}"
-                                                    min="1" onkeyup="PurchaseInvoice.calcRow(this)">
+                                                    min="1" onkeyup="PurchaseInvoice.calcRow(this)" disabled>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" id="unit" value="{{ $item->unit }}"
+                                                <input type="text" class="form-control" id="unit" value="{{ $item->unit_name }}"
+                                                    data_id="{{ $item->unit }}"
                                                     disabled>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" id="price"
-                                                    value="{{ $item->purchase_price }}" readonly>
+                                                    value="{{ $item->purchase_price }}" readonly disabled>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" id="discount"
-                                                    value="{{ $item->discount_percent }}"
-                                                    onkeyup="PurchaseInvoice.calcRow(this)">
+                                                    value="{{ $item->diskon_total }}"
+                                                    onkeyup="PurchaseInvoice.calcRow(this)" disabled>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" id="tax" value="{{ $item->tax }}"
-                                                    onkeyup="PurchaseInvoice.calcRow(this)">
+                                                    onkeyup="PurchaseInvoice.calcRow(this)" disabled>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" id="subtotal"
-                                                    value="{{ $item->subtotal }}" readonly>
+                                                    value="{{ $item->subtotal }}" disabled>
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger"
@@ -164,7 +165,7 @@
                     <button type="button" class="btn btn-sm btn-primary mt-2" onclick="PurchaseInvoice.addRow()">+ Tambah Barang</button>
 
                     <div class="text-end mt-4">
-                        <h5>Total Amount: <span id="total-amount">0.00</span></h5>
+                        <h5>Total Amount: <span id="total-amount">{{ isset($data->total_amount) ? $data->total_amount : '0.00' }}</span></h5>
                     </div>
 
                     <div class="text-end">

@@ -191,7 +191,7 @@ let PurchaseInvoice = {
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
-                            if(row.status == 'open'){
+                            if(row.status == 'draft'){
                                 html += `<a href='${url.base_url(
                                     PurchaseInvoice.module()
                                 )}ubah?id=${data}' data_id="${
@@ -200,7 +200,7 @@ let PurchaseInvoice = {
                             }
                         }
                         if (deleteAction == 1) {
-                            if(row.status == 'open'){
+                            if(row.status == 'draft'){
                                 html += `<button type="button" data_id="${row.id}" onclick="PurchaseInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }

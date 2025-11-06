@@ -152,8 +152,11 @@
                     </div>
 
                 </form>
+
+                @include('web.general_ledger.list_general_ledger')
             </div>
         </div>
+
 
         <div class="text-end">
             <button type="submit" onclick="GoodReceipt.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">

@@ -81,6 +81,7 @@ class GoodReceiptController extends Controller
         ->with(['vendors'])
         ->get();
         $data['data_item'] = [];
+        $data['general_ledgers'] = [];
         $view = view('web.good_receipt.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -119,6 +120,7 @@ class GoodReceiptController extends Controller
             ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
             ->with(['vendors'])
             ->get();
+        $data['general_ledgers'] = getGeneralLedger($data['data']->gr_number);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.good_receipt.formadd', $data);

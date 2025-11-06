@@ -131,6 +131,7 @@ class PurchaseInvoiceController extends Controller
             $roles->currency = $currency_id;
             $roles->save();
             $hdrId = $roles->id;
+            $invoice_number = $roles->invoice_number;
 
             $data_po = [];
             foreach ($data['items'] as $key => $value) {
@@ -168,6 +169,7 @@ class PurchaseInvoiceController extends Controller
                     $items->discount_amount = $purchase_price_detail->diskon_nominal;
                     $items->tax = $purchase_price_detail->tax_rate;
                     $items->subtotal = $purchase_price_detail->subtotal;
+                    $items->diskon_total = $value['discount'];
                     $items->status = 'open';
                     $items->save();
 
@@ -184,7 +186,7 @@ class PurchaseInvoiceController extends Controller
                     $purchase_price_detail->save();
 
                     $grand_total = $value['qty'] * $value['price'];
-                    $reference = $po_number.'-'.$po_detail_id;
+                    $reference = $invoice_number.'-'.$po_detail_id;
                     postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total), $currency_id);
                     postingGL($reference, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, ($value['discount']), $currency_id);
                     postingGL($reference, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $purchase_price_detail->tax_amount, $currency_id);
@@ -330,13 +332,9 @@ class PurchaseInvoiceController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-                'po.code as po_code',
-                'po.vendor',
                 'v.nama_vendor',
-                'po.status as status_po',
             ])
-            ->join('purchase_order as po', 'po.id', 'm.purchase_order')
-            ->join('vendor as v', 'v.id', 'po.vendor')
+            ->join('vendor as v', 'v.id', 'm.vendor')
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
