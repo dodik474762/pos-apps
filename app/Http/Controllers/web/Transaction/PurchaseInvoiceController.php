@@ -4,9 +4,11 @@ namespace App\Http\Controllers\web\Transaction;
 
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use App\Models\Master\Vendor;
 use App\Models\Transaction\PurchaseInvoiceDtl;
+use App\Models\Transaction\PurchaseInvoiceHeader;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -127,18 +129,16 @@ class PurchaseInvoiceController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
-        // $company = CompanyModel::where('id', session('id_company'))->first();
-        // $data = GoodReceipt::with(['po','po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
-        // $qr = '';
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail','items.products', 'items.units'])->findOrFail($data['id']);
         // echo '<pre>';
-        // print_r($data);
-        // die;
+        // print_r($data);die;
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.purchase_invoice.print.gr-print', compact('data', 'total', 'company', 'qr'))
+        $pdf = Pdf::loadView('web.purchase_invoice.print.pi-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PO-'.$data->code.'.pdf');

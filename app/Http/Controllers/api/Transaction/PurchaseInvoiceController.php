@@ -221,8 +221,8 @@ class PurchaseInvoiceController extends Controller
         DB::beginTransaction();
         try {
             // code...
-            $menu = GoodReceipt::find($data['id']);
-            if ($menu->status != 'open') {
+            $menu = PurchaseInvoiceHeader::find($data['id']);
+            if ($menu->status != 'draft') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
 
@@ -232,62 +232,13 @@ class PurchaseInvoiceController extends Controller
             $menu->deleted_by = session('user_id');
             $menu->save();
 
-            $items = GoodReceiptDtl::where('goods_receipt_header', $data['id'])->get();
-            $po = PurchaseOrder::find($menu->purchase_order);
-            $warehouse = $po->warehouse;
+            $items = PurchaseInvoiceDtl::where('purchase_invoice_id', $data['id'])->get();
 
-            $totalFullyReceived = 0;
-            $totalPartlyReceived = 0;
-            $totalOpen = 0;
+
             foreach ($items as $value) {
-                // Cek data lama di detail GR
-                $oldDetail = GoodReceiptDtl::find($value->id);
-                if ($oldDetail) {
-                    // Hitung qty dalam base unit
-                    $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received);
-                    $qtyBaseUnitOld = $qtyBaseUnitOld['qty_in_base_unit'];
-
-                    // Rollback stok lama
-                    $valueRollback = [
-                        'product' => $oldDetail->product,
-                        'price' => $update->purchase_price ?? 0,
-                    ];
-
-                    $productUomLevel1 = ProductUom::where('product', $oldDetail->product)->where('level', '1')->first();
-
-                    // rollback stok lama (kebalikan dari add)
-                    stockRollback(
-                        $menu->id,
-                        $warehouse,
-                        $oldDetail->product,
-                        $productUomLevel1->unit_tujuan,
-                        $qtyBaseUnitOld,
-                        $valueRollback,
-                        'add' // karena sebelumnya 'add', rollback-nya kebalikannya
-                    );
-                }
-
                 $value->deleted = date('Y-m-d H:i:s');
                 $value->deleted_by = session('user_id');
                 $value->save();
-
-                $update = PurchaseOrderDetail::where('id', $value->purchase_order_detail)->first();
-                $update->qty_received = $update->qty_received - $value->qty_received;
-
-                if ($update->qty - $update->qty_received == 0) {
-                    $update->status = 'received';
-                    $totalFullyReceived += 1;
-                }
-
-                if ($update->qty - $update->qty_received > 0) {
-                    $update->status = 'partial-received';
-                    $totalPartlyReceived += 1;
-                }
-                if ($update->qty_received == 0) {
-                    $update->status = 'open';
-                    $totalOpen += 1;
-                }
-                $update->save();
             }
 
             $po = PurchaseOrder::find($menu->purchase_order);

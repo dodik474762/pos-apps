@@ -285,7 +285,18 @@ class GoodReceiptController extends Controller
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
-            // code...
+
+
+            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'inventory')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+                ->where('account_type', 'grir')
+                ->with('account')
+                ->first();
+
             $menu = GoodReceipt::find($data['id']);
             if ($menu->status != 'open') {
                 DB::rollBack();
@@ -354,6 +365,10 @@ class GoodReceiptController extends Controller
                     $totalOpen += 1;
                 }
                 $update->save();
+
+                $reference = $menu->gr_number.'-'.$value->purchase_order_detail;
+                cancelGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $value->subtotal, $menu->currency);
+                cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $value->subtotal, $menu->currency);
             }
 
 
@@ -369,18 +384,6 @@ class GoodReceiptController extends Controller
             }
             $po->save();
 
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'inventory')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            cancelGL($menu->gr_number, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $menu->total_amount, $menu->currency);
-            cancelGL($menu->gr_number, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $menu->total_amount, $menu->currency);
 
             DB::commit();
             $result['is_valid'] = true;
