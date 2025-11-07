@@ -281,6 +281,12 @@ class ProductController extends Controller
                         $product_uom->unit_tujuan = $data['unit_tujuan'][$i];
                         $product_uom->nilai_konversi = $data['nilai_konversi'][$i];
                         $product_uom->level = $i + 1;
+                        if($i == 0){
+                            $product_uom->state = 'small';
+                        }
+                        if($i == count($data['unit_dasar']) - 1){
+                            $product_uom->state = 'large';
+                        }
                         $product_uom->save();
                     }
                 }
