@@ -98,6 +98,7 @@ class PurchaseOrderController extends Controller
             ->join('product as p', 'p.id', 'm.product')
             ->whereNull('m.deleted')
             ->whereNull('po.deleted')
+            ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 

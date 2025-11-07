@@ -220,8 +220,29 @@ class PurchaseInvoiceController extends Controller
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
-            // code...
+
+            $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'hutang usaha')
+                ->with('account')
+                ->first();
+
+            $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'grir')
+                ->with('account')
+                ->first();
+
+            $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'ppn masukan')
+                ->with('account')
+                ->first();
+
+            $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                ->where('account_type', 'diskon pembelian')
+                ->with('account')
+                ->first();
+
             $menu = PurchaseInvoiceHeader::find($data['id']);
+            $invoice_number = $menu->invoice_number;
             if ($menu->status != 'draft') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -235,36 +256,45 @@ class PurchaseInvoiceController extends Controller
             $items = PurchaseInvoiceDtl::where('purchase_invoice_id', $data['id'])->get();
 
 
+            $data_po = [];
+            $all_po = [];
             foreach ($items as $value) {
                 $value->deleted = date('Y-m-d H:i:s');
                 $value->deleted_by = session('user_id');
                 $value->save();
+
+                $po_detail = PurchaseOrderDetail::find($value->purchase_order_detail_id);
+                $qty_total_outstanding_received = $po_detail->qty - ($po_detail->qty_received == '' ? 0 : $po_detail->qty_received);
+                if($qty_total_outstanding_received <= 0){
+                    $po_detail->status = 'received';
+                }else{
+                    $po_detail->status = 'partial-received';
+                }
+                $po_detail->save();
+
+
+                $data_po[$po_detail->purchase_order] =$po_detail->status;
+                $all_po[] = $po_detail->purchase_order;
+
+                $reference = $invoice_number.'-'.$value->purchase_order_detail_id;
+                cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd);
+                cancelGL($reference, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd);
+                cancelGL($reference, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd);
+                cancelGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd);
             }
 
-            $po = PurchaseOrder::find($menu->purchase_order);
-            if ($totalFullyReceived == count($items->toArray())) {
-                $po->status = 'received';
+            $all_po = array_unique($all_po);
+            $po = PurchaseOrder::whereIn('id', $all_po)->get();
+            foreach ($po as $key => $value) {
+                if(isset($data_po[$value->id])){
+                    $value->status = $data_po[$value->id];
+                    $value->save();
+                }else{
+                    DB::rollBack();
+                    $result['message'] = 'Tidak dapat dihapus karena status PO - Tidak tersedia';
+                    return response()->json($result);
+                }
             }
-            if ($totalPartlyReceived == count($items->toArray())) {
-                $po->status = 'partial-received';
-            }
-            if ($totalOpen == count($items->toArray())) {
-                $po->status = 'draft';
-            }
-            $po->save();
-
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'inventory')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            cancelGL($menu->gr_number, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $menu->total_amount, $menu->currency);
-            cancelGL($menu->gr_number, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $menu->total_amount, $menu->currency);
 
             DB::commit();
             $result['is_valid'] = true;
