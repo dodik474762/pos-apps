@@ -579,9 +579,9 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $postingDate = now();
 
     $exist = GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
-    ->where('dc', $dc)->first();
+        ->where('dc', $dc)->first();
 
-    $post = empty($exist) ? new GeneralLedger() : $exist;
+    $post = empty($exist) ? new GeneralLedger : $exist;
     $post->posting_date = $postingDate;
     $post->reference = $reference;
     $post->account_id = $account_id;
@@ -597,17 +597,18 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
 function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '')
 {
     GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
-    ->where('dc', $dc)->delete();
+        ->where('dc', $dc)->delete();
 }
 
-function getGeneralLedger($reference = ''){
+function getGeneralLedger($reference = '')
+{
     $general_ledgers = DB::table('general_ledgers as gl')
-    ->join('coa as c', 'c.id', '=', 'gl.account_id')
-    ->select('gl.*', 'c.account_code', 'c.account_name as account_name_coa')
-    ->where('gl.reference', 'like', "%{$reference}%")
-    ->orderBy('gl.posting_date')
-    ->orderBy('gl.id')
-    ->get();
+        ->join('coa as c', 'c.id', '=', 'gl.account_id')
+        ->select('gl.*', 'c.account_code', 'c.account_name as account_name_coa')
+        ->where('gl.reference', 'like', "%{$reference}%")
+        ->orderBy('gl.posting_date')
+        ->orderBy('gl.id')
+        ->get();
 
     return $general_ledgers;
 }
@@ -625,7 +626,7 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
             ->whereNull('deleted')
             ->first();
 
-        if (!$conversion || $conversion->level == 1) {
+        if (! $conversion || $conversion->level == 1) {
             // tidak ada konversi lebih lanjut, unit saat ini = unit terkecil
             $baseUnit = $currentUnit;
             break;
@@ -647,41 +648,51 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
 
 function getLargestUnit($productId, $fromUnitId, $qty = 1)
 {
-    $multiplier = 1;
-    $currentUnit = $fromUnitId;
-
-    $conversion = DB::table('product_uom')
-            ->where('product', $productId)
-            ->where('unit_dasar', $currentUnit)
-            ->whereNull('deleted')
-            ->first();
+    // Ambil semua konversi unit untuk produk terkait
     $data_product_uom = DB::table('product_uom')
-            ->where('product', $productId)
-            ->whereNull('deleted')
-            ->where('id', '!=', $conversion->id)
-            ->orderBy('level')
-            ->get();
+        ->where('product', $productId)
+        ->whereNull('deleted')
+        ->orderBy('level')
+        ->get();
 
-    $largestUnit = 0;
+    if ($data_product_uom->isEmpty()) {
+        return [
+            'largest_unit' => $fromUnitId,
+            'largest_unit_name' => '',
+            'multiplier' => 1,
+            'qty_in_largest_unit' => $qty,
+        ];
+    }
+
+    // Cari baris dengan state = 'large' (unit terbesar)
+    $largest = $data_product_uom->firstWhere('state', 'large');
+
+    if (! $largest) {
+        // Kalau tidak ada 'large', ambil level tertinggi
+        $largest = $data_product_uom->sortByDesc('level')->first();
+    }
+
+    $largestUnit = $largest->unit_tujuan;
+
+    // Hitung total multiplier dari unit kecil ke unit terbesar
     $multiplier = 1;
-    foreach ($data_product_uom as $key => $value) {
+    foreach ($data_product_uom as $value) {
         $multiplier *= $value->nilai_konversi;
-        if($value->state == 'large'){
-            $largestUnit = $value->unit_tujuan;
+        if ($value->unit_tujuan == $largestUnit) {
             break;
         }
     }
 
-
+    // Ambil nama unit terbesar (opsional)
     $unit_tujuan = DB::table('unit')->where('id', $largestUnit)->first();
+
     return [
         'largest_unit' => $largestUnit,
-        'largest_unit_name' => empty($unit_tujuan) ? '' : $unit_tujuan->name,
+        'largest_unit_name' => $unit_tujuan->name ?? '',
         'multiplier' => $multiplier,
         'qty_in_largest_unit' => $qty / $multiplier,
     ];
 }
-
 
 function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
 {
@@ -763,4 +774,3 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
         'created_at' => now(),
     ]);
 }
-

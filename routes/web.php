@@ -27,6 +27,7 @@ use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourCo
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
+use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
+use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -174,6 +176,10 @@ Route::get('transaksi/purchase-invoice', [PurchaseInvoiceController::class, 'ind
 Route::get('transaksi/purchase-invoice/add', [PurchaseInvoiceController::class, 'add']);
 Route::get('transaksi/purchase-invoice/ubah', [PurchaseInvoiceController::class, 'ubah']);
 Route::get('transaksi/purchase-invoice/cetak', [PurchaseInvoiceController::class, 'cetak']);
+
+Route::get('transaksi/vendor-bill', [VendorBillController::class, 'index']);
+Route::get('transaksi/vendor-bill/add', [VendorBillController::class, 'add']);
+Route::get('transaksi/vendor-bill/ubah', [VendorBillController::class, 'ubah']);
 
 /*API */
 
@@ -337,4 +343,11 @@ Route::post('api/transaksi/purchase-invoice/submit', [TransactionPurchaseInvoice
 Route::post('api/transaksi/purchase-invoice/delete', [TransactionPurchaseInvoiceController::class, 'delete']);
 Route::post('api/transaksi/purchase-invoice/confirmDelete', [TransactionPurchaseInvoiceController::class, 'confirmDelete']);
 Route::post('api/transaksi/purchase-invoice/showDataPoDetail', [TransactionPurchaseInvoiceController::class, 'showDataPoDetail']);
+
+Route::post('api/transaksi/vendor-bill/getData', [TransactionVendorBillController::class, 'getData']);
+Route::post('api/transaksi/vendor-bill/submit', [TransactionVendorBillController::class, 'submit']);
+Route::post('api/transaksi/vendor-bill/delete', [TransactionVendorBillController::class, 'delete']);
+Route::post('api/transaksi/vendor-bill/confirmDelete', [TransactionVendorBillController::class, 'confirmDelete']);
+Route::post('api/transaksi/vendor-bill/showDataInvoice', [TransactionVendorBillController::class, 'showDataInvoice']);
+Route::post('api/transaksi/vendor-bill/loadInvoices', [TransactionVendorBillController::class, 'loadInvoices']);
 /*API */
