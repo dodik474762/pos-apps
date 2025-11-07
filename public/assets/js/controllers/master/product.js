@@ -115,6 +115,9 @@ let Product = {
                     },
                 },
                 {
+                    data: "code",
+                },
+                {
                     data: "name",
                 },
                 {

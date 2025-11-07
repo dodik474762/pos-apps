@@ -78,6 +78,16 @@ class ProductController extends Controller
         return $datadb;
     }
 
+    public function getCostProduct($product = 0){
+        $datadb = DB::table('product_uom_cost as ps')
+        ->select(['ps.*', 'u.name as unit_name', 'v.nama_vendor'])
+        ->join('unit as u', 'u.id', 'ps.unit_id')
+        ->join('vendor as v', 'v.id', 'ps.vendor')
+        ->where('ps.product', $product)
+        ->get();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -198,6 +208,7 @@ class ProductController extends Controller
         $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
         $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
         $data['product_stocks'] = $this->getStock($data['id']);
+        $data['product_costs'] = $this->getCostProduct($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

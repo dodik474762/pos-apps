@@ -13,6 +13,7 @@ use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
+use App\Models\Transaction\ProductUomCost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +50,7 @@ class ProductController extends Controller
                 $datadb->where(function ($query) use ($keyword) {
                     $query->where('m.name', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
                 });
@@ -392,6 +394,13 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //code...
+            $productCost = ProductUomCost::where('product', $data['id'])->get();
+            if (!empty($productCost)) {
+                DB::rollBack();
+                $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di cost list';
+                return response()->json($result);
+            }
+
             $menu = Product::find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();

@@ -95,6 +95,7 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>Kode</th>
                                                     <th>Product</th>
                                                     <th>Type</th>
                                                     <th>Model Number</th>
