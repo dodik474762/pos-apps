@@ -68,6 +68,16 @@ class ProductController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getStock($product = 0){
+        $datadb = DB::table('product_stock as ps')
+        ->select(['ps.*', 'u.name as unit_name', 'w.name as warehouse_name'])
+        ->join('unit as u', 'u.id', 'ps.unit')
+        ->join('warehouse as w', 'w.id', 'ps.warehouse')
+        ->where('ps.product', $product)
+        ->get();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -76,6 +86,7 @@ class ProductController extends Controller
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
         $data['product_logs'] = [];
+        $data['product_stocks'] = [];
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -186,6 +197,7 @@ class ProductController extends Controller
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
         $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
+        $data['product_stocks'] = $this->getStock($data['id']);
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

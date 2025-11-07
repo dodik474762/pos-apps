@@ -662,7 +662,6 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
             ->where('id', $stock->id)
             ->update([
                 'qty' => $type == 'add' ? $stock->qty + $convertedQty : $stock->qty - $convertedQty,
-                'last_purchase_price' => $value['price'] ?? 0,
                 'updated_at' => now(),
             ]);
     } else {
@@ -673,7 +672,6 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
             'warehouse' => $warehouseId,
             'qty' => $convertedQty,
             'avg_cost' => $value['price'] ?? 0,
-            'last_purchase_price' => $value['price'] ?? 0,
             'created_at' => now(),
         ]);
     }
