@@ -3,6 +3,11 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\AccountMapping;
+use App\Models\Master\Currency;
+use App\Models\Transaction\PurchaseInvoiceHeader;
+use App\Models\Transaction\VendorBillDtl;
+use App\Models\Transaction\VendorBillHeader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -66,143 +71,127 @@ class VendorBillController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
-
         $users = session('user_id');
         $result['is_valid'] = false;
+
         DB::beginTransaction();
         try {
-            // code...
+            // Ambil currency IDR
             $currency = Currency::where('code', 'IDR')->first();
-
             if (empty($currency)) {
-                DB::rollBack();
-                $result['message'] = 'Currency IDR tidak ditemukan';
-
-                return response()->json($result);
-            }
-
-            $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'hutang usaha')
-                ->with('account')
-                ->first();
-
-            $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'ppn masukan')
-                ->with('account')
-                ->first();
-
-            $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'diskon pembelian')
-                ->with('account')
-                ->first();
-
-            if (! $hutangAccount || ! $grirAccount || ! $ppnMasukanAccount || ! $discAccount) {
                 DB::rollBack();
 
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Purchase Invoice belum lengkap.',
+                    'message' => 'Currency IDR tidak ditemukan',
                 ]);
             }
 
             $currency_id = $currency->id;
 
-            $roles = $data['id'] == '' ? new PurchaseInvoiceHeader : PurchaseInvoiceHeader::find($data['id']);
+            // Ambil konfigurasi akun
+            $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
+                ->where('account_type', 'hutang usaha')
+                ->with('account')
+                ->first();
+
+            $kasBankAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
+                ->where('account_type', 'kas/bank')
+                ->with('account')
+                ->first();
+
+            if (! $hutangAccount || ! $kasBankAccount) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Vendor Payment belum lengkap.',
+                ]);
+            }
+
+            // Simpan header
+            $roles = $data['id'] == '' ? new VendorBillHeader : VendorBillHeader::find($data['id']);
             if ($data['id'] == '') {
-                $roles->invoice_number = generatePINumber();
+                $roles->payment_number = generateVPN(); // fungsi auto generate nomor pembayaran
                 $roles->created_by = $users;
             }
-            $roles->invoice_date = $data['invoice_date'];
+
+            $roles->payment_date = $data['payment_date'];
             $roles->vendor = $data['vendor'];
+            $roles->payment_method = $data['payment_method'];
+            $roles->reference_number = $data['reference_number'];
+            $roles->total_payment = $data['total_payment'];
             $roles->remarks = $data['remarks'];
-            $roles->total_amount = $data['total_amount'];
             $roles->status = 'draft';
             $roles->currency = $currency_id;
             $roles->save();
+
             $hdrId = $roles->id;
-            $invoice_number = $roles->invoice_number;
+            $payment_number = $roles->payment_number;
 
-            $data_po = [];
-            foreach ($data['items'] as $key => $value) {
-                [$po_number, $po_detail_id, $product, $product_name] = explode('//', $value['po_detail']);
-                if ($value['remove'] == '1') {
-                    $items = PurchaseInvoiceDtl::find($value['id_detail']);
-                    if ($items->status != 'open') {
-                        DB::rollBack();
-                        $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
+            // Loop data detail (invoice yang dibayar)
+            foreach ($data['invoices'] as $key => $value) {
+                $invoice = PurchaseInvoiceHeader::find($value['invoice_id']);
+                if (empty($invoice)) {
+                    DB::rollBack();
 
-                        return response()->json($result);
-                    }
-                    $items->deleted = now();
-                    $items->save();
-                } else {
-                    $items = $value['id_detail'] == '' ? new PurchaseInvoiceDtl : PurchaseInvoiceDtl::find($value['id_detail']);
-                    $status = $value['id_detail'] == '' ? '' : $items->status;
-
-                    $purchase_price_detail = PurchaseOrderDetail::find($po_detail_id);
-                    if (empty($purchase_price_detail)) {
-                        DB::rollBack();
-                        $result['message'] = 'Data PO Item '.$product_name.' tidak ditemukan';
-
-                        return response()->json($result);
-                    }
-
-                    $items->purchase_invoice_id = $hdrId;
-                    $items->purchase_order_detail_id = $po_detail_id;
-                    $items->product = $product;
-                    $items->unit = $value['unit'];
-                    $items->unit_name = $value['unit_name'];
-                    $items->qty = $value['qty'];
-                    $items->purchase_price = $value['price'];
-                    $items->discount_percent = $purchase_price_detail->diskon_persen;
-                    $items->discount_amount = $purchase_price_detail->diskon_nominal;
-                    $items->tax = $purchase_price_detail->tax_rate;
-                    $items->subtotal = $purchase_price_detail->subtotal;
-                    $items->diskon_total = $value['discount'];
-                    $items->status = 'open';
-                    $items->save();
-
-                    if ($value['id_detail'] != '') {
-                        if ($status != 'open') {
-                            DB::rollBack();
-                            $result['message'] = 'Tidak dapat diubah karena status sudah tidak open';
-
-                            return response()->json($result);
-                        }
-                    }
-
-                    $purchase_price_detail->status = 'invoiced';
-                    $purchase_price_detail->save();
-
-                    $grand_total = $value['qty'] * $value['price'];
-                    $reference = $invoice_number.'-'.$po_detail_id;
-                    postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($grand_total), $currency_id);
-                    postingGL($reference, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd, ($value['discount']), $currency_id);
-                    postingGL($reference, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd, $purchase_price_detail->tax_amount, $currency_id);
-                    postingGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd, $value['subtotal'], $currency_id);
-
-                    $data_po[] = $po_number;
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Invoice ID '.$value['invoice_id'].' tidak ditemukan.',
+                    ]);
                 }
-            }
 
-            $data_po = array_unique($data_po);
-            $po = PurchaseOrder::whereIn('code', $data_po)->get();
-            foreach ($po as $key => $value) {
-                $value->status = 'invoiced';
-                $value->save();
+                $amountPaid = floatval($value['amount_paid']);
+                $remaining = max($invoice->total_amount - $amountPaid, 0);
+
+                // Simpan ke vendor_payment_detail
+                $detail = new VendorBillDtl;
+                $detail->vendor_payment_id = $hdrId;
+                $detail->purchase_invoice_id = $invoice->id;
+                $detail->amount_paid = $amountPaid;
+                $detail->remaining_balance = $remaining;
+                $detail->save();
+
+                // Update invoice
+                $totalPaidBefore = DB::table('vendor_payment_detail')
+                    ->where('purchase_invoice_id', $invoice->id)
+                    ->whereNull('deleted')
+                    ->sum('amount_paid');
+
+                $invoice->status = ($totalPaidBefore >= $invoice->total_amount) ? 'paid' : 'posted';
+                $invoice->updated_at = now();
+                $invoice->save();
+
+                // Posting ke General Ledger
+                $reference = $payment_number.'-'.$invoice->invoice_number;
+
+                // Debit Hutang Usaha (mengurangi kewajiban)
+                postingGL(
+                    $reference,
+                    $hutangAccount->account_id,
+                    $hutangAccount->account->account_name,
+                    $hutangAccount->cd,
+                    $amountPaid,
+                    $currency_id
+                );
+
+                // Kredit Kas / Bank
+                postingGL(
+                    $reference,
+                    $kasBankAccount->account_id,
+                    $kasBankAccount->account->account_name,
+                    $kasBankAccount->cd,
+                    $amountPaid,
+                    $currency_id
+                );
             }
 
             DB::commit();
             $result['is_valid'] = true;
+            $result['message'] = 'Vendor Payment berhasil disimpan.';
         } catch (\Throwable $th) {
-            // throw $th;
-            $result['message'] = $th->getMessage();
             DB::rollBack();
+            $result['message'] = $th->getMessage();
         }
 
         return response()->json($result);
@@ -335,29 +324,28 @@ class VendorBillController extends Controller
         $data = $request->all();
         $vendorId = $data['vendor'];
         try {
-            //code...
+            // code...
             $data['invoices'] = DB::table('purchase_invoice_header as h')
-            ->leftJoin('vendor_payment_detail as d', function ($join) {
-                $join->on('d.purchase_invoice_id', '=', 'h.id')
-                    ->whereNull('d.deleted');
-            })
-            ->select(
-                'h.id',
-                'h.invoice_number',
-                'h.invoice_date',
-                'h.total_amount',
-                DB::raw('COALESCE(SUM(d.amount_paid), 0) as total_paid'),
-                DB::raw('(h.total_amount - COALESCE(SUM(d.amount_paid), 0)) as outstanding')
-            )
-            ->where('h.vendor', $vendorId)
-            ->whereNull('h.deleted')
-            ->groupBy('h.id', 'h.invoice_number', 'h.invoice_date', 'h.total_amount')
-            ->having('outstanding', '>', 0)
-            ->get();
+                ->leftJoin('vendor_payment_detail as d', function ($join) {
+                    $join->on('d.purchase_invoice_id', '=', 'h.id')
+                        ->whereNull('d.deleted');
+                })
+                ->select(
+                    'h.id',
+                    'h.invoice_number',
+                    'h.invoice_date',
+                    'h.total_amount',
+                    DB::raw('COALESCE(SUM(d.amount_paid), 0) as total_paid'),
+                    DB::raw('(h.total_amount - COALESCE(SUM(d.amount_paid), 0)) as outstanding')
+                )
+                ->where('h.vendor', $vendorId)
+                ->whereNull('h.deleted')
+                ->groupBy('h.id', 'h.invoice_number', 'h.invoice_date', 'h.total_amount')
+                ->having('outstanding', '>', 0)
+                ->get();
 
             // echo '<pre>';
             // print_r($data);die;
-
 
             return view('web.vendor_bill.datainvoice', $data);
         } catch (\Throwable $th) {

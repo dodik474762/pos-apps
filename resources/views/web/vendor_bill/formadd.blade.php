@@ -87,6 +87,17 @@
                                     value="{{ isset($data->total_payment) ? number_format($data->total_payment, 2) : '0.00' }}"
                                     disabled>
                             </div>
+                            <div class="mb-3">
+    <label class="form-label">Account Kas / Bank</label>
+    <select id="account_id" class="form-control select2 required">
+        <option value="">-- Pilih Akun --</option>
+        @foreach ($cashBankAccounts as $acc)
+            <option value="{{ $acc->id }}">
+                {{ $acc->account_code }} - {{ $acc->account_name }}
+            </option>
+        @endforeach
+    </select>
+</div>
                         </div>
                     </div>
 
