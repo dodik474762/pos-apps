@@ -75,7 +75,15 @@ class ProductController extends Controller
         ->join('warehouse as w', 'w.id', 'ps.warehouse')
         ->where('ps.product', $product)
         ->get();
-        return $datadb;
+
+        $result = [];
+        foreach ($datadb as $key => $value) {
+            $units_large = getLargestUnit($product, $value->unit, $value->qty);
+            $value->unit_large = $units_large['largest_unit_name'];
+            $value->qty_large = $units_large['qty_in_largest_unit'];
+            $result[] = $value;
+        }
+        return $result;
     }
 
     public function getCostProduct($product = 0){

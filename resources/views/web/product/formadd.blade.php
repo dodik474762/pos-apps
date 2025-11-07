@@ -96,9 +96,11 @@
                                         <table class="table table-nowrap align-middle table-sm" id="table-stock">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th style="width: 35%;">Satuan</th>
-                                                    <th style="width: 15%;">Stok</th>
-                                                    <th style="width: 20%;">Gudang</th>
+                                                    <th style="width: 10%;">Satuan Kecil</th>
+                                                    <th style="width: 10%;">Stok</th>
+                                                    <th style="width: 10%;">Satuan Besar</th>
+                                                    <th style="width: 10%;">Stok</th>
+                                                    <th style="width: 30%;">Gudang</th>
                                                     <th style="width: 30%;">Last Update</th>
                                                 </tr>
                                             </thead>
@@ -106,6 +108,8 @@
                                                 <tr>
                                                     <td>{{ $item->unit_name }}</td>
                                                     <td>{{ $item->qty }}</td>
+                                                    <td>{{ $item->unit_large }}</td>
+                                                    <td>{{ $item->qty_large }}</td>
                                                     <td>{{ $item->warehouse_name }}</td>
                                                     <td>{{ $item->updated_at }}</td>
                                                 </tr>

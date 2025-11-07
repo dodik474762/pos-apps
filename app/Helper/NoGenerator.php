@@ -645,6 +645,44 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
+function getLargestUnit($productId, $fromUnitId, $qty = 1)
+{
+    $multiplier = 1;
+    $currentUnit = $fromUnitId;
+
+    $conversion = DB::table('product_uom')
+            ->where('product', $productId)
+            ->where('unit_dasar', $currentUnit)
+            ->whereNull('deleted')
+            ->first();
+    $data_product_uom = DB::table('product_uom')
+            ->where('product', $productId)
+            ->whereNull('deleted')
+            ->where('id', '!=', $conversion->id)
+            ->orderBy('level')
+            ->get();
+
+    $largestUnit = 0;
+    $multiplier = 1;
+    foreach ($data_product_uom as $key => $value) {
+        $multiplier *= $value->nilai_konversi;
+        if($value->state == 'large'){
+            $largestUnit = $value->unit_tujuan;
+            break;
+        }
+    }
+
+
+    $unit_tujuan = DB::table('unit')->where('id', $largestUnit)->first();
+    return [
+        'largest_unit' => $largestUnit,
+        'largest_unit_name' => empty($unit_tujuan) ? '' : $unit_tujuan->name,
+        'multiplier' => $multiplier,
+        'qty_in_largest_unit' => $qty / $multiplier,
+    ];
+}
+
+
 function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
 {
     // Update stok di gudang
