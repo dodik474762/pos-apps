@@ -27,6 +27,7 @@ use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourCo
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
+use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -57,6 +58,7 @@ use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
+use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
 
@@ -180,6 +182,10 @@ Route::get('transaksi/purchase-invoice/cetak', [PurchaseInvoiceController::class
 Route::get('transaksi/vendor-bill', [VendorBillController::class, 'index']);
 Route::get('transaksi/vendor-bill/add', [VendorBillController::class, 'add']);
 Route::get('transaksi/vendor-bill/ubah', [VendorBillController::class, 'ubah']);
+
+Route::get('transaksi/purchase-return', [PurchaseReturnController::class, 'index']);
+Route::get('transaksi/purchase-return/add', [PurchaseReturnController::class, 'add']);
+Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, 'ubah']);
 
 /*API */
 
@@ -350,4 +356,11 @@ Route::post('api/transaksi/vendor-bill/delete', [TransactionVendorBillController
 Route::post('api/transaksi/vendor-bill/confirmDelete', [TransactionVendorBillController::class, 'confirmDelete']);
 Route::post('api/transaksi/vendor-bill/showDataInvoice', [TransactionVendorBillController::class, 'showDataInvoice']);
 Route::post('api/transaksi/vendor-bill/loadInvoices', [TransactionVendorBillController::class, 'loadInvoices']);
+
+Route::post('api/transaksi/purchase-return/getData', [TransactionPurchaseReturnController::class, 'getData']);
+Route::post('api/transaksi/purchase-return/submit', [TransactionPurchaseReturnController::class, 'submit']);
+Route::post('api/transaksi/purchase-return/delete', [TransactionPurchaseReturnController::class, 'delete']);
+Route::post('api/transaksi/purchase-return/confirmDelete', [TransactionPurchaseReturnController::class, 'confirmDelete']);
+Route::get('api/transaksi/purchase-return/references', [TransactionPurchaseReturnController::class, 'getReferences']);
+Route::get('api/transaksi/purchase-return/reference-detail', [TransactionPurchaseReturnController::class, 'getReferencesDetail']);
 /*API */

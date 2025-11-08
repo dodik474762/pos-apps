@@ -180,7 +180,7 @@
 
                     <div class="text-end">
                         @if (!isset($id))
-                            <button type="submit" class="btn btn-success waves-effect waves-light me-1">Submit</button>
+                            <button type="submit" class="btn btn-success waves-effect waves-light me-1" onclick="VendorBill.submit(this, event)">Submit</button>
                         @endif
                         <button type="reset" onclick="VendorBill.back(this, event)"
                             class="btn btn-secondary waves-effect">Cancel</button>

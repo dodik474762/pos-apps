@@ -90,6 +90,25 @@ function generateVPN()
     return $no;
 }
 
+function generatePRN()
+{
+    $no = 'RE-'.strtoupper(date('m')).date('y');
+    $data = DB::table('purchase_return')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->code);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateNoPO()
 {
     $no = 'PO'.strtoupper(date('m')).date('y');
