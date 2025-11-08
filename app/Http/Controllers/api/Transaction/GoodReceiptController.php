@@ -126,6 +126,7 @@ class GoodReceiptController extends Controller
             $roles->currency = $currency->id;
             $roles->save();
             $hdrId = $roles->id;
+            $gr_number = $roles->code;
 
             $grand_total = 0;
             $totalFullyReceived = 0;
@@ -250,7 +251,7 @@ class GoodReceiptController extends Controller
                     stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
                     $grand_total += $subtotal;
 
-                    $reference = $update->gr_number.'-'.$value['id'];
+                    $reference = $gr_number.'-'.$value['id'];
                     postingGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $subtotal, $update->currency);
                     postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($subtotal), $update->currency);
                 }
