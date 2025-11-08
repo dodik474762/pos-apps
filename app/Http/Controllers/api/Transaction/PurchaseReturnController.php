@@ -121,7 +121,7 @@ class PurchaseReturnController extends Controller
                     ->with('account')->first();
             }
 
-            if (! $returnAccount || ! $hutangAccount || ($data['return_type'] == 'FROM_INVOICE' && (! $ppnAccount || ! $diskonAccount))) {
+            if (! $hutangAccount || ($data['return_type'] == 'FROM_INVOICE' && (! $ppnAccount))) {
                 DB::rollBack();
 
                 return response()->json([
@@ -165,6 +165,7 @@ class PurchaseReturnController extends Controller
                 $detail->reason = $value['reason_detail'] ?? null;
                 $detail->reference_detail_id = $value['reference_detail'] ?? null;
                 $detail->created_at = now();
+                $detail->return_type = $data['return_type'];
                 $detail->save();
 
                 $amount = floatval($value['qty']) * floatval($value['unit_price']);
@@ -391,10 +392,20 @@ class PurchaseReturnController extends Controller
         $type = $request->get('type'); // FROM_GR atau FROM_INVOICE
 
         if ($type === 'FROM_GR') {
+            $subReturn = DB::table('purchase_return_detail')
+                ->select('reference_detail_id', DB::raw('SUM(qty) as total_qty_returned'))
+                ->where('return_type', 'FROM_GR')
+                ->groupBy('reference_detail_id');
+
             $details = DB::table('goods_receipt_detail as grd')
                 ->join('product as p', 'p.id', '=', 'grd.product')
                 ->join('unit as u', 'u.id', '=', 'grd.unit')
                 ->join('purchase_order_detail as pod', 'pod.id', '=', 'grd.purchase_order_detail')
+                ->leftJoinSub($subReturn, 'prd', function ($join) {
+                    $join->on('prd.reference_detail_id', '=', 'grd.id');
+                })
+                ->where('grd.goods_receipt_header', $id)
+                ->whereNull('grd.deleted')
                 ->select(
                     'grd.id as gr_detail_id',
                     'p.id as item_id',
@@ -402,16 +413,25 @@ class PurchaseReturnController extends Controller
                     'u.name as unit_name',
                     'u.id as unit',
                     'grd.qty_received as qty',
-                    'pod.purchase_price as unit_price'
+                    'pod.purchase_price as unit_price',
+                    DB::raw('COALESCE(prd.total_qty_returned, 0) as qty_returned')
                 )
-                ->where('grd.goods_receipt_header', $id)
-                ->whereNull('grd.deleted')
                 ->get();
         } elseif ($type === 'FROM_INVOICE') {
+            $subReturn = DB::table('purchase_return_detail')
+                ->select('reference_detail_id', DB::raw('SUM(qty) as total_qty_returned'))
+                ->where('return_type', 'FROM_INVOICE')
+                ->groupBy('reference_detail_id');
+
             $details = DB::table('purchase_invoice_detail as pid')
                 ->join('product as p', 'p.id', '=', 'pid.product')
                 ->join('purchase_order_detail as pod', 'pod.id', '=', 'pid.purchase_order_detail_id')
                 ->join('unit as u', 'u.id', '=', 'pod.unit')
+                ->leftJoinSub($subReturn, 'prd', function ($join) {
+                    $join->on('prd.reference_detail_id', '=', 'pid.id');
+                })
+                ->where('pid.purchase_invoice_id', $id)
+                ->whereNull('pid.deleted')
                 ->select(
                     'pid.id as invoice_detail_id',
                     'p.id as item_id',
@@ -419,10 +439,9 @@ class PurchaseReturnController extends Controller
                     'u.name as unit_name',
                     'u.id as unit',
                     'pid.qty as qty',
-                    'pod.purchase_price as unit_price'
+                    'pod.purchase_price as unit_price',
+                    DB::raw('COALESCE(prd.total_qty_returned, 0) as qty_returned')
                 )
-                ->where('pid.purchase_invoice_id', $id)
-                ->whereNull('pid.deleted')
                 ->get();
         } else {
             $details = collect([]);

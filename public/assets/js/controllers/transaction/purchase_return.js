@@ -775,13 +775,17 @@ let PurchaseReturn = {
                         parseFloat(row.qty) * parseFloat(row.unit_price);
                     total += lineTotal;
 
+                    const qty_returned = isNaN(parseFloat(row.qty_returned)) ? 0 : parseFloat(row.qty_returned);
+                    console.log('qty_returned', qty_returned);
+                    const qty = parseFloat(row.qty) - qty_returned;
+
                     html += `
                     <tr class="input" data_id="${row.item_id}" id_detail="">
                         <td><input type="text" class="form-control" value="${
                             row.item_name
                         }" disabled></td>
                         <td><input type="number" class="form-control" id="qty" value="${
-                            row.qty
+                            qty
                         }" onkeyup="PurchaseReturn.calcRow(this)"></td>
                         <td><input type="text" data_id="${
                             row.unit
