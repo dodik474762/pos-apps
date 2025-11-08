@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\AccountMapping;
+use App\Models\Master\Coa;
 use App\Models\Master\Currency;
 use App\Models\Transaction\PurchaseInvoiceHeader;
 use App\Models\Transaction\VendorBillDtl;
@@ -71,6 +72,8 @@ class VendorBillController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
         $users = session('user_id');
         $result['is_valid'] = false;
 
@@ -95,10 +98,7 @@ class VendorBillController extends Controller
                 ->with('account')
                 ->first();
 
-            $kasBankAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
-                ->where('account_type', 'kas/bank')
-                ->with('account')
-                ->first();
+            $kasBankAccount = Coa::where('id', $data['account_id'])->first();
 
             if (! $hutangAccount || ! $kasBankAccount) {
                 DB::rollBack();
@@ -122,6 +122,7 @@ class VendorBillController extends Controller
             $roles->reference_number = $data['reference_number'];
             $roles->total_payment = $data['total_payment'];
             $roles->remarks = $data['remarks'];
+            $roles->account_id = $data['account_id'];
             $roles->status = 'draft';
             $roles->currency = $currency_id;
             $roles->save();
@@ -130,14 +131,14 @@ class VendorBillController extends Controller
             $payment_number = $roles->payment_number;
 
             // Loop data detail (invoice yang dibayar)
-            foreach ($data['invoices'] as $key => $value) {
-                $invoice = PurchaseInvoiceHeader::find($value['invoice_id']);
+            foreach ($data['items'] as $key => $value) {
+                $invoice = PurchaseInvoiceHeader::find($value['id']);
                 if (empty($invoice)) {
                     DB::rollBack();
 
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Invoice ID '.$value['invoice_id'].' tidak ditemukan.',
+                        'message' => 'Invoice ID '.$value['id'].' tidak ditemukan.',
                     ]);
                 }
 
@@ -178,9 +179,9 @@ class VendorBillController extends Controller
                 // Kredit Kas / Bank
                 postingGL(
                     $reference,
-                    $kasBankAccount->account_id,
-                    $kasBankAccount->account->account_name,
-                    $kasBankAccount->cd,
+                    $data['account_id'],
+                    $kasBankAccount->account_name,
+                    'C',
                     $amountPaid,
                     $currency_id
                 );
@@ -201,89 +202,106 @@ class VendorBillController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+
         DB::beginTransaction();
         try {
+            $payment = VendorBillHeader::with(['details'])->find($data['id']);
+            if (empty($payment)) {
+                DB::rollBack();
 
-            $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Vendor Payment tidak ditemukan.',
+                ]);
+            }
+
+            if ($payment->status != 'draft') {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat dihapus karena status sudah tidak draft.',
+                ]);
+            }
+
+            // ambil mapping akun untuk rollback GL
+            $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
                 ->where('account_type', 'hutang usaha')
                 ->with('account')
                 ->first();
 
-            $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'grir')
-                ->with('account')
-                ->first();
-
-            $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'ppn masukan')
-                ->with('account')
-                ->first();
-
-            $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
-                ->where('account_type', 'diskon pembelian')
-                ->with('account')
-                ->first();
-
-            $menu = PurchaseInvoiceHeader::find($data['id']);
-            $invoice_number = $menu->invoice_number;
-            if ($menu->status != 'draft') {
+            if (! $hutangAccount) {
                 DB::rollBack();
-                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
 
-                return response()->json($result);
-            }
-            $menu->deleted = date('Y-m-d H:i:s');
-            $menu->deleted_by = session('user_id');
-            $menu->save();
-
-            $items = PurchaseInvoiceDtl::where('purchase_invoice_id', $data['id'])->get();
-
-            $data_po = [];
-            $all_po = [];
-            foreach ($items as $value) {
-                $value->deleted = date('Y-m-d H:i:s');
-                $value->deleted_by = session('user_id');
-                $value->save();
-
-                $po_detail = PurchaseOrderDetail::find($value->purchase_order_detail_id);
-                $qty_total_outstanding_received = $po_detail->qty - ($po_detail->qty_received == '' ? 0 : $po_detail->qty_received);
-                if ($qty_total_outstanding_received <= 0) {
-                    $po_detail->status = 'received';
-                } else {
-                    $po_detail->status = 'partial-received';
-                }
-                $po_detail->save();
-
-                $data_po[$po_detail->purchase_order] = $po_detail->status;
-                $all_po[] = $po_detail->purchase_order;
-
-                $reference = $invoice_number.'-'.$value->purchase_order_detail_id;
-                cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd);
-                cancelGL($reference, $discAccount->account_id, $discAccount->account->account_name, $discAccount->cd);
-                cancelGL($reference, $ppnMasukanAccount->account_id, $ppnMasukanAccount->account->account_name, $ppnMasukanAccount->cd);
-                cancelGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd);
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Mapping akun hutang usaha belum dikonfigurasi.',
+                ]);
             }
 
-            $all_po = array_unique($all_po);
-            $po = PurchaseOrder::whereIn('id', $all_po)->get();
-            foreach ($po as $key => $value) {
-                if (isset($data_po[$value->id])) {
-                    $value->status = $data_po[$value->id];
-                    $value->save();
-                } else {
+            $kasBankAccount = Coa::find($payment->account_id);
+            if (! $kasBankAccount) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Akun kas / bank tidak ditemukan.',
+                ]);
+            }
+
+            // tandai header payment sebagai deleted
+            $payment->deleted = now();
+            $payment->deleted_by = session('user_id');
+            $payment->status = 'deleted';
+            $payment->save();
+
+            // Loop setiap detail payment
+            foreach ($payment->details as $detail) {
+                $invoice = PurchaseInvoiceHeader::find($detail->purchase_invoice_id);
+                if (! $invoice) {
                     DB::rollBack();
-                    $result['message'] = 'Tidak dapat dihapus karena status PO - Tidak tersedia';
 
-                    return response()->json($result);
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Invoice ID '.$detail->purchase_invoice_id.' tidak ditemukan.',
+                    ]);
                 }
+
+                // rollback status invoice (kembalikan menjadi "posted")
+                // hitung ulang total pembayaran selain yang dihapus
+                $totalPaid = DB::table('vendor_payment_detail')
+                    ->where('purchase_invoice_id', $invoice->id)
+                    ->whereNull('deleted')
+                    ->where('vendor_payment_id', '!=', $payment->id)
+                    ->sum('amount_paid');
+
+                if ($totalPaid <= 0) {
+                    $invoice->status = 'posted'; // belum ada pembayaran
+                } elseif ($totalPaid < $invoice->total_amount) {
+                    $invoice->status = 'partial'; // pembayaran sebagian
+                } else {
+                    $invoice->status = 'paid'; // masih fully paid
+                }
+                $invoice->save();
+
+                // batalkan jurnal (GL)
+                $reference = $payment->payment_number.'-'.$invoice->invoice_number;
+
+                cancelGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd);
+                cancelGL($reference, $kasBankAccount->id, $kasBankAccount->account_name, 'C');
+
+                // tandai detail sebagai deleted
+                $detail->deleted = now();
+                $detail->deleted_by = session('user_id');
+                $detail->save();
             }
 
             DB::commit();
             $result['is_valid'] = true;
+            $result['message'] = 'Vendor Payment berhasil dibatalkan dan dihapus.';
         } catch (\Throwable $th) {
-            // throw $th;
-            $result['message'] = $th->getMessage();
             DB::rollBack();
+            $result['message'] = $th->getMessage();
         }
 
         return response()->json($result);

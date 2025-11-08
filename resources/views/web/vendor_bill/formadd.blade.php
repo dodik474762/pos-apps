@@ -88,16 +88,16 @@
                                     disabled>
                             </div>
                             <div class="mb-3">
-    <label class="form-label">Account Kas / Bank</label>
-    <select id="account_id" class="form-control select2 required">
-        <option value="">-- Pilih Akun --</option>
-        @foreach ($cashBankAccounts as $acc)
-            <option value="{{ $acc->id }}">
-                {{ $acc->account_code }} - {{ $acc->account_name }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                                <label class="form-label">Account Kas / Bank</label>
+                                <select id="account_id" class="form-control select2 required">
+                                    <option value="">-- Pilih Akun --</option>
+                                    @foreach ($cashBankAccounts as $acc)
+                                        <option value="{{ $acc->id }}" {{ isset($data->account_id) ? ($data->account_id == $acc->id ? 'selected' : '')  : ''}}>
+                                            {{ $acc->account_code }} - {{ $acc->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -122,7 +122,7 @@
                             <tbody id="detail-body">
                                 @if (!empty($data_invoices))
                                     @foreach ($data_invoices as $inv)
-                                        <tr class="input" data_id="{{ $inv->id }}">
+                                        <tr class="input" data_id="{{ $inv->id }}" id_detail="{{ $inv->vendor_payment_detail_id }}">
                                             <td><input type="text" class="form-control" id="invoice_number"
                                                     value="{{ $inv->invoice_number }}" disabled></td>
                                             <td><input type="date" class="form-control" id="invoice_date"
@@ -130,23 +130,23 @@
                                             <td><input type="number" class="form-control" id="total_amount"
                                                     value="{{ $inv->total_amount }}" disabled></td>
                                             <td><input type="number" class="form-control" id="outstanding"
-                                                    value="{{ $inv->outstanding }}" disabled></td>
-                                            <td><input type="number" class="form-control" id="amount_paid" value="0"
+                                                    value="{{ $inv->amount_paid + $inv->remaining_balance }}" disabled></td>
+                                            <td><input type="number" class="form-control" id="amount_paid" value="{{ $inv->amount_paid }}"
                                                     onkeyup="VendorBill.calcRow(this)"></td>
                                             <td><input type="number" class="form-control" id="remaining"
-                                                    value="{{ $inv->outstanding }}" disabled></td>
+                                                    value="{{ $inv->amount_paid + $inv->remaining_balance }}" disabled></td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger"
+                                                {{-- <button type="button" class="btn btn-sm btn-danger"
                                                     onclick="VendorBill.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
-                                                </button>
+                                                </button> --}}
                                             </td>
                                         </tr>
                                     @endforeach
                                 @else
                                     <tr class="input" data_id="">
-                                        <td><input type="text" class="form-control" id="invoice_number"
-                                                    value="" disabled></td>
+                                        <td><input type="text" class="form-control" id="invoice_number" value="" disabled>
+                                        </td>
                                         <td><input type="date" class="form-control" id="invoice_date" value="" disabled>
                                         </td>
                                         <td><input type="number" class="form-control" id="total_amount" value="" disabled>
@@ -168,7 +168,8 @@
                         </table>
                     </div>
 
-                    {{-- <button type="button" class="btn btn-sm btn-primary mt-2" onclick="VendorBill.addRow()">+ Tambah
+                    {{-- <button type="button" class="btn btn-sm btn-primary mt-2" onclick="VendorBill.addRow()">+
+                        Tambah
                         Barang</button> --}}
 
                     <div class="text-end mt-4">
@@ -178,7 +179,9 @@
                     </div>
 
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success waves-effect waves-light me-1">Submit</button>
+                        @if (!isset($id))
+                            <button type="submit" class="btn btn-success waves-effect waves-light me-1">Submit</button>
+                        @endif
                         <button type="reset" onclick="VendorBill.back(this, event)"
                             class="btn btn-secondary waves-effect">Cancel</button>
                     </div>

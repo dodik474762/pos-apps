@@ -35,40 +35,57 @@ let VendorBill = {
         window.location.href = url.base_url(VendorBill.module()) + "add";
     },
 
-    getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
-        let result = [];
-
-        table.each((index, elm) => {
-            result.push({
-                id: $(elm).attr("data_id"),
-                id_detail: $(elm).attr("id_detail"),
-                po_detail: $(elm).find("#po-detail").val(),
-                qty: $(elm).find("#qty").val(),
-                unit_name: $(elm).find("#unit").val(),
-                unit: $(elm).find("#unit").attr('data_id'),
-                price: $(elm).find("#price").val(),
-                discount: $(elm).find("#discount").val(),
-                subtotal: $(elm).find("#subtotal").val(),
-                remove: $(elm).hasClass("remove") ? 1 : 0,
-            });
-        });
-
-        return result;
-    },
-
     getPostInput: () => {
+        let items = VendorBill.getPostItem();
+
         let data = {
-            id: $("input#id").val(),
-            invoice_date: $("#invoice_date").val(),
-            invoice_number: $("#invoice_number").val(),
+            id: $("#id").val(),
+            payment_number: $("#payment_number").val(),
+            payment_date: $("#payment_date").val(),
             vendor: $("#vendor").val(),
-            total_amount: $("#total_amount").val(),
+            payment_method: $("#payment_method").val(),
+            reference_number: $("#reference_number").val(),
             remarks: $("#remarks").val(),
-            items: VendorBill.getPostItem(),
+            total_payment: $("#total_payment").val().replace(/,/g, ""), // hilangkan koma
+            account_id: $("#account_id").val(),
+            items: items,
         };
 
         return data;
+    },
+
+    // Ambil data dari setiap baris invoice
+    getPostItem: () => {
+        let items = [];
+
+        $("#detail-body tr.input").each(function () {
+            let tr = $(this);
+            let data_id = tr.attr("data_id");
+            let id_detail = tr.attr("id_detail");
+            let invoice_number = tr.find("#invoice_number").val();
+            let invoice_date = tr.find("#invoice_date").val();
+            let total_amount = tr.find("#total_amount").val();
+            let outstanding = tr.find("#outstanding").val();
+            let amount_paid = tr.find("#amount_paid").val();
+            let remaining = tr.find("#remaining").val();
+
+            // hanya push jika ada invoice_number atau amount_paid > 0
+            if (invoice_number && parseFloat(amount_paid) > 0) {
+                items.push({
+                    id: data_id,
+                    id_detail: id_detail,
+                    invoice_number: invoice_number,
+                    invoice_date: invoice_date,
+                    total_amount: total_amount,
+                    outstanding: outstanding,
+                    amount_paid: amount_paid,
+                    remaining: remaining,
+                    remove: tr.hasClass("remove") ? 1 : 0,
+                });
+            }
+        });
+
+        return items;
     },
 
     submit: (elm, e) => {
@@ -185,13 +202,14 @@ let VendorBill = {
                 {
                     data: "id",
                     render: function (data, type, row) {
-                        var html = `<a href='${url.base_url(
-                            VendorBill.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        // var html = `<a href='${url.base_url(
+                        //     VendorBill.module()
+                        // )}cetak?id=${data}' data_id="${
+                        //     row.id
+                        // }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        let html = '';
                         if (updateAction == 1) {
-                            if(row.status == 'draft'){
+                            if (row.status == "draft") {
                                 html += `<a href='${url.base_url(
                                     VendorBill.module()
                                 )}ubah?id=${data}' data_id="${
@@ -200,7 +218,7 @@ let VendorBill = {
                             }
                         }
                         if (deleteAction == 1) {
-                            if(row.status == 'draft'){
+                            if (row.status == "draft") {
                                 html += `<button type="button" data_id="${row.id}" onclick="VendorBill.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
@@ -298,7 +316,7 @@ let VendorBill = {
 
     showDataInvoice: (elm) => {
         let params = {
-            vendor: $('#vendor').val()
+            vendor: $("#vendor").val(),
         };
 
         $.ajax({
@@ -331,7 +349,7 @@ let VendorBill = {
 
     loadInvoices: (elm) => {
         let params = {
-            vendor: $('#vendor').val()
+            vendor: $("#vendor").val(),
         };
 
         $.ajax({
@@ -354,7 +372,7 @@ let VendorBill = {
 
             success: function (resp) {
                 message.closeLoading();
-                 $('table#table-items').find('tbody').html(resp);
+                $("table#table-items").find("tbody").html(resp);
 
                 // const vendor = $('#purchase_order').find('option:selected').attr('vendor');
                 // const vendor_name = $('#purchase_order').find('option:selected').attr('vendor_name');
@@ -367,14 +385,16 @@ let VendorBill = {
 
     getListItemOutstandingPO: (elm) => {
         let params = {
-            po: $('#purchase_order').val()
+            po: $("#purchase_order").val(),
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(VendorBill.moduleApi()) + "getListItemOutstandingPO",
+            url:
+                url.base_url(VendorBill.moduleApi()) +
+                "getListItemOutstandingPO",
             headers: {
                 "X-CSRF-TOKEN": VendorBill.csrf_token(),
             },
@@ -390,12 +410,16 @@ let VendorBill = {
 
             success: function (resp) {
                 message.closeLoading();
-                $('table#table-items').find('tbody').html(resp);
+                $("table#table-items").find("tbody").html(resp);
 
-                const vendor = $('#purchase_order').find('option:selected').attr('vendor');
-                const vendor_name = $('#purchase_order').find('option:selected').attr('vendor_name');
-                $('input#vendor').val(vendor_name);
-                $('input#vendor').attr('data_id', vendor);
+                const vendor = $("#purchase_order")
+                    .find("option:selected")
+                    .attr("vendor");
+                const vendor_name = $("#purchase_order")
+                    .find("option:selected")
+                    .attr("vendor_name");
+                $("input#vendor").val(vendor_name);
+                $("input#vendor").attr("data_id", vendor);
                 VendorBill.hitungSummaryAll();
             },
         });
@@ -431,8 +455,8 @@ let VendorBill = {
                     `getDataProductPoDetail`,
                 type: "POST",
                 data: {
-                    vendor: $('#vendor').val(),
-                    itemsChoose: itemsChoose
+                    vendor: $("#vendor").val(),
+                    itemsChoose: itemsChoose,
                 },
                 headers: {
                     "X-CSRF-TOKEN": VendorBill.csrf_token(),
@@ -528,16 +552,30 @@ let VendorBill = {
         let subtotal = $(elm).attr("subtotal");
 
         qty = isNaN(parseFloat(qty)) ? 0 : parseFloat(qty);
-        purchase_price = isNaN(parseFloat(purchase_price)) ? 0 : parseFloat(purchase_price);
-        diskon_persen = isNaN(parseFloat(diskon_persen)) ? 0 : parseFloat(diskon_persen);
-        diskon_nominal = isNaN(parseFloat(diskon_nominal)) ? 0 : parseFloat(diskon_nominal);
+        purchase_price = isNaN(parseFloat(purchase_price))
+            ? 0
+            : parseFloat(purchase_price);
+        diskon_persen = isNaN(parseFloat(diskon_persen))
+            ? 0
+            : parseFloat(diskon_persen);
+        diskon_nominal = isNaN(parseFloat(diskon_nominal))
+            ? 0
+            : parseFloat(diskon_nominal);
         const grandTotal = qty * purchase_price;
         const totalDiskonPersen = grandTotal * (diskon_persen / 100);
         const diskonTotal = totalDiskonPersen + diskon_nominal;
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(po_number + "//" + purchase_order_detail_id+ "//" + produk_id + "//" + produk_name);
+            .val(
+                po_number +
+                    "//" +
+                    purchase_order_detail_id +
+                    "//" +
+                    produk_id +
+                    "//" +
+                    produk_name
+            );
         console.log($(elmChoose).closest("tr").find("td#unit"));
         $(elmChoose).closest("tr").find("input#qty").val(qty);
         $(elmChoose).closest("tr").find("input#unit").val(unit_name);
@@ -555,60 +593,24 @@ let VendorBill = {
     },
 
     calcRow: (elm) => {
-        // const tr = $(elm).closest("tr");
-
-        // // Ambil value input
-        // const qty = parseFloat(tr.find("input#qty_received").val()) || 0;
-        // const price = parseFloat(tr.find("input#po_detail").attr('price')) || 0;
-
-        // // Hitung subtotal sebelum pajak
-        // const subTotal = qty * price;
-        // const disc = subTotal * (disc_persen / 100) + disc_nominal;
-        // const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
-
-        // // Ambil rate pajak dari option terpilih
-        // const taxRate =
-        //     parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
-        // const taxAmount = dpp * (taxRate / 100);
-
-        // // Total per baris = DPP + pajak
-        // const subtotalResult = dpp + taxAmount;
-
-        // // Update input subtotal
-        // tr.find("input#subtotal").val(subtotalResult.toFixed(2));
-
-        // // Simpan data pajak di row untuk reference
-        // tr.data("dpp", dpp);
-        // tr.data("tax_amount", taxAmount);
-        // tr.data("tax_rate", taxRate);
-
-        // Hitung summary total
         VendorBill.hitungSummaryAll();
     },
 
     hitungSummaryAll: () => {
         const table = $("table#table-items tbody tr.input");
         let subTotalAll = 0;
-        let qtyTotal = 0;
 
         table.each((index, elm) => {
-            if(!$(elm).hasClass('remove')){
-                const subtotal =
-                    parseFloat($(elm).find("input#subtotal").val()) || 0;
-                const qty =
-                    parseFloat($(elm).find("input#qty_received").val()) || 0;
+            if (!$(elm).hasClass("remove")) {
+                const amount =
+                    parseFloat($(elm).find("input#amount_paid").val()) || 0;
 
-                subTotalAll += subtotal;
-                qtyTotal += qty;
+                subTotalAll += amount;
             }
         });
 
-        const grandTotal = subTotalAll;
-
-        console.log('qtyTotal', qtyTotal);
-
-        $("#total-amount").text(subTotalAll.toFixed(2));
-        $("#total_amount").val(subTotalAll.toFixed(2));
+        $("#total-payment-display").text(subTotalAll.toFixed(2));
+        $("input#total_payment").val(subTotalAll.toFixed(2));
     },
 
     removeRow: (elm) => {
@@ -624,7 +626,6 @@ let VendorBill = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
-
 
         if (itemsChoose.length > 0) {
             for (let i = 0; i < itemsChoose.length; i++) {

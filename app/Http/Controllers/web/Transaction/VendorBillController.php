@@ -8,6 +8,7 @@ use App\Models\Master\Tax;
 use App\Models\Master\Vendor;
 use App\Models\Transaction\VendorBillDtl;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VendorBillController extends Controller
 {
@@ -60,6 +61,13 @@ class VendorBillController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getListKasBank(){
+        $datadb = DB::table('coa')->where('is_active', 1)
+        ->where('parent_code', '1100')
+        ->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -73,6 +81,7 @@ class VendorBillController extends Controller
             ->get(['id', 'tax_name', 'rate']);
         $data['data_invoices'] = [];
         $data['general_ledgers'] = [];
+        $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.vendor_bill.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -89,29 +98,26 @@ class VendorBillController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['cashBankAccounts'] = $this->getListKasBank();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_invoices'] = VendorBillDtl::where('purchase_invoice_detail.purchase_invoice_id', $data['id'])
+        $data['data_invoices'] = VendorBillDtl::where('vendor_payment_detail.vendor_payment_id', $data['id'])
             ->select([
-                'purchase_invoice_detail.*',
-                'p.id as product_id',
-                'p.name as product_name',
-                'u.name as unit_name',
-                'pod.purchase_price',
-                'p.code as product_code',
-                'po.code as po_number'
+                'pi.*',
+                'vendor_payment_detail.id as vendor_payment_detail_id',
+                'vendor_payment_detail.remaining_balance',
+                'vendor_payment_detail.amount_paid',
             ])
-            ->join('purchase_order_detail as pod', 'pod.id', 'purchase_invoice_detail.purchase_order_detail_id')
-            ->join('purchase_order as po', 'po.id', 'pod.purchase_order')
-            ->join('product as p', 'p.id', 'purchase_invoice_detail.product')
-            ->join('unit as u', 'u.id', 'purchase_invoice_detail.unit')
+            ->join('purchase_invoice_header as pi', 'pi.id', 'vendor_payment_detail.purchase_invoice_id')
             ->get();
+        // echo '<pre>';
+        // print_r($data['data_invoices']);die;
 
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_number);
         $view = view('web.vendor_bill.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
