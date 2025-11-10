@@ -225,105 +225,69 @@ class PurchaseReturnController extends Controller
 
     public function confirmDelete(Request $request)
     {
-        $data = $request->all();
-        $result['is_valid'] = false;
+        $id = $request->id; // ID Purchase Return yang akan dihapus
+        $userId = session('user_id');
+
+        $result = ['is_valid' => false];
 
         DB::beginTransaction();
         try {
-            $payment = PurchaseReturn::with(['details'])->find($data['id']);
-            if (empty($payment)) {
-                DB::rollBack();
-
+            // Cek data header
+            $hdr = PurchaseReturn::find($id);
+            if (! $hdr) {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Vendor Payment tidak ditemukan.',
+                    'message' => 'Data Purchase Return tidak ditemukan.',
                 ]);
             }
 
-            if ($payment->status != 'draft') {
-                DB::rollBack();
-
+            // Cek apakah status masih draft atau sudah diposting
+            if ($hdr->status !== 'DRAFT') {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Tidak dapat dihapus karena status sudah tidak draft.',
+                    'message' => 'Hanya data dengan status draft yang dapat dihapus.',
                 ]);
             }
 
-            // ambil mapping akun untuk rollback GL
-            $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
-                ->where('account_type', 'hutang usaha')
-                ->with('account')
-                ->first();
+            $hdrId = $hdr->id;
+            $returnNumber = $hdr->code;
 
-            if (! $hutangAccount) {
-                DB::rollBack();
+            // Ambil detail
+            $details = PurchaseReturnDtl::where('purchase_return_id', $hdrId)->get();
 
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Mapping akun hutang usaha belum dikonfigurasi.',
-                ]);
+            foreach ($details as $detail) {
+                // 🔹 Kembalikan stok (karena sebelumnya retur mengurangi stok)
+                $qtyBaseUnit = getSmallestUnit($detail->product, $detail->unit, $detail->qty);
+                $productUomLevel1 = ProductUom::where('product', $detail->product)->where('level', '1')->first();
+                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+
+                // Tambahkan kembali stok (reverse dari "min")
+                stockUpdate(
+                    $hdrId,
+                    $hdr->warehouse,
+                    $detail->product,
+                    $productUomLevel1->unit_tujuan,
+                    $qtyBaseUnit,
+                    $detail,
+                    'add',
+                    'purchase_return_delete'
+                );
+
+                // 🔹 Hapus jurnal GL terkait
+                $reference = $returnNumber . '-ITEM-' . $detail->product;
+                cancelAllGL($reference);
             }
 
-            $kasBankAccount = Coa::find($payment->account_id);
-            if (! $kasBankAccount) {
-                DB::rollBack();
+            // 🔹 Hapus detail
+            PurchaseReturnDtl::where('purchase_return_id', $hdrId)->delete();
 
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Akun kas / bank tidak ditemukan.',
-                ]);
-            }
-
-            // tandai header payment sebagai deleted
-            $payment->deleted = now();
-            $payment->deleted_by = session('user_id');
-            $payment->status = 'deleted';
-            $payment->save();
-
-            // Loop setiap detail payment
-            foreach ($payment->details as $detail) {
-                $invoice = PurchaseInvoiceHeader::find($detail->purchase_invoice_id);
-                if (! $invoice) {
-                    DB::rollBack();
-
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Invoice ID '.$detail->purchase_invoice_id.' tidak ditemukan.',
-                    ]);
-                }
-
-                // rollback status invoice (kembalikan menjadi "posted")
-                // hitung ulang total pembayaran selain yang dihapus
-                $totalPaid = DB::table('vendor_payment_detail')
-                    ->where('purchase_invoice_id', $invoice->id)
-                    ->whereNull('deleted')
-                    ->where('vendor_payment_id', '!=', $payment->id)
-                    ->sum('amount_paid');
-
-                if ($totalPaid <= 0) {
-                    $invoice->status = 'posted'; // belum ada pembayaran
-                } elseif ($totalPaid < $invoice->total_amount) {
-                    $invoice->status = 'partial'; // pembayaran sebagian
-                } else {
-                    $invoice->status = 'paid'; // masih fully paid
-                }
-                $invoice->save();
-
-                // batalkan jurnal (GL)
-                $reference = $payment->payment_number.'-'.$invoice->invoice_number;
-
-                cancelGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd);
-                cancelGL($reference, $kasBankAccount->id, $kasBankAccount->account_name, 'C');
-
-                // tandai detail sebagai deleted
-                $detail->deleted = now();
-                $detail->deleted_by = session('user_id');
-                $detail->save();
-            }
+            // 🔹 Hapus header
+            $hdr->delete();
 
             DB::commit();
+
             $result['is_valid'] = true;
-            $result['message'] = 'Vendor Payment berhasil dibatalkan dan dihapus.';
+            $result['message'] = 'Purchase Return berhasil dihapus.';
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = $th->getMessage();

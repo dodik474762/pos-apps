@@ -657,6 +657,11 @@ function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = ''
         ->where('dc', $dc)->delete();
 }
 
+function cancelAllGL($reference = '')
+{
+    GeneralLedger::where('reference', $reference)->delete();
+}
+
 function getGeneralLedger($reference = '')
 {
     $general_ledgers = DB::table('general_ledgers as gl')
