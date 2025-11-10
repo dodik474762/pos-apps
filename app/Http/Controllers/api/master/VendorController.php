@@ -75,6 +75,7 @@ class VendorController extends Controller
             $roles->address = $data['address'];
             $roles->city = $data['city'];
             $roles->region = $data['region'];
+            $roles->category = $data['category'];
             $roles->save();
             DB::commit();
             $result['is_valid'] = true;

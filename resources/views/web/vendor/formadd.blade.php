@@ -27,6 +27,16 @@
                 <form onsubmit="Vendor.submit(this, event)">
                     <div class="row">
                         <div class="col-lg-6">
+                             <div class="mb-3">
+                                <label class="form-label">Kategori</label>
+                                <select class="form-control select2 required" error="Kategori" id="category">
+                                    @foreach ($categorys as $item)
+                                        <option value="{{ $item->id }}"
+                                            {{ isset($data->category) ? ($data->category == $item->id ? 'selected' : '') : '' }}>
+                                            {{ $item->category }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="mb-3">
                                 <label>PIC</label>
                                 <div>

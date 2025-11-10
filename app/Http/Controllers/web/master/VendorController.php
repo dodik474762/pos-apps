@@ -6,6 +6,7 @@ use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Region;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VendorController extends Controller
 {
@@ -56,6 +57,11 @@ class VendorController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getCategory(){
+        $datadb = DB::table('vendor_category')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -64,6 +70,7 @@ class VendorController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['categorys'] = $this->getCategory();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -83,6 +90,7 @@ class VendorController extends Controller
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['categorys'] = $this->getCategory();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();

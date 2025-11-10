@@ -45,6 +45,7 @@ let Vendor = {
             address: $("#address").val(),
             city: $("#city").val(),
             region: $("#region").val(),
+            category: $("#category").val(),
         };
 
         return data;
