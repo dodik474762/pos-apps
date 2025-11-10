@@ -28,6 +28,7 @@ use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionP
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
+use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -59,6 +60,7 @@ use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
+use App\Http\Controllers\web\Transaction\SalesOrderController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
 
@@ -186,6 +188,10 @@ Route::get('transaksi/vendor-bill/ubah', [VendorBillController::class, 'ubah']);
 Route::get('transaksi/purchase-return', [PurchaseReturnController::class, 'index']);
 Route::get('transaksi/purchase-return/add', [PurchaseReturnController::class, 'add']);
 Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, 'ubah']);
+
+Route::get('transaksi/sales_order', [SalesOrderController::class, 'index']);
+Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add']);
+Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah']);
 
 /*API */
 
@@ -363,4 +369,9 @@ Route::post('api/transaksi/purchase-return/delete', [TransactionPurchaseReturnCo
 Route::post('api/transaksi/purchase-return/confirmDelete', [TransactionPurchaseReturnController::class, 'confirmDelete']);
 Route::get('api/transaksi/purchase-return/references', [TransactionPurchaseReturnController::class, 'getReferences']);
 Route::get('api/transaksi/purchase-return/reference-detail', [TransactionPurchaseReturnController::class, 'getReferencesDetail']);
+
+Route::post('api/transaksi/sales_order/getData', [TransactionSalesOrderController::class, 'getData']);
+Route::post('api/transaksi/sales_order/submit', [TransactionSalesOrderController::class, 'submit']);
+Route::post('api/transaksi/sales_order/delete', [TransactionSalesOrderController::class, 'delete']);
+Route::post('api/transaksi/sales_order/confirmDelete', [TransactionSalesOrderController::class, 'confirmDelete']);
 /*API */
