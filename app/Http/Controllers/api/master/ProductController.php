@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\web\master\ProductController as MasterProductController;
+use App\Models\Master\Customer;
 use App\Models\Master\CustomerCategory;
 use App\Models\Master\Product;
 use App\Models\Master\ProductCatalog;
@@ -307,10 +308,20 @@ class ProductController extends Controller
                         $product_uom_price->price_list = $data['type_price'][$i];
                         $product_uom_price->price = $data['price'][$i];
                         $product_uom_price->date_start = $data['date_start'][$i];
+                        $product_uom_price->min_qty = $data['min_qty'][$i];
+                        $product_uom_price->max_qty = $data['max_qty'][$i];
                         if ($data['customer'][$i] != '') {
                             list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
                             $product_uom_price->customer = $id_cust;
                             $product_uom_price->customer_name = $name_cust;
+
+                            /*cek customer sudah setup pricel level */
+                            $cust = Customer::find($id_cust);
+                            if($cust->price_list != ''){
+                                $result['message'] = 'Customer sudah setup pricelist';
+                                return response()->json($result);
+                            }
+                            /*cek customer sudah setup pricel level */
                         }
                         $product_uom_price->save();
                     }

@@ -14,6 +14,7 @@
                          <thead>
                             <tr>
                               <th>No</th>
+                              <th>Kode</th>
                               <th>Nama</th>
                               <th>Kategori</th>
                               <th>Kota</th>
@@ -24,7 +25,7 @@
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="7">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="8">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>

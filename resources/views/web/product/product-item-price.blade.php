@@ -18,6 +18,16 @@
         </select>
     </td>
     <td>
+        <!-- 🔹 input baru: Min Qty -->
+        <input type="number" id="min_qty" name="min_qty[]" class="form-control required" error="Min Qty" min="1"
+            value="1">
+    </td>
+    <td>
+        <!-- 🔹 input baru: Min Qty -->
+        <input type="number" id="max_qty" name="max_qty[]" class="form-control required" error="Max Qty" min="1"
+            value="1">
+    </td>
+    <td>
         <input type="number" id="price" name="price[]" class="form-control required" error="Harga" value="">
     </td>
     <td>

@@ -541,6 +541,9 @@ let Product = {
                     },
                 },
                 {
+                    data: "code",
+                },
+                {
                     data: "nama_customer",
                 },
                 {
