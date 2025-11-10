@@ -55,6 +55,14 @@ class CustomerController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getTerms(){
+        $datadb = DB::table('term_of_payment')->whereNull('deleted')
+        ->orderBy('nilai', 'asc')
+        ->get();
+
+        return $datadb;
+    }
+
     public function add(){
         $data['data'] = [];
         $data['title'] = 'Form '.$this->getTitle();
@@ -64,6 +72,7 @@ class CustomerController extends Controller
         $data['company'] = session('id_company');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
+        $data['tops'] = $this->getTerms();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -85,6 +94,7 @@ class CustomerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
+        $data['tops'] = $this->getTerms();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();

@@ -1,0 +1,24 @@
+8 November 2025
+Master
+- Customer :
+    - TOP ditaruh di atas credit limit (jika cash maka credit limit langsung 0)
+    - payment terms ( cash, top (berapa hari 7/13/))
+    - (payment terms dan credit limit untuk di akun sales tidak perlu)
+    - reference_number (untuk kebutuhan mapping principal)
+    - (UMUM,GROSIR, RETAIL) belum muncul di pelanggan
+- Product :
+    - product harga (jika sudah diseting price level ecer, dll di master customer) maka tidak bisa ditambahkan
+    - pada saat pilih customer tampilkan kode customer
+    - Product Harga ditambahkan min qty pengambilan (untuk menentukan harga tertentu)
+- Vendor :
+    - Tambahkan kategori vendor
+- PO
+    - saat pilih produk tampilkan stok, rata2 jual (3 bulan), doi (day of inventory)
+
+
+
+Note##
+- Return Sales (Kategori Good, Bad) :
+    - diajukan sales,dikonfirmasi admin/spv, divalidasi oleh Warehouse, Disetujui oleh Owner (potong owner) --> Bad Stock
+    - diajukan sales,dikonfirmasi admin/spv, divalidasi oleh Warehouse --> Good Stock
+- Pemusnahan Barang Bad Stock

@@ -315,7 +315,7 @@ let Customer = {
             },
         });
     },
-    
+
     getKecamatan: (elm) => {
         const kota = $(elm).val();
         $.ajax({
@@ -357,7 +357,7 @@ let Customer = {
             },
         });
     },
-   
+
     getKelurahan: (elm) => {
         const kecamatan = $(elm).val();
         $.ajax({
@@ -399,6 +399,16 @@ let Customer = {
             },
         });
     },
+
+    changeCreditLimit:(elm)=>{
+        const top = $(elm).val();
+        if(top == '3'){
+            $('#credit_limit').val(0);
+            $('#credit_limit').attr('disabled',true);
+        }else{
+            $('#credit_limit').attr('disabled',false);
+        }
+    }
 };
 
 $(function () {

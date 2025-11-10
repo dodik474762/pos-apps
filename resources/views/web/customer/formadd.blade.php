@@ -81,20 +81,24 @@
                                 </div>
                             </div>
                              <div class="mb-3">
+                                <label>Payment Terms / TOP</label>
+                                 <div>
+                                    <select name="" id="payment_terms" class="form-control required" error="TOP" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($tops as $item)
+                                            <option value="{{ $item->id }}" {{ isset($data->payment_terms) ? ($data->payment_terms == $item->id ? 'selected' : '') : '' }}>{{ $item->code }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                             <div class="mb-3">
                                 <label>Credit Limit</label>
                                 <div>
                                     <input tabindex="10" type="number" id="credit_limit" class="form-control required" error="Credit Limit"
                                         placeholder="Credit Limit" value="{{ isset($data->credit_limit) ? $data->credit_limit : '' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
-                                <label>No. KTP</label>
-                                <div>
-                                    <input tabindex="9" type="text" id="no_ktp" class="form-control" error="No. KTP"
-                                        placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
-                                </div>
-                            </div>
-                            <div class="mb-3 d-none">
+                            <div class="mb-3">
                                 <label>Price List</label>
                                 <div>
                                     <select name="" id="price_list" class="form-control">
@@ -159,11 +163,11 @@
                                         placeholder="NPWP" value="{{ isset($data->npwp) ? $data->npwp : '' }}">
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label>Payment Terms / TOP</label>
+                             <div class="mb-3">
+                                <label>No. KTP</label>
                                 <div>
-                                    <input tabindex="10" type="number" id="payment_terms" class="form-control required" error="Payment Terms"
-                                        placeholder="Payment Terms" value="{{ isset($data->payment_terms) ? $data->payment_terms : '' }}">
+                                    <input tabindex="9" type="text" id="no_ktp" class="form-control" error="No. KTP"
+                                        placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
                                 </div>
                             </div>
                         </div>
