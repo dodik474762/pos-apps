@@ -170,6 +170,13 @@
                                         placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Reference Number</label>
+                                <div>
+                                    <input tabindex="10" type="text" id="reference_number" class="form-control" error="Reference Number"
+                                        placeholder="Reference Number" value="{{ isset($data->reference_number) ? $data->reference_number : '' }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>

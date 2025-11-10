@@ -105,6 +105,7 @@ class CustomerController extends Controller
             $roles->credit_limit = $data['credit_limit'];
             $roles->kecamatan = $data['kecamatan'];
             $roles->kelurahan = $data['kelurahan'];
+            $roles->reference_number = $data['reference_number'];
             $roles->save();
 
             // $nik_upt = new KaryawanHasUpt();
@@ -180,7 +181,7 @@ class CustomerController extends Controller
         $result['data'] = $datadb;
         return response()->json($result);
     }
-    
+
     public function getKecamatan(Request $request)
     {
         $data = $request->all();
@@ -192,7 +193,7 @@ class CustomerController extends Controller
         $result['data'] = $datadb;
         return response()->json($result);
     }
-   
+
     public function getKelurahan(Request $request)
     {
         $data = $request->all();

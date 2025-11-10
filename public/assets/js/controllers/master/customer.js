@@ -53,6 +53,7 @@ let Customer = {
             no_ktp: $("#no_ktp").val(),
             kecamatan: $("#kecamatan").val(),
             kelurahan: $("#kelurahan").val(),
+            reference_number: $("#reference_number").val(),
         };
 
         return data;
