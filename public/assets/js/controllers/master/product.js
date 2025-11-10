@@ -659,7 +659,7 @@ let Product = {
         $("button.btn-close").trigger("click");
     },
 
-    removeItemPrice: (elm) => {
+    removeItemPrice: (elm, e) => {
         e.preventDefault();
         const data_id = $(elm).closest("tr").attr("data_id");
         if (data_id == "") {

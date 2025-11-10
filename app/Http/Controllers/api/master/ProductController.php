@@ -452,13 +452,15 @@ class ProductController extends Controller
     public function removeUomPrice(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
 
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
-            // $product_uom = ProductUom::find($data['id']);
+            ProductUomPrice::where('id', $data['id'])->delete();
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
             // ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
             // if(!empty($product_uom_price)){
