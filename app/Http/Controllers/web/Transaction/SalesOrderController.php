@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
+use App\Models\Master\Currency;
 use App\Models\Master\Customer;
 use App\Models\Master\Tax;
 use App\Models\Transaction\SalesOrderDetail;
@@ -73,6 +74,7 @@ class SalesOrderController extends Controller
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
+        $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -104,6 +106,7 @@ class SalesOrderController extends Controller
             ->join('unit as u', 'u.id', 'purchase_order_detail.unit')
             ->get();
 
+        $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_order.formadd', $data);

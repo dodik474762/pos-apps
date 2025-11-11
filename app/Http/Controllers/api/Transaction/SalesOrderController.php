@@ -4,9 +4,12 @@ namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\Currency;
+use App\Models\Master\Customer;
 use App\Models\Master\ProductDisc;
 use App\Models\Master\ProductFreeGood;
+use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
+use App\Models\Master\Unit;
 use App\Models\Transaction\SalesOrderHeader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -325,6 +328,73 @@ class SalesOrderController extends Controller
         return view('web.product.modal.dataproduct', $data);
     }
 
+    public function showDiscountProduct(Request $request)
+    {
+        $data = $request->all();
+        $data['message'] = '';
+        try {
+            $data['disc'] = $this->getDataDiscProduct($data);
+        } catch (\Throwable $th) {
+            $data['message'] = $th->getMessage();
+        }
+
+        return view('web.product.datainfoprogramdisk', $data);
+    }
+    
+    public function showDiscountFreeProduct(Request $request)
+    {
+        $data = $request->all();
+        $data['message'] = '';
+        try {
+            $data['disc'] = $this->getProductFreeGood($data);
+        } catch (\Throwable $th) {
+            $data['message'] = $th->getMessage();
+        }
+
+        // echo '<pre>';
+        // print_r($data);die;
+
+        return view('web.product.datainfoprogramfreegood', $data);
+    }
+    
+    public function showQtySmallestProduct(Request $request)
+    {
+        $data = $request->all();
+        $data['message'] = '';
+        $data['data_uom'] = [];
+        try {
+            $data_uom = ProductUom::whereNull('product_uom.deleted')->where('product_uom.product', $data['produk_id'])
+            ->select(['product_uom.*', 'p.name as product_name', 'p.code'])
+            ->join('product as p', 'p.id', 'product_uom.product')
+            ->orderBy('product_uom.level')->get();
+            $units = collect($data_uom)->pluck('unit_tujuan')->unique()->values()->all();
+            $unit = Unit::whereNull('deleted')
+            ->whereIn('id', $units)
+            ->get();
+
+        
+            $data_result = [];
+            foreach ($data_uom as $key => $value) {
+                $conversion = getSmallestUnit($value->product, $value->unit_tujuan, 1);
+                $unit_name = collect($unit)->where('id', $value->unit_tujuan)->first();
+                $conversion['unit_name'] = $unit_name->name;
+                $conversion['product'] = $value->product;
+                $conversion['product_name'] = $value->product_name;
+                $conversion['code'] = $value->code;
+                $data_result[] = $conversion;
+            }
+
+            $data['data_uom'] = $data_result;
+        } catch (\Throwable $th) {
+            $data['message'] = $th->getMessage();
+        }
+
+        // echo '<pre>';
+        // print_r($data);die;
+
+        return view('web.product.datauom', $data);
+    }
+
     public function getDiscount(Request $request)
     {
         $discount = ProductDisc::valid(
@@ -341,26 +411,51 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    function getProductFreeGood($product_id, $unit_id, $customer_id, $customer_category_id, $qty)
+    function getProductFreeGood($params)
     {
-        return ProductFreeGood::where('product', $product_id)
-            ->where('unit', $unit_id)
-            ->where(function ($q) use ($customer_id) {
-                $q->where('customer', $customer_id)->orWhereNull('customer');
-            })
-            ->where(function ($q) use ($customer_category_id) {
-                $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
-            })
-            ->where('status_aktif', 1)
-            ->whereDate('date_start', '<=', now())
+        $data = $params;
+        $product_id = $data['produk_id'];
+        $unit_id = $data['unit'];
+        $customer_id = $data['customer'];
+        $customerdb = Customer::find($customer_id);
+        $customer_category_id = $customerdb->customer_category;
+
+        $datadb = ProductFreeGood::where('product_free_good.product', $product_id)
+            // ->where('unit', $unit_id)
+            // ->where(function ($q) use ($customer_id) {
+            //     $q->where('customer', $customer_id)->orWhereNull('customer');
+            // })
+            // ->where(function ($q) use ($customer_category_id) {
+            //     $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
+            // })
+            ->select([
+                'product_free_good.*',
+                'p.name as product_name',
+                'fp.name as free_product_name',
+                'u.name as unit_name',
+                'fu.name as free_unit_name',
+                'c.nama_customer',
+                'cc.category',
+                'p.code',
+                'fp.code as free_code'
+            ])
+            ->join('product as p', 'p.id', 'product_free_good.product')
+            ->join('product as fp', 'fp.id', 'product_free_good.free_product')
+            ->join('unit as u', 'u.id', 'product_free_good.unit')
+            ->join('unit as fu', 'fu.id', 'product_free_good.free_unit')
+            ->leftJoin('customer as c', 'c.id', 'product_free_good.customer')
+            ->leftJoin('customer_category as cc', 'cc.id', 'product_free_good.customer_category')
+            ->where('product_free_good.status_aktif', 1)
+            ->whereDate('product_free_good.date_start', '<=', now())
             ->where(function ($q) {
-                $q->whereDate('date_end', '>=', now())->orWhereNull('date_end');
+                $q->whereDate('product_free_good.date_end', '>=', now())->orWhereNull('date_end');
             })
-            ->where('min_qty', '<=', $qty)
-            ->where(function ($q) use ($qty) {
-                $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
-            })
-            ->first();
+            // ->where('min_qty', '<=', $qty)
+            // ->where(function ($q) use ($qty) {
+            //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
+            // })
+            ->get();
+        return $datadb;
     }
 
     function getProductPrice($product_id, $unit_id, $customer_id, $qty)
@@ -381,25 +476,141 @@ class SalesOrderController extends Controller
             ->first();
     }
 
-    function getProductDiscount($product_id, $unit_id, $customer_id, $customer_category_id, $qty)
+    public function getDataDiscProduct($params)
     {
-        return ProductDisc::where('product', $product_id)
-            ->where('unit', $unit_id)
-            ->where(function ($q) use ($customer_id) {
-                $q->where('customer', $customer_id)->orWhereNull('customer');
-            })
-            ->where(function ($q) use ($customer_category_id) {
-                $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
-            })
-            ->where('status_aktif', 1)
-            ->whereDate('date_start', '<=', now())
+        $data = $params;
+        $product_id = $data['produk_id'];
+        $unit_id = $data['unit'];
+        $customer_id = $data['customer'];
+        $customerdb = Customer::find($customer_id);
+        $customer_category_id = $customerdb->customer_category;
+
+        $datadb = ProductDisc::where('product_discount.product', $product_id)
+            // ->where(function ($q) use ($customer_id) {
+            //     $q->where('customer', $customer_id)->orWhereNull('customer');
+            // })
+            // ->where(function ($q) use ($customer_category_id) {
+            //     $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
+            // })
+            ->select([
+                'product_discount.*',
+                'u.name as unit_name',
+                'c.nama_customer',
+                'cc.category',
+                'p.name as product_name',
+                'p.code',
+            ])
+            ->join('product as p', 'p.id', 'product_discount.product')
+            ->join('unit as u', 'u.id', 'product_discount.unit')
+            ->leftJoin('customer as c', 'c.id', 'product_discount.customer')
+            ->leftJoin('customer_category as cc', 'cc.id', 'product_discount.customer_category')
+            ->where('product_discount.status_aktif', 1)
+            ->whereDate('product_discount.date_start', '<=', now())
             ->where(function ($q) {
-                $q->whereDate('date_end', '>=', now())->orWhereNull('date_end');
+                $q->whereDate('product_discount.date_end', '>=', now())->orWhereNull('date_end');
             })
-            ->where('min_qty', '<=', $qty)
-            ->where(function ($q) use ($qty) {
-                $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
+            // ->where('min_qty', '<=', $qty)
+            // ->where(function ($q) use ($qty) {
+            //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
+            // })
+            ->get();
+        return $datadb;
+    }
+
+    public function getDataProduct(Request $request)
+    {
+        $data = $request->all();
+        DB::enableQueryLog();
+
+        $data = [
+            'data' => [],
+            'recordsTotal' => 0,
+            'recordsFiltered' => 0,
+            'draw' => $_POST['draw'] ?? 1,
+        ];
+
+        // --- Base Query ---
+        $datadb = DB::table('product as m')
+            ->select([
+                'm.*',
+                'pt.type',
+                'u.name as unit_name',
+                'uo.name as unit_tujuan_name',
+                'uo.id as unit_tujuan_id',
+                'pu.id as id_uom',
+
+                // kolom harga dari tabel product_uom_price
+                'pup.price as harga',
+                'pup.min_qty',
+                'pup.max_qty',
+                'pup.date_start',
+                'pup.date_end',
+                'pup.customer_name',
+                'pup.id as price_id'
+            ])
+            ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
+            ->join('product_uom as pu', 'pu.product', '=', 'm.id')
+            ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
+            ->join('unit as u', 'u.id', '=', 'm.unit')
+            ->leftJoin('product_uom_price as pup', function($join) {
+                $join->on('pup.product', '=', 'm.id')
+                    ->on('pup.unit', '=', 'pu.unit_tujuan')
+                    ->whereNull('pup.deleted')
+                    ->where(function($query) {
+                        $query->whereNull('pup.date_end')
+                            ->orWhere('pup.date_end', '>=', now());
+                    })
+                    ->where('pup.date_start', '<=', now());
             })
-            ->first();
+            ->whereNull('m.deleted');
+
+            if(isset($data['customer'])){
+                if($data['customer'] != ''){
+                    $datadb->where('pup.customer', $data['customer']);
+                }
+            }
+        // --- Total tanpa filter ---
+        $data['recordsTotal'] = $datadb->count();
+
+        // --- Pencarian ---
+        if (!empty($_POST['search']['value'])) {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('m.name', 'like', "%{$keyword}%")
+                    ->orWhere('m.remarks', 'like', "%{$keyword}%")
+                    ->orWhere('m.model_number', 'like', "%{$keyword}%")
+                    ->orWhere('pt.type', 'like', "%{$keyword}%")
+                    ->orWhere('uo.name', 'like', "%{$keyword}%")
+                    ->orWhere('pup.customer_name', 'like', "%{$keyword}%");
+            });
+        }
+
+        // --- Urutan (Sorting) ---
+        if (!empty($_POST['order'][0]['dir'])) {
+            $dir = $_POST['order'][0]['dir'];
+            $datadb->orderBy('m.id', $dir);
+        } else {
+            $datadb->orderBy('m.id', 'desc');
+        }
+
+        // --- Filtered Count ---
+        $data['recordsFiltered'] = $datadb->count();
+
+        // --- Pagination ---
+        if (isset($_POST['length']) && $_POST['length'] != -1) {
+            $datadb->limit($_POST['length']);
+        }
+        if (isset($_POST['start'])) {
+            $datadb->offset($_POST['start']);
+        }
+
+        // --- Eksekusi ---
+        $data['data'] = $datadb->get();
+
+        // --- Debug Query (opsional) ---
+        $query = DB::getQueryLog();
+        // dd($query);
+
+        return response()->json($data);
     }
 }

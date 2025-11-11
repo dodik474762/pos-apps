@@ -374,4 +374,9 @@ Route::post('api/transaksi/sales_order/getData', [TransactionSalesOrderControlle
 Route::post('api/transaksi/sales_order/submit', [TransactionSalesOrderController::class, 'submit']);
 Route::post('api/transaksi/sales_order/delete', [TransactionSalesOrderController::class, 'delete']);
 Route::post('api/transaksi/sales_order/confirmDelete', [TransactionSalesOrderController::class, 'confirmDelete']);
+Route::post('api/transaksi/sales_order/showDataProduct', [TransactionSalesOrderController::class, 'showDataProduct']);
+Route::post('api/transaksi/sales_order/getDataProduct', [TransactionSalesOrderController::class, 'getDataProduct']);
+Route::post('api/transaksi/sales_order/showDiscountProduct', [TransactionSalesOrderController::class, 'showDiscountProduct']);
+Route::post('api/transaksi/sales_order/showDiscountFreeProduct', [TransactionSalesOrderController::class, 'showDiscountFreeProduct']);
+Route::post('api/transaksi/sales_order/showQtySmallestProduct', [TransactionSalesOrderController::class, 'showQtySmallestProduct']);
 /*API */

@@ -1,4 +1,5 @@
 let elmChoose;
+let discProduct = [];
 let SalesOrder = {
     module: () => {
         return "transaksi/sales_order";
@@ -311,6 +312,11 @@ let SalesOrder = {
 
     showDataProduct: (elm) => {
         let params = {};
+        const customer = $("#customer_id").val();
+        if (customer == "") {
+            message.sweetError("Informasi", "Pilih Customer");
+            return false;
+        }
 
         $.ajax({
             type: "POST",
@@ -342,6 +348,9 @@ let SalesOrder = {
 
     getDataProduct: () => {
         let tableData = $("table#table-data-modal");
+        const params = {
+            customer: $("#customer_id").val(),
+        };
         var data = tableData.DataTable({
             processing: true,
             serverSide: true,
@@ -365,13 +374,12 @@ let SalesOrder = {
                 );
             },
             ajax: {
-                url:
-                    url.base_url(SalesOrder.moduleApiProduct()) +
-                    `getDataProduct`,
+                url: url.base_url(SalesOrder.moduleApi()) + `getDataProduct`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": SalesOrder.csrf_token(),
                 },
+                data: params,
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -395,10 +403,28 @@ let SalesOrder = {
                     data: "unit_tujuan_name",
                 },
                 {
+                    data: "min_qty",
+                },
+                {
+                    data: "max_qty",
+                },
+                {
+                    data: "customer_name",
+                },
+                {
+                    data: "harga",
+                },
+                {
+                    data: "date_start",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}" code="${row.code}" produk_name="${row.name}"
+                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}"
+                        code="${row.code}" produk_name="${row.name}"
+                        price="${row.harga}"
+                        price_id="${row.price_id}"
                         onclick="SalesOrder.pilihDataProduct(this, event)"
                         data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
@@ -415,6 +441,8 @@ let SalesOrder = {
         let unit = $(elm).attr("unit");
         let unit_name = $(elm).attr("unit_name");
         let product_uom_id = $(elm).attr("data_id");
+        let price = $(elm).attr("price");
+        let price_id = $(elm).attr("price_id");
         $(elmChoose)
             .closest("div")
             .find("input")
@@ -422,7 +450,121 @@ let SalesOrder = {
         console.log($(elmChoose).closest("tr").find("td#unit"));
         $(elmChoose).closest("tr").find("td#unit").text(unit_name);
         $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
+        $(elmChoose).closest("tr").find("#unit_price").val(price);
+        $(elmChoose)
+            .closest("tr")
+            .find("#unit_price")
+            .attr("data_id", price_id);
         $("button.btn-close").trigger("click");
+
+        SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
+        SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
+        SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
+    },
+
+     showDiscountProduct: (produk_id, produk_name, unit) => {
+        let params = {
+            customer : $('#customer_id').val(),
+            produk_id: produk_id,
+            unit: unit,
+            produk_name: produk_name
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "showDiscountProduct",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-data-diskon");
+                table_items.find('tbody').append(resp);
+                
+            },
+        });
+    },
+     
+    showDiscountFreeProduct: (produk_id, produk_name, unit) => {
+        let params = {
+            customer : $('#customer_id').val(),
+            produk_id: produk_id,
+            unit: unit,
+            produk_name: produk_name
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "showDiscountFreeProduct",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-data-diskon-free");
+                table_items.find('tbody').append(resp);
+                
+            },
+        });
+    },
+    
+    showQtySmallestProduct: (produk_id, produk_name, unit) => {
+        let params = {
+            customer : $('#customer_id').val(),
+            produk_id: produk_id,
+            unit: unit,
+            produk_name: produk_name
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "showQtySmallestProduct",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-data-uom");
+                table_items.find('tbody').append(resp);
+                
+            },
+        });
     },
 
     calcRow: (elm) => {
@@ -489,6 +631,11 @@ let SalesOrder = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
+
+        const product_id = $(elm).closest('tr').find('input#product').val();
+        const splitProductId = product_id.split("//");
+        const programDiskon = $(`.diskon-`+splitProductId[1]);
+        programDiskon.remove();
     },
 
     addRow: () => {
@@ -503,6 +650,27 @@ let SalesOrder = {
         row.find("td#unit").attr("data_id", "");
         row.attr("data_id", "");
         $("table#table-items").find("tbody").append(row);
+    },
+
+    calcDiscRow: (elm) => {
+        const tr = $(elm).closest("tr");
+        const qty = parseFloat(tr.find("input#qty").val()) || 0;
+    },
+
+    changeCustomer: (elm) => {
+        const table = $("table#table-items tbody tr.input");
+        let result = [];
+
+        table.each((index, elm) => {
+            if(index > 0){
+                $(elm).remove();
+            }
+
+            $(elm).find('input').val('');
+            $(elm).find('td#unit').text('');
+            $(elm).find('td#unit').attr('data_id', '');
+            $(elm).find('#price').attr('data_id', '');
+        });
     },
 };
 
