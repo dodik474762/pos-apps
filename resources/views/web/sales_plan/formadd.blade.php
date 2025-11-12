@@ -94,7 +94,7 @@
                         <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel"
                             aria-labelledby="tab-barang">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="table-sales-plan-detail">
+                                <table class="table table-bordered" id="table-items">
                                     <thead class="table-light">
                                         <tr>
                                             <th style="width:15%;">Customer</th>
@@ -134,10 +134,10 @@
                                                     </td>
                                                     <td>
                                                         <select class="form-control" id="week_type">
-                                                            <option value="ODD" {{ $item->week_type == 'ODD' ? 'selected' : '' }}>ODD
+                                                            <option value="ODD" {{ $item->week_type == 'ODD' ? 'selected' : '' }}>GANJIL
                                                             </option>
                                                             <option value="EVEN" {{ $item->week_type == 'EVEN' ? 'selected' : '' }}>
-                                                                EVEN</option>
+                                                                GENAP</option>
                                                         </select>
                                                     </td>
                                                     <td>
@@ -183,8 +183,8 @@
                                                 </td>
                                                 <td>
                                                     <select class="form-control" id="week_type">
-                                                        <option value="ODD">ODD</option>
-                                                        <option value="EVEN">EVEN</option>
+                                                        <option value="ODD">GANJIL</option>
+                                                        <option value="EVEN">GENAP</option>
                                                     </select>
                                                 </td>
                                                 <td>
@@ -209,6 +209,8 @@
                                 </table>
                             </div>
                         </div>
+
+                        <button type="button" class="btn btn-primary mt-2" onclick="SalesPlan.addRow()">+ Add Detail</button>
                     </div>
 
                     <hr>
