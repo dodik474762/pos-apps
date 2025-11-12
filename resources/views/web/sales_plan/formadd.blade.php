@@ -94,69 +94,119 @@
                         <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel"
                             aria-labelledby="tab-barang">
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="table-items">
+                                <table class="table table-bordered" id="table-sales-plan-detail">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="width: 20%">Customer</th>
-                                            <th style="width: 20%">Product</th>
-                                            <th style="width: 10%">Week Number</th>
-                                            <th style="width: 10%">Week Type</th>
-                                            <th style="width: 10%">Target Qty</th>
-                                            <th style="width: 10%">Target Value</th>
-                                            <th style="width: 15%">Actual Qty</th>
-                                            <th style="width: 15%">Actual Value</th>
-                                            <th style="width: 10%">Note</th>
-                                            <th style="width: 5%"></th>
+                                            <th style="width:15%;">Customer</th>
+                                            <th style="width:15%;">Product</th>
+                                            <th style="width:8%;">Week Number</th>
+                                            <th style="width:8%;">Week Type</th>
+                                            <th style="width:10%;">Day</th>
+                                            <th style="width:10%;">Target Qty</th>
+                                            <th style="width:10%;">Target Value</th>
+                                            <th style="width:20%;">Note</th>
+                                            <th style="width:4%;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="detail-body">
-                                        <tr class="input" data_id="">
-                                            <td>
-                                                <select class="form-control select2 required" id="customer_id"
-                                                    error="Customer">
-                                                    <option value=""></option>
-                                                    @foreach ($customers as $c)
-                                                        <option value="{{ $c->id }}">{{ $c->nama_customer }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select class="form-control select2 required" id="product_id"
-                                                    error="Product">
-                                                    <option value=""></option>
-                                                    @foreach ($products as $p)
-                                                        <option value="{{ $p->id }}">{{ $p->product_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td><input type="number" class="form-control required" id="week_number"
-                                                    min="1" max="52"></td>
-                                            <td>
-                                                <select class="form-control required" id="week_type">
-                                                    <option value="ODD">ODD</option>
-                                                    <option value="EVEN">EVEN</option>
-                                                </select>
-                                            </td>
-                                            <td><input type="number" class="form-control" id="target_qty" value="0"
-                                                    step="0.01"></td>
-                                            <td><input type="number" class="form-control" id="target_value" value="0"
-                                                    step="0.01"></td>
-                                            <td><input type="number" class="form-control" id="actual_qty" value="0"
-                                                    step="0.01" readonly></td>
-                                            <td><input type="number" class="form-control" id="actual_value" value="0"
-                                                    step="0.01" readonly></td>
-                                            <td><input type="text" class="form-control" id="note"></td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger"
-                                                    onclick="SalesPlan.removeRow(this)">
-                                                    <i class="bx bx-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        @if(!empty($sales_plan_details))
+                                            @foreach($sales_plan_details as $item)
+                                                <tr class="input" data_id="{{ $item->id }}">
+                                                    <td>
+                                                        <select class="form-control select2 required" id="customer_id"
+                                                            error="Customer">
+                                                            @foreach ($customers as $c)
+                                                                <option value="{{ $c->id }}" {{ $item->customer_id == $c->id ? 'selected' : '' }}>{{ $c->nama_customer }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-control select2 required" id="product_id"
+                                                            error="Product">
+                                                            @foreach ($products as $p)
+                                                                <option value="{{ $p->id }}" {{ $item->product_id == $p->id ? 'selected' : '' }}>{{ $p->product_name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" class="form-control" id="week_number"
+                                                            value="{{ $item->week_number }}">
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-control" id="week_type">
+                                                            <option value="ODD" {{ $item->week_type == 'ODD' ? 'selected' : '' }}>ODD
+                                                            </option>
+                                                            <option value="EVEN" {{ $item->week_type == 'EVEN' ? 'selected' : '' }}>
+                                                                EVEN</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-control" id="day_of_week">
+                                                            @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                                                                <option value="{{ $day }}" {{ $item->day_of_week == $day ? 'selected' : '' }}>{{ $day }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td><input type="number" class="form-control" id="target_qty"
+                                                            value="{{ $item->target_qty }}"></td>
+                                                    <td><input type="number" class="form-control" id="target_value"
+                                                            value="{{ $item->target_value }}"></td>
+                                                    <td><input type="text" class="form-control" id="note"
+                                                            value="{{ $item->note }}"></td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="SalesPlan.removeRow(this)">Delete</button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr class="input">
+                                                <td>
+                                                    <select class="form-control select2 required" id="customer_id"
+                                                        error="Customer">
+                                                        <option value=""></option>
+                                                        @foreach ($customers as $c)
+                                                            <option value="{{ $c->id }}">{{ $c->nama_customer }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control select2 required" id="product_id"
+                                                        error="Product">
+                                                        <option value=""></option>
+                                                        @foreach ($products as $p)
+                                                            <option value="{{ $p->id }}">{{ $p->product_name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td><input type="number" class="form-control" id="week_number" value="1">
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="week_type">
+                                                        <option value="ODD">ODD</option>
+                                                        <option value="EVEN">EVEN</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="day_of_week">
+                                                        @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                                                            <option value="{{ $day }}">{{ $day }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td><input type="number" class="form-control" id="target_qty" value="0">
+                                                </td>
+                                                <td><input type="number" class="form-control" id="target_value" value="0">
+                                                </td>
+                                                <td><input type="text" class="form-control" id="note" value=""></td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                        onclick="SalesPlan.removeRow(this)">Delete</button>
+                                                </td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
-                                <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesPlan.addRow()">+
-                                    Add Detail</button>
                             </div>
                         </div>
                     </div>
