@@ -40,32 +40,30 @@ let SalesOrder = {
         let result = [];
 
         table.each((index, elm) => {
+            const $row = $(elm);
+            const isFreeGood = $row.hasClass("freegood");
+
             result.push({
-                id: $(elm).attr("data_id"),
-                product: $(elm).find("#product").val(),
-                qty: $(elm).find("#qty").val(),
-                unit: $(elm).find("td#unit").attr("data_id"),
-                price: $(elm).find("#price").val(),
-                disc_persen:
-                    $(elm).find("#disc_persen").val() == ""
-                        ? 0
-                        : $(elm).find("#disc_persen").val(),
-                disc_nominal:
-                    $(elm).find("#disc_nominal").val() == ""
-                        ? 0
-                        : $(elm).find("#disc_nominal").val(),
-                subtotal:
-                    $(elm).find("#subtotal").val() == ""
-                        ? 0
-                        : $(elm).find("#subtotal").val(),
-                tax:
-                    $(elm).find("select#tax").val() == ""
-                        ? 0
-                        : $(elm).find("select#tax").val(),
-                tax_rate:
-                    $(elm).find("select#tax option:selected").data("rate") || 0,
-                tax_amount: $(elm).data("tax_amount") || 0,
-                remove: $(elm).hasClass("remove") ? 1 : 0,
+                id: $row.attr("data_id") || null,
+                product_id: $row.find("#product").attr("data_id") || null,
+                product_name: $row.find("#product").val() || "",
+                qty: parseFloat($row.find("#qty").val()) || 0,
+                unit_id: $row.find("td#unit").attr("data_id") || null,
+                price: isFreeGood
+                    ? 0
+                    : parseFloat($row.find("#unit_price").val()) || 0,
+                disc_percent: isFreeGood
+                    ? 0
+                    : parseFloat($row.find("#disc_percent").val()) || 0,
+                disc_amount: isFreeGood
+                    ? 0
+                    : parseFloat($row.find("#disc_amount").val()) || 0,
+                subtotal: isFreeGood
+                    ? 0
+                    : parseFloat($row.find("#subtotal").val()) || 0,
+                is_freegood: isFreeGood ? 1 : 0,
+                free_for: isFreeGood ? $row.data("free-for") || null : null, // referensi produk asal
+                remove: $row.hasClass("remove") ? 1 : 0,
             });
         });
 
@@ -74,13 +72,14 @@ let SalesOrder = {
 
     getPostInput: () => {
         let data = {
-            id: $("input#id").val(),
-            po_date: $("#po_date").val(),
-            vendor: $("#vendor").val(),
-            warehouse: $("#warehouse").val(),
-            remarks: $("#remarks").val(),
-            grand_total: $("#total-harga").text(),
-            est_received_date: $("#est_received_date").val(),
+            id: $("#id").val() || null,
+            so_number: $("#so_number").val() || null,
+            so_date: $("#so_date").val() || null,
+            customer_id: $("#customer_id").val() || null,
+            payment_term: $("#payment_term").val() || null,
+            currency: $("#currency").val() || null,
+            remarks: $("#remarks").val() || "",
+            total_amount: parseFloat($("#total-harga").text()) || 0,
             items: SalesOrder.getPostItem(),
         };
 
@@ -447,7 +446,8 @@ let SalesOrder = {
             .closest("div")
             .find("input")
             .val(product_uom_id + "//" + produk_id + "//" + produk_name);
-        console.log($(elmChoose).closest("tr").find("td#unit"));
+        $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
+
         $(elmChoose).closest("tr").find("td#unit").text(unit_name);
         $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
         $(elmChoose).closest("tr").find("#unit_price").val(price);
@@ -462,12 +462,12 @@ let SalesOrder = {
         SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
     },
 
-     showDiscountProduct: (produk_id, produk_name, unit) => {
+    showDiscountProduct: (produk_id, produk_name, unit) => {
         let params = {
-            customer : $('#customer_id').val(),
+            customer: $("#customer_id").val(),
             produk_id: produk_id,
             unit: unit,
-            produk_name: produk_name
+            produk_name: produk_name,
         };
 
         $.ajax({
@@ -491,25 +491,26 @@ let SalesOrder = {
             success: function (resp) {
                 message.closeLoading();
                 const table_items = $("#table-data-diskon");
-                table_items.find('tbody').append(resp);
-                
+                table_items.find("tbody").append(resp);
             },
         });
     },
-     
+
     showDiscountFreeProduct: (produk_id, produk_name, unit) => {
         let params = {
-            customer : $('#customer_id').val(),
+            customer: $("#customer_id").val(),
             produk_id: produk_id,
             unit: unit,
-            produk_name: produk_name
+            produk_name: produk_name,
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesOrder.moduleApi()) + "showDiscountFreeProduct",
+            url:
+                url.base_url(SalesOrder.moduleApi()) +
+                "showDiscountFreeProduct",
             headers: {
                 "X-CSRF-TOKEN": SalesOrder.csrf_token(),
             },
@@ -526,25 +527,25 @@ let SalesOrder = {
             success: function (resp) {
                 message.closeLoading();
                 const table_items = $("#table-data-diskon-free");
-                table_items.find('tbody').append(resp);
-                
+                table_items.find("tbody").append(resp);
             },
         });
     },
-    
+
     showQtySmallestProduct: (produk_id, produk_name, unit) => {
         let params = {
-            customer : $('#customer_id').val(),
+            customer: $("#customer_id").val(),
             produk_id: produk_id,
             unit: unit,
-            produk_name: produk_name
+            produk_name: produk_name,
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesOrder.moduleApi()) + "showQtySmallestProduct",
+            url:
+                url.base_url(SalesOrder.moduleApi()) + "showQtySmallestProduct",
             headers: {
                 "X-CSRF-TOKEN": SalesOrder.csrf_token(),
             },
@@ -561,8 +562,7 @@ let SalesOrder = {
             success: function (resp) {
                 message.closeLoading();
                 const table_items = $("#table-data-uom");
-                table_items.find('tbody').append(resp);
-                
+                table_items.find("tbody").append(resp);
             },
         });
     },
@@ -603,24 +603,13 @@ let SalesOrder = {
     },
 
     hitungSummaryAll: () => {
-        const table = $("table#table-items tbody tr.input");
-        let totalDpp = 0;
-        let totalTax = 0;
-
-        table.each((index, elm) => {
+        let total = 0;
+        document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
             const subtotal =
-                parseFloat($(elm).find("input#subtotal").val()) || 0;
-            const tax = parseFloat($(elm).data("tax_amount")) || 0;
-            const dpp = parseFloat($(elm).data("dpp")) || 0;
-
-            totalDpp += dpp;
-            totalTax += tax;
+                parseFloat(tr.querySelector("#subtotal").value) || 0;
+            total += subtotal;
         });
-
-        const grandTotal = totalDpp + totalTax;
-
-        $("#total-harga").text(grandTotal.toFixed(2));
-        $("#total-pajak").text(totalTax.toFixed(2));
+        document.getElementById("total-harga").textContent = total.toFixed(2);
     },
 
     removeRow: (elm) => {
@@ -632,9 +621,9 @@ let SalesOrder = {
             $(elm).closest("tr").addClass("d-none");
         }
 
-        const product_id = $(elm).closest('tr').find('input#product').val();
+        const product_id = $(elm).closest("tr").find("input#product").val();
         const splitProductId = product_id.split("//");
-        const programDiskon = $(`.diskon-`+splitProductId[1]);
+        const programDiskon = $(`.diskon-` + splitProductId[1]);
         programDiskon.remove();
     },
 
@@ -645,16 +634,282 @@ let SalesOrder = {
             .clone();
         row.removeClass("remove");
         row.removeClass("d-none");
+        row.removeClass("freegood");
         row.find("input").val("");
+        row.find("input#product").closest("div").find("button").text("Pilih");
+        row.find("input#product")
+            .closest("div")
+            .find("button")
+            .removeAttr("disabled");
+        row.find("input#product").removeAttr("disabled");
+        row.find("input#qty").removeAttr("disabled");
+        row.find("button.btn-danger").removeAttr("disabled");
+        row.removeAttr("data-free-for");
         row.find("td#unit").text("");
         row.find("td#unit").attr("data_id", "");
         row.attr("data_id", "");
         $("table#table-items").find("tbody").append(row);
     },
 
+    getDataUomConversion: () => {
+        const table_uom = $("table#table-data-uom").find("tbody").find("tr");
+        const UOM_CONVERSION = [];
+        $.each(table_uom, (index, elm) => {
+            const product_id = $(elm).attr("product_id");
+            const unit_id = $(elm).attr("unit_id");
+            const conversion = $(elm).attr("conversion");
+            UOM_CONVERSION.push({
+                product_id: product_id,
+                unit_id: unit_id,
+                conversion: conversion,
+            });
+        });
+
+        return UOM_CONVERSION;
+    },
+
+    getDataDiskon: () => {
+        const table_diskon = $("table#table-data-diskon")
+            .find("tbody")
+            .find("tr");
+        const DATA_DISKON = [];
+        if (table_diskon.length > 0) {
+            $.each(table_diskon, (index, elm) => {
+                const product_id = $(elm).attr("product_id");
+                const unit_id = $(elm).attr("unit");
+                const id = $(elm).attr("data_id");
+                const discount_type = $(elm).attr("discount_type");
+                const discount_value = isNaN(
+                    parseFloat($(elm).attr("discount_value"))
+                )
+                    ? 0
+                    : parseFloat($(elm).attr("discount_value"));
+                const customer_category = $(elm).attr("customer_category");
+                const min_qty = isNaN(parseFloat($(elm).attr("min_qty")))
+                    ? 0
+                    : parseFloat($(elm).attr("min_qty"));
+                const max_qty = isNaN(parseFloat($(elm).attr("max_qty")))
+                    ? 0
+                    : parseFloat($(elm).attr("max_qty"));
+                const customer = $(elm).attr("customer");
+                const berlaku_from = $(elm).attr("berlaku_from");
+
+                DATA_DISKON.push({
+                    product_id: product_id,
+                    unit_id: unit_id,
+                    id: id,
+                    discount_type: discount_type,
+                    discount_value: discount_value,
+                    customer_category: customer_category,
+                    min_qty: min_qty,
+                    max_qty: max_qty,
+                    customer: customer,
+                    berlaku_from: berlaku_from,
+                });
+            });
+        }
+
+        return DATA_DISKON;
+    },
+
+    getDataDiskonFreeGood: () => {
+        const rows = $("table#table-data-diskon-free tbody tr");
+        const DATA_DISKON_FREE = [];
+
+        if (rows.length > 0) {
+            $.each(rows, (index, elm) => {
+                const $tr = $(elm);
+
+                const product_id = $tr.attr("product_id") || null;
+                const unit_id = $tr.attr("unit") || null;
+                const free_product = $tr.attr("free_product") || null;
+                const free_unit_name = $tr.attr("free_unit_name") || null;
+                const free_product_name = $tr.attr("free_product_name") || null;
+                const free_unit = $tr.attr("free_unit") || null;
+                const free_qty = isNaN(parseFloat($tr.attr("free_qty")))
+                    ? 0
+                    : parseFloat($tr.attr("free_qty"));
+                const id = $tr.attr("data_id") || null;
+                const customer_category = $tr.attr("customer_category") || null;
+                const min_qty = isNaN(parseFloat($tr.attr("min_qty")))
+                    ? 0
+                    : parseFloat($tr.attr("min_qty"));
+                const max_qty = isNaN(parseFloat($tr.attr("max_qty")))
+                    ? 0
+                    : parseFloat($tr.attr("max_qty"));
+                const customer_id = $tr.attr("customer") || null;
+                const berlaku_from = $tr.attr("berlaku_from") || null;
+
+                DATA_DISKON_FREE.push({
+                    id,
+                    product_id,
+                    unit_id,
+                    min_qty,
+                    max_qty,
+                    free_product,
+                    free_product_name,
+                    free_unit_name,
+                    free_unit,
+                    free_qty,
+                    customer_id,
+                    customer_category,
+                    berlaku_from,
+                });
+            });
+        }
+
+        return DATA_DISKON_FREE;
+    },
+
     calcDiscRow: (elm) => {
         const tr = $(elm).closest("tr");
-        const qty = parseFloat(tr.find("input#qty").val()) || 0;
+        const qty = parseFloat(tr.find("#qty").val()) || 0;
+        const productId = tr.find("#product").attr("data_id");
+        const satuanId = tr.find("td#unit").attr("data_id");
+        const price = parseFloat(tr.find("#unit_price").val()) || 0;
+        const customerId = $("#customer_id").val();
+        const today = new Date().toISOString().slice(0, 10);
+
+        if (!productId) return;
+
+        const UOM_CONVERSION = SalesOrder.getDataUomConversion();
+        const DATA_DISKON = SalesOrder.getDataDiskon();
+        const DATA_DISKON_FREE = SalesOrder.getDataDiskonFreeGood();
+
+        // Konversi qty input ke satuan terkecil
+        const qtySmallest = SalesOrder.convertToSmallest(
+            UOM_CONVERSION,
+            productId,
+            satuanId,
+            qty
+        );
+
+        // Cari data diskon yang cocok
+        const applicable = DATA_DISKON.find((d) => {
+            // konversi range min/max ke satuan terkecil
+            const minSmall = SalesOrder.convertToSmallest(
+                UOM_CONVERSION,
+                d.product_id,
+                d.unit_id,
+                d.min_qty
+            );
+            const maxSmall = SalesOrder.convertToSmallest(
+                UOM_CONVERSION,
+                d.product_id,
+                d.unit_id,
+                d.max_qty
+            );
+
+            return (
+                d.product_id == productId &&
+                qtySmallest >= minSmall &&
+                qtySmallest <= maxSmall &&
+                (!d.customer_id || d.customer_id == customerId) &&
+                today >= d.berlaku_from
+            );
+        });
+
+        const discPercentInput = tr.find("#disc_percent");
+        const discAmountInput = tr.find("#disc_amount");
+        const subtotalInput = tr.find("#subtotal");
+
+        if (applicable) {
+            if (applicable.discount_type === "percent") {
+                discPercentInput.val(applicable.discount_value);
+                discAmountInput.val(
+                    (price * qty * applicable.discount_value) / 100
+                );
+            } else {
+                discPercentInput.val(0);
+                discAmountInput.val(applicable.discount_value);
+            }
+        } else {
+            discPercentInput.val(0);
+            discAmountInput.val(0);
+        }
+
+        // Hitung subtotal
+        const discAmount = parseFloat(discAmountInput.val()) || 0;
+        const subtotal = price * qty - discAmount;
+        subtotalInput.val(subtotal.toFixed(2));
+
+        // ========================
+        // CARI DISKON FREE GOOD
+        // ========================
+        const applicableFree = DATA_DISKON_FREE.find((d) => {
+            const minSmall = SalesOrder.convertToSmallest(
+                UOM_CONVERSION,
+                d.product_id,
+                d.unit_id,
+                d.min_qty
+            );
+            const maxSmall = SalesOrder.convertToSmallest(
+                UOM_CONVERSION,
+                d.product_id,
+                d.unit_id,
+                d.max_qty
+            );
+
+            const isApplicable =
+                d.product_id == productId &&
+                qtySmallest >= minSmall &&
+                qtySmallest <= maxSmall &&
+                (!d.customer_id || d.customer_id == customerId) &&
+                today >= d.berlaku_from;
+            return isApplicable;
+        });
+
+        // Jika ada free good
+        if (applicableFree) {
+            const freeQty = applicableFree.free_qty || 0;
+
+            // Cek apakah baris free good sudah pernah ditambahkan
+            const exists =
+                tr.next('tr[data-free-for="' + productId + '"]').length > 0;
+
+            if (!exists) {
+                const freeRow = `
+                    <tr class="input freegood" data-free-for="${productId}">
+                        <td>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesOrder.showDataProduct(this)">Free</button>
+                                <input disabled type="text" id="product" class="form-control"
+                                    data_id="${applicableFree.free_product}"
+                                    value="${
+                                        applicableFree.free_product_name ||
+                                        "Free Product"
+                                    }">
+                            </div>
+                        </td>
+                        <td id="unit" data_id="${applicableFree.free_unit}">
+                            ${applicableFree.free_unit_name || ""}
+                        </td>
+                        <td><input type="number" class="form-control" id="qty" value="${freeQty}" disabled></td>
+                        <td><input type="number" class="form-control" id="unit_price" value="0" disabled></td>
+                        <td><input type="number" class="form-control" id="disc_percent" value="0" disabled></td>
+                        <td><input type="number" class="form-control" id="disc_amount" value="0" disabled></td>
+                        <td><input type="text" class="form-control" id="subtotal" value="0" disabled></td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-danger" disabled onclick="SalesOrder.removeRow(this)"><i class="bx bx-gift"></i></button></td>
+                    </tr>
+                `;
+
+                tr.after(freeRow);
+            }
+        } else {
+            // Hapus baris freegood lama jika qty tidak lagi memenuhi
+            tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
+        }
+
+        // Update total keseluruhan
+        SalesOrder.hitungSummaryAll();
+    },
+
+    convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
+        const uom = UOM_CONVERSIONS.find(
+            (u) => u.product_id == productId && u.unit_id == satuanId
+        );
+        if (!uom) return qty; // fallback jika tidak ditemukan
+        return qty * uom.conversion;
     },
 
     changeCustomer: (elm) => {
@@ -662,14 +917,14 @@ let SalesOrder = {
         let result = [];
 
         table.each((index, elm) => {
-            if(index > 0){
+            if (index > 0) {
                 $(elm).remove();
             }
 
-            $(elm).find('input').val('');
-            $(elm).find('td#unit').text('');
-            $(elm).find('td#unit').attr('data_id', '');
-            $(elm).find('#price').attr('data_id', '');
+            $(elm).find("input").val("");
+            $(elm).find("td#unit").text("");
+            $(elm).find("td#unit").attr("data_id", "");
+            $(elm).find("#price").attr("data_id", "");
         });
     },
 };

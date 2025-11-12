@@ -149,7 +149,7 @@
                                                     </div>
                                                 </td>
                                                 <td data_id="" id="unit"></td>
-                                                <td><input type="number" class="form-control" id="qty" value="1" min="1" onchange="SalesOrder.calcDiscRow(this)"></td>
+                                                <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
                                                 <td><input type="number" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="number" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="number" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
@@ -250,7 +250,7 @@
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div class="tab-pane fade" id="tab-pane-uom" role="tabpanel" aria-labelledby="tab-uom">
                             <div class="table-responsive">
                                 <table id="table-data-uom" class="table table-striped table-bordered dt-responsive nowrap"
@@ -292,3 +292,10 @@
     </div>
 </div>
 <!-- end row -->
+
+
+<style>
+    .freegood {
+        background-color:#f5f7ff
+    }
+</style>

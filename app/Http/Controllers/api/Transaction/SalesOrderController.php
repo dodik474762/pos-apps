@@ -10,6 +10,7 @@ use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
+use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -148,126 +149,102 @@ class SalesOrderController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
-        $users = session('user_id');
-        // echo '<pre>';
-        // print_r($data);die;
-        $result['is_valid'] = false;
+        $userId = session('user_id');
+        $result = ['is_valid' => false];
+
         DB::beginTransaction();
         try {
-            // code...
+            // Pastikan currency default ada
             $currency = Currency::where('code', 'IDR')->first();
-            if (empty($currency)) {
+            if (!$currency) {
                 DB::rollBack();
-                $result['message'] = 'Currency IDR tidak ditemukan';
-
-                return response()->json($result);
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Currency IDR tidak ditemukan'
+                ]);
             }
 
-            $roles = $data['id'] == '' ? new PurchaseOrder : PurchaseOrder::find($data['id']);
-            if ($data['id'] == '') {
-                $roles->code = generateNoPO();
-                $roles->created_by = $users;
+            // === HEADER ===
+            $header = empty($data['id'])
+                ? new SalesOrderHeader()
+                : SalesOrderHeader::find($data['id']);
+
+            if (empty($data['id'])) {
+                $header->so_number = generateNoSO(); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'draft';
             }
-            $roles->po_date = $data['po_date'];
-            $roles->remarks = $data['remarks'];
-            $roles->vendor = $data['vendor'];
-            $roles->warehouse = $data['warehouse'];
-            $roles->status = 'DRAFT';
-            $roles->est_received_date = $data['est_received_date'];
-            $roles->currency = $currency->id;
-            $roles->save();
-            $hdrId = $roles->id;
 
-            $grand_total = 0;
-            foreach ($data['items'] as $key => $value) {
-                if ($value['remove'] == '1') {
-                    $items = PurchaseOrderDetail::find($value['id']);
-                    if ($items->status != 'open') {
-                        DB::rollBack();
-                        $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
+            $header->so_date = $data['so_date'];
+            $header->customer_id = $data['customer_id'];
+            $header->payment_term = $data['payment_term'] ?? null;
+            $header->currency = $data['currency'];
+            $header->remarks = $data['remarks'] ?? null;
+            $header->total_amount = 0; // akan dihitung ulang di bawah
+            $header->save();
 
-                        return response()->json($result);
-                    }
-                    $items->deleted = now();
-                    $items->save();
-                } else {
-                    [$product_uom, $product, $product_name] = explode('//', $value['product']);
-                    $items = $value['id'] == '' ? new PurchaseOrderDetail : PurchaseOrderDetail::find($value['id']);
-                    $items->purchase_order = $hdrId;
-                    $items->product = $product;
-                    $items->unit = $value['unit'];
-                    $items->qty = $value['qty'];
-                    $items->purchase_price = $value['price'];
-                    $items->diskon_persen = $value['disc_persen'];
-                    $items->diskon_nominal = $value['disc_nominal'];
-                    $items->est_received_date = $data['est_received_date'];
-                    $items->product_uom = $product_uom;
-                    $items->subtotal = $value['subtotal'];
-                    $items->tax = $value['tax'];
-                    $items->tax_rate = $value['tax_rate'];
-                    $items->tax_amount = $value['tax_amount'];
-                    if ($value['id'] == '') {
-                        $items->status = 'open';
-                        $items->qty_received = 0;
-                    }
-                    $items->save();
+            $hdrId = $header->id;
+            $grandTotal = 0;
 
-                    if ($value['id'] != '') {
-                        if ($items->status != 'open') {
+            // === DETAIL ===
+            foreach ($data['items'] as $item) {
+                // Skip baris yang ditandai untuk dihapus
+                if (!empty($item['remove']) && $item['remove'] == 1) {
+                    if (!empty($item['id'])) {
+                        $exist = SalesOrderDetail::find($item['id']);
+                        if ($exist && $exist->status !== 'draft') {
                             DB::rollBack();
-                            $result['message'] = 'Tidak dapat diubah karena status sudah tidak open';
-
-                            return response()->json($result);
+                            return response()->json([
+                                'is_valid' => false,
+                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
+                            ]);
+                        }
+                        if ($exist) {
+                            $exist->deleted = now();
+                            $exist->deleted_by = $userId;
+                            $exist->save();
                         }
                     }
+                    continue;
+                }
 
-                    /* uom cost price */
-                    $existCost = ProductUomCost::where('product', $product)->where('unit_id', $value['unit'])
-                        ->where('vendor', $data['vendor'])
-                        ->first();
-                    if (! empty($existCost)) {
-                        $existCost->cost = $value['price'];
-                        $existCost->vendor = $data['vendor'];
-                        $existCost->product_uom = $product_uom;
-                        $existCost->date_start = date('Y-m-d');
-                        $existCost->save();
-                    } else {
-                        $product_cost = new ProductUomCost;
-                        $product_cost->cost = $value['price'];
-                        $product_cost->vendor = $data['vendor'];
-                        $product_cost->product_uom = $product_uom;
-                        $product_cost->product = $product;
-                        $product_cost->unit_id = $value['unit'];
-                        $product_cost->date_start = date('Y-m-d');
-                        $product_cost->save();
-                    }
-                    /* uom cost price */
+                // Item baru atau update
+                $detail = empty($item['id'])
+                    ? new SalesOrderDetail()
+                    : SalesOrderDetail::find($item['id']);
 
-                    /* uom cost history */
-                    $historyCost = new ProductUomCostHistory;
-                    $historyCost->cost = $value['price'];
-                    $historyCost->vendor = $data['vendor'];
-                    $historyCost->product_uom = $product_uom;
-                    $historyCost->product = $product;
-                    $historyCost->unit_id = $value['unit'];
-                    $historyCost->date_start = date('Y-m-d');
-                    $historyCost->save();
-                    /* uom cost history */
+                $detail->sales_order_id = $hdrId;
+                $detail->product_id = $item['product_id'];
+                $detail->qty = $item['qty'];
+                $detail->unit = $item['unit_id'];
+                $detail->unit_price = $item['price'];
+                $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
+                $detail->discount_percent = $item['disc_percent'];
+                $detail->discount_amount = $item['disc_amount'];
+                $detail->subtotal = $item['subtotal'];
+                $detail->is_free_good = $item['is_freegood'] ?? 0;
+                $detail->free_for = $item['free_for'] ?? null;
+                $detail->status = $detail->status ?? 'draft';
+                $detail->save();
 
-                    $grand_total += $value['subtotal'];
+                // Hanya tambahkan ke total jika bukan free good
+                if (empty($item['is_freegood'])) {
+                    $grandTotal += $item['subtotal'];
                 }
             }
 
-            $update = SalesOrderHeader::find($hdrId);
-            $update->grand_total = $grand_total;
-            $update->save();
+            // Update total header
+            $header->total_amount = $grandTotal;
+            $header->save();
 
             DB::commit();
             $result['is_valid'] = true;
+            $result['message'] = 'Sales Order berhasil disimpan';
+            $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
-            // throw $th;
-            $result['message'] = $th->getMessage();
             DB::rollBack();
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
         }
 
         return response()->json($result);
@@ -340,7 +317,7 @@ class SalesOrderController extends Controller
 
         return view('web.product.datainfoprogramdisk', $data);
     }
-    
+
     public function showDiscountFreeProduct(Request $request)
     {
         $data = $request->all();
@@ -356,7 +333,7 @@ class SalesOrderController extends Controller
 
         return view('web.product.datainfoprogramfreegood', $data);
     }
-    
+
     public function showQtySmallestProduct(Request $request)
     {
         $data = $request->all();
@@ -372,11 +349,12 @@ class SalesOrderController extends Controller
             ->whereIn('id', $units)
             ->get();
 
-        
+
             $data_result = [];
             foreach ($data_uom as $key => $value) {
                 $conversion = getSmallestUnit($value->product, $value->unit_tujuan, 1);
                 $unit_name = collect($unit)->where('id', $value->unit_tujuan)->first();
+                $conversion['unit'] = $value->unit_tujuan;
                 $conversion['unit_name'] = $unit_name->name;
                 $conversion['product'] = $value->product;
                 $conversion['product_name'] = $value->product_name;

@@ -1,6 +1,9 @@
 
 @foreach ($data_uom as $item)
-    <tr product_id="{{ $item['product'] }}" class="diskon-{{ $item['product'] }}">
+    <tr product_id="{{ $item['product'] }}"
+    unit_id="{{ $item['unit'] }}"
+    conversion="{{ $item['qty_in_base_unit'] }}"
+    class="diskon-{{ $item['product'] }}">
         <td>{{ $item['code'] }} - {{ $item['product_name'] }}</td>
         <td>{{ $item['unit_name'] }}</td>
         <td>{{ $item['qty_in_base_unit'] }}</td>
