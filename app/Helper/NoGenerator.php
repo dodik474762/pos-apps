@@ -166,6 +166,25 @@ function generateNoSO()
     return $no;
 }
 
+function generatePlanCode()
+{
+    $no = 'SO'.strtoupper(date('m')).date('y');
+    $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%'.$no.'%')->orderBy('plan_code', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->plan_code);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateGrNumber()
 {
     $no = 'GR'.strtoupper(date('m')).date('y');

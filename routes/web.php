@@ -29,6 +29,7 @@ use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoo
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
 use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
+use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSalesPlanController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -61,6 +62,7 @@ use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\SalesOrderController;
+use App\Http\Controllers\web\Transaction\SalesPlanController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
 
@@ -192,6 +194,10 @@ Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, '
 Route::get('transaksi/sales_order', [SalesOrderController::class, 'index']);
 Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add']);
 Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah']);
+
+Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
+Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);
+Route::get('transaksi/sales_plan/ubah', [SalesPlanController::class, 'ubah']);
 
 /*API */
 
@@ -379,4 +385,9 @@ Route::post('api/transaksi/sales_order/getDataProduct', [TransactionSalesOrderCo
 Route::post('api/transaksi/sales_order/showDiscountProduct', [TransactionSalesOrderController::class, 'showDiscountProduct']);
 Route::post('api/transaksi/sales_order/showDiscountFreeProduct', [TransactionSalesOrderController::class, 'showDiscountFreeProduct']);
 Route::post('api/transaksi/sales_order/showQtySmallestProduct', [TransactionSalesOrderController::class, 'showQtySmallestProduct']);
+
+Route::post('api/transaksi/sales_plan/getData', [TransactionSalesPlanController::class, 'getData']);
+Route::post('api/transaksi/sales_plan/submit', [TransactionSalesPlanController::class, 'submit']);
+Route::post('api/transaksi/sales_plan/delete', [TransactionSalesPlanController::class, 'delete']);
+Route::post('api/transaksi/sales_plan/confirmDelete', [TransactionSalesPlanController::class, 'confirmDelete']);
 /*API */
