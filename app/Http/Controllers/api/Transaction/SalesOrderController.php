@@ -178,6 +178,7 @@ class SalesOrderController extends Controller
             $header->so_date = $data['so_date'];
             $header->customer_id = $data['customer_id'];
             $header->payment_term = $data['payment_term'] ?? null;
+            $header->salesman = $data['salesman'] ?? null;
             $header->currency = $data['currency'];
             $header->remarks = $data['remarks'] ?? null;
             $header->total_amount = 0; // akan dihitung ulang di bawah

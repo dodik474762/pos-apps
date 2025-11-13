@@ -192,8 +192,8 @@ Route::get('transaksi/purchase-return/add', [PurchaseReturnController::class, 'a
 Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, 'ubah']);
 
 Route::get('transaksi/sales_order', [SalesOrderController::class, 'index']);
-Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add']);
-Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah']);
+Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add'])->name('sales-order-add');
+Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah'])->name('sales-order-edit');;
 
 Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
 Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);

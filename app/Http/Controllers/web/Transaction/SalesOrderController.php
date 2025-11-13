@@ -10,13 +10,16 @@ use App\Models\Master\Customer;
 use App\Models\Master\Tax;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SalesOrderController extends Controller
 {
-     public $akses_menu = [];
+    public $akses_menu = [];
+
     public function __construct()
     {
         date_default_timezone_set('Asia/Jakarta');
@@ -25,25 +28,25 @@ class SalesOrderController extends Controller
 
     public function getHeaderCss()
     {
-        return array(
+        return [
             'js-1' => asset('assets/js/controllers/transaction/sales_order.js'),
             'js-2' => asset('assets/js/controllers/notification.js'),
-        );
+        ];
     }
 
     public function getTitleParent()
     {
-        return "Penjualan";
+        return 'Penjualan';
     }
 
     public function getTableName()
     {
-        return "";
+        return '';
     }
 
     public function getTitle()
     {
-        return "Sales Order";
+        return 'Sales Order';
     }
 
     public function index()
@@ -60,62 +63,88 @@ class SalesOrderController extends Controller
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
     }
 
-    public function add()
+    public function add(Request $request)
     {
+        $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['customers'] = Customer::whereNull('deleted')->get();
+        $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
+        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
     }
 
     public function ubah(Request $request)
     {
-        $api = new TransactionSalesOrderController();
+        $api = new TransactionSalesOrderController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['customers'] = Customer::whereNull('deleted')->get();
+        $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
+        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = SalesOrderDetail::where('purchase_order_detail.purchase_order', $data['id'])
+        $data['data_item'] = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['id'])
             ->select([
-                'purchase_order_detail.*',
+                'sales_order_details.*',
                 'p.id as product_id',
                 'p.name as product_name',
                 'u.name as unit_name',
             ])
-            ->join('product as p', 'p.id', 'purchase_order_detail.product')
-            ->join('unit as u', 'u.id', 'purchase_order_detail.unit')
+            ->join('product as p', 'p.id', 'sales_order_details.product_id')
+            ->join('unit as u', 'u.id', 'sales_order_details.unit')
+            ->orderBy('sales_order_details.id')
             ->get();
 
+        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
-        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
+
         return view('web.template.main', $put);
+    }
+
+    public function getCustomer($salesmanId){
+        $periodYear = intval(date('Y'));  // misal dari form input
+        $periodMonth = intval(date('m'));   // misal dari form input
+
+        $customers = DB::table('sales_plan_detail as d')
+            ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
+            ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->where('h.salesman', $salesmanId)
+            ->where('h.period_year', $periodYear)
+            ->where('h.period_month', $periodMonth)
+            ->whereNull('h.deleted')
+            ->select('d.customer_id as id', 'c.nama_customer')
+            ->distinct()
+            ->get();
+
+            return $customers;
     }
 
     public function cetak(Request $request)
@@ -135,6 +164,6 @@ class SalesOrderController extends Controller
         $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('PO-' . $data->code . '.pdf');
+        return $pdf->stream('PO-'.$data->code.'.pdf');
     }
 }

@@ -1,6 +1,7 @@
 <button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
 <div id="content-modal-form"></div>
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
+<input type="hidden" id="url" value="{{ isset($id) ? route('sales-order-edit') : route('sales-order-add') }}">
 
 <!-- start page title -->
 <div class="row">
@@ -38,6 +39,18 @@
                                 <label class="form-label">SO Date</label>
                                 <input type="date" id="so_date" class="form-control required" error="SO Date"
                                     value="{{ isset($data->so_date) ? $data->so_date : date('Y-m-d') }}">
+                            </div>
+
+                             <div class="mb-3">
+                                <label class="form-label">Salesman</label>
+                                <select class="form-control select2 required" id="salesman" error="Salesman" onchange="SalesOrder.getCustomer(this)">
+                                    <option value=""></option>
+                                    @foreach ($salesmen as $s)
+                                        <option value="{{ $s->id }}" {{ (isset($data->salesman) && $data->salesman == $s->id ) || (isset($salesman) && $salesman == $s->id) ? 'selected' : '' }}>
+                                            {{ $s->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <div class="mb-3">
@@ -120,23 +133,23 @@
                                     <tbody id="detail-body">
                                         @if (!empty($data_item))
                                             @foreach ($data_item as $item)
-                                                <tr class="input" data_id="{{ $item->id }}">
+                                                <tr class="input {{ $item->is_free_good ? 'freegood' : '' }}" data_id="{{ $item->id }}" {{ $item->is_free_good ? 'data-free-for='.$item->product_id : '' }}>
                                                     <td>
                                                         <div class="input-group">
-                                                            <button class="btn btn-outline-primary" type="button"
-                                                                onclick="SalesOrder.showDataProduct(this)">Pilih</button>
+                                                            <button {{ $item->is_free_good ? 'disabled' : '' }} class="btn btn-outline-primary" type="button"
+                                                                onclick="SalesOrder.showDataProduct(this)">{{ $item->is_free_good ? 'Free' : 'Pilih' }}</button>
                                                             <input disabled type="text" id="product" class="form-control required" error="Product"
-                                                                value="{{ $item->product_name }}">
+                                                                value="{{ $item->product_name }}" data_id="{{ $item->product_id }}">
                                                         </div>
                                                     </td>
                                                     <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
-                                                    <td><input type="number" class="form-control" id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="unit_price" data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="disc_percent" value="{{ $item->discount_value }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="disc_amount" value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
+                                                    <td><input type="number" class="form-control" id="unit_price" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="number" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="number" class="form-control" id="disc_amount" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                                        <button {{ $item->is_free_good ? 'disabled' : '' }} type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
                                                     </td>
                                                 </tr>
                                             @endforeach

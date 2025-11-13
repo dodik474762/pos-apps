@@ -75,6 +75,7 @@ let SalesOrder = {
             id: $("#id").val() || null,
             so_number: $("#so_number").val() || null,
             so_date: $("#so_date").val() || null,
+            salesman: $("#salesman").val() || null,
             customer_id: $("#customer_id").val() || null,
             payment_term: $("#payment_term").val() || null,
             currency: $("#currency").val() || null,
@@ -927,9 +928,72 @@ let SalesOrder = {
             $(elm).find("#price").attr("data_id", "");
         });
     },
+
+    getCustomer: (elm) => {
+        const url = $("input#url").val();
+        const id = $("input#id").val();
+        const salesman = $(elm).val();
+        if (id == "") {
+            window.location.href = url + "?salesman=" + salesman;
+        } else {
+            window.location.href = url + "&salesman=" + salesman;
+        }
+    },
+
+    editReload: () => {
+        const id = $("#id").val();
+        if (id != "") {
+            const table = $("table#table-items tbody tr.input");
+            let resultProduct = [];
+
+            table.each((index, elm) => {
+                const $row = $(elm);
+                const isFreeGood = $row.hasClass("freegood");
+
+                if (!isFreeGood) {
+                    resultProduct.push({
+                        product_id:
+                            $row.find("#product").attr("data_id") || null,
+                        product_name: $row.find("#product").val() || "",
+                        unit_id: $row.find("td#unit").attr("data_id") || null,
+                    });
+                }
+            });
+
+            // 2️⃣ Hapus duplikat berdasarkan product_id
+            resultProduct = resultProduct.filter(
+                (value, index, self) =>
+                    index ===
+                    self.findIndex((t) => t.product_id === value.product_id)
+            );
+
+            // 3️⃣ Loop per product_id
+            resultProduct.forEach((item) => {
+                const { product_id, product_name, unit_id } = item;
+
+                // Contoh: panggil fungsi per produk
+                SalesOrder.showDiscountProduct(
+                    [product_id],
+                    [product_name],
+                    [unit_id]
+                );
+                SalesOrder.showDiscountFreeProduct(
+                    [product_id],
+                    [product_name],
+                    [unit_id]
+                );
+                SalesOrder.showQtySmallestProduct(
+                    [product_id],
+                    [product_name],
+                    [unit_id]
+                );
+            });
+        }
+    },
 };
 
 $(function () {
     SalesOrder.setSelect2();
     SalesOrder.getData();
+    SalesOrder.editReload();
 });
