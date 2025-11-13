@@ -901,7 +901,7 @@ let SalesOrder = {
             tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
         }
 
-        // Update total keseluruhan
+        // Update total keseluruhans
         SalesOrder.hitungSummaryAll();
     },
 
