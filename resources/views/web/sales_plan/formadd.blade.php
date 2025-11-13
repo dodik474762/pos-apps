@@ -1,4 +1,8 @@
 <!-- Page Title -->
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<div id="content-modal-form"></div>
+<input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
+
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -25,7 +29,7 @@
                                 <label class="form-label">Plan Code</label>
                                 <input type="text" id="plan_code" class="form-control required" error="Plan Code"
                                     placeholder="Auto Generate" readonly
-                                    value="{{ isset($sales_plan->plan_code) ? $sales_plan->plan_code : 'AUTO' }}">
+                                    value="{{ isset($data->plan_code) ? $data->plan_code : 'AUTO' }}">
                             </div>
 
                             <div class="mb-3">
@@ -37,7 +41,7 @@
                                         $endYear = $currentYear + 5;
                                     @endphp
                                     @for($y = $startYear; $y <= $endYear; $y++)
-                                        <option value="{{ $y }}" {{ isset($sales_plan->period_year) && $sales_plan->period_year == $y ? 'selected' : ($y == $currentYear ? 'selected' : '') }}>
+                                        <option value="{{ $y }}" {{ isset($data->period_year) && $data->period_year == $y ? 'selected' : ($y == $currentYear ? 'selected' : '') }}>
                                             {{ $y }}
                                         </option>
                                     @endfor
@@ -48,7 +52,7 @@
                                 <label class="form-label">Period Month</label>
                                 <select class="form-control required" id="period_month" error="Period Month">
                                     @for ($m = 1; $m <= 12; $m++)
-                                        <option value="{{ $m }}" {{ isset($sales_plan->period_month) && $sales_plan->period_month == $m ? 'selected' : '' }}>
+                                        <option value="{{ $m }}" {{ isset($data->period_month) && $data->period_month == $m ? 'selected' : '' }}>
                                             {{ DateTime::createFromFormat('!m', $m)->format('F') }}
                                         </option>
                                     @endfor
@@ -60,7 +64,7 @@
                                 <select class="form-control select2 required" id="salesman" error="Salesman">
                                     <option value=""></option>
                                     @foreach ($salesmen as $s)
-                                        <option value="{{ $s->id }}" {{ isset($sales_plan->salesman) && $sales_plan->salesman == $s->id ? 'selected' : '' }}>
+                                        <option value="{{ $s->id }}" {{ isset($data->salesman) && $data->salesman == $s->id ? 'selected' : '' }}>
                                             {{ $s->name }}
                                         </option>
                                     @endforeach
@@ -72,7 +76,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Description</label>
                                 <textarea id="description" class="form-control"
-                                    placeholder="Optional">{{ isset($sales_plan->description) ? $sales_plan->description : '' }}</textarea>
+                                    placeholder="Optional">{{ isset($data->description) ? $data->description : '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -113,20 +117,16 @@
                                             @foreach($sales_plan_details as $item)
                                                 <tr class="input" data_id="{{ $item->id }}">
                                                     <td>
-                                                        <select class="form-control select2 required" id="customer_id"
-                                                            error="Customer">
-                                                            @foreach ($customers as $c)
-                                                                <option value="{{ $c->id }}" {{ $item->customer_id == $c->id ? 'selected' : '' }}>{{ $c->nama_customer }}</option>
-                                                            @endforeach
-                                                        </select>
+                                                        <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="SalesPlan.showDataCustomer(this)">Pilih</button>
+                                                            <input disabled type="text" class="form-control required" id="customer_id" error="Customer" value="{{ $item->customer_id }}//{{ $item->nama_customer }}">
+                                                        </div>
                                                     </td>
                                                     <td>
-                                                        <select class="form-control select2 required" id="product_id"
-                                                            error="Product">
-                                                            @foreach ($products as $p)
-                                                                <option value="{{ $p->id }}" {{ $item->product_id == $p->id ? 'selected' : '' }}>{{ $p->product_name }}</option>
-                                                            @endforeach
-                                                        </select>
+                                                        <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="SalesPlan.showDataProduct(this)">Pilih</button>
+                                                            <input type="text" class="form-control" id="product" error="Product" value="{{ $item->product_id == 0 ? '' : $item->product_id.'//'.$item->product_name }}">
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <input type="number" class="form-control" id="week_number"
@@ -162,22 +162,16 @@
                                         @else
                                             <tr class="input">
                                                 <td>
-                                                    <select class="form-control select2 required" id="customer_id"
-                                                        error="Customer">
-                                                        <option value=""></option>
-                                                        @foreach ($customers as $c)
-                                                            <option value="{{ $c->id }}">{{ $c->nama_customer }}</option>
-                                                        @endforeach
-                                                    </select>
+                                                    <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="SalesPlan.showDataCustomer(this)">Pilih</button>
+                                                            <input disabled type="text" class="form-control required" id="customer_id" error="Customer" value="">
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    <select class="form-control select2 required" id="product_id"
-                                                        error="Product">
-                                                        <option value=""></option>
-                                                        @foreach ($products as $p)
-                                                            <option value="{{ $p->id }}">{{ $p->product_name }}</option>
-                                                        @endforeach
-                                                    </select>
+                                                      <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="SalesPlan.showDataProduct(this)">Pilih</button>
+                                                            <input type="text" class="form-control" id="product" error="Product" value="">
+                                                        </div>
                                                 </td>
                                                 <td><input type="number" class="form-control" id="week_number" value="1">
                                                 </td>

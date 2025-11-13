@@ -11,7 +11,7 @@
             </div>
             <div class="modal-footer">
                 <!-- Toogle to second dialog -->
-                <button class="btn btn-primary" onclick="SalesOrder.confirmDelete(this)" data_id="{{ $id }}">Ya</button>
+                <button class="btn btn-primary" onclick="SalesPlan.confirmDelete(this)" data_id="{{ $id }}">Ya</button>
                 <button class="btn btn-default" data-bs-dismiss="modal">Tidak</button>
             </div>
         </div>

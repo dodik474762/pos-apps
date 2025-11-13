@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Currency;
+use App\Models\Transaction\SalesPlanDetail;
+use App\Models\Transaction\SalesPlanHeader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -137,6 +140,8 @@ class SalesPlanController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
@@ -154,33 +159,30 @@ class SalesPlanController extends Controller
 
             // === HEADER ===
             $header = empty($data['id'])
-                ? new SalesOrderHeader()
-                : SalesOrderHeader::find($data['id']);
+                ? new SalesPlanHeader()
+                : SalesPlanHeader::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->so_number = generateNoSO(); // misal helper
+                $header->plan_code = generateNoRoutePlan(); // misal helper
                 $header->created_by = $userId;
-                $header->status = 'draft';
+                $header->status = 'DRAFT';
             }
 
-            $header->so_date = $data['so_date'];
-            $header->customer_id = $data['customer_id'];
-            $header->payment_term = $data['payment_term'] ?? null;
-            $header->currency = $data['currency'];
-            $header->remarks = $data['remarks'] ?? null;
-            $header->total_amount = 0; // akan dihitung ulang di bawah
+            $header->salesman = $data['salesman'];
+            $header->period_year = $data['period_year'];
+            $header->period_month = $data['period_month'] ?? null;
+            $header->description = $data['description'] ?? null;
             $header->save();
 
             $hdrId = $header->id;
-            $grandTotal = 0;
 
             // === DETAIL ===
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
-                        $exist = SalesOrderDetail::find($item['id']);
-                        if ($exist && $exist->status !== 'draft') {
+                        $exist = SalesPlanDetail::find($item['id']);
+                        if ($exist && $exist->status !== 'DRAFT') {
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
@@ -198,36 +200,30 @@ class SalesPlanController extends Controller
 
                 // Item baru atau update
                 $detail = empty($item['id'])
-                    ? new SalesOrderDetail()
-                    : SalesOrderDetail::find($item['id']);
+                    ? new SalesPlanDetail()
+                    : SalesPlanDetail::find($item['id']);
 
-                $detail->sales_order_id = $hdrId;
-                $detail->product_id = $item['product_id'];
-                $detail->qty = $item['qty'];
-                $detail->unit = $item['unit_id'];
-                $detail->unit_price = $item['price'];
-                $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
-                $detail->discount_percent = $item['disc_percent'];
-                $detail->discount_amount = $item['disc_amount'];
-                $detail->subtotal = $item['subtotal'];
-                $detail->is_free_good = $item['is_freegood'] ?? 0;
-                $detail->free_for = $item['free_for'] ?? null;
-                $detail->status = $detail->status ?? 'draft';
-                $detail->save();
-
-                // Hanya tambahkan ke total jika bukan free good
-                if (empty($item['is_freegood'])) {
-                    $grandTotal += $item['subtotal'];
+                list($cust_id, $cust_name) = explode('//', $item['customer_name']);
+                $detail->header_id = $hdrId;
+                $detail->customer_id = $cust_id;
+                if($item['product_name'] != ''){
+                    list($prod_id, $prod_name) = explode('//', $item['product_name']);
+                    $detail->product_id = $prod_id;
+                }else{
+                    $detail->product_id = 0;
                 }
+                $detail->week_number = $item['week_number'];
+                $detail->week_type = $item['week_type'];
+                $detail->day_of_week = $item['day_of_week'];
+                $detail->target_qty = $item['target_qty'] == '' ? 0 : $item['target_qty'];
+                $detail->target_value = $item['target_value'] == '' ? 0 : $item['target_value'];
+                $detail->note = $item['note'];
+                $detail->save();
             }
-
-            // Update total header
-            $header->total_amount = $grandTotal;
-            $header->save();
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Sales Order berhasil disimpan';
+            $result['message'] = 'Sales Plan berhasil disimpan';
             $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -245,8 +241,8 @@ class SalesPlanController extends Controller
         DB::beginTransaction();
         try {
             // code...
-            $menu = SalesOrderHeader::find($data['id']);
-            if ($menu->status != 'draft') {
+            $menu = SalesPlanHeader::find($data['id']);
+            if ($menu->status != 'DRAFT') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
 
@@ -283,204 +279,21 @@ class SalesPlanController extends Controller
     {
         $data = $request->all();
 
-        return view('web.sales_order.modal.confirmdelete', $data);
+        return view('web.sales_plan.modal.confirmdelete', $data);
     }
 
     public function showDataProduct(Request $request)
     {
         $data = $request->all();
 
-        return view('web.product.modal.dataproduct', $data);
+        return view('web.sales_plan.modal.dataproduct', $data);
     }
 
-    public function showDiscountProduct(Request $request)
+    public function showDataCustomer(Request $request)
     {
         $data = $request->all();
-        $data['message'] = '';
-        try {
-            $data['disc'] = $this->getDataDiscProduct($data);
-        } catch (\Throwable $th) {
-            $data['message'] = $th->getMessage();
-        }
 
-        return view('web.product.datainfoprogramdisk', $data);
-    }
-
-    public function showDiscountFreeProduct(Request $request)
-    {
-        $data = $request->all();
-        $data['message'] = '';
-        try {
-            $data['disc'] = $this->getProductFreeGood($data);
-        } catch (\Throwable $th) {
-            $data['message'] = $th->getMessage();
-        }
-
-        // echo '<pre>';
-        // print_r($data);die;
-
-        return view('web.product.datainfoprogramfreegood', $data);
-    }
-
-    public function showQtySmallestProduct(Request $request)
-    {
-        $data = $request->all();
-        $data['message'] = '';
-        $data['data_uom'] = [];
-        try {
-            $data_uom = ProductUom::whereNull('product_uom.deleted')->where('product_uom.product', $data['produk_id'])
-            ->select(['product_uom.*', 'p.name as product_name', 'p.code'])
-            ->join('product as p', 'p.id', 'product_uom.product')
-            ->orderBy('product_uom.level')->get();
-            $units = collect($data_uom)->pluck('unit_tujuan')->unique()->values()->all();
-            $unit = Unit::whereNull('deleted')
-            ->whereIn('id', $units)
-            ->get();
-
-
-            $data_result = [];
-            foreach ($data_uom as $key => $value) {
-                $conversion = getSmallestUnit($value->product, $value->unit_tujuan, 1);
-                $unit_name = collect($unit)->where('id', $value->unit_tujuan)->first();
-                $conversion['unit'] = $value->unit_tujuan;
-                $conversion['unit_name'] = $unit_name->name;
-                $conversion['product'] = $value->product;
-                $conversion['product_name'] = $value->product_name;
-                $conversion['code'] = $value->code;
-                $data_result[] = $conversion;
-            }
-
-            $data['data_uom'] = $data_result;
-        } catch (\Throwable $th) {
-            $data['message'] = $th->getMessage();
-        }
-
-        // echo '<pre>';
-        // print_r($data);die;
-
-        return view('web.product.datauom', $data);
-    }
-
-    public function getDiscount(Request $request)
-    {
-        $discount = ProductDisc::valid(
-            $request->product_id,
-            $request->unit_id,
-            $request->customer_id,
-            $request->customer_category_id,
-            $request->qty
-        )->first();
-
-        return response()->json([
-            'found' => $discount ? true : false,
-            'data' => $discount,
-        ]);
-    }
-
-    function getProductFreeGood($params)
-    {
-        $data = $params;
-        $product_id = $data['produk_id'];
-        $unit_id = $data['unit'];
-        $customer_id = $data['customer'];
-        $customerdb = Customer::find($customer_id);
-        $customer_category_id = $customerdb->customer_category;
-
-        $datadb = ProductFreeGood::where('product_free_good.product', $product_id)
-            // ->where('unit', $unit_id)
-            // ->where(function ($q) use ($customer_id) {
-            //     $q->where('customer', $customer_id)->orWhereNull('customer');
-            // })
-            // ->where(function ($q) use ($customer_category_id) {
-            //     $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
-            // })
-            ->select([
-                'product_free_good.*',
-                'p.name as product_name',
-                'fp.name as free_product_name',
-                'u.name as unit_name',
-                'fu.name as free_unit_name',
-                'c.nama_customer',
-                'cc.category',
-                'p.code',
-                'fp.code as free_code'
-            ])
-            ->join('product as p', 'p.id', 'product_free_good.product')
-            ->join('product as fp', 'fp.id', 'product_free_good.free_product')
-            ->join('unit as u', 'u.id', 'product_free_good.unit')
-            ->join('unit as fu', 'fu.id', 'product_free_good.free_unit')
-            ->leftJoin('customer as c', 'c.id', 'product_free_good.customer')
-            ->leftJoin('customer_category as cc', 'cc.id', 'product_free_good.customer_category')
-            ->where('product_free_good.status_aktif', 1)
-            ->whereDate('product_free_good.date_start', '<=', now())
-            ->where(function ($q) {
-                $q->whereDate('product_free_good.date_end', '>=', now())->orWhereNull('date_end');
-            })
-            // ->where('min_qty', '<=', $qty)
-            // ->where(function ($q) use ($qty) {
-            //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
-            // })
-            ->get();
-        return $datadb;
-    }
-
-    function getProductPrice($product_id, $unit_id, $customer_id, $qty)
-    {
-        return ProductUomPrice::where('product', $product_id)
-            ->where('unit', $unit_id)
-            ->where(function ($q) use ($customer_id) {
-                $q->where('customer', $customer_id)->orWhereNull('customer');
-            })
-            ->where(function ($q) use ($qty) {
-                $q->where('min_qty', '<=', $qty)
-                ->where(function ($q2) use ($qty) {
-                    $q2->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
-                });
-            })
-            ->whereDate('date_start', '<=', now())
-            ->orderByDesc('min_qty')
-            ->first();
-    }
-
-    public function getDataDiscProduct($params)
-    {
-        $data = $params;
-        $product_id = $data['produk_id'];
-        $unit_id = $data['unit'];
-        $customer_id = $data['customer'];
-        $customerdb = Customer::find($customer_id);
-        $customer_category_id = $customerdb->customer_category;
-
-        $datadb = ProductDisc::where('product_discount.product', $product_id)
-            // ->where(function ($q) use ($customer_id) {
-            //     $q->where('customer', $customer_id)->orWhereNull('customer');
-            // })
-            // ->where(function ($q) use ($customer_category_id) {
-            //     $q->where('customer_category', $customer_category_id)->orWhereNull('customer_category');
-            // })
-            ->select([
-                'product_discount.*',
-                'u.name as unit_name',
-                'c.nama_customer',
-                'cc.category',
-                'p.name as product_name',
-                'p.code',
-            ])
-            ->join('product as p', 'p.id', 'product_discount.product')
-            ->join('unit as u', 'u.id', 'product_discount.unit')
-            ->leftJoin('customer as c', 'c.id', 'product_discount.customer')
-            ->leftJoin('customer_category as cc', 'cc.id', 'product_discount.customer_category')
-            ->where('product_discount.status_aktif', 1)
-            ->whereDate('product_discount.date_start', '<=', now())
-            ->where(function ($q) {
-                $q->whereDate('product_discount.date_end', '>=', now())->orWhereNull('date_end');
-            })
-            // ->where('min_qty', '<=', $qty)
-            // ->where(function ($q) use ($qty) {
-            //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
-            // })
-            ->get();
-        return $datadb;
+        return view('web.sales_plan.modal.datacustomer', $data);
     }
 
     public function getDataProduct(Request $request)
@@ -500,41 +313,9 @@ class SalesPlanController extends Controller
             ->select([
                 'm.*',
                 'pt.type',
-                'u.name as unit_name',
-                'uo.name as unit_tujuan_name',
-                'uo.id as unit_tujuan_id',
-                'pu.id as id_uom',
-
-                // kolom harga dari tabel product_uom_price
-                'pup.price as harga',
-                'pup.min_qty',
-                'pup.max_qty',
-                'pup.date_start',
-                'pup.date_end',
-                'pup.customer_name',
-                'pup.id as price_id'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
-            ->join('product_uom as pu', 'pu.product', '=', 'm.id')
-            ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
-            ->join('unit as u', 'u.id', '=', 'm.unit')
-            ->leftJoin('product_uom_price as pup', function($join) {
-                $join->on('pup.product', '=', 'm.id')
-                    ->on('pup.unit', '=', 'pu.unit_tujuan')
-                    ->whereNull('pup.deleted')
-                    ->where(function($query) {
-                        $query->whereNull('pup.date_end')
-                            ->orWhere('pup.date_end', '>=', now());
-                    })
-                    ->where('pup.date_start', '<=', now());
-            })
             ->whereNull('m.deleted');
-
-            if(isset($data['customer'])){
-                if($data['customer'] != ''){
-                    $datadb->where('pup.customer', $data['customer']);
-                }
-            }
         // --- Total tanpa filter ---
         $data['recordsTotal'] = $datadb->count();
 
@@ -545,9 +326,7 @@ class SalesPlanController extends Controller
                 $query->where('m.name', 'like', "%{$keyword}%")
                     ->orWhere('m.remarks', 'like', "%{$keyword}%")
                     ->orWhere('m.model_number', 'like', "%{$keyword}%")
-                    ->orWhere('pt.type', 'like', "%{$keyword}%")
-                    ->orWhere('uo.name', 'like', "%{$keyword}%")
-                    ->orWhere('pup.customer_name', 'like', "%{$keyword}%");
+                    ->orWhere('pt.type', 'like', "%{$keyword}%");
             });
         }
 
@@ -578,5 +357,63 @@ class SalesPlanController extends Controller
         // dd($query);
 
         return response()->json($data);
+    }
+
+    public function getDataCustomer()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $company = session('id_company');
+        $akses = session('akses');
+
+        $datadb = DB::table('customer as m')
+            ->select([
+                'm.*',
+                'cc.category as customer_category_name',
+                'r.name as city_name',
+                'k.name as kecamatan_name',
+                'kl.name as kelurahan_name',
+            ])
+            ->join('customer_category as cc', 'cc.id', 'm.customer_category')
+            ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->whereNull('m.deleted');
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
     }
 }

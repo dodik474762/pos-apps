@@ -390,4 +390,8 @@ Route::post('api/transaksi/sales_plan/getData', [TransactionSalesPlanController:
 Route::post('api/transaksi/sales_plan/submit', [TransactionSalesPlanController::class, 'submit']);
 Route::post('api/transaksi/sales_plan/delete', [TransactionSalesPlanController::class, 'delete']);
 Route::post('api/transaksi/sales_plan/confirmDelete', [TransactionSalesPlanController::class, 'confirmDelete']);
+Route::post('api/transaksi/sales_plan/showDataCustomer', [TransactionSalesPlanController::class, 'showDataCustomer']);
+Route::post('api/transaksi/sales_plan/getDataCustomer', [TransactionSalesPlanController::class, 'getDataCustomer']);
+Route::post('api/transaksi/sales_plan/showDataProduct', [TransactionSalesPlanController::class, 'showDataProduct']);
+Route::post('api/transaksi/sales_plan/getDataProduct', [TransactionSalesPlanController::class, 'getDataProduct']);
 /*API */

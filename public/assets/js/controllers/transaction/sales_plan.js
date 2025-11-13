@@ -35,52 +35,43 @@ let SalesPlan = {
         window.location.href = url.base_url(SalesPlan.module()) + "add";
     },
 
+       // Ambil data dari tabel detail (Plan Details)
     getPostItem: () => {
         const table = $("table#table-items tbody tr.input");
         let result = [];
 
         table.each((index, elm) => {
             const $row = $(elm);
-            const isFreeGood = $row.hasClass("freegood");
 
             result.push({
                 id: $row.attr("data_id") || null,
+                customer_id: $row.find("#customer_id").attr("data_id") || null,
+                customer_name: $row.find("#customer_id").val() || "",
                 product_id: $row.find("#product").attr("data_id") || null,
                 product_name: $row.find("#product").val() || "",
-                qty: parseFloat($row.find("#qty").val()) || 0,
-                unit_id: $row.find("td#unit").attr("data_id") || null,
-                price: isFreeGood
-                    ? 0
-                    : parseFloat($row.find("#unit_price").val()) || 0,
-                disc_percent: isFreeGood
-                    ? 0
-                    : parseFloat($row.find("#disc_percent").val()) || 0,
-                disc_amount: isFreeGood
-                    ? 0
-                    : parseFloat($row.find("#disc_amount").val()) || 0,
-                subtotal: isFreeGood
-                    ? 0
-                    : parseFloat($row.find("#subtotal").val()) || 0,
-                is_freegood: isFreeGood ? 1 : 0,
-                free_for: isFreeGood ? $row.data("free-for") || null : null, // referensi produk asal
-                remove: $row.hasClass("remove") ? 1 : 0,
+                week_number: parseInt($row.find("#week_number").val()) || 0,
+                week_type: $row.find("#week_type").val() || "",
+                day_of_week: $row.find("#day_of_week").val() || "",
+                target_qty: parseFloat($row.find("#target_qty").val()) || 0,
+                target_value: parseFloat($row.find("#target_value").val()) || 0,
+                note: $row.find("#note").val() || "",
+                remove: $row.hasClass("remove") ? 1 : 0
             });
         });
 
         return result;
     },
 
+    // Ambil data utama dari header form
     getPostInput: () => {
         let data = {
             id: $("#id").val() || null,
-            so_number: $("#so_number").val() || null,
-            so_date: $("#so_date").val() || null,
-            customer_id: $("#customer_id").val() || null,
-            payment_term: $("#payment_term").val() || null,
-            currency: $("#currency").val() || null,
-            remarks: $("#remarks").val() || "",
-            total_amount: parseFloat($("#total-harga").text()) || 0,
-            items: SalesPlan.getPostItem(),
+            plan_code: $("#plan_code").val() || "",
+            period_year: $("#period_year").val() || "",
+            period_month: $("#period_month").val() || "",
+            salesman: $("#salesman").val() || "",
+            description: $("#description").val() || "",
+            items: SalesPlan.getPostItem()
         };
 
         return data;
@@ -197,11 +188,12 @@ let SalesPlan = {
                 {
                     data: "id",
                     render: function (data, type, row) {
-                        var html = `<a href='${url.base_url(
-                            SalesPlan.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        // var html = `<a href='${url.base_url(
+                        //     SalesPlan.module()
+                        // )}cetak?id=${data}' data_id="${
+                        //     row.id
+                        // }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        let html = "";
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesPlan.module()
@@ -210,7 +202,7 @@ let SalesPlan = {
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "draft") {
+                            if (row.status == "DRAFT") {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesPlan.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
@@ -308,7 +300,7 @@ let SalesPlan = {
 
     showDataProduct: (elm) => {
         let params = {};
-        const customer = $("#customer_id").val();
+        const customer = $(elm).closest("tr").find("#customer_id").val();
         if (customer == "") {
             message.sweetError("Informasi", "Pilih Customer");
             return false;
@@ -338,6 +330,38 @@ let SalesPlan = {
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
                 SalesPlan.getDataProduct();
+            },
+        });
+    },
+
+    showDataCustomer: (elm) => {
+        let params = {};
+        const customer = $("#customer_id").val();
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesPlan.moduleApi()) + "showDataCustomer",
+            headers: {
+                "X-CSRF-TOKEN": SalesPlan.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                SalesPlan.getDataCustomer();
             },
         });
     },
@@ -396,33 +420,100 @@ let SalesPlan = {
                     data: "name",
                 },
                 {
-                    data: "unit_tujuan_name",
+                    data: "type",
                 },
                 {
-                    data: "min_qty",
-                },
-                {
-                    data: "max_qty",
-                },
-                {
-                    data: "customer_name",
-                },
-                {
-                    data: "harga",
-                },
-                {
-                    data: "date_start",
+                    data: "model_number",
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}"
+                        html += `<a href='' produk_id="${row.id}"
                         code="${row.code}" produk_name="${row.name}"
-                        price="${row.harga}"
-                        price_id="${row.price_id}"
+                        model_number="${row.model_number}"
                         onclick="SalesPlan.pilihDataProduct(this, event)"
-                        data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+    
+    getDataCustomer: () => {
+        let tableData = $("table#table-data-modal");
+        const params = {
+            customer: $("#customer_id").val(),
+        };
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesPlan.moduleApi()) + `getDataCustomer`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": SalesPlan.csrf_token(),
+                },
+                data: params,
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "customer_category_name",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' data_id="${row.id}" category="${row.customer_category}" customer_name="${row.nama_customer}"
+                        code="${row.code}"
+                        onclick="SalesPlan.pilihDataCustomer(this, event)"
+                        class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
@@ -434,134 +525,26 @@ let SalesPlan = {
         e.preventDefault();
         let produk_name = $(elm).attr("produk_name");
         let produk_id = $(elm).attr("produk_id");
-        let unit = $(elm).attr("unit");
-        let unit_name = $(elm).attr("unit_name");
-        let product_uom_id = $(elm).attr("data_id");
-        let price = $(elm).attr("price");
-        let price_id = $(elm).attr("price_id");
+        let model_number = $(elm).attr("model_number");
+        let code = $(elm).attr("code");
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(product_uom_id + "//" + produk_id + "//" + produk_name);
+            .val(produk_id + "//" + produk_name);
         $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
-
-        $(elmChoose).closest("tr").find("td#unit").text(unit_name);
-        $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
-        $(elmChoose).closest("tr").find("#unit_price").val(price);
-        $(elmChoose)
-            .closest("tr")
-            .find("#unit_price")
-            .attr("data_id", price_id);
         $("button.btn-close").trigger("click");
-
-        SalesPlan.showDiscountProduct(produk_id, produk_name, unit);
-        SalesPlan.showDiscountFreeProduct(produk_id, produk_name, unit);
-        SalesPlan.showQtySmallestProduct(produk_id, produk_name, unit);
     },
-
-    showDiscountProduct: (produk_id, produk_name, unit) => {
-        let params = {
-            customer: $("#customer_id").val(),
-            produk_id: produk_id,
-            unit: unit,
-            produk_name: produk_name,
-        };
-
-        $.ajax({
-            type: "POST",
-            dataType: "html",
-            data: params,
-            url: url.base_url(SalesPlan.moduleApi()) + "showDiscountProduct",
-            headers: {
-                "X-CSRF-TOKEN": SalesPlan.csrf_token(),
-            },
-
-            beforeSend: () => {
-                message.loadingProses("Proses Pengambilan Data");
-            },
-
-            error: function () {
-                message.closeLoading();
-                message.sweetError("Informasi", "Gagal");
-            },
-
-            success: function (resp) {
-                message.closeLoading();
-                const table_items = $("#table-data-diskon");
-                table_items.find("tbody").append(resp);
-            },
-        });
-    },
-
-    showDiscountFreeProduct: (produk_id, produk_name, unit) => {
-        let params = {
-            customer: $("#customer_id").val(),
-            produk_id: produk_id,
-            unit: unit,
-            produk_name: produk_name,
-        };
-
-        $.ajax({
-            type: "POST",
-            dataType: "html",
-            data: params,
-            url:
-                url.base_url(SalesPlan.moduleApi()) +
-                "showDiscountFreeProduct",
-            headers: {
-                "X-CSRF-TOKEN": SalesPlan.csrf_token(),
-            },
-
-            beforeSend: () => {
-                message.loadingProses("Proses Pengambilan Data");
-            },
-
-            error: function () {
-                message.closeLoading();
-                message.sweetError("Informasi", "Gagal");
-            },
-
-            success: function (resp) {
-                message.closeLoading();
-                const table_items = $("#table-data-diskon-free");
-                table_items.find("tbody").append(resp);
-            },
-        });
-    },
-
-    showQtySmallestProduct: (produk_id, produk_name, unit) => {
-        let params = {
-            customer: $("#customer_id").val(),
-            produk_id: produk_id,
-            unit: unit,
-            produk_name: produk_name,
-        };
-
-        $.ajax({
-            type: "POST",
-            dataType: "html",
-            data: params,
-            url:
-                url.base_url(SalesPlan.moduleApi()) + "showQtySmallestProduct",
-            headers: {
-                "X-CSRF-TOKEN": SalesPlan.csrf_token(),
-            },
-
-            beforeSend: () => {
-                message.loadingProses("Proses Pengambilan Data");
-            },
-
-            error: function () {
-                message.closeLoading();
-                message.sweetError("Informasi", "Gagal");
-            },
-
-            success: function (resp) {
-                message.closeLoading();
-                const table_items = $("#table-data-uom");
-                table_items.find("tbody").append(resp);
-            },
-        });
+    
+    pilihDataCustomer: (elm, e) => {
+        e.preventDefault();
+        let customer_name = $(elm).attr("customer_name");
+        let data_id = $(elm).attr("data_id");
+        $(elmChoose)
+            .closest("div")
+            .find("input")
+            .val(data_id + "//" + customer_name);  
+        $(elmChoose).closest("div").find("input").attr("data_id", data_id);          
+        $("button.btn-close").trigger("click");
     },
 
     calcRow: (elm) => {

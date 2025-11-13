@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\web\Transaction;
 
+use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSalesPlanController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Customer;
 use App\Models\Master\Product;
+use App\Models\Transaction\SalesPlanDetail;
+use App\Models\Transaction\SalesPlanHeader;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -71,8 +74,6 @@ class SalesPlanController extends Controller
 
         // Dropdown
         $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
-        $data['customers'] = Customer::whereNull('deleted')->get(['id', 'nama_customer']);
-        $data['products'] = Product::whereNull('deleted')->get(['id', 'name']);
 
         $data['data_item'] = []; // Data detail kosong
 
@@ -89,26 +90,21 @@ class SalesPlanController extends Controller
 
     public function ubah(Request $request)
     {
-        $api = new TransactionSalesOrderController;
+        $api = new TransactionSalesPlanController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['customers'] = Customer::whereNull('deleted')->get();
-        $data['taxes'] = Tax::where('is_active', 1)
-            ->whereNull('deleted')
-            ->orderBy('tax_name')
-            ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = SalesOrderDetail::where('purchase_order_detail.purchase_order', $data['id'])
+        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
+        $data['sales_plan_details'] = SalesPlanDetail::where('sales_plan_detail.header_id', $data['id'])
             ->select([
-                'purchase_order_detail.*',
+                'sales_plan_detail.*',
                 'p.id as product_id',
                 'p.name as product_name',
-                'u.name as unit_name',
+                'c.nama_customer',
             ])
-            ->join('product as p', 'p.id', 'purchase_order_detail.product')
-            ->join('unit as u', 'u.id', 'purchase_order_detail.unit')
+            ->join('customer as c', 'c.id', 'sales_plan_detail.customer_id')
+            ->leftJoin('product as p', 'p.id', 'sales_plan_detail.product_id')
             ->get();
 
-        $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_plan.formadd', $data);
@@ -125,7 +121,7 @@ class SalesPlanController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $data = SalesPlanHeader::with(['items'])->findOrFail($data['id']);
         $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
         // $qr = '';
         // echo '<pre>';
