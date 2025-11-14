@@ -24,6 +24,7 @@ use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
+use App\Http\Controllers\api\Transaction\DeliveryOrderController as TransactionDeliveryOrderController;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
@@ -57,6 +58,7 @@ use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
+use App\Http\Controllers\web\Transaction\DeliveryOrderController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
@@ -198,6 +200,11 @@ Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah'])-
 Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
 Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);
 Route::get('transaksi/sales_plan/ubah', [SalesPlanController::class, 'ubah']);
+
+Route::get('transaksi/delivery_order', [DeliveryOrderController::class, 'index']);
+Route::get('transaksi/delivery_order/add', [DeliveryOrderController::class, 'add'])->name('delivery-order-add');
+Route::get('transaksi/delivery_order/ubah', [DeliveryOrderController::class, 'ubah'])->name('delivery-order-edit');;
+Route::get('transaksi/delivery_order/cetak', [DeliveryOrderController::class, 'cetak'])->name('delivery-order-print');;
 
 /*API */
 
@@ -394,4 +401,12 @@ Route::post('api/transaksi/sales_plan/showDataCustomer', [TransactionSalesPlanCo
 Route::post('api/transaksi/sales_plan/getDataCustomer', [TransactionSalesPlanController::class, 'getDataCustomer']);
 Route::post('api/transaksi/sales_plan/showDataProduct', [TransactionSalesPlanController::class, 'showDataProduct']);
 Route::post('api/transaksi/sales_plan/getDataProduct', [TransactionSalesPlanController::class, 'getDataProduct']);
+
+Route::post('api/transaksi/delivery_order/getData', [TransactionDeliveryOrderController::class, 'getData']);
+Route::post('api/transaksi/delivery_order/submit', [TransactionDeliveryOrderController::class, 'submit']);
+Route::post('api/transaksi/delivery_order/delete', [TransactionDeliveryOrderController::class, 'delete']);
+Route::post('api/transaksi/delivery_order/confirmDelete', [TransactionDeliveryOrderController::class, 'confirmDelete']);
+Route::post('api/transaksi/delivery_order/showModalSO', [TransactionDeliveryOrderController::class, 'showModalSO']);
+Route::post('api/transaksi/delivery_order/getDataSo', [TransactionDeliveryOrderController::class, 'getDataSo']);
+Route::post('api/transaksi/delivery_order/getSoDetail', [TransactionDeliveryOrderController::class, 'getSoDetail']);
 /*API */

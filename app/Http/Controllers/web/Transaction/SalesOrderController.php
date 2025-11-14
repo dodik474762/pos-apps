@@ -164,6 +164,6 @@ class SalesOrderController extends Controller
         $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('PO-'.$data->code.'.pdf');
+        return $pdf->stream('SO-'.$data->code.'.pdf');
     }
 }

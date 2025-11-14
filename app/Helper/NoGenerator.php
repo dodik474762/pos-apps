@@ -166,6 +166,25 @@ function generateNoSO()
     return $no;
 }
 
+function generateNoDO()
+{
+    $no = 'DO'.strtoupper(date('m')).date('y');
+    $data = DB::table('delivery_order_header')->where('do_number', 'LIKE', '%'.$no.'%')->orderBy('do_number', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->do_number);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateNoRoutePlan()
 {
     $no = 'RP'.strtoupper(date('m')).date('y');
