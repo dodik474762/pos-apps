@@ -72,7 +72,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Customer</label>
                                 <input type="text" disabled id="customer_id" class="form-control required" error="Customer"
-                                       value="{{ $data->customer_id ?? '' }}">
+                                       value="{{ isset($data->customer_id) ? $data->customer_id.'//'.$data->nama_customer : '' }}">
                             </div>
 
                             <div class="mb-3">
@@ -108,42 +108,20 @@
                             <tbody id="detail-body">
 
                                 @if (!empty($details))
-                                    @foreach ($details as $d)
-                                        <tr class="input" data_id="{{ $d->id }}" so_detail_id="{{ $d->so_detail_id }}">
-
+                                    @foreach ($details as $item)
+                                        <tr class="input" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
+                                            <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
+                                            <td id="uom" data_id="{{ $item->unit }}">{{ $item->unit_name }}</td>
+                                            <td id="qty">{{ $item->qty }}</td>
                                             <td>
-                                                <div class="input-group">
-                                                    <button type="button" class="btn btn-outline-primary"
-                                                            onclick="DeliveryOrder.showDataProduct(this)">
-                                                        Pilih
-                                                    </button>
-                                                    <input disabled type="text" class="form-control required"
-                                                           id="product" error="Product"
-                                                           value="{{ $d->product_name }}"
-                                                           data_id="{{ $d->product_id }}">
-                                                </div>
+                                                <input {{ $item->note == 'FREE GOOD' ? 'disabled' : '' }} type="text" id="note" class="form-control" value="{{ $item->note }}">
                                             </td>
-
-                                            <td id="uom" data_id="{{ $d->uom }}">{{ $d->uom }}</td>
-
-                                            <td>
-                                                <input type="number" min="1" id="qty" class="form-control"
-                                                       value="{{ $d->qty }}"
-                                                       onkeyup="DeliveryOrder.calcRow(this)">
-                                            </td>
-
-                                            <td>
-                                                <input type="text" id="note" class="form-control"
-                                                       value="{{ $d->note }}">
-                                            </td>
-
                                             <td class="text-center">
                                                 {{-- <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="DeliveryOrder.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button> --}}
                                             </td>
-
                                         </tr>
                                     @endforeach
                                 @else

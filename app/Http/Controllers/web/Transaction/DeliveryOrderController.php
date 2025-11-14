@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\DeliveryOrderController as TransactionD
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Warehouse;
+use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\SalesOrderHeader;
 use App\Models\User;
@@ -89,25 +90,18 @@ class DeliveryOrderController extends Controller
         $api = new TransactionDeliveryOrderController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
-        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();;
-        $data['taxes'] = Tax::where('is_active', 1)
-            ->whereNull('deleted')
-            ->orderBy('tax_name')
-            ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['id'])
+        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['details'] = DeliveryOrderDtl::where('delivery_order_detail.do_id', $data['id'])
             ->select([
-                'sales_order_details.*',
+                'delivery_order_detail.*',
                 'p.id as product_id',
                 'p.name as product_name',
                 'u.name as unit_name',
             ])
-            ->join('product as p', 'p.id', 'sales_order_details.product_id')
-            ->join('unit as u', 'u.id', 'sales_order_details.unit')
-            ->orderBy('sales_order_details.id')
+            ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
+            ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
+            ->orderBy('delivery_order_detail.id')
             ->get();
-
-        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.delivery_order.formadd', $data);

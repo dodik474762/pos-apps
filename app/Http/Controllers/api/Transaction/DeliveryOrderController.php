@@ -373,7 +373,12 @@ class DeliveryOrderController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+                'so.so_number',
+                'c.nama_customer'
+            ])
+            ->join('sales_order_headers as so', 'so.id', 'm.so_id')
+            ->join('customer as c', 'c.id', 'm.customer_id')
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
 

@@ -29,6 +29,7 @@ use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionP
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
+use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
 use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSalesPlanController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
@@ -63,6 +64,7 @@ use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
+use App\Http\Controllers\web\Transaction\SalesInvoiceController;
 use App\Http\Controllers\web\Transaction\SalesOrderController;
 use App\Http\Controllers\web\Transaction\SalesPlanController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
@@ -206,6 +208,11 @@ Route::get('transaksi/delivery_order', [DeliveryOrderController::class, 'index']
 Route::get('transaksi/delivery_order/add', [DeliveryOrderController::class, 'add'])->name('delivery-order-add');
 Route::get('transaksi/delivery_order/ubah', [DeliveryOrderController::class, 'ubah'])->name('delivery-order-edit');;
 Route::get('transaksi/delivery_order/cetak', [DeliveryOrderController::class, 'cetak'])->name('delivery-order-print');;
+
+Route::get('transaksi/sales_invoice', [SalesInvoiceController::class, 'index']);
+Route::get('transaksi/sales_invoice/add', [SalesInvoiceController::class, 'add'])->name('sales-invoice-add');
+Route::get('transaksi/sales_invoice/ubah', [SalesInvoiceController::class, 'ubah'])->name('sales-invoice-edit');;
+Route::get('transaksi/sales_invoice/cetak', [SalesInvoiceController::class, 'cetak'])->name('sales-invoice-print');;
 
 /*API */
 
@@ -410,4 +417,9 @@ Route::post('api/transaksi/delivery_order/confirmDelete', [TransactionDeliveryOr
 Route::post('api/transaksi/delivery_order/showModalSO', [TransactionDeliveryOrderController::class, 'showModalSO']);
 Route::post('api/transaksi/delivery_order/getDataSo', [TransactionDeliveryOrderController::class, 'getDataSo']);
 Route::post('api/transaksi/delivery_order/getSoDetail', [TransactionDeliveryOrderController::class, 'getSoDetail']);
+
+Route::post('api/transaksi/sales_invoice/getData', [TransactionSalesInvoiceController::class, 'getData']);
+Route::post('api/transaksi/sales_invoice/submit', [TransactionSalesInvoiceController::class, 'submit']);
+Route::post('api/transaksi/sales_invoice/delete', [TransactionSalesInvoiceController::class, 'delete']);
+Route::post('api/transaksi/sales_invoice/confirmDelete', [TransactionSalesInvoiceController::class, 'confirmDelete']);
 /*API */
