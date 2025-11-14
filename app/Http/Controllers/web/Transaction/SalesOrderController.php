@@ -152,7 +152,7 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->code));
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->so_number));
         // $qr = '';
         // echo '<pre>';
         // print_r($data);
@@ -164,6 +164,6 @@ class SalesOrderController extends Controller
         $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SO-'.$data->code.'.pdf');
+        return $pdf->stream('SO-'.$data->so_number.'.pdf');
     }
 }

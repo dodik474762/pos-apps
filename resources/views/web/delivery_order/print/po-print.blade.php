@@ -81,7 +81,7 @@
             </td>
             <td style="text-align:right;">
                 <h4 style="margin:0; padding:0;">DELIVERY ORDER</h4>
-                <small>No: {{ $data->code }}</small>
+                <small>No: {{ $data->do_number }}</small>
                 <br>
                 {{-- QR Code (otomatis di-generate) --}}
                 <div style="margin-top:5px;">
