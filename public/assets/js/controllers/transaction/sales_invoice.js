@@ -1,8 +1,8 @@
 let elmChoose;
 let discProduct = [];
-let DeliveryOrder = {
+let SalesInvoice = {
     module: () => {
-        return "transaksi/delivery_order";
+        return "transaksi/sales_invoice";
     },
 
     csrf_token: () => {
@@ -46,8 +46,13 @@ let DeliveryOrder = {
                 id: $row.attr("data_id") || null,
                 so_detail_id: $row.attr("so_detail_id") || null,
                 product_id: $row.find("#product").attr("data_id") || null,
+
+                // kembali pakai TEXT
                 qty: parseFloat($row.find("#qty").text()) || 0,
-                uom: $row.find("#uom").attr("data_id") || null,
+                price: parseFloat($row.find("#price").text()) || 0,
+                discount: parseFloat($row.find("#discount").text()) || 0,
+                subtotal: parseFloat($row.find("#subtotal").text()) || 0,
+
                 note: $row.find("#note").val() || "",
                 remove: $row.hasClass("remove") ? 1 : 0,
             });
@@ -59,11 +64,16 @@ let DeliveryOrder = {
     getPostInput: () => {
         let data = {
             id: $("#id").val() || null,
-            do_number: $("#do_number").val() || null,
-            do_date: $("#do_date").val() || null,
-            so_id: $("#so_number").attr("data_id") || null,
+            invoice_number: $("#invoice_number").val() || null,
+            invoice_date: $("#invoice_date").val() || null,
+            do_id: $("#do_number").attr("data_id") || null,
             customer_id: $("#customer_id").val() || null,
-            warehouse_id: $("#warehouse_id").val() || null,
+            subtotal: parseFloat($("#subtotal").val()) || 0,
+            discount_amount: parseFloat($("#discount_amount").val()) || 0,
+            tax:$("#tax").val() || 0,
+            tax_base: parseFloat($("#tax option:selected").attr('rate')) || 0,
+            total_amount: parseFloat($("#grand-total").text()) || 0,
+
             items: SalesInvoice.getPostItem(),
         };
 
@@ -161,19 +171,19 @@ let DeliveryOrder = {
                     },
                 },
                 {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
                     data: "do_number",
                 },
                 {
                     data: "do_date",
                 },
                 {
-                    data: "so_number",
-                },
-                {
                     data: "nama_customer",
-                },
-                {
-                    data: "warehouse_name",
                 },
                 {
                     data: "created_by_name",
@@ -293,14 +303,19 @@ let DeliveryOrder = {
         });
     },
 
-    showModalSO: (elm) => {
+    showModalDO: (elm) => {
         let params = {};
+        const tax = $("#tax").val();
+        if (tax == "") {
+            message.sweetError("Informasi", "Pilih Tax Terlebih Dahulu");
+            return;
+        }
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "showModalSO",
+            url: url.base_url(SalesInvoice.moduleApi()) + "showModalDO",
             headers: {
                 "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
             },
@@ -319,12 +334,12 @@ let DeliveryOrder = {
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
-                SalesInvoice.getDataSo();
+                SalesInvoice.getDataDo();
             },
         });
     },
 
-    getDataSo: () => {
+    getDataDo: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
             processing: true,
@@ -349,7 +364,7 @@ let DeliveryOrder = {
                 );
             },
             ajax: {
-                url: url.base_url(SalesInvoice.moduleApi()) + `getDataSo`,
+                url: url.base_url(SalesInvoice.moduleApi()) + `getDataDo`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
@@ -366,6 +381,12 @@ let DeliveryOrder = {
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     },
+                },
+                {
+                    data: "do_number",
+                },
+                {
+                    data: "do_date",
                 },
                 {
                     data: "so_number",
@@ -385,7 +406,8 @@ let DeliveryOrder = {
                         var html = "";
                         html += `<a href='' so_number="${row.so_number}" nama_customer="${row.nama_customer}"
                         customer="${row.customer_id}"
-                        onclick="SalesInvoice.pilihDataSo(this, event)"
+                        do_number="${row.do_number}"
+                        onclick="SalesInvoice.pilihDataDo(this, event)"
                         data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
@@ -394,32 +416,33 @@ let DeliveryOrder = {
         });
     },
 
-    pilihDataSo: (elm, e) => {
+    pilihDataDo: (elm, e) => {
         e.preventDefault();
         let nama_customer = $(elm).attr("nama_customer");
         let customer = $(elm).attr("customer");
         let so_number = $(elm).attr("so_number");
+        let do_number = $(elm).attr("do_number");
         let data_id = $(elm).attr("data_id");
 
         $("#customer_id").val(customer + "//" + nama_customer);
-        $("#so_number").val(so_number);
-        $("#so_number").attr('data_id',data_id);
+        $("#do_number").val(do_number);
+        $("#do_number").attr("data_id", data_id);
 
         $("button.btn-close").trigger("click");
 
-        SalesInvoice.getSoDetail(data_id);
+        SalesInvoice.getDoDetail(data_id);
     },
 
-    getSoDetail: (so_id) => {
+    getDoDetail: (do_id) => {
         let params = {
-            so_id: so_id,
+            do_id: do_id,
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "getSoDetail",
+            url: url.base_url(SalesInvoice.moduleApi()) + "getDoDetail",
             headers: {
                 "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
             },
@@ -437,6 +460,7 @@ let DeliveryOrder = {
                 message.closeLoading();
                 const table_items = $("#table-items");
                 table_items.find("tbody").html(resp);
+                SalesInvoice.hitungSummaryAll();
             },
         });
     },
@@ -480,10 +504,21 @@ let DeliveryOrder = {
         let total = 0;
         document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
             const subtotal =
-                parseFloat(tr.querySelector("#subtotal").value) || 0;
+                parseFloat(
+                    $(tr).find("td#subtotal").text().replace(/,/g, "")
+                ) || 0;
             total += subtotal;
         });
-        document.getElementById("total-harga").textContent = total.toFixed(2);
+
+        const taxRate = isNaN(
+            parseFloat($(`#tax option:selected`).attr("rate"))
+        )
+            ? 0
+            : parseFloat($(`#tax option:selected`).attr("rate"));
+        const totalTax = total * (taxRate / 100);
+
+        total += totalTax;
+        document.getElementById("grand-total").textContent = total.toFixed(2);
     },
 
     removeRow: (elm) => {
@@ -494,11 +529,6 @@ let DeliveryOrder = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
-
-        const product_id = $(elm).closest("tr").find("input#product").val();
-        const splitProductId = product_id.split("//");
-        const programDiskon = $(`.diskon-` + splitProductId[1]);
-        programDiskon.remove();
     },
 
     addRow: () => {

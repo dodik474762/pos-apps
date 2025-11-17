@@ -422,4 +422,7 @@ Route::post('api/transaksi/sales_invoice/getData', [TransactionSalesInvoiceContr
 Route::post('api/transaksi/sales_invoice/submit', [TransactionSalesInvoiceController::class, 'submit']);
 Route::post('api/transaksi/sales_invoice/delete', [TransactionSalesInvoiceController::class, 'delete']);
 Route::post('api/transaksi/sales_invoice/confirmDelete', [TransactionSalesInvoiceController::class, 'confirmDelete']);
+Route::post('api/transaksi/sales_invoice/showModalDO', [TransactionSalesInvoiceController::class, 'showModalDO']);
+Route::post('api/transaksi/sales_invoice/getDataDo', [TransactionSalesInvoiceController::class, 'getDataDo']);
+Route::post('api/transaksi/sales_invoice/getDoDetail', [TransactionSalesInvoiceController::class, 'getDoDetail']);
 /*API */

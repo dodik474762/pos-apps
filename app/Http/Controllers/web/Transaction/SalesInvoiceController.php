@@ -5,12 +5,15 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
-use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\Master\Tax;
+use App\Models\Master\Customer;
+use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesInvoiceHeader;
 
 class SalesInvoiceController extends Controller
 {
@@ -70,6 +73,11 @@ class SalesInvoiceController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $view = view('web.sales_invoice.formadd', $data);
@@ -91,9 +99,10 @@ class SalesInvoiceController extends Controller
         $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['id'])
+        $data['data_item'] = SalesInvoiceDtl::where('sales_order_details.sales_order_id', $data['id'])
             ->select([
                 'sales_order_details.*',
                 'p.id as product_id',
