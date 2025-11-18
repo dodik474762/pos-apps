@@ -74,7 +74,7 @@
                                 <label class="form-label">Customer</label>
                                 <input disabled type="text" id="customer_id" class="form-control required"
                                        error="Customer"
-                                       value="{{ $data->customer_name ?? '' }}"
+                                       value="{{ isset($data->nama_customer) ? $data->customer_id.'//'.$data->nama_customer : '' }}"
                                        data_id="{{ $data->customer_id ?? '' }}">
                             </div>
 
@@ -83,7 +83,7 @@
                                 <select id="tax" class="form-control select2">
                                     <option value=""></option>
                                     @foreach ($taxes as $item)
-                                        <option rate="{{ $item->rate }}" value="{{ $item->id }}" {{ isset($data->tax) ? $data->tax == $item->id ? 'selected' : ''  : ''}}>{{ $item->tax_name }}</option>
+                                        <option rate="{{ $item->rate }}" value="{{ $item->id }}" {{ isset($data->tax_id) ? $data->tax_id == $item->id ? 'selected' : ''  : ''}}>{{ $item->tax_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -110,47 +110,13 @@
                             <tbody id="detail-body">
 
                                 @if (!empty($details))
-                                    @foreach ($details as $d)
-                                        <tr class="input" data_id="{{ $d->id }}">
-                                            <td>
-                                                <div class="input-group">
-                                                    <button type="button" class="btn btn-outline-primary"
-                                                            onclick="SalesInvoice.showDataProduct(this)">
-                                                        Pilih
-                                                    </button>
-                                                    <input disabled type="text" class="form-control required"
-                                                           id="product" error="Product"
-                                                           value="{{ $d->product_name }}"
-                                                           data_id="{{ $d->product_id }}">
-                                                </div>
-                                            </td>
-
-                                            <td>
-                                                <input type="number" class="form-control qty"
-                                                       id="qty" min="1"
-                                                       value="{{ $d->qty }}"
-                                                       onkeyup="SalesInvoice.calcRow(this)">
-                                            </td>
-
-                                            <td>
-                                                <input type="number" class="form-control price"
-                                                       id="price" step="0.01"
-                                                       value="{{ $d->price }}"
-                                                       onkeyup="SalesInvoice.calcRow(this)">
-                                            </td>
-
-                                            <td>
-                                                <input type="number" class="form-control discount"
-                                                       id="discount" step="0.01"
-                                                       value="{{ $d->discount }}"
-                                                       onkeyup="SalesInvoice.calcRow(this)">
-                                            </td>
-
-                                            <td>
-                                                <input type="number" class="form-control subtotal"
-                                                       id="subtotal" step="0.01"
-                                                       value="{{ $d->subtotal }}" readonly>
-                                            </td>
+                                    @foreach ($details as $item)
+                                        <tr class="input" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
+                                            <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
+                                            <td id="qty">{{ $item->qty }}</td>
+                                            <td id="price">{{ $item->price }}</td>
+                                            <td id="discount">{{ $item->discount }}</td>
+                                            <td id="subtotal">{{ $item->subtotal }}</td>
 
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger"
@@ -180,11 +146,12 @@
                     </div>
 
                     <div class="text-end mt-4">
-                        <h5>Grand Total: <span id="grand-total">{{ $data->subtotal ?? 0 }}</span></h5>
+                        <h5>Grand Total: <span id="grand-total">{{ isset($data->subtotal) ? $data->subtotal + $data->tax_amount : 0 }}</span></h5>
                     </div>
-                    <hr>
 
                 </form>
+
+                @include('web.general_ledger.list_general_ledger')
 
             </div>
         </div>

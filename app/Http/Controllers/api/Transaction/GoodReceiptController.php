@@ -299,6 +299,14 @@ class GoodReceiptController extends Controller
                 ->first();
 
             $menu = GoodReceipt::find($data['id']);
+
+            $now = date('Y-m-d');
+            if($now > $menu->received_date){
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat dihapus karena tanggal sudah lewat';
+                return response()->json($result);
+            }
+
             if ($menu->status != 'open') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';

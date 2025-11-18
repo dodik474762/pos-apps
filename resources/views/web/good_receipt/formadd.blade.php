@@ -159,7 +159,10 @@
 
 
         <div class="text-end">
-            <button type="submit" onclick="GoodReceipt.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+            @php
+                $disabled = '';
+            @endphp
+            <button type="submit" {{ $disabled }} onclick="GoodReceipt.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
             <button type="reset" onclick="GoodReceipt.back(this, event)" class="btn btn-secondary waves-effect">

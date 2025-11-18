@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\AccountMapping;
+use App\Models\Master\Coa;
+use App\Models\Master\Tax;
 use Illuminate\Http\Request;
 use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\DeliveryOrderStatusLog;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
+use App\Models\Transaction\SalesOrderHeader;
 use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceController extends Controller
@@ -208,8 +212,45 @@ class SalesInvoiceController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
+
         DB::beginTransaction();
         try {
+
+             $piutangAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'piutang usaha')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $penjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'penjualan barang')
+                ->with('account')
+                ->first();
+
+            $discPenjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'diskon penjualan')
+                ->with('account')
+                ->first();
+
+            if (! $piutangAcc || ! $penjualanAcc || ! $discPenjualanAcc) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Sales Invoice belum lengkap.',
+                ]);
+            }
+
+            $tax = Tax::find($data['tax']);
+            if(empty($tax)){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tax tidak ditemukan.',
+                ]);
+            }
+
+            $ppnAccount = Coa::find($tax->coa_id);
+            $do = DeliveryOrderHeader::find($data['do_id']);
 
             // === HEADER ===
             $header = empty($data['id'])
@@ -217,21 +258,21 @@ class SalesInvoiceController extends Controller
                 : SalesInvoiceHeader::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->do_number = generateNoSI(); // misal helper
+                $header->invoice_number = generateNoSI(); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
             }
 
             $subtotal = collect($data['items'])->where('remove', 0)->sum('subtotal');
             $disc_total = collect($data['items'])->where('remove', 0)->sum('discount');
-            $tax_amount = $data['tax_rate'] / 100 * $subtotal;
+            $tax_amount = $data['tax_base'] / 100 * $subtotal;
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = $data['do_id'];
+            $header->warehouse_id = $do->warehouse_id;
             $header->customer_id = $cust_id;
-            $header->warehouse_id = $data['warehouse_id'];
             $header->subtotal = $subtotal;
             $header->discount_amount = $disc_total;
             $header->tax_base = $data['tax_base'];
@@ -283,9 +324,8 @@ class SalesInvoiceController extends Controller
                 /*mapping coa */
             }
 
-            $so = DeliveryOrderHeader::find($data['do_id']);
-            $so->status = 'CONFIRMED';
-            $so->save();
+            $do->status = 'CONFIRMED';
+            $do->save();
 
             $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
             if (empty($dev_status_log)) {
@@ -298,9 +338,25 @@ class SalesInvoiceController extends Controller
                 $dev_status_log->save();
             }
 
+            $so = SalesOrderHeader::find($do->so_id);
+            $currency = $so->currency;
+
+            $reference = $header->invoice_number;
+            if($data['id'] != ''){
+                cancelAllGL($reference);
+            }
+
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $subtotal+$tax_amount, $currency);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal+$disc_total), $currency);
+            postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($disc_total), $currency);
+            if(!empty($ppnAccount)){
+                $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
+                postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
+            }
+
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Delivery Order berhasil disimpan';
+            $result['message'] = 'Sales Invoice berhasil disimpan';
             $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -315,49 +371,59 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+
         DB::beginTransaction();
         try {
-            // code...
-            // $menu = DeliveryOrderHeader::find($data['id']);
-            // if ($menu->status != 'DRAFT') {
-            //     DB::rollBack();
-            //     $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
 
-            //     return response()->json($result);
-            // }
-            // $menu->deleted = date('Y-m-d H:i:s');
-            // $menu->deleted_by = session('user_id');
-            // $menu->save();
+            $menu = SalesInvoiceHeader::find($data['id']);
 
-            // $wh_id = $menu->warehouse_id;
+            if ($menu->status != 'DRAFT') {
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak DRAFT';
+                return response()->json($result);
+            }
 
-            // $delivery_dtl = DeliveryOrderDtl::where('do_id', $data['id'])->get();
-            // foreach ($delivery_dtl as $item) {
-            //     $item->deleted = date('Y-m-d H:i:s');
-            //     $item->deleted_by = session('user_id');
-            //     $item->save();
+            // Soft delete header
+            $menu->deleted = date('Y-m-d H:i:s');
+            $menu->deleted_by = session('user_id');
+            $menu->status = 'CANCELED';
+            $menu->save();
 
-            //     $qtyBaseUnit = getSmallestUnit($item->product_id, $item->uom, $item->qty);
-            //     $productUomLevel1 = ProductUom::where('product', $item->product_id)->where('level', '1')->first();
-            //     $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+            // Ambil detail
+            $items = SalesInvoiceDtl::where('invoice_id', $data['id'])->get();
 
-            //     $value['product'] = $item->product_id;
-            //     stockUpdate($data['id'],
-            //     $wh_id,
-            //     $item->product_id,
-            //     $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'cancel_delivery_order');
-            // }
+            $do = DeliveryOrderHeader::find($menu->do_id);
+            $so = SalesOrderHeader::find($do->so_id);
 
-            // DeliveryOrderStatusLog::where('do_id', $data['id'])->delete();
+            foreach ($items as $value) {
 
-            // $so = SalesOrderHeader::find($menu->so_id);
-            // $so->status = 'draft';
-            // $so->save();
+                $oldDetail = SalesInvoiceDtl::find($value->id);
+
+                if ($oldDetail) {
+                    $value->deleted = date('Y-m-d H:i:s');
+                    $value->deleted_by = session('user_id');
+                    $value->save();
+                }
+            }
+
+            // Update Delivery Order
+            $do->status = 'DRAFT';
+            $do->save();
+
+            // Hapus log status DO
+            $log = DeliveryOrderStatusLog::where('do_id', $menu->do_id)
+            ->where('status_to', 'CONFIRMED')
+            ->first();
+            if ($log) {
+                $log->delete();
+            }
+
+            cancelAllGL($menu->invoice_number);
 
             DB::commit();
             $result['is_valid'] = true;
+
         } catch (\Throwable $th) {
-            // throw $th;
             $result['message'] = $th->getMessage();
             DB::rollBack();
         }
@@ -371,10 +437,10 @@ class SalesInvoiceController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-                'so.so_number',
+                'do.do_number',
                 'c.nama_customer'
             ])
-            ->join('sales_order_headers as so', 'so.id', 'm.so_id')
+            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->where('m.id', $id);
         $data = $datadb->first();
@@ -415,7 +481,7 @@ class SalesInvoiceController extends Controller
         ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
         ->whereNull('delivery_order_detail.deleted')
         ->whereNull('sod.deleted')
-        ->whereNull('sod.free_for')
+        // ->whereNull('sod.free_for')
         ->get();
 
         $data['data'] = $datadb;

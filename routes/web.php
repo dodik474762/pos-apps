@@ -31,6 +31,7 @@ use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as Transactio
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
 use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
+use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSalesPaymentController;
 use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSalesPlanController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
@@ -66,6 +67,7 @@ use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\SalesInvoiceController;
 use App\Http\Controllers\web\Transaction\SalesOrderController;
+use App\Http\Controllers\web\Transaction\SalesPaymentController;
 use App\Http\Controllers\web\Transaction\SalesPlanController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
@@ -213,6 +215,11 @@ Route::get('transaksi/sales_invoice', [SalesInvoiceController::class, 'index']);
 Route::get('transaksi/sales_invoice/add', [SalesInvoiceController::class, 'add'])->name('sales-invoice-add');
 Route::get('transaksi/sales_invoice/ubah', [SalesInvoiceController::class, 'ubah'])->name('sales-invoice-edit');;
 Route::get('transaksi/sales_invoice/cetak', [SalesInvoiceController::class, 'cetak'])->name('sales-invoice-print');;
+
+Route::get('transaksi/sales_payment', [SalesPaymentController::class, 'index']);
+Route::get('transaksi/sales_payment/add', [SalesPaymentController::class, 'add'])->name('sales-payment-add');
+Route::get('transaksi/sales_payment/ubah', [SalesPaymentController::class, 'ubah'])->name('sales-payment-edit');;
+Route::get('transaksi/sales_payment/cetak', [SalesPaymentController::class, 'cetak'])->name('sales-payment-print');;
 
 /*API */
 
@@ -425,4 +432,9 @@ Route::post('api/transaksi/sales_invoice/confirmDelete', [TransactionSalesInvoic
 Route::post('api/transaksi/sales_invoice/showModalDO', [TransactionSalesInvoiceController::class, 'showModalDO']);
 Route::post('api/transaksi/sales_invoice/getDataDo', [TransactionSalesInvoiceController::class, 'getDataDo']);
 Route::post('api/transaksi/sales_invoice/getDoDetail', [TransactionSalesInvoiceController::class, 'getDoDetail']);
+
+Route::post('api/transaksi/sales_payment/getData', [TransactionSalesPaymentController::class, 'getData']);
+Route::post('api/transaksi/sales_payment/submit', [TransactionSalesPaymentController::class, 'submit']);
+Route::post('api/transaksi/sales_payment/delete', [TransactionSalesPaymentController::class, 'delete']);
+Route::post('api/transaksi/sales_payment/confirmDelete', [TransactionSalesPaymentController::class, 'confirmDelete']);
 /*API */

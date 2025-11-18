@@ -529,6 +529,8 @@ let SalesInvoice = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
+
+        SalesInvoice.hitungSummaryAll();
     },
 
     addRow: () => {

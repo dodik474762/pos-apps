@@ -80,6 +80,7 @@ class SalesInvoiceController extends Controller
             ->get(['id', 'tax_name', 'rate']);
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
+        $data['general_ledgers'] = [];
         $view = view('web.sales_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -95,26 +96,26 @@ class SalesInvoiceController extends Controller
         $api = new TransactionSalesInvoiceController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
-        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = SalesInvoiceDtl::where('sales_order_details.sales_order_id', $data['id'])
+        $data['details'] = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $data['id'])
             ->select([
-                'sales_order_details.*',
+                'sales_invoice_detail.*',
                 'p.id as product_id',
                 'p.name as product_name',
+                'p.code as product_code',
                 'u.name as unit_name',
             ])
-            ->join('product as p', 'p.id', 'sales_order_details.product_id')
-            ->join('unit as u', 'u.id', 'sales_order_details.unit')
-            ->orderBy('sales_order_details.id')
+            ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
+            ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
+            ->join('unit as u', 'u.id', 'sod.unit')
+            ->orderBy('sales_invoice_detail.id')
             ->get();
 
-        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_invoice.formadd', $data);
@@ -149,8 +150,8 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['customers', 'warehouses','items.products', 'items.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->do_number));
+        $data = SalesInvoiceHeader::with(['do.so','customers', 'warehouses','items.products', 'items.so_detail.units'])->findOrFail($data['id']);
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         // $qr = '';
         // echo '<pre>';
         // print_r($data);
@@ -161,6 +162,6 @@ class SalesInvoiceController extends Controller
         $pdf = Pdf::loadView('web.sales_invoice.print.po-print', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SI-'.$data->do_number.'.pdf');
+        return $pdf->stream('SI-'.$data->invoice_number.'.pdf');
     }
 }

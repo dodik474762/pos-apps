@@ -164,7 +164,15 @@
         </div>
 
         <div class="text-end">
-            <button type="submit" onclick="DeliveryOrder.submit(this, event)"
+            @php
+                $disabled = '';
+                if(isset($id)){
+                    if($data->status != 'DRAFT'){
+                        $disabled = 'disabled';
+                    }
+                }
+            @endphp
+            <button {{ $disabled }} type="submit" onclick="DeliveryOrder.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>

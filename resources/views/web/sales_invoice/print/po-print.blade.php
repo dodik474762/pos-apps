@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Delivery Order - {{ $data->code }}</title>
+    <title>Sales Invoice - {{ $data->code }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -80,8 +80,8 @@
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">DELIVERY ORDER</h4>
-                <small>No: {{ $data->do_number }}</small>
+                <h4 style="margin:0; padding:0;">FAKTUR PENJUALAN</h4>
+                <small>No: {{ $data->invoice_number }}</small>
                 <br>
                 {{-- QR Code (otomatis di-generate) --}}
                 <div style="margin-top:5px;">
@@ -96,16 +96,16 @@
     {{-- INFORMASI PO --}}
     <table class="no-border" style="width:100%;">
         <tr>
-            <td><strong>Kode DO:</strong> {{ $data->do_number }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal DO:</strong> {{ date('d/m/Y', strtotime($data->do_date)) }}</td>
+            <td><strong>Kode Pesanan:</strong> {{ $data->do->so->so_number }}</td>
+            <td style="padding-left:40px;"><strong>Tanggal Pesanan:</strong> {{ date('d/m/Y', strtotime($data->do->so->so_date)) }}</td>
         </tr>
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
             <td style="padding-left:40px;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>
         </tr>
         <tr>
-            <td><strong>Nomor Pesanan:</strong> {{ $data->so->so_number }}</td>
-            <td style="padding-left:40px;"><strong>Keterangan:</strong> {{ '-' }}</td>
+            <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
+            <td style="padding-left:40px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
         </tr>
     </table>
 
@@ -117,7 +117,9 @@
                 <th>Produk</th>
                 <th>Satuan</th>
                 <th>Qty</th>
+                <th>Diskon</th>
                 <th>Note</th>
+                <th>Sub Total</th>
             </tr>
         </thead>
         <tbody>
@@ -125,16 +127,26 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $item->products->name ?? '-' }}</td>
-                    <td>{{ $item->units->name ?? '-' }}</td>
+                    <td>{{ $item->so_detail->units->name ?? '-' }}</td>
                     <td class="text-center">{{ $item->qty }}</td>
-                    <td class="text-center">{{ $item->note }}</td>
+                    <td class="text-center">{{ $item->discount }}</td>
+                    <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
+                    <td class="text-center">{{ $item->subtotal }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right"><strong>Total Barang</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->total_item, 0, ',', '.') }}</strong></td>
+                <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>
