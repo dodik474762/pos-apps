@@ -8,6 +8,7 @@ use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SalesPaymentController extends Controller
@@ -61,6 +62,13 @@ class SalesPaymentController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getListKasBank(){
+        $datadb = DB::table('coa')->where('is_active', 1)
+        ->where('parent_code', '1100')
+        ->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function add(Request $request)
     {
         $data = $request->all();
@@ -76,6 +84,7 @@ class SalesPaymentController extends Controller
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $data['general_ledgers'] = [];
+        $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -96,6 +105,7 @@ class SalesPaymentController extends Controller
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
+        $data['cashBankAccounts'] = $this->getListKasBank();
         $data['details'] = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $data['id'])
             ->select([
                 'sales_invoice_detail.*',

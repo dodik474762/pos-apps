@@ -157,6 +157,14 @@
         </div>
 
         <div class="text-end">
+            @if (isset($id))
+                @if ($data->status == 'DRAFT')
+                    <button type="button" onclick="SalesInvoice.posted(this, event)"
+                            class="btn btn-primary waves-effect waves-light me-1">
+                        Posted
+                    </button>
+                @endif
+            @endif
             <button type="submit" onclick="SalesInvoice.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                 Submit

@@ -119,6 +119,45 @@ let SalesInvoice = {
         }
     },
 
+    posted: (elm, e) => {
+        e.preventDefault();
+        let form = $(elm).closest("div.row");
+        if (validation.runWithElement(form)) {
+            let params = SalesInvoice.getPostInput();
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: params,
+                url: url.base_url(SalesInvoice.moduleApi()) + "posted",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+                beforeSend: () => {
+                    message.loadingProses("Proses Simpan Data...");
+                },
+                error: function () {
+                    message.closeLoading();
+                    message.sweetError("Informasi", "Gagal");
+                },
+
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        message.sweetSuccess();
+                        setTimeout(function () {
+                            // window.location.reload();
+                            SalesInvoice.back();
+                        }, 1000);
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
+        } else {
+            message.sweetError("Informasi", "Data Belum Lengkap");
+        }
+    },
+
     back: (elm) => {
         window.location.href = url.base_url(SalesInvoice.module()) + "/";
     },

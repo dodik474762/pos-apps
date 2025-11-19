@@ -62,10 +62,28 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Customer</label>
-                                <input disabled type="text" id="customer_id" class="form-control required"
-                                       error="Customer"
-                                       value="{{ isset($data->customer_name) ? $data->customer_id.' // '.$data->customer_name : '' }}"
-                                       data_id="{{ $data->customer_id ?? '' }}">
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-primary"
+                                            onclick="SalesPayment.showModalCustomer(this)">
+                                        Pilih
+                                    </button>
+                                    <input disabled type="text" id="customer_id" class="form-control required"
+                                           error="Customer"
+                                           value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->customer_name : '' }}"
+                                           data_id="{{ $data->customer_id ?? '' }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Account Kas / Bank</label>
+                                <select id="account_id" class="form-control select2 required">
+                                    <option value="">-- Pilih Akun --</option>
+                                    @foreach ($cashBankAccounts as $acc)
+                                        <option value="{{ $acc->id }}" {{ isset($data->account_id) ? ($data->account_id == $acc->id ? 'selected' : '')  : ''}}>
+                                            {{ $acc->account_code }} - {{ $acc->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                         </div>
@@ -75,19 +93,19 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Total Amount</label>
-                                <input type="number" step="0.01" id="total_amount" class="form-control required"
+                                <input disabled type="number" step="0.01" id="total_amount" class="form-control required"
                                        value="{{ $data->total_amount ?? 0 }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Discount Amount</label>
-                                <input type="number" step="0.01" id="discount_amount" class="form-control"
+                                <input disabled type="number" step="0.01" id="discount_amount" class="form-control"
                                        value="{{ $data->discount_amount ?? 0 }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Net Amount</label>
-                                <input type="number" step="0.01" id="net_amount" class="form-control" readonly
+                                <input disabled type="number" step="0.01" id="net_amount" class="form-control"
                                        value="{{ $data->net_amount ?? 0 }}">
                             </div>
 
@@ -109,26 +127,28 @@
 
                     {{-- ================= DETAIL ITEMS ================= --}}
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="table-details">
+                        <table class="table table-bordered" id="table-items">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 50%">Invoice</th>
-                                    <th style="width: 30%">Allocated Amount</th>
-                                    <th style="width: 20%">Action</th>
+                                    <th style="width: 30%">Invoice</th>
+                                    <th style="width: 20%">Tanggal Invoice</th>
+                                    <th style="width: 20%">Outstanding Amount</th>
+                                    <th style="width: 20%">Allocated Amount</th>
+                                    <th style="width: 10%">Action</th>
                                 </tr>
                             </thead>
 
                             <tbody id="detail-body">
                                 @if(!empty($details))
                                     @foreach($details as $i => $item)
-                                        <tr data_index="{{ $i }}">
+                                        <tr data_id="">
+                                            <td id="invoice_id"></td>
+                                            <td id="date_invoice"></td>
                                             <td>
-                                                <input type="text" class="form-control" value="{{ $item->invoice_number }}" readonly>
-                                                <input type="hidden" name="details[{{ $i }}][invoice_id]" value="{{ $item->invoice_id }}">
+                                                <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled>
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control"
-                                                       name="details[{{ $i }}][allocated_amount]" value="{{ $item->allocated_amount }}">
+                                                <input type="number" step="0.01" class="form-control" id="allocated_amount">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger btn-remove">
@@ -138,20 +158,21 @@
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr data_index="0">
+                                    <tr data_id="">
+                                        <td id="invoice_id"></td>
+                                        <td id="date_invoice"></td>
                                         <td>
-                                            <input type="text" class="form-control" readonly>
-                                            <input type="hidden" name="details[0][invoice_id]" value="">
+                                            <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control" name="details[0][allocated_amount]">
+                                            <input type="number" step="0.01" class="form-control" id="allocated_amount">
                                         </td>
                                         <td class="text-center"></td>
                                     </tr>
                                 @endif
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-primary mt-2" id="add-row">Add Detail</button>
+
                     </div>
 
                     <div class="text-end mt-4">
@@ -159,6 +180,8 @@
                     </div>
 
                 </form>
+
+                @include('web.general_ledger.list_general_ledger')
 
             </div>
         </div>

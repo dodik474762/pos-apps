@@ -17,6 +17,10 @@ let SalesPayment = {
         return "api/master/product";
     },
 
+    moduleApiCustomer: () => {
+        return "api/master/customer";
+    },
+
     setSelect2: () => {
         if ($(".select2").length > 0) {
             $.each($(".select2"), function () {
@@ -36,24 +40,17 @@ let SalesPayment = {
     },
 
     getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
+        const rows = $("#table-items tbody tr");
         let result = [];
 
-        table.each((index, elm) => {
+        rows.each((index, elm) => {
             const $row = $(elm);
 
             result.push({
-                id: $row.attr("data_id") || null,
-                so_detail_id: $row.attr("so_detail_id") || null,
-                product_id: $row.find("#product").attr("data_id") || null,
-
-                // kembali pakai TEXT
-                qty: parseFloat($row.find("#qty").text()) || 0,
-                price: parseFloat($row.find("#price").text()) || 0,
-                discount: parseFloat($row.find("#discount").text()) || 0,
-                subtotal: parseFloat($row.find("#subtotal").text()) || 0,
-
-                note: $row.find("#note").val() || "",
+                invoice_id: $row.find("#invoice_id").attr("data_id") || null,
+                discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
+                outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
+                allocated_amount: parseFloat($row.find("#allocated_amount").val()) || 0,
                 remove: $row.hasClass("remove") ? 1 : 0,
             });
         });
@@ -64,17 +61,21 @@ let SalesPayment = {
     getPostInput: () => {
         let data = {
             id: $("#id").val() || null,
-            invoice_number: $("#invoice_number").val() || null,
-            invoice_date: $("#invoice_date").val() || null,
-            do_id: $("#do_number").attr("data_id") || null,
-            customer_id: $("#customer_id").val() || null,
-            subtotal: parseFloat($("#subtotal").val()) || 0,
-            discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            tax:$("#tax").val() || 0,
-            tax_base: parseFloat($("#tax option:selected").attr('rate')) || 0,
-            total_amount: parseFloat($("#grand-total").text()) || 0,
+            payment_code: $("#payment_code").val() || null,
+            payment_date: $("#payment_date").val() || null,
+            payment_method: $("#payment_method").val() || null,
 
-            items: SalesPayment.getPostItem(),
+            customer_id: $("#customer_id").attr("data_id") || null,
+            account_id: $("#account_id").val() || null,
+
+            total_amount: parseFloat($("#total_amount").val()) || 0,
+            discount_amount: parseFloat($("#discount_amount").val()) || 0,
+            net_amount: parseFloat($("#net_amount").val()) || 0,
+
+            reference_no: $("#reference_no").val() || null,
+            remarks: $("#remarks").val() || null,
+
+            details: SalesPayment.getPostItem(),
         };
 
         return data;
@@ -303,11 +304,11 @@ let SalesPayment = {
         });
     },
 
-    showModalDO: (elm) => {
+    showModalCustomer: (elm) => {
         let params = {};
-        const tax = $("#tax").val();
-        if (tax == "") {
-            message.sweetError("Informasi", "Pilih Tax Terlebih Dahulu");
+        const payment_method = $("#payment_method").val();
+        if (payment_method == "") {
+            message.sweetError("Informasi", "Pilih Payment Method Terlebih Dahulu");
             return;
         }
 
@@ -315,7 +316,7 @@ let SalesPayment = {
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesPayment.moduleApi()) + "showModalDO",
+            url: url.base_url(SalesPayment.moduleApi()) + "showModalCustomer",
             headers: {
                 "X-CSRF-TOKEN": SalesPayment.csrf_token(),
             },
@@ -334,12 +335,12 @@ let SalesPayment = {
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
-                SalesPayment.getDataDo();
+                SalesPayment.getDataCustomer();
             },
         });
     },
 
-    getDataDo: () => {
+    getDataCustomer: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
             processing: true,
@@ -364,7 +365,7 @@ let SalesPayment = {
                 );
             },
             ajax: {
-                url: url.base_url(SalesPayment.moduleApi()) + `getDataDo`,
+                url: url.base_url(SalesPayment.moduleApiCustomer()) + `getData`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": SalesPayment.csrf_token(),
@@ -383,32 +384,28 @@ let SalesPayment = {
                     },
                 },
                 {
-                    data: "do_number",
-                },
-                {
-                    data: "do_date",
-                },
-                {
-                    data: "so_number",
-                },
-                {
-                    data: "so_date",
+                    data: "code",
                 },
                 {
                     data: "nama_customer",
                 },
                 {
-                    data: "status",
+                    data: "customer_category_name",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan_name",
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' so_number="${row.so_number}" nama_customer="${row.nama_customer}"
-                        customer="${row.customer_id}"
-                        do_number="${row.do_number}"
-                        onclick="SalesPayment.pilihDataDo(this, event)"
-                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="SalesPayment.pilihDataCust(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
@@ -416,33 +413,31 @@ let SalesPayment = {
         });
     },
 
-    pilihDataDo: (elm, e) => {
+    pilihDataCust: (elm, e) => {
         e.preventDefault();
         let nama_customer = $(elm).attr("nama_customer");
-        let customer = $(elm).attr("customer");
-        let so_number = $(elm).attr("so_number");
-        let do_number = $(elm).attr("do_number");
+        let code_customer = $(elm).attr("code");
+        let customer = $(elm).attr("data_id");
         let data_id = $(elm).attr("data_id");
 
         $("#customer_id").val(customer + "//" + nama_customer);
-        $("#do_number").val(do_number);
-        $("#do_number").attr("data_id", data_id);
+        $("#customer_id").attr("data_id", data_id);
 
         $("button.btn-close").trigger("click");
 
-        SalesPayment.getDoDetail(data_id);
+        SalesPayment.getOutstandingInvoice(data_id);
     },
 
-    getDoDetail: (do_id) => {
+    getOutstandingInvoice: (customer) => {
         let params = {
-            do_id: do_id,
+            customer: customer,
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesPayment.moduleApi()) + "getDoDetail",
+            url: url.base_url(SalesPayment.moduleApi()) + "getOutstandingInvoice",
             headers: {
                 "X-CSRF-TOKEN": SalesPayment.csrf_token(),
             },
@@ -465,36 +460,13 @@ let SalesPayment = {
         });
     },
 
-    calcRow: (elm) => {
+    changeAllocate: (elm) => {
         const tr = $(elm).closest("tr");
 
         // Ambil value input
-        const qty = parseFloat(tr.find("input#qty").val()) || 0;
-        const price = parseFloat(tr.find("input#price").val()) || 0;
-        const disc_persen = parseFloat(tr.find("input#disc_persen").val()) || 0;
-        const disc_nominal =
-            parseFloat(tr.find("input#disc_nominal").val()) || 0;
-
-        // Hitung subtotal sebelum pajak
-        const subTotal = qty * price;
-        const disc = subTotal * (disc_persen / 100) + disc_nominal;
-        const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
-
-        // Ambil rate pajak dari option terpilih
-        const taxRate =
-            parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
-        const taxAmount = dpp * (taxRate / 100);
-
-        // Total per baris = DPP + pajak
-        const subtotalResult = dpp + taxAmount;
-
-        // Update input subtotal
-        tr.find("input#subtotal").val(subtotalResult.toFixed(2));
-
-        // Simpan data pajak di row untuk reference
-        tr.data("dpp", dpp);
-        tr.data("tax_amount", taxAmount);
-        tr.data("tax_rate", taxRate);
+        const allocated = parseFloat(tr.find("input#allocated_amount").val()) || 0;
+        const outstanding = parseFloat(tr.find("input#outstanding_amount").val()) || 0;
+        const outstanding_new = outstanding - allocated;
 
         // Hitung summary total
         SalesPayment.hitungSummaryAll();
@@ -502,23 +474,30 @@ let SalesPayment = {
 
     hitungSummaryAll: () => {
         let total = 0;
+        let total_disc = 0;
+        let total_subtotal = 0;
+        let net_total = 0;
+
         document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
-            const subtotal =
+            const allocated =
                 parseFloat(
-                    $(tr).find("td#subtotal").text().replace(/,/g, "")
+                    $(tr).find("input#allocated_amount").val()
                 ) || 0;
-            total += subtotal;
+            const invoice_id = $(tr).find("td#invoice_id");
+            const subtotal = parseFloat(invoice_id.attr("subtotal")) || 0;
+            total_subtotal += subtotal;
+            const discount_amount = parseFloat(invoice_id.attr("discount_amount")) || 0;
+            total_disc += discount_amount;
+            const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
+            net_total += outstanding;
+            total += allocated;
         });
 
-        const taxRate = isNaN(
-            parseFloat($(`#tax option:selected`).attr("rate"))
-        )
-            ? 0
-            : parseFloat($(`#tax option:selected`).attr("rate"));
-        const totalTax = total * (taxRate / 100);
-
-        total += totalTax;
         document.getElementById("grand-total").textContent = total.toFixed(2);
+        $('input#total_amount').val(total_subtotal.toFixed(2));
+        $('input#discount_amount').val(total_disc.toFixed(2));
+        $('input#net_amount').val(net_total.toFixed(2));
+
     },
 
     removeRow: (elm) => {

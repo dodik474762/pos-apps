@@ -431,6 +431,35 @@ class SalesInvoiceController extends Controller
         return response()->json($result);
     }
 
+    public function posted(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+
+            $menu = SalesInvoiceHeader::find($data['id']);
+
+            if ($menu->status != 'DRAFT') {
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat diposting karena status sudah tidak DRAFT';
+                return response()->json($result);
+            }
+            $menu->updated_by = session('user_id');
+            $menu->status = 'POSTED';
+            $menu->save();
+            DB::commit();
+            $result['is_valid'] = true;
+
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
+
     public function getDetailData($id)
     {
         DB::enableQueryLog();
