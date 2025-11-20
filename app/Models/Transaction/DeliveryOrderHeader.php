@@ -23,6 +23,6 @@ class DeliveryOrderHeader extends Model
     }
 
     public function items(){
-        return $this->hasMany(DeliveryOrderDtl::class, 'do_id', 'id');
+        return $this->hasMany(DeliveryOrderDtl::class, 'do_id', 'id')->whereNull('deleted');
     }
 }

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Sales Invoice - {{ $data->code }}</title>
+    <title>Sales Payment - {{ $data->code }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -80,8 +80,8 @@
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">FAKTUR PENJUALAN</h4>
-                <small>No: {{ $data->invoice_number }}</small>
+                <h4 style="margin:0; padding:0;">PEMBAYARAN PELANGGAN</h4>
+                <small>No: {{ $data->payment_code }}</small>
                 <br>
                 {{-- QR Code (otomatis di-generate) --}}
                 <div style="margin-top:5px;">
@@ -96,57 +96,51 @@
     {{-- INFORMASI PO --}}
     <table class="no-border" style="width:100%;">
         <tr>
-            <td><strong>Kode Pesanan:</strong> {{ $data->do->so->so_number }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal Pesanan:</strong> {{ date('d/m/Y', strtotime($data->do->so->so_date)) }}</td>
+            <td><strong>Kode Pelanggan:</strong> {{ $data->customers->code }}</td>
+            <td style="padding-left:40px;"><strong>Tanggal Pembayaran:</strong> {{ date('d/m/Y', strtotime($data->payment_date)) }}</td>
         </tr>
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:40px;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>
+            <td style="padding-left:40px;"><strong>Alamat:</strong> {{ $data->customers->address ?? '-' }}</td>
         </tr>
         <tr>
-            <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
-            <td style="padding-left:40px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
+            <td><strong>Nomor Pembayaran:</strong> {{ $data->payment_code }}</td>
+            <td style="padding-left:40px;"><strong>Keterangan:</strong> {{ $data->remarks }}</td>
         </tr>
     </table>
 
-    <h4>Detail Barang</h4>
+    <h4>Detail</h4>
     <table class="table-detail">
         <thead>
             <tr>
                 <th>No</th>
-                <th>Produk</th>
-                <th>Satuan</th>
-                <th>Qty</th>
-                <th>Diskon</th>
-                <th>Note</th>
-                <th>Sub Total</th>
+                <th>No. Invoice</th>
+                <th>Tanggal Invoice</th>
+                <th>Jumlah Belum Dibayar</th>
+                <th>Jumlah Dibayar</th>
             </tr>
         </thead>
         <tbody>
+            @php
+                $total = 0;
+            @endphp
             @foreach ($data->items as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->products->name ?? '-' }}</td>
-                    <td>{{ $item->so_detail->units->name ?? '-' }}</td>
-                    <td class="text-center">{{ $item->qty }}</td>
-                    <td class="text-center">{{ $item->discount }}</td>
-                    <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
-                    <td class="text-center">{{ $item->subtotal }}</td>
+                    <td>{{ $item->invoice->invoice_number }}</td>
+                    <td>{{ $item->invoice->invoice_date }}</td>
+                    <td>{{ $item->outstanding_amount }}</td>
+                    <td class="text-right">{{ $item->allocated_amount }}</td>
                 </tr>
+                @php
+                    $total += $item->allocated_amount ?? 0;
+                @endphp
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
-            </tr>
-            <tr>
-                <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td>
-            </tr>
-            <tr>
-                <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
+                <td colspan="4" class="text-right"><strong>Sub Total</strong></td>
+                <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>

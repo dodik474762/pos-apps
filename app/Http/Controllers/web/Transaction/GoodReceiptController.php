@@ -114,6 +114,7 @@ class GoodReceiptController extends Controller
             ->join('purchase_order_detail as pod', 'pod.id', 'goods_receipt_detail.purchase_order_detail')
             ->join('product as p', 'p.id', 'goods_receipt_detail.product')
             ->join('unit as u', 'u.id', 'goods_receipt_detail.unit')
+            ->whereNull('goods_receipt_detail.deleted')
             ->get();
 
         $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')

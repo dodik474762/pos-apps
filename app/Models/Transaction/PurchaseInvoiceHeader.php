@@ -14,6 +14,6 @@ class PurchaseInvoiceHeader extends Model
     }
 
     public function items(){
-        return $this->hasMany(PurchaseInvoiceDtl::class, 'purchase_invoice_id', 'id');
+        return $this->hasMany(PurchaseInvoiceDtl::class, 'purchase_invoice_id', 'id')->whereNull('deleted');
     }
 }

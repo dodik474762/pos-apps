@@ -100,6 +100,7 @@ class DeliveryOrderController extends Controller
             ])
             ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
             ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
+            ->whereNull('delivery_order_detail.deleted')
             ->orderBy('delivery_order_detail.id')
             ->get();
         $data['title'] = 'Form '.$this->getTitle();

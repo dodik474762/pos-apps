@@ -13,6 +13,6 @@ class GoodReceipt extends Model
     }
 
     public function items(){
-        return $this->hasMany(GoodReceiptDtl::class, 'goods_receipt_header', 'id');
+        return $this->hasMany(GoodReceiptDtl::class, 'goods_receipt_header', 'id')->whereNull('deleted');
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
+use App\Models\Transaction\SalesPaymentDtl;
+use App\Models\Transaction\SalesPaymentHeader;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,21 +108,22 @@ class SalesPaymentController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['cashBankAccounts'] = $this->getListKasBank();
-        $data['details'] = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $data['id'])
+        $data['details'] = SalesPaymentDtl::where('sales_payment_detail.payment_id', $data['id'])
             ->select([
-                'sales_invoice_detail.*',
-                'p.id as product_id',
-                'p.name as product_name',
-                'p.code as product_code',
-                'u.name as unit_name',
+                'sales_payment_detail.*',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.total_amount as total_amount_invoice',
+                'sih.discount_amount',
+                'sih.subtotal',
+                'sih.amount_paid',
             ])
-            ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
-            ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
-            ->join('unit as u', 'u.id', 'sod.unit')
-            ->orderBy('sales_invoice_detail.id')
+            ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
+            ->whereNull('sales_payment_detail.deleted')
+            ->orderBy('sales_payment_detail.id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_payment.formadd', $data);
@@ -155,11 +158,11 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['do.so','customers', 'warehouses','items.products', 'items.so_detail.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
+        $data = SalesPaymentHeader::with(['customers', 'items.invoice'])->findOrFail($data['id']);
+        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         // $qr = '';
         // echo '<pre>';
-        // print_r($data);
+        // print_r($data->items);
         // die;
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
@@ -167,6 +170,6 @@ class SalesPaymentController extends Controller
         $pdf = Pdf::loadView('web.sales_payment.print.po-print', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SI-'.$data->invoice_number.'.pdf');
+        return $pdf->stream('SP-'.$data->payment_code.'.pdf');
     }
 }

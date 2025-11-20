@@ -440,4 +440,5 @@ Route::post('api/transaksi/sales_payment/delete', [TransactionSalesPaymentContro
 Route::post('api/transaksi/sales_payment/confirmDelete', [TransactionSalesPaymentController::class, 'confirmDelete']);
 Route::post('api/transaksi/sales_payment/showModalCustomer', [TransactionSalesPaymentController::class, 'showModalCustomer']);
 Route::post('api/transaksi/sales_payment/getOutstandingInvoice', [TransactionSalesPaymentController::class, 'getOutstandingInvoice']);
+Route::post('api/transaksi/sales_payment/posted', [TransactionSalesPaymentController::class, 'posted']);
 /*API */

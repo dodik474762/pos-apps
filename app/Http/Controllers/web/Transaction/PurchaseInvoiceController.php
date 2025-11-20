@@ -111,6 +111,7 @@ class PurchaseInvoiceController extends Controller
             ->join('purchase_order as po', 'po.id', 'pod.purchase_order')
             ->join('product as p', 'p.id', 'purchase_invoice_detail.product')
             ->join('unit as u', 'u.id', 'purchase_invoice_detail.unit')
+            ->whereNull('purchase_invoice_detail.deleted')
             ->get();
 
         $data['title'] = 'Form '.$this->getTitle();

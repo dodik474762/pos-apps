@@ -7,4 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class SalesPaymentDtl extends Model
 {
     protected $table = 'sales_payment_detail';
+
+    public function invoice(){
+        return $this->hasOne(SalesInvoiceHeader::class, 'id', 'invoice_id');
+    }
 }

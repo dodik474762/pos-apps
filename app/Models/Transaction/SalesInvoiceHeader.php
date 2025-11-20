@@ -24,6 +24,6 @@ class SalesInvoiceHeader extends Model
     }
 
     public function items(){
-        return $this->hasMany(SalesInvoiceDtl::class, 'invoice_id', 'id');
+        return $this->hasMany(SalesInvoiceDtl::class, 'invoice_id', 'id')->whereNull('deleted');
     }
 }

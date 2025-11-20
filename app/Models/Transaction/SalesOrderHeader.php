@@ -14,6 +14,6 @@ class SalesOrderHeader extends Model
     }
 
     public function items(){
-        return $this->hasMany(SalesOrderDetail::class, 'sales_order_id', 'id');
+        return $this->hasMany(SalesOrderDetail::class, 'sales_order_id', 'id')->whereNull('deleted');
     }
 }

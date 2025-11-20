@@ -69,7 +69,7 @@
                                     </button>
                                     <input disabled type="text" id="customer_id" class="form-control required"
                                            error="Customer"
-                                           value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->customer_name : '' }}"
+                                           value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->nama_customer : '' }}"
                                            data_id="{{ $data->customer_id ?? '' }}">
                                 </div>
                             </div>
@@ -79,7 +79,7 @@
                                 <select id="account_id" class="form-control select2 required">
                                     <option value="">-- Pilih Akun --</option>
                                     @foreach ($cashBankAccounts as $acc)
-                                        <option value="{{ $acc->id }}" {{ isset($data->account_id) ? ($data->account_id == $acc->id ? 'selected' : '')  : ''}}>
+                                        <option value="{{ $acc->id }}" {{ isset($data->coa_kas) ? ($data->coa_kas == $acc->id ? 'selected' : '')  : ''}}>
                                             {{ $acc->account_code }} - {{ $acc->account_name }}
                                         </option>
                                     @endforeach
@@ -141,17 +141,17 @@
                             <tbody id="detail-body">
                                 @if(!empty($details))
                                     @foreach($details as $i => $item)
-                                        <tr data_id="">
-                                            <td id="invoice_id"></td>
-                                            <td id="date_invoice"></td>
+                                        <tr data_id="{{ $item->id }}">
+                                            <td id="invoice_id" data_id="{{ $item->invoice_id }}" subtotal="{{ $item->subtotal + $item->discount_amount }}" discount_amount="{{ $item->discount_amount }}">{{ $item->invoice_number }}</td>
+                                            <td id="date_invoice">{{ $item->invoice_date }}</td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled>
+                                                <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled value="{{ $item->outstanding_amount }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" id="allocated_amount">
+                                                <input type="number" step="0.01" class="form-control" id="allocated_amount" value="{{ $item->allocated_amount }}" min="0" max="{{ $item->outstanding_amount }}" onkeyup="SalesPayment.changeAllocate(this)">
                                             </td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger btn-remove">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button>
                                             </td>
@@ -159,15 +159,19 @@
                                     @endforeach
                                 @else
                                     <tr data_id="">
-                                        <td id="invoice_id"></td>
+                                        <td id="invoice_id"  data_id="" subtotal="" discount_amount=""></td>
                                         <td id="date_invoice"></td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled>
+                                            <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled value="">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control" id="allocated_amount">
+                                            <input type="number" step="0.01" class="form-control" id="allocated_amount" value="" min="0" max="" onkeyup="SalesPayment.changeAllocate(this)">
                                         </td>
-                                        <td class="text-center"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">
+                                                <i class="bx bx-trash-alt"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -176,7 +180,7 @@
                     </div>
 
                     <div class="text-end mt-4">
-                        <h5>Grand Total: <span id="grand-total">{{ $data->net_amount ?? 0 }}</span></h5>
+                        <h5>Grand Total Pembayaran: <span id="grand-total">{{ $data->total_amount ?? 0 }}</span></h5>
                     </div>
 
                 </form>
@@ -187,7 +191,22 @@
         </div>
 
         <div class="text-end mt-3">
-            <button type="submit" onclick="SalesPayment.submit(this, event)"
+            @php
+                $disabled = '';
+            @endphp
+            @if (isset($id))
+                @if ($data->status == 'PENDING')
+                    <button type="button" onclick="SalesPayment.posted(this, event)"
+                            class="btn btn-primary waves-effect waves-light me-1">
+                        Confirm
+                    </button>
+                @else
+                    @php
+                        $disabled = 'disabled'
+                    @endphp
+                @endif
+            @endif
+            <button {{ $disabled }} type="submit" onclick="SalesPayment.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
@@ -204,51 +223,3 @@
     .freegood { background-color:#f5f7ff }
 </style>
 
-@section('scripts')
-<script>
-let rowIndex = {{ !empty($details) ? count($details) : 1 }};
-
-// Tambah detail row
-document.getElementById('add-row').addEventListener('click', function(){
-    let tbody = document.getElementById('detail-body');
-    let row = document.createElement('tr');
-    row.setAttribute('data_index', rowIndex);
-    row.innerHTML = `
-        <td>
-            <input type="text" class="form-control" readonly>
-            <input type="hidden" name="details[${rowIndex}][invoice_id]" value="">
-        </td>
-        <td>
-            <input type="number" step="0.01" class="form-control" name="details[${rowIndex}][allocated_amount]">
-        </td>
-        <td class="text-center">
-            <button type="button" class="btn btn-sm btn-danger btn-remove">
-                <i class="bx bx-trash-alt"></i>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(row);
-    rowIndex++;
-});
-
-// Remove row
-document.addEventListener('click', function(e){
-    if(e.target.classList.contains('btn-remove') || e.target.closest('.btn-remove')){
-        let btn = e.target.closest('.btn-remove');
-        btn.closest('tr').remove();
-    }
-});
-
-// Auto calculate net amount
-document.getElementById('total_amount').addEventListener('input', calcNetAmount);
-document.getElementById('discount_amount').addEventListener('input', calcNetAmount);
-
-function calcNetAmount() {
-    let total = parseFloat(document.getElementById('total_amount').value) || 0;
-    let discount = parseFloat(document.getElementById('discount_amount').value) || 0;
-    let net = total - discount;
-    document.getElementById('net_amount').value = net;
-    document.getElementById('grand-total').innerText = net.toFixed(2);
-}
-</script>
-@endsection

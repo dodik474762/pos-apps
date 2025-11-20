@@ -19,6 +19,6 @@ class PurchaseOrder extends Model
     }
 
     public function items(){
-        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order', 'id');
+        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order', 'id')->whereNull('deleted');
     }
 }

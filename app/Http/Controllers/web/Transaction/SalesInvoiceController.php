@@ -112,6 +112,7 @@ class SalesInvoiceController extends Controller
             ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
             ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
             ->join('unit as u', 'u.id', 'sod.unit')
+            ->whereNull('sales_invoice_detail.deleted')
             ->orderBy('sales_invoice_detail.id')
             ->get();
 

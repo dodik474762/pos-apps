@@ -250,9 +250,15 @@ class SalesPaymentController extends Controller
             $header->net_amount = 0;
             $header->reference_no = $data['reference_no'];
             $header->remarks = $data['remarks'];
+            $header->coa_kas = $data['account_id'];
             $header->save();
 
             $hdrId = $header->id;
+
+            $reference = $header->payment_code;
+            if($data['id'] != ''){
+                cancelAllGL($reference);
+            }
 
             // === DETAIL ===
             $totalAmount = 0;
@@ -264,13 +270,6 @@ class SalesPaymentController extends Controller
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
                         $exist = SalesPaymentDtl::find($value['id']);
-                        if ($exist && $exist->status !== 'DRAFT') {
-                            DB::rollBack();
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
-                            ]);
-                        }
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
@@ -289,9 +288,9 @@ class SalesPaymentController extends Controller
                     ]);
                 }
 
-                $existInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->first();
+                $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
                 $disc_amount = 0;
-                if(empty($existInvoicePayment)){
+                if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
                     $disc_amount = $value['discount_amount'];
                     $disc_total += $disc_amount;
                 }
@@ -312,7 +311,7 @@ class SalesPaymentController extends Controller
                 $totalAmount += $value['allocated_amount'];
 
                 // Item baru atau update
-                $detail = empty($item['id'])
+                $detail = empty($value['id'])
                     ? new SalesPaymentDtl()
                     : SalesPaymentDtl::find($value['id']);
 
@@ -326,7 +325,12 @@ class SalesPaymentController extends Controller
                 /*mapping coa */
 
                 $invoice = SalesInvoiceHeader::find($value['invoice_id']);
-                $total_paid = $invoice->amount_paid + $value['allocated_amount'];
+                $total_paid = 0;
+                if($value['id'] == ''){
+                    $total_paid = $invoice->amount_paid +$value['allocated_amount'];
+                }else{
+                    $total_paid = $invoice->amount_paid - $value['allocated_amount'];
+                }
                 $invoice->amount_paid = $total_paid;
                 if($outstanding_amount == 0){
                     $invoice->status = 'PAID';
@@ -346,11 +350,6 @@ class SalesPaymentController extends Controller
             $update->discount_amount = $disc_total;
             $update->net_amount = $net_total;
             $update->save();
-
-            $reference = $header->payment_code;
-            if($data['id'] != ''){
-                cancelAllGL($reference);
-            }
 
             postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId);
 
@@ -376,65 +375,90 @@ class SalesPaymentController extends Controller
     public function confirmDelete(Request $request)
     {
         $data = $request->all();
-        $result['is_valid'] = false;
-
+        $id = $data['id'];
         DB::beginTransaction();
+
         try {
+            $userId = session('user_id');
 
-            $menu = SalesInvoiceHeader::find($data['id']);
+            // ====== HEADER ======
+            $header = SalesPaymentHeader::find($id);
 
-            if ($menu->status != 'DRAFT') {
-                DB::rollBack();
-                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak DRAFT';
-                return response()->json($result);
+            if (! $header) {
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
             }
 
-            // Soft delete header
-            $menu->deleted = date('Y-m-d H:i:s');
-            $menu->deleted_by = session('user_id');
-            $menu->status = 'CANCELED';
-            $menu->save();
+            // Jika sudah CANCEL, stop
+            if ($header->status == 'CANCELLED') {
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Sales Payment sudah dibatalkan sebelumnya'
+                ]);
+            }
 
-            // Ambil detail
-            $items = SalesInvoiceDtl::where('invoice_id', $data['id'])->get();
+            $reference = $header->payment_code;
 
-            $do = DeliveryOrderHeader::find($menu->do_id);
-            $so = SalesOrderHeader::find($do->so_id);
+            // ====== DETAIL ======
+            $details = SalesPaymentDtl::where('payment_id', $id)->whereNull('deleted')->get();
 
-            foreach ($items as $value) {
+            foreach ($details as $dt) {
 
-                $oldDetail = SalesInvoiceDtl::find($value->id);
+                // Kembalikan amount_paid invoice
+                $invoice = SalesInvoiceHeader::find($dt->invoice_id);
+                if ($invoice) {
 
-                if ($oldDetail) {
-                    $value->deleted = date('Y-m-d H:i:s');
-                    $value->deleted_by = session('user_id');
-                    $value->save();
+                    // Kembalikan nilai amount_paid
+                    $invoice->amount_paid = $invoice->amount_paid - $dt->allocated_amount;
+
+                    // Tidak boleh minus
+                    if ($invoice->amount_paid < 0) {
+                        $invoice->amount_paid = 0;
+                    }
+
+                    // Update status invoice
+                    if ($invoice->amount_paid == 0) {
+                        $invoice->status = 'POSTED';
+                    } elseif ($invoice->amount_paid < $invoice->total_amount) {
+                        $invoice->status = 'PARTIAL PAID';
+                    }
+
+                    $invoice->save();
                 }
+
+                // Tandai detail sebagai deleted
+                $dt->deleted = now();
+                $dt->deleted_by = $userId;
+                $dt->save();
             }
 
-            // Update Delivery Order
-            $do->status = 'DRAFT';
-            $do->save();
+            // ====== CANCEL GL ======
+            cancelAllGL($reference);
 
-            // Hapus log status DO
-            $log = DeliveryOrderStatusLog::where('do_id', $menu->do_id)
-            ->where('status_to', 'CONFIRMED')
-            ->first();
-            if ($log) {
-                $log->delete();
-            }
-
-            cancelAllGL($menu->invoice_number);
+            // ====== UPDATE HEADER ======
+            $header->status = 'CANCELLED';
+            $header->deleted = now();
+            $header->deleted_by = $userId;
+            $header->save();
 
             DB::commit();
-            $result['is_valid'] = true;
 
-        } catch (\Throwable $th) {
-            $result['message'] = $th->getMessage();
+            return response()->json([
+                'is_valid' => true,
+                'message' => 'Sales Payment berhasil dibatalkan'
+            ]);
+
+        } catch (\Throwable $e) {
+
             DB::rollBack();
-        }
 
-        return response()->json($result);
+            return response()->json([
+                'is_valid' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function getDetailData($id)
@@ -443,10 +467,8 @@ class SalesPaymentController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-                'do.do_number',
                 'c.nama_customer'
             ])
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->where('m.id', $id);
         $data = $datadb->first();
@@ -482,6 +504,7 @@ class SalesPaymentController extends Controller
             'discount_amount',
             'subtotal',
             'amount_paid',
+            DB::raw('(subtotal - discount_amount) AS total_before_discount'),
             DB::raw('(total_amount - amount_paid) AS outstanding_amount')
         )
         ->whereIn('status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
@@ -493,5 +516,29 @@ class SalesPaymentController extends Controller
         $data['data'] = $datadb;
 
         return view('web.sales_payment.datainvoiceoutstanding', $data);
+    }
+
+     public function posted(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+
+            $menu = SalesPaymentHeader::find($data['id']);
+            $menu->updated_by = session('user_id');
+            $menu->status = 'POSTED';
+            $menu->save();
+            DB::commit();
+
+            $result['is_valid'] = true;
+
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
     }
 }

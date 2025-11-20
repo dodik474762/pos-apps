@@ -112,6 +112,7 @@ class SalesOrderController extends Controller
             ])
             ->join('product as p', 'p.id', 'sales_order_details.product_id')
             ->join('unit as u', 'u.id', 'sales_order_details.unit')
+            ->whereNull('sales_order_details.deleted')
             ->orderBy('sales_order_details.id')
             ->get();
 

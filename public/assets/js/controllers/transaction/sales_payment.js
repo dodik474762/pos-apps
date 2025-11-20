@@ -47,6 +47,7 @@ let SalesPayment = {
             const $row = $(elm);
 
             result.push({
+                id: $row.attr("data_id") || null,
                 invoice_id: $row.find("#invoice_id").attr("data_id") || null,
                 discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
                 outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
@@ -208,7 +209,7 @@ let SalesPayment = {
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "DRAFT") {
+                            if (row.status == "PENDING") {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesPayment.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
@@ -294,6 +295,39 @@ let SalesPayment = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    posted: (elm) => {
+        let params = {};
+        params.id = $('#id').val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesPayment.moduleApi()) + "posted",
+            headers: {
+                "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Confirm");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
@@ -488,8 +522,9 @@ let SalesPayment = {
             total_subtotal += subtotal;
             const discount_amount = parseFloat(invoice_id.attr("discount_amount")) || 0;
             total_disc += discount_amount;
-            const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
-            net_total += outstanding;
+            // const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
+            const netAmount = subtotal - discount_amount;
+            net_total += netAmount;
             total += allocated;
         });
 
