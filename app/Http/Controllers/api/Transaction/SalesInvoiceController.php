@@ -273,6 +273,15 @@ class SalesInvoiceController extends Controller
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
+            $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
+            if(!$policyCreateInvoice['status']){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => $policyCreateInvoice['message']
+                ]);
+            }
+
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = $data['do_id'];
             $header->warehouse_id = $do->warehouse_id;

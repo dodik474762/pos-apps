@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\api\Messaging\FcmController;
 use App\Models\Master\Actor;
+use App\Models\Master\Customer;
 use App\Models\Master\DocumentTransaction;
 use App\Models\Master\PricePNBP;
 use App\Models\Master\RoutingPermission;
@@ -949,4 +950,41 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
         'price' => $value['price'] ?? 0,
         'created_at' => now(),
     ]);
+}
+
+function checkCustomerCreditLimit($customer = 0){
+    $datadb = Customer::where('id', $customer)->first();
+
+    $credit_limit = 0;
+    if($datadb){
+        $credit_limit = $datadb->credit_limit;
+    }
+
+    if($credit_limit == 0){
+        return [
+            'status' => true,
+            'message' => 'Customer tidak memiliki batas kredit'
+        ];
+    }
+
+    //cek piutang belum tertagih
+    $totalOutstanding = DB::table('sales_invoice_header')
+    ->whereIn('status', ['DRAFT','POSTED', 'PARTIAL PAID'])
+    ->whereNull('deleted')
+    ->where('customer_id', $customer)
+    ->whereRaw('(total_amount - amount_paid) > 0')
+    ->sum(DB::raw('total_amount - amount_paid'));
+
+
+    if($totalOutstanding >= $credit_limit){
+        return [
+            'status' => false,
+            'message' => 'Customer telah mencapai batas kredit maksimal yaitu : '.$credit_limit.' dengan total piutang belum tertagih sebesar : '.$totalOutstanding
+        ];
+    }else{
+        return [
+            'status' => true,
+            'message' => 'Customer masih memiliki sisa batas kredit sebesar : '.($credit_limit - $totalOutstanding)
+        ];
+    }
 }
