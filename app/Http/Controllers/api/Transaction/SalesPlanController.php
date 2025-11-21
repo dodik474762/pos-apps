@@ -218,6 +218,7 @@ class SalesPlanController extends Controller
                 $detail->target_qty = $item['target_qty'] == '' ? 0 : $item['target_qty'];
                 $detail->target_value = $item['target_value'] == '' ? 0 : $item['target_value'];
                 $detail->note = $item['note'];
+                $detail->type = $item['type'];
                 $detail->save();
             }
 

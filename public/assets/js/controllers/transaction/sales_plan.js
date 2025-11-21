@@ -55,6 +55,7 @@ let SalesPlan = {
                 target_qty: parseFloat($row.find("#target_qty").val()) || 0,
                 target_value: parseFloat($row.find("#target_value").val()) || 0,
                 note: $row.find("#note").val() || "",
+                type: $row.find("#type").val() || "PERMANEN",
                 remove: $row.hasClass("remove") ? 1 : 0
             });
         });
@@ -440,7 +441,7 @@ let SalesPlan = {
             ],
         });
     },
-    
+
     getDataCustomer: () => {
         let tableData = $("table#table-data-modal");
         const params = {
@@ -534,7 +535,7 @@ let SalesPlan = {
         $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
         $("button.btn-close").trigger("click");
     },
-    
+
     pilihDataCustomer: (elm, e) => {
         e.preventDefault();
         let customer_name = $(elm).attr("customer_name");
@@ -542,8 +543,8 @@ let SalesPlan = {
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(data_id + "//" + customer_name);  
-        $(elmChoose).closest("div").find("input").attr("data_id", data_id);          
+            .val(data_id + "//" + customer_name);
+        $(elmChoose).closest("div").find("input").attr("data_id", data_id);
         $("button.btn-close").trigger("click");
     },
 

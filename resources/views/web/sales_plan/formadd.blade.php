@@ -108,7 +108,8 @@
                                             <th style="width:10%;">Day</th>
                                             <th style="width:10%;">Target Qty</th>
                                             <th style="width:10%;">Target Value</th>
-                                            <th style="width:20%;">Note</th>
+                                            <th style="width:10%;">Note</th>
+                                            <th style="width:10%;">Type</th>
                                             <th style="width:4%;">Action</th>
                                         </tr>
                                     </thead>
@@ -153,6 +154,12 @@
                                                             value="{{ $item->target_value }}"></td>
                                                     <td><input type="text" class="form-control" id="note"
                                                             value="{{ $item->note }}"></td>
+                                                    <td>
+                                                        <select name="type" id="type" class="form-control required" error="Tipe">
+                                                            <option value="PERMANEN">PERMANEN</option>
+                                                            <option value="EXTRA CALL">EXTRA CALL</option>
+                                                        </select>
+                                                    </td>
                                                     <td class="text-center">
                                                         <button type="button" class="btn btn-sm btn-danger"
                                                             onclick="SalesPlan.removeRow(this)">Delete</button>
@@ -193,6 +200,12 @@
                                                 <td><input type="number" class="form-control" id="target_value" value="0">
                                                 </td>
                                                 <td><input type="text" class="form-control" id="note" value=""></td>
+                                                <td>
+                                                    <select name="type" id="type" class="form-control required" error="Tipe">
+                                                        <option value="PERMANEN">PERMANEN</option>
+                                                        <option value="EXTRA CALL">EXTRA CALL</option>
+                                                    </select>
+                                                </td>
                                                 <td class="text-center">
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="SalesPlan.removeRow(this)">Delete</button>

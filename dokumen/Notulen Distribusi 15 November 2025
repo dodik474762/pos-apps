@@ -1,0 +1,22 @@
+Notulen 15 November 2025
+
+Sales Plan
+- tambahkan kategori tipe (permanen, extra call)
+Sales ORder
+- payment terms/top default by customer 
+- harga produk sebelum ppn
+- tambahkan tax di atas item
+- salesman tidak perlu mandatory di admin
+
+Sales Invoice
+- jika ada tolakan produk akan kembali ke stok dan flag ke do dan sonya bahwa ada produk koreksi
+
+Master Product
+- tax ditentukan diproduk
+
+
+Title Aplikasi Browser
+- menyesuaikan menu yang dibuka
+
+Karyawan
+- tambahkan syarat pembelian produk tertentu (baru bisa bikin SO)
