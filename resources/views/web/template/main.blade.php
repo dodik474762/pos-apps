@@ -6,10 +6,10 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>POS APPS</title>
+    <title>{{ isset($title_top) ? $title_top : 'POS APPS' }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="POS APPS" name="description" />
+    <meta content="{{ isset($title_top) ? $title_top : 'POS APPS' }}" name="description" />
     <meta content="Dodik Rismawan Affrudin" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('main_template/assets/images/favicon.ico') }}">

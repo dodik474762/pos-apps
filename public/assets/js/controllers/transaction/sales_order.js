@@ -805,7 +805,7 @@ let SalesOrder = {
                 d.product_id == productId &&
                 qtySmallest >= minSmall &&
                 qtySmallest <= maxSmall &&
-                (!d.customer_id || d.customer_id == customerId) &&
+                (!d.customer || d.customer == customerId) &&
                 today >= d.berlaku_from
             );
         });

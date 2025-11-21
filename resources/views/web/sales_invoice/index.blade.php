@@ -91,6 +91,7 @@
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
                                                     <th>Dibuat Oleh</th>
+                                                    <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>

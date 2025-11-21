@@ -225,7 +225,13 @@ let SalesInvoice = {
                     data: "nama_customer",
                 },
                 {
+                    data: "warehouse_name",
+                },
+                {
                     data: "created_by_name",
+                },
+                {
+                    data: "due_date",
                 },
                 {
                     data: "status",

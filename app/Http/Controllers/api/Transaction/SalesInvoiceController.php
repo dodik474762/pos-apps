@@ -35,10 +35,12 @@ class SalesInvoiceController extends Controller
                 'cc.nama_customer',
                 'do.do_number',
                 'do.do_date',
+                'w.name as warehouse_name'
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -51,6 +53,8 @@ class SalesInvoiceController extends Controller
                     $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('do.do_number', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('do.do_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
                 });
             }
@@ -339,6 +343,18 @@ class SalesInvoiceController extends Controller
             }
 
             $so = SalesOrderHeader::find($do->so_id);
+            if($data['id'] == ''){
+                $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
+                if($so->payment_term == '' || $so->payment_term == 0){
+                    $updateInv->due_date = $data['invoice_date'];
+                    $updateInv->save();
+                }else{
+                    $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
+                    $updateInv->due_date = $dueDate;
+                    $updateInv->save();
+                }
+            }
+
             $currency = $so->currency;
 
             $reference = $header->invoice_number;
