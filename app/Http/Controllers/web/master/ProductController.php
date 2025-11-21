@@ -12,6 +12,7 @@ use App\Models\Master\ProductLog;
 use App\Models\Master\ProductType;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
+use App\Models\Master\Tax;
 use App\Models\Master\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,7 @@ class ProductController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
         $data['product_logs'] = [];
         $data['product_stocks'] = [];
         $view = view('web.product.formadd', $data);
@@ -202,6 +204,7 @@ class ProductController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
 
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
         $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);

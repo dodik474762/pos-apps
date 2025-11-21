@@ -66,6 +66,19 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label>Tax Jual</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Tax Jual' id="tax_id" name="tax_id">
+                                        <option value="">-- Pilih Tax Jual --</option>
+                                        @foreach ($taxs as $item)
+                                            <option value="{{ $item['id'] }}"
+                                                {{ isset($data->tax_sale) ? ($data->tax_sale == $item['id'] ? 'selected' : '') : '' }}>
+                                                {{ $item['tax_name'] }} - {{ $item['rate'] }}%</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label for="">File Produk</label>
                                 <div class="input-group">
                                     {{-- <button class="btn btn-outline-secondary" type="button" id="button-addon1"

@@ -710,6 +710,16 @@ let Product = {
         }
     },
 
+    removeItemDiscFree: (elm, e) => {
+        e.preventDefault();
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            Product.removeDiscFree(data_id);
+        }
+    },
+
     removeDiscStrata: (id) => {
         let params = {
             id: id,
@@ -720,6 +730,41 @@ let Product = {
             dataType: "json",
             data: params,
             url: url.base_url(Product.moduleApi()) + "removeDiscStrata",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    removeItemDiscFree: (id) => {
+        let params = {
+            id: id,
+            product: $("input#id").val(),
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "removeItemDiscFree",
             headers: {
                 "X-CSRF-TOKEN": Product.csrf_token(),
             },

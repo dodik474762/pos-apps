@@ -259,6 +259,7 @@ Route::post('api/master/product/removeUomPrice', [MasterProductController::class
 Route::post('api/master/product/addItemDiscStrata', [MasterProductController::class, 'addItemDiscStrata']);
 Route::post('api/master/product/removeDiscStrata', [MasterProductController::class, 'removeDiscStrata']);
 Route::post('api/master/product/addItemDiscFreeGood', [MasterProductController::class, 'addItemDiscFreeGood']);
+Route::post('api/master/product/removeItemDiscFree', [MasterProductController::class, 'removeItemDiscFree']);
 Route::post('api/master/product/showDataProduct', [MasterProductController::class, 'showDataProduct']);
 Route::post('api/master/product/getDataProduct', [MasterProductController::class, 'getDataProduct']);
 
