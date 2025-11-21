@@ -43,7 +43,7 @@
 
                              <div class="mb-3">
                                 <label class="form-label">Salesman</label>
-                                <select class="form-control select2 required" id="salesman" error="Salesman" onchange="SalesOrder.getCustomer(this)">
+                                <select class="form-control select2" id="salesman" error="Salesman" onchange="SalesOrder.getCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($salesmen as $s)
                                         <option value="{{ $s->id }}" {{ (isset($data->salesman) && $data->salesman == $s->id ) || (isset($salesman) && $salesman == $s->id) ? 'selected' : '' }}>
@@ -58,7 +58,7 @@
                                 <select class="form-control select2 required" id="customer_id" error="Customer" onchange="SalesOrder.changeCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}"
+                                        <option top="{{ $customer->top_value }}" value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
                                             {{ $customer->nama_customer }}
                                         </option>
@@ -68,8 +68,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Payment Term</label>
-                                <input type="text" id="payment_term" class="form-control" placeholder="e.g. 30 days"
-                                    value="{{ isset($data->payment_term) ? $data->payment_term : '' }}">
+                                <input disabled type="text" id="payment_term" class="form-control" placeholder="e.g. 30 days"
+                                    value="{{ isset($data->payment_term) ? $data->payment_term : '0' }}">
                             </div>
                         </div>
 

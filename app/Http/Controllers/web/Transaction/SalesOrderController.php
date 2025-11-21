@@ -74,7 +74,10 @@ class SalesOrderController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();
+        $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+        ->select(['customer.*', 'top.nilai as top_value'])
+        ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+        ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
@@ -98,7 +101,11 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
-        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('deleted')->get();;
+        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+        ->select(['customer.*', 'top.nilai as top_value'])
+        ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+        ->get();
+
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
@@ -137,11 +144,12 @@ class SalesOrderController extends Controller
         $customers = DB::table('sales_plan_detail as d')
             ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->leftJoin('term_of_payment as top', 'top.id', '=', 'c.payment_terms')
             ->where('h.salesman', $salesmanId)
             ->where('h.period_year', $periodYear)
             ->where('h.period_month', $periodMonth)
             ->whereNull('h.deleted')
-            ->select('d.customer_id as id', 'c.nama_customer')
+            ->select('d.customer_id as id', 'c.nama_customer', 'top.nilai as top_value')
             ->distinct()
             ->get();
 

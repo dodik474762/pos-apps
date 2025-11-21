@@ -927,6 +927,9 @@ let SalesOrder = {
             $(elm).find("td#unit").attr("data_id", "");
             $(elm).find("#price").attr("data_id", "");
         });
+
+        const top = $(elm).find("option:selected").attr("top");
+        $('#payment_term').val(top);
     },
 
     getCustomer: (elm) => {

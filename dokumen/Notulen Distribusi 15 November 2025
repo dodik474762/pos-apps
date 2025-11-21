@@ -1,12 +1,12 @@
 Notulen 15 November 2025
 
 Sales Plan
-- tambahkan kategori tipe (permanen, extra call)
+- tambahkan kategori tipe (permanen, extra call) -> OK
 Sales ORder
-- payment terms/top default by customer 
+- payment terms/top default by customer -> OK
 - harga produk sebelum ppn
 - tambahkan tax di atas item
-- salesman tidak perlu mandatory di admin
+- salesman tidak perlu mandatory di admin -> OK
 
 Sales Invoice
 - jika ada tolakan produk akan kembali ke stok dan flag ke do dan sonya bahwa ada produk koreksi
