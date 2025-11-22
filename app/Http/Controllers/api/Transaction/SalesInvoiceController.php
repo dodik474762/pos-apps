@@ -216,7 +216,6 @@ class SalesInvoiceController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
-
         DB::beginTransaction();
         try {
 
@@ -244,6 +243,36 @@ class SalesInvoiceController extends Controller
                 ]);
             }
 
+            if(empty($data['items'])){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Item tidak boleh kosong.',
+                ]);
+            }
+            
+            //cek jika ada tipe tax yang berbeda dalam 1 invoice
+            if(count(array_unique(array_column($data['items'], 'type_tax'))) > 1){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tipe Tax yang berbeda dalam 1 invoice.',
+                ]);
+            }
+
+            //cek jika ada tax yang berbeda dalam 1 invoice
+            if(count(array_unique(array_column($data['items'], 'tax'))) > 1){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tax yang berbeda dalam 1 invoice.',
+                ]);
+            }
+
+            $tax_amount = collect($data['items'])->where('remove', 0)->sum('tax_amount');
+
+            $data['tax'] = $data['items'][0]['tax'];
+            $type_pajak = $data['items'][0]['type_tax'];
             $tax = Tax::find($data['tax']);
             if(empty($tax)){
                 DB::rollBack();
@@ -269,7 +298,6 @@ class SalesInvoiceController extends Controller
 
             $subtotal = collect($data['items'])->where('remove', 0)->sum('subtotal');
             $disc_total = collect($data['items'])->where('remove', 0)->sum('discount');
-            $tax_amount = $data['tax_base'] / 100 * $subtotal;
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
@@ -282,13 +310,14 @@ class SalesInvoiceController extends Controller
                 ]);
             }
 
+            $data['total_amount'] = $subtotal;
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = $data['do_id'];
             $header->warehouse_id = $do->warehouse_id;
             $header->customer_id = $cust_id;
-            $header->subtotal = $subtotal;
+            $header->subtotal = $subtotal - $tax_amount;
             $header->discount_amount = $disc_total;
-            $header->tax_base = $data['tax_base'];
+            $header->tax_base = $tax->rate;
             $header->tax_id = $data['tax'];
             $header->tax_amount = $tax_amount;
             $header->total_amount = $data['total_amount'];
@@ -331,6 +360,10 @@ class SalesInvoiceController extends Controller
                 $detail->price = $item['price'];
                 $detail->discount = $item['discount'];
                 $detail->subtotal = $item['subtotal'];
+                $detail->tax = $item['tax'];
+                $detail->tax_amount = $item['tax_amount'];
+                $detail->tax_rate = $item['tax_rate'];
+                $detail->type_tax = $item['type_tax'];
                 $detail->line_no = $line_no++;
                 $detail->save();
 
@@ -371,12 +404,15 @@ class SalesInvoiceController extends Controller
                 cancelAllGL($reference);
             }
 
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $subtotal+$tax_amount, $currency);
-            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal+$disc_total), $currency);
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $subtotal, $currency);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal+$disc_total - $tax_amount), $currency);
             postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($disc_total), $currency);
-            if(!empty($ppnAccount)){
-                $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
-                postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
+
+            if($type_pajak == 'exclude'){
+                if(!empty($ppnAccount)){
+                    $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
+                    postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
+                }
             }
 
             DB::commit();
@@ -528,10 +564,31 @@ class SalesInvoiceController extends Controller
             'sod.discount_percent',
             'sod.unit_price',
             'sod.discount_amount',
-            'sod.subtotal',
+            'sod.subtotal', // subtotal sudah net (after discount)
+            'p.type_tax',
+            'p.tax_sale',
+            't.rate as tax',
+             // Hitung tax_amount sesuai tipe pajak
+            DB::raw("
+                CASE
+                    WHEN p.type_tax = 'include' THEN (sod.subtotal - (sod.subtotal / (1 + t.rate/100)))
+                    WHEN p.type_tax = 'exclude' THEN (sod.subtotal * (t.rate/100))
+                    ELSE 0
+                END AS tax_amount
+            "),
+                // Hitung line total = subtotal + tax_amount
+            DB::raw("
+                sod.subtotal + 
+                CASE
+                    WHEN p.type_tax = 'include' THEN (sod.subtotal - (sod.subtotal / (1 + t.rate/100)))
+                    WHEN p.type_tax = 'exclude' THEN (sod.subtotal * (t.rate/100))
+                    ELSE 0
+                END AS line_total
+            ")
         ])
         ->join('sales_order_details as sod', 'sod.id', 'delivery_order_detail.so_detail_id')
         ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
+        ->join('tax as t', 't.id', 'p.tax_sale')
         ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
         ->whereNull('delivery_order_detail.deleted')
         ->whereNull('sod.deleted')

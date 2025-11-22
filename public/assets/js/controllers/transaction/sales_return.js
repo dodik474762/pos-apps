@@ -1,8 +1,8 @@
 let elmChoose;
 let discProduct = [];
-let SalesInvoice = {
+let SalesReturn = {
     module: () => {
-        return "transaksi/sales_invoice";
+        return "transaksi/sales_return";
     },
 
     csrf_token: () => {
@@ -10,11 +10,15 @@ let SalesInvoice = {
     },
 
     moduleApi: () => {
-        return "api/" + SalesInvoice.module();
+        return "api/" + SalesReturn.module();
     },
 
     moduleApiProduct: () => {
         return "api/master/product";
+    },
+
+    moduleApiCustomer: () => {
+        return "api/master/customer";
     },
 
     setSelect2: () => {
@@ -27,37 +31,27 @@ let SalesInvoice = {
 
     cancel: (elm, e) => {
         e.preventDefault();
-        window.location.href = url.base_url(SalesInvoice.module()) + "/";
+        window.location.href = url.base_url(SalesReturn.module()) + "/";
     },
 
     add: (elm, e) => {
         e.preventDefault();
-        window.location.href = url.base_url(SalesInvoice.module()) + "add";
+        window.location.href = url.base_url(SalesReturn.module()) + "add";
     },
 
     getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
+        const rows = $("#table-items tbody tr");
         let result = [];
 
-        table.each((index, elm) => {
+        rows.each((index, elm) => {
             const $row = $(elm);
 
             result.push({
                 id: $row.attr("data_id") || null,
-                so_detail_id: $row.attr("so_detail_id") || null,
-                product_id: $row.find("#product").attr("data_id") || null,
-
-                // kembali pakai TEXT
-                qty: parseFloat($row.find("#qty").text()) || 0,
-                price: parseFloat($row.find("#price").text()) || 0,
-                discount: parseFloat($row.find("#discount").text()) || 0,
-                tax_amount: parseFloat($row.find("#tax").text()) || 0,
-                tax: parseFloat($row.find("#tax").attr('data_id')) || 0,
-                type_tax: $row.find("#tax").attr('type_tax') || '',
-                tax_rate: parseFloat($row.find("#tax").attr('rate')) || 0,
-                subtotal: parseFloat($row.find("#subtotal").text()) || 0,
-
-                note: $row.find("#note").val() || "",
+                invoice_id: $row.find("#invoice_id").attr("data_id") || null,
+                discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
+                outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
+                allocated_amount: parseFloat($row.find("#allocated_amount").val()) || 0,
                 remove: $row.hasClass("remove") ? 1 : 0,
             });
         });
@@ -68,17 +62,21 @@ let SalesInvoice = {
     getPostInput: () => {
         let data = {
             id: $("#id").val() || null,
-            invoice_number: $("#invoice_number").val() || null,
-            invoice_date: $("#invoice_date").val() || null,
-            do_id: $("#do_number").attr("data_id") || null,
-            customer_id: $("#customer_id").val() || null,
-            subtotal: parseFloat($("#subtotal").val()) || 0,
-            discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            tax:$("#tax").val() || 0,
-            tax_base: parseFloat($("#tax option:selected").attr('rate')) || 0,
-            total_amount: parseFloat($("#grand-total").text()) || 0,
+            payment_code: $("#payment_code").val() || null,
+            payment_date: $("#payment_date").val() || null,
+            payment_method: $("#payment_method").val() || null,
 
-            items: SalesInvoice.getPostItem(),
+            customer_id: $("#customer_id").attr("data_id") || null,
+            account_id: $("#account_id").val() || null,
+
+            total_amount: parseFloat($("#total_amount").val()) || 0,
+            discount_amount: parseFloat($("#discount_amount").val()) || 0,
+            net_amount: parseFloat($("#net_amount").val()) || 0,
+
+            reference_no: $("#reference_no").val() || null,
+            remarks: $("#remarks").val() || null,
+
+            details: SalesReturn.getPostItem(),
         };
 
         return data;
@@ -88,14 +86,14 @@ let SalesInvoice = {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
-            let params = SalesInvoice.getPostInput();
+            let params = SalesReturn.getPostInput();
             $.ajax({
                 type: "POST",
                 dataType: "json",
                 data: params,
-                url: url.base_url(SalesInvoice.moduleApi()) + "submit",
+                url: url.base_url(SalesReturn.moduleApi()) + "submit",
                 headers: {
-                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
                 },
                 beforeSend: () => {
                     message.loadingProses("Proses Simpan Data...");
@@ -111,46 +109,7 @@ let SalesInvoice = {
                         message.sweetSuccess();
                         setTimeout(function () {
                             // window.location.reload();
-                            SalesInvoice.back();
-                        }, 1000);
-                    } else {
-                        message.sweetError("Informasi", resp.message);
-                    }
-                },
-            });
-        } else {
-            message.sweetError("Informasi", "Data Belum Lengkap");
-        }
-    },
-
-    posted: (elm, e) => {
-        e.preventDefault();
-        let form = $(elm).closest("div.row");
-        if (validation.runWithElement(form)) {
-            let params = SalesInvoice.getPostInput();
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                data: params,
-                url: url.base_url(SalesInvoice.moduleApi()) + "posted",
-                headers: {
-                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
-                },
-                beforeSend: () => {
-                    message.loadingProses("Proses Simpan Data...");
-                },
-                error: function () {
-                    message.closeLoading();
-                    message.sweetError("Informasi", "Gagal");
-                },
-
-                success: function (resp) {
-                    message.closeLoading();
-                    if (resp.is_valid) {
-                        message.sweetSuccess();
-                        setTimeout(function () {
-                            // window.location.reload();
-                            SalesInvoice.back();
+                            SalesReturn.back();
                         }, 1000);
                     } else {
                         message.sweetError("Informasi", resp.message);
@@ -163,7 +122,7 @@ let SalesInvoice = {
     },
 
     back: (elm) => {
-        window.location.href = url.base_url(SalesInvoice.module()) + "/";
+        window.location.href = url.base_url(SalesReturn.module()) + "/";
     },
 
     getData: async () => {
@@ -195,10 +154,10 @@ let SalesInvoice = {
                 );
             },
             ajax: {
-                url: url.base_url(SalesInvoice.moduleApi()) + `getData`,
+                url: url.base_url(SalesReturn.moduleApi()) + `getData`,
                 type: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
                 },
             },
             deferRender: true,
@@ -214,28 +173,25 @@ let SalesInvoice = {
                     },
                 },
                 {
+                    data: "return_number",
+                },
+                {
                     data: "invoice_number",
-                },
-                {
-                    data: "invoice_date",
-                },
-                {
-                    data: "do_number",
-                },
-                {
-                    data: "do_date",
                 },
                 {
                     data: "nama_customer",
                 },
                 {
-                    data: "warehouse_name",
+                    data: "return_date",
+                },
+                {
+                    data: "return_type",
+                },
+                {
+                    data: "refund_amount",
                 },
                 {
                     data: "created_by_name",
-                },
-                {
-                    data: "due_date",
                 },
                 {
                     data: "status",
@@ -244,20 +200,20 @@ let SalesInvoice = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            SalesInvoice.module()
+                            SalesReturn.module()
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                SalesInvoice.module()
+                                SalesReturn.module()
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "DRAFT") {
-                                html += `<button type="button" data_id="${row.id}" onclick="SalesInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            if (row.status == "PENDING") {
+                                html += `<button type="button" data_id="${row.id}" onclick="SalesReturn.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
                         return html;
@@ -299,9 +255,9 @@ let SalesInvoice = {
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "delete",
+            url: url.base_url(SalesReturn.moduleApi()) + "delete",
             headers: {
-                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
             },
             beforeSend: () => {
                 message.loadingProses("Proses Pengambilan Data...");
@@ -326,9 +282,9 @@ let SalesInvoice = {
             type: "POST",
             dataType: "json",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "confirmDelete",
+            url: url.base_url(SalesReturn.moduleApi()) + "confirmDelete",
             headers: {
-                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
             },
             beforeSend: () => {
                 message.loadingProses("Proses Simpan Data...");
@@ -352,21 +308,49 @@ let SalesInvoice = {
         });
     },
 
-    showModalDO: (elm) => {
+    posted: (elm) => {
         let params = {};
-        // const tax = $("#tax").val();
-        // if (tax == "") {
-        //     message.sweetError("Informasi", "Pilih Tax Terlebih Dahulu");
-        //     return;
-        // }
+        params.id = $('#id').val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesReturn.moduleApi()) + "posted",
+            headers: {
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Confirm");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    showModalCustomer: (elm) => {
+        let params = {};
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "showModalDO",
+            url: url.base_url(SalesReturn.moduleApi()) + "showModalCustomer",
             headers: {
-                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
             },
 
             beforeSend: () => {
@@ -383,12 +367,48 @@ let SalesInvoice = {
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
-                SalesInvoice.getDataDo();
+                SalesReturn.getDataCustomer();
             },
         });
     },
 
-    getDataDo: () => {
+    showModalInvoice: (elm) => {
+        let params = {};
+        const customer_id = $("#customer_id").val();
+        if (customer_id == "") {
+            message.sweetError("Informasi", "Pilih Customer Terlebih Dahulu");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesReturn.moduleApi()) + "showModalInvoice",
+            headers: {
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                SalesReturn.getDataInvoice();
+            },
+        });
+    },
+
+    getDataCustomer: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
             processing: true,
@@ -413,10 +433,10 @@ let SalesInvoice = {
                 );
             },
             ajax: {
-                url: url.base_url(SalesInvoice.moduleApi()) + `getDataDo`,
+                url: url.base_url(SalesReturn.moduleApiCustomer()) + `getData`,
                 type: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
                 },
             },
             deferRender: true,
@@ -432,19 +452,90 @@ let SalesInvoice = {
                     },
                 },
                 {
-                    data: "do_number",
-                },
-                {
-                    data: "do_date",
-                },
-                {
-                    data: "so_number",
-                },
-                {
-                    data: "so_date",
+                    data: "code",
                 },
                 {
                     data: "nama_customer",
+                },
+                {
+                    data: "customer_category_name",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="SalesReturn.pilihDataCust(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+
+    getDataInvoice: () => {
+        let tableData = $("table#table-data-modal");
+        const params = {
+            'customer': $('#customer_id').attr('data_id')
+        }
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesReturn.moduleApi()) + `getDataInvoice`,
+                type: "POST",
+                data: params,
+                headers: {
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "total_amount",
                 },
                 {
                     data: "status",
@@ -453,11 +544,7 @@ let SalesInvoice = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' so_number="${row.so_number}" nama_customer="${row.nama_customer}"
-                        customer="${row.customer_id}"
-                        do_number="${row.do_number}"
-                        onclick="SalesInvoice.pilihDataDo(this, event)"
-                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        html += `<a href='' invoice_number="${row.invoice_number}" onclick="SalesReturn.pilihDataInvoice(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
@@ -465,35 +552,45 @@ let SalesInvoice = {
         });
     },
 
-    pilihDataDo: (elm, e) => {
+    pilihDataCust: (elm, e) => {
         e.preventDefault();
         let nama_customer = $(elm).attr("nama_customer");
-        let customer = $(elm).attr("customer");
-        let so_number = $(elm).attr("so_number");
-        let do_number = $(elm).attr("do_number");
+        let code_customer = $(elm).attr("code");
+        let customer = $(elm).attr("data_id");
         let data_id = $(elm).attr("data_id");
 
         $("#customer_id").val(customer + "//" + nama_customer);
-        $("#do_number").val(do_number);
-        $("#do_number").attr("data_id", data_id);
+        $("#customer_id").attr("data_id", data_id);
 
         $("button.btn-close").trigger("click");
+    },
+    
+    pilihDataInvoice: (elm, e) => {
+        e.preventDefault();
+        let invoice_number = $(elm).attr("invoice_number");
+        let data_id = $(elm).attr("data_id");
 
-        SalesInvoice.getDoDetail(data_id);
+        $("#invoice_id").val(data_id + "//" + invoice_number);
+        $("#invoice_id").attr("data_id", data_id);
+
+        $("button.btn-close").trigger("click");
+        
+        SalesReturn.getProductInvoice(data_id);
+
     },
 
-    getDoDetail: (do_id) => {
+    getProductInvoice: (invoice) => {
         let params = {
-            do_id: do_id,
+            invoice: invoice,
         };
 
         $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "getDoDetail",
+            url: url.base_url(SalesReturn.moduleApi()) + "getProductInvoice",
             headers: {
-                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
             },
 
             beforeSend: () => {
@@ -509,64 +606,65 @@ let SalesInvoice = {
                 message.closeLoading();
                 const table_items = $("#table-items");
                 table_items.find("tbody").html(resp);
-                SalesInvoice.hitungSummaryAll();
+                SalesReturn.hitungSummaryAll();
             },
         });
     },
 
-    calcRow: (elm) => {
+    changeQtyRetur: (elm) => {
         const tr = $(elm).closest("tr");
 
         // Ambil value input
-        const qty = parseFloat(tr.find("input#qty").val()) || 0;
-        const price = parseFloat(tr.find("input#price").val()) || 0;
-        const disc_persen = parseFloat(tr.find("input#disc_persen").val()) || 0;
-        const disc_nominal =
-            parseFloat(tr.find("input#disc_nominal").val()) || 0;
-
-        // Hitung subtotal sebelum pajak
-        const subTotal = qty * price;
-        const disc = subTotal * (disc_persen / 100) + disc_nominal;
-        const dpp = subTotal - disc; // DPP = dasar pengenaan pajak
-
-        // Ambil rate pajak dari option terpilih
-        const taxRate =
-            parseFloat(tr.find("select#tax option:selected").data("rate")) || 0;
-        const taxAmount = dpp * (taxRate / 100);
-
-        // Total per baris = DPP + pajak
-        const subtotalResult = dpp + taxAmount;
-
-        // Update input subtotal
-        tr.find("input#subtotal").val(subtotalResult.toFixed(2));
-
-        // Simpan data pajak di row untuk reference
-        tr.data("dpp", dpp);
-        tr.data("tax_amount", taxAmount);
-        tr.data("tax_rate", taxRate);
+        // const qty_retur = parseFloat(tr.find("input#qty_return").val()) || 0;
+        // const outstanding = parseFloat(tr.find("input#outstanding_amount").val()) || 0;
+        // const outstanding_new = outstanding - allocated;
 
         // Hitung summary total
-        SalesInvoice.hitungSummaryAll();
+        SalesReturn.hitungSummaryAll();
     },
 
     hitungSummaryAll: () => {
         let total = 0;
-        let totalTaxs = 0;
+        let total_disc = 0;
+        let total_subtotal = 0;
+        let net_total = 0;
+        let total_deposit = 0;
+
+        
         document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
-            const subtotal =
+            const qty = parseFloat(
+                $(tr).find("input#qty_return").val()
+            ) || 0;
+            const qty_invoice = parseFloat(
+                $(tr).find("input#qty_return").attr('qty_invoice')
+            ) || 0;
+            const max_qty = parseFloat(
+                $(tr).find("input#qty_return").attr('max')
+            ) || 0;
+            const price =
                 parseFloat(
-                    $(tr).find("td#subtotal").text().replace(/,/g, "")
+                    $(tr).find("td#unit_price").text()
                 ) || 0;
-                const totalTax = isNaN(
-                    parseFloat($(tr).find("td#tax").text().replace(/,/g, ""))
-                );
+            const subtotal = price * qty;
+            const discount_amount =
+                parseFloat(
+                    $(tr).find("td#discount_amount").text()
+                ) || 0;
+            const discount_amount_return = qty / qty_invoice * discount_amount;
+            
+
+            total_disc += discount_amount_return;
+            // const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
+            const netAmount = subtotal - discount_amount_return;
+            net_total += netAmount;
             total += subtotal;
-            totalTaxs += totalTax;
+            total_deposit += netAmount;
         });
 
+        document.getElementById("total-return").textContent = total_deposit.toFixed(2);
+        $('input#refund_amount').val(total_deposit.toFixed(2));
+        $('input#deposit_amount').val(0);
 
-        total += totalTaxs;
-        document.getElementById("grand-total").textContent = total.toFixed(2);
     },
 
     removeRow: (elm) => {
@@ -578,7 +676,7 @@ let SalesInvoice = {
             $(elm).closest("tr").addClass("d-none");
         }
 
-        SalesInvoice.hitungSummaryAll();
+        SalesReturn.hitungSummaryAll();
     },
 
     addRow: () => {
@@ -726,12 +824,12 @@ let SalesInvoice = {
 
         if (!productId) return;
 
-        const UOM_CONVERSION = SalesInvoice.getDataUomConversion();
-        const DATA_DISKON = SalesInvoice.getDataDiskon();
-        const DATA_DISKON_FREE = SalesInvoice.getDataDiskonFreeGood();
+        const UOM_CONVERSION = SalesReturn.getDataUomConversion();
+        const DATA_DISKON = SalesReturn.getDataDiskon();
+        const DATA_DISKON_FREE = SalesReturn.getDataDiskonFreeGood();
 
         // Konversi qty input ke satuan terkecil
-        const qtySmallest = SalesInvoice.convertToSmallest(
+        const qtySmallest = SalesReturn.convertToSmallest(
             UOM_CONVERSION,
             productId,
             satuanId,
@@ -741,13 +839,13 @@ let SalesInvoice = {
         // Cari data diskon yang cocok
         const applicable = DATA_DISKON.find((d) => {
             // konversi range min/max ke satuan terkecil
-            const minSmall = SalesInvoice.convertToSmallest(
+            const minSmall = SalesReturn.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
                 d.min_qty
             );
-            const maxSmall = SalesInvoice.convertToSmallest(
+            const maxSmall = SalesReturn.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
@@ -791,13 +889,13 @@ let SalesInvoice = {
         // CARI DISKON FREE GOOD
         // ========================
         const applicableFree = DATA_DISKON_FREE.find((d) => {
-            const minSmall = SalesInvoice.convertToSmallest(
+            const minSmall = SalesReturn.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
                 d.min_qty
             );
-            const maxSmall = SalesInvoice.convertToSmallest(
+            const maxSmall = SalesReturn.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
@@ -826,7 +924,7 @@ let SalesInvoice = {
                     <tr class="input freegood" data-free-for="${productId}">
                         <td>
                             <div class="input-group">
-                                <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesInvoice.showDataProduct(this)">Free</button>
+                                <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesReturn.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
                                     value="${
@@ -843,7 +941,7 @@ let SalesInvoice = {
                         <td><input type="number" class="form-control" id="disc_percent" value="0" disabled></td>
                         <td><input type="number" class="form-control" id="disc_amount" value="0" disabled></td>
                         <td><input type="text" class="form-control" id="subtotal" value="0" disabled></td>
-                        <td class="text-center"><button type="button" class="btn btn-sm btn-danger" disabled onclick="SalesInvoice.removeRow(this)"><i class="bx bx-gift"></i></button></td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-danger" disabled onclick="SalesReturn.removeRow(this)"><i class="bx bx-gift"></i></button></td>
                     </tr>
                 `;
 
@@ -855,7 +953,7 @@ let SalesInvoice = {
         }
 
         // Update total keseluruhans
-        SalesInvoice.hitungSummaryAll();
+        SalesReturn.hitungSummaryAll();
     },
 
     convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
@@ -925,17 +1023,17 @@ let SalesInvoice = {
                 const { product_id, product_name, unit_id } = item;
 
                 // Contoh: panggil fungsi per produk
-                SalesInvoice.showDiscountProduct(
+                SalesReturn.showDiscountProduct(
                     [product_id],
                     [product_name],
                     [unit_id]
                 );
-                SalesInvoice.showDiscountFreeProduct(
+                SalesReturn.showDiscountFreeProduct(
                     [product_id],
                     [product_name],
                     [unit_id]
                 );
-                SalesInvoice.showQtySmallestProduct(
+                SalesReturn.showQtySmallestProduct(
                     [product_id],
                     [product_name],
                     [unit_id]
@@ -946,7 +1044,7 @@ let SalesInvoice = {
 };
 
 $(function () {
-    SalesInvoice.setSelect2();
-    SalesInvoice.getData();
-    SalesInvoice.editReload();
+    SalesReturn.setSelect2();
+    SalesReturn.getData();
+    SalesReturn.editReload();
 });

@@ -4,7 +4,8 @@
         <td id="qty">{{ $item->qty }}</td>
         <td id="price">{{ $item->unit_price }}</td>
         <td id="discount">{{ $item->discount_amount }}</td>
-        <td id="subtotal">{{ $item->subtotal }}</td>
+        <td id="tax" data_id="{{ $item->tax_sale }}" type_tax="{{ $item->type_tax }}" rate="{{ $item->tax }}">{{ $item->tax_amount }}</td>
+        <td id="subtotal">{{ $item->subtotal + $item->tax_amount }}</td>
 
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-danger"

@@ -253,6 +253,7 @@ class ProductController extends Controller
             $roles->product_type = $data['product_type'];
             $roles->remarks = $data['remarks'];
             $roles->tax_sale = $data['tax_id'];
+            $roles->type_tax = $data['type_tax'];
             $roles->files = !empty($data['file']) ? $fileName : $roles->files;
             $roles->path_files = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
             $roles->save();

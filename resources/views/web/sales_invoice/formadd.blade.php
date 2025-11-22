@@ -78,7 +78,7 @@
                                        data_id="{{ $data->customer_id ?? '' }}">
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3 d-none">
                                 <label class="form-label">Tax</label>
                                 <select id="tax" class="form-control select2">
                                     <option value=""></option>
@@ -101,8 +101,9 @@
                                     <th style="width: 25%">Product</th>
                                     <th style="width: 10%">Qty</th>
                                     <th style="width: 15%">Price</th>
-                                    <th style="width: 15%">Discount</th>
-                                    <th style="width: 20%">Subtotal</th>
+                                    <th style="width: 10%">Discount</th>
+                                    <th style="width: 10%">Tax</th>
+                                    <th style="width: 15%">Subtotal</th>
                                     <th style="width: 5%"></th>
                                 </tr>
                             </thead>
@@ -116,6 +117,7 @@
                                             <td id="qty">{{ $item->qty }}</td>
                                             <td id="price">{{ $item->price }}</td>
                                             <td id="discount">{{ $item->discount }}</td>
+                                            <td id="tax" data_id="{{ $item->tax }}" type_tax="{{ $item->type_tax }}" rate="{{ $item->tax_rate }}">{{ $item->tax_amount }}</td>
                                             <td id="subtotal">{{ $item->subtotal }}</td>
 
                                             <td class="text-center">
@@ -134,8 +136,8 @@
                                         <td id="qty"></td>
                                         <td id="price"></td>
                                         <td id="discount"></td>
+                                        <td id="tax"></td>
                                         <td id="subtotal"></td>
-
                                         <td class="text-center">
                                         </td>
                                     </tr>
@@ -146,7 +148,7 @@
                     </div>
 
                     <div class="text-end mt-4">
-                        <h5>Grand Total: <span id="grand-total">{{ isset($data->subtotal) ? $data->subtotal + $data->tax_amount : 0 }}</span></h5>
+                        <h5>Grand Total: <span id="grand-total">{{ isset($data->subtotal) ? $data->subtotal : 0 }}</span></h5>
                     </div>
 
                 </form>

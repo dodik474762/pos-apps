@@ -79,6 +79,19 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label>Tax Tipe</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Tax Tipe' id="type_tax" name="type_tax">
+                                        <option value="">-- Pilih Tax Tipe --</option>
+                                        @foreach ($tax_type as $item)
+                                            <option value="{{ $item }}"
+                                                {{ isset($data->type_tax) ? ($data->type_tax == $item ? 'selected' : '') : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label for="">File Produk</label>
                                 <div class="input-group">
                                     {{-- <button class="btn btn-outline-secondary" type="button" id="button-addon1"

@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class TermOfPayment extends Model
 {
-    //
+    protected $table = 'term_of_payment';
 }

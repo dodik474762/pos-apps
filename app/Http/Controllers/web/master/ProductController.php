@@ -105,6 +105,7 @@ class ProductController extends Controller
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
         $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
+        $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['product_logs'] = [];
         $data['product_stocks'] = [];
         $view = view('web.product.formadd', $data);
@@ -206,6 +207,7 @@ class ProductController extends Controller
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
         $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
 
+        $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
         $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
         $data['title'] = 'Form ' . $this->getTitle();
