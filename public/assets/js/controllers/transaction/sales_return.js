@@ -46,13 +46,34 @@ let SalesReturn = {
         rows.each((index, elm) => {
             const $row = $(elm);
 
+            const remove = $row.hasClass("remove") ? 1 : 0;
+            const invoice_detail_id = $row.attr("invoice_detail_id") || null;
+            const qty_return = parseFloat($row.find("#qty_return").val()) || 0;
+            const qty_return_old = parseFloat($row.find("#qty_return").attr("qty_return_old")) || 0;
+            const unit_price = parseFloat($row.find("td#unit_price").text()) || 0;
+            const discount_amount = parseFloat($row.find("td#discount_amount").text()) || 0;
+            const discount_return = parseFloat($row.find("td#discount_amount").attr("discount_return")) || 0;
+            const tax_amount = parseFloat($row.find("#tax").text()) || 0;
+            const type_tax = $row.find("#tax").attr("type_tax") || null;
+            const tax_id = $row.find("#tax").attr("data_id") || null;
+            const tax_rate = parseFloat($row.find("#tax").attr("tax_rate")) || 0;
+            const tax_amount_return = parseFloat($row.find("#tax").attr("tax_amount")) || 0;
+
             result.push({
                 id: $row.attr("data_id") || null,
-                invoice_id: $row.find("#invoice_id").attr("data_id") || null,
-                discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
-                outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
-                allocated_amount: parseFloat($row.find("#allocated_amount").val()) || 0,
-                remove: $row.hasClass("remove") ? 1 : 0,
+                product_id: $row.find("#product_id").attr("data_id") || null,
+                qty_return: qty_return,
+                unit_price: unit_price,
+                discount_amount: discount_amount,
+                tax_amount: tax_amount,
+                type_tax: type_tax,
+                tax_rate: tax_rate,
+                tax: tax_id,
+                invoice_detail_id: invoice_detail_id,
+                discount_return: discount_return,
+                tax_amount_return: tax_amount_return,
+                qty_return_old: qty_return_old,
+                remove: remove,
             });
         });
 
@@ -62,21 +83,15 @@ let SalesReturn = {
     getPostInput: () => {
         let data = {
             id: $("#id").val() || null,
-            payment_code: $("#payment_code").val() || null,
-            payment_date: $("#payment_date").val() || null,
-            payment_method: $("#payment_method").val() || null,
-
+            return_number: $("#return_number").val() || null,
+            return_date: $("#return_date").val() || null,
             customer_id: $("#customer_id").attr("data_id") || null,
-            account_id: $("#account_id").val() || null,
-
-            total_amount: parseFloat($("#total_amount").val()) || 0,
-            discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            net_amount: parseFloat($("#net_amount").val()) || 0,
-
-            reference_no: $("#reference_no").val() || null,
-            remarks: $("#remarks").val() || null,
-
-            details: SalesReturn.getPostItem(),
+            invoice_id: $("#invoice_id").attr("data_id") || null,
+            return_type: $("#return_type").val() || null,
+            refund_amount: parseFloat($("#refund_amount").val()) || 0,
+            deposit_amount: parseFloat($("#deposit_amount").val()) || 0,
+            reason: $("#reason").val() || null,
+            items: SalesReturn.getPostItem(),
         };
 
         return data;
@@ -310,7 +325,7 @@ let SalesReturn = {
 
     posted: (elm) => {
         let params = {};
-        params.id = $('#id').val();
+        params.id = $("#id").val();
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -484,8 +499,8 @@ let SalesReturn = {
     getDataInvoice: () => {
         let tableData = $("table#table-data-modal");
         const params = {
-            'customer': $('#customer_id').attr('data_id')
-        }
+            customer: $("#customer_id").attr("data_id"),
+        };
         var data = tableData.DataTable({
             processing: true,
             serverSide: true,
@@ -564,7 +579,7 @@ let SalesReturn = {
 
         $("button.btn-close").trigger("click");
     },
-    
+
     pilihDataInvoice: (elm, e) => {
         e.preventDefault();
         let invoice_number = $(elm).attr("invoice_number");
@@ -574,9 +589,8 @@ let SalesReturn = {
         $("#invoice_id").attr("data_id", data_id);
 
         $("button.btn-close").trigger("click");
-        
-        SalesReturn.getProductInvoice(data_id);
 
+        SalesReturn.getProductInvoice(data_id);
     },
 
     getProductInvoice: (invoice) => {
@@ -624,47 +638,71 @@ let SalesReturn = {
     },
 
     hitungSummaryAll: () => {
-        let total = 0;
-        let total_disc = 0;
         let total_subtotal = 0;
-        let net_total = 0;
-        let total_deposit = 0;
+        let total_disc = 0;
+        let total_tax = 0;
+        let total_net = 0;
 
-        
         document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
-            const qty = parseFloat(
-                $(tr).find("input#qty_return").val()
-            ) || 0;
-            const qty_invoice = parseFloat(
-                $(tr).find("input#qty_return").attr('qty_invoice')
-            ) || 0;
-            const max_qty = parseFloat(
-                $(tr).find("input#qty_return").attr('max')
-            ) || 0;
-            const price =
+            const qty = parseFloat($(tr).find("input#qty_return").val()) || 0;
+            const qty_invoice =
                 parseFloat(
-                    $(tr).find("td#unit_price").text()
+                    $(tr).find("input#qty_return").attr("qty_invoice")
                 ) || 0;
-            const subtotal = price * qty;
+            const price = parseFloat($(tr).find("td#unit_price").text()) || 0;
             const discount_amount =
-                parseFloat(
-                    $(tr).find("td#discount_amount").text()
-                ) || 0;
-            const discount_amount_return = qty / qty_invoice * discount_amount;
-            
+                parseFloat($(tr).find("td#discount_amount").text()) || 0;
+            const type_tax = $(tr).find("td#tax").attr("type_tax");
+            const tax_rate =
+                parseFloat($(tr).find("td#tax").attr("tax_rate")) || 0;
 
-            total_disc += discount_amount_return;
-            // const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
-            const netAmount = subtotal - discount_amount_return;
-            net_total += netAmount;
-            total += subtotal;
-            total_deposit += netAmount;
+            // hitung subtotal dan diskon proporsional
+            const subtotal = price * qty;
+            const discount_return = (qty / qty_invoice) * discount_amount;
+            const net_before_tax = subtotal - discount_return;
+            $(tr).find("td#discount_amount").attr('discount_return', discount_return.toFixed(2));            
+
+            let tax_amount = 0;
+            let net_total = 0;
+
+            switch (type_tax.toUpperCase()) {
+                case "INCLUDE":
+                    // subtotal sudah include pajak → pisahkan pajak
+                    tax_amount =
+                        net_before_tax - net_before_tax / (1 + tax_rate / 100);
+                    net_total = net_before_tax; // total sudah termasuk pajak
+                    break;
+                case "EXCLUDE":
+                    // subtotal belum termasuk pajak → tambahkan pajak
+                    tax_amount = net_before_tax * (tax_rate / 100);
+                    net_total = net_before_tax + tax_amount;
+                    break;
+                case "NON-TAX":
+                default:
+                    tax_amount = 0;
+                    net_total = net_before_tax;
+                    break;
+            }
+
+            $(tr).find("td#tax").attr('tax_amount', tax_amount.toFixed(2));
+
+            total_subtotal += subtotal;
+            total_disc += discount_return;
+            total_tax += tax_amount;
+            total_net += net_total;
         });
 
-        document.getElementById("total-return").textContent = total_deposit.toFixed(2);
-        $('input#refund_amount').val(total_deposit.toFixed(2));
-        $('input#deposit_amount').val(0);
+        document.getElementById("total-return").textContent =
+        total_net.toFixed(2);
 
+        const return_type = $("#return_type").val();
+        if(return_type == "DEPOSIT"){
+            $("input#refund_amount").val(0);
+            $("input#deposit_amount").val(total_net.toFixed(2));
+        }else{
+            $("input#refund_amount").val(total_net.toFixed(2));
+            $("input#deposit_amount").val(0);
+        }
     },
 
     removeRow: (elm) => {

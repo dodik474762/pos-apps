@@ -148,7 +148,7 @@
                                                 <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled value="{{ $item->outstanding_amount }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" id="allocated_amount" value="{{ $item->allocated_amount }}" min="0" max="{{ $item->outstanding_amount }}" onkeyup="SalesPayment.changeAllocate(this)">
+                                                <input type="number" step="0.01" class="form-control" allocated_amount_old="{{ $item->allocated_amount }}" id="allocated_amount" value="{{ $item->allocated_amount }}" min="0" max="{{ $item->outstanding_amount }}" onkeyup="SalesPayment.changeAllocate(this)">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">

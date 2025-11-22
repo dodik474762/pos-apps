@@ -52,6 +52,7 @@ let SalesPayment = {
                 discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
                 outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
                 allocated_amount: parseFloat($row.find("#allocated_amount").val()) || 0,
+                allocated_amount_old: parseFloat($row.find("#allocated_amount").attr("allocated_amount_old")) || 0,
                 remove: $row.hasClass("remove") ? 1 : 0,
             });
         });

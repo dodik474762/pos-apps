@@ -3,6 +3,11 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\AccountMapping;
+use App\Models\Master\Currency;
+use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesReturnDtl;
+use App\Models\Transaction\SalesReturnHdr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -269,51 +274,64 @@ class SalesReturnController extends Controller
         DB::beginTransaction();
         try {
 
-             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'piutang usaha')
+             $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'penjualan barang')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
-            $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'diskon bayar')
+            $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'ppn keluaran')
                 ->with('account')
                 ->first();
 
-            if (! $piutangAcc || ! $discBayarAcc) {
+            $discAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'diskon penjualan')
+                ->with('account')
+                ->first();
+
+            $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'kas bank')
+                ->with('account')
+                ->first();
+
+            $depositAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'deposit pelanggan')
+                ->with('account')
+                ->first();
+
+            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc || ! $kasBankAcc || ! $depositAcc) {
                 DB::rollBack();
 
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
+                    'message' => 'Konfigurasi akun untuk Sales Return belum lengkap.',
                 ]);
             }
 
-            $kasAccount = Coa::find($data['account_id']);
             // === HEADER ===
             $header = empty($data['id'])
-                ? new SalesPaymentHeader()
-                : SalesPaymentHeader::find($data['id']);
+                ? new SalesReturnHdr()
+                : SalesReturnHdr::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->payment_code = generateNoSP(); // misal helper
+                $header->return_number = generateNoReturn(); // misal helper
                 $header->created_by = $userId;
-                $header->status = 'PENDING';
+                $header->status = 'DRAFT';
             }
 
-            $header->payment_date = $data['payment_date'];
+            $header->return_date = $data['return_date'];
             $header->customer_id = $data['customer_id'];
-            $header->payment_method = $data['payment_method'];
-            $header->total_amount = 0;
-            $header->discount_amount = 0;
-            $header->net_amount = 0;
-            $header->reference_no = $data['reference_no'];
-            $header->remarks = $data['remarks'];
-            $header->coa_kas = $data['account_id'];
+            $header->return_type = $data['return_type'];
+            $header->refund_amount = $data['refund_amount'];
+            $header->deposit_amount = $data['deposit_amount'];
+            $header->total_return_value = 0;
+            $header->reason = $data['reason'];
+            $header->invoice_id = $data['invoice_id'];
             $header->save();
 
             $hdrId = $header->id;
 
-            $reference = $header->payment_code;
+            $reference = $header->return_number;
             if($data['id'] != ''){
                 cancelAllGL($reference);
             }
@@ -322,104 +340,94 @@ class SalesReturnController extends Controller
             $totalAmount = 0;
             $disc_total = 0;
             $net_total = 0;
+            $tax_total = 0;
             $line_no = 1;
-            foreach ($data['details'] as $key=>$value) {
+            foreach ($data['items'] as $key=>$value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
-                        $exist = SalesPaymentDtl::find($value['id']);
+                        $exist = SalesReturnDtl::find($value['id']);
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
                             $exist->save();
+
+                            $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
+                            $return_qty = $invoice->return_qty - $value['qty_return'];
+                            $invoice->return_qty = $return_qty;
+                            $invoice->save();
                         }
+                        
                     }
                     continue;
                 }
 
-                $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
-                if($outstanding_amount < 0){
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-'.($key+1)
-                    ]);
-                }
-
-                $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
-                $disc_amount = 0;
-                if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
-                    $disc_amount = $value['discount_amount'];
-                    $disc_total += $disc_amount;
-                }
-
-                if($value['allocated_amount'] > 0){
-                    $net_total += ($value['allocated_amount'] - $disc_amount);
-                }
-
-                if($value['allocated_amount'] < $disc_amount){
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-'.($key+1)
-                    ]);
-
-                }
-
-                $totalAmount += $value['allocated_amount'];
-
                 // Item baru atau update
                 $detail = empty($value['id'])
-                    ? new SalesPaymentDtl()
-                    : SalesPaymentDtl::find($value['id']);
+                    ? new SalesReturnDtl()
+                    : SalesReturnDtl::find($value['id']);
 
-                $detail->payment_id = $hdrId;
-                $detail->invoice_id = $value['invoice_id'];
-                $detail->allocated_amount = $value['allocated_amount'];
-                $detail->outstanding_amount = $value['outstanding_amount'];
-                $detail->line_no = $line_no++;
+                $detail->return_id = $hdrId;
+                $detail->product_id = $value['product_id'];
+                $detail->qty_return = $value['qty_return'];
+                $detail->unit_price = $value['unit_price'];
+                $detail->discount_amount = $value['discount_return'];
+                $detail->tax_amount = $value['tax_amount_return'];
+                $detail->type_tax = $value['type_tax'];
+                $detail->tax_rate = $value['tax_rate'];
+                $detail->invoice_detail_id = $value['invoice_detail_id'];
+                $detail->tax = $value['tax'];
                 $detail->save();
+
+                $disc_total += $value['discount_return'];
+                $tax_total += $value['tax_amount_return'];
+                $totalAmount += (($value['unit_price'] * $value['qty_return']));
+                $net_total += (($value['unit_price'] * $value['qty_return']) - $value['discount_return'] + $value['tax_amount_return']);
 
                 /*mapping coa */
 
-                $invoice = SalesInvoiceHeader::find($value['invoice_id']);
-                $total_paid = 0;
+                $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
+                $total_return = 0;
                 if($value['id'] == ''){
-                    $total_paid = $invoice->amount_paid +$value['allocated_amount'];
+                    $total_return = $invoice->return_qty +$value['qty_return'];
                 }else{
-                    $total_paid = $invoice->amount_paid - $value['allocated_amount'];
+                    $total_return = $invoice->return_qty - $value['qty_return_old'] + $value['qty_return'];
                 }
-                $invoice->amount_paid = $total_paid;
-                if($outstanding_amount == 0){
-                    $invoice->status = 'PAID';
-                }else{
-                    $invoice->status = 'PARTIAL PAID';
+                $invoice->return_qty = $total_return;
+
+                $outstanding = $invoice->qty - $invoice->return_qty;
+                if($outstanding < 0){
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Jumlah return melebihi outstanding invoice '
+                    ]); 
                 }
                 $invoice->save();
 
 
             }
 
+            $updateHdr = SalesReturnHdr::find($hdrId);
+            $updateHdr->total_return_value = $net_total;
+            $updateHdr->save();
+
             $currency = Currency::where('code', 'IDR')->first();
             $currencyId = $currency->id;
 
-            $update = SalesPaymentHeader::find($hdrId);
-            $update->total_amount = $totalAmount;
-            $update->discount_amount = $disc_total;
-            $update->net_amount = $net_total;
-            $update->save();
-
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId);
-
-            $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
-            postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
-            if($disc_total > 0){
-                postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
+            postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
+            postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
+            if($data['return_type'] == 'REFUND'){
+                postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
+            }
+            if($data['return_type'] == 'DEPOSIT'){
+                postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, ($net_total), $currencyId);
             }
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Sales Payment berhasil disimpan';
+            $result['message'] = 'Sales Return berhasil disimpan';
             $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -525,9 +533,11 @@ class SalesReturnController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-                'c.nama_customer'
+                'c.nama_customer',
+                'i.invoice_number'
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
+            ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -570,6 +580,10 @@ class SalesReturnController extends Controller
                 'sid.return_qty',
                 'p.code as product_code',
                 'p.name as product_name',
+                'sid.tax',
+                'sid.tax_amount',
+                'sid.tax_rate',
+                'sid.type_tax',
                 DB::raw('(sid.qty - sid.return_qty) AS outstanding_can_return'),
             )
             ->join('product as p', 'p.id', 'sid.product_id')

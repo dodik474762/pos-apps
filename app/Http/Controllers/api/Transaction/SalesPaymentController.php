@@ -329,7 +329,7 @@ class SalesPaymentController extends Controller
                 if($value['id'] == ''){
                     $total_paid = $invoice->amount_paid +$value['allocated_amount'];
                 }else{
-                    $total_paid = $invoice->amount_paid - $value['allocated_amount'];
+                    $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
                 }
                 $invoice->amount_paid = $total_paid;
                 if($outstanding_amount == 0){

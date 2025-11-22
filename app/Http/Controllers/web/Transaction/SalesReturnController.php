@@ -108,20 +108,23 @@ class SalesReturnController extends Controller
         $data['cashBankAccounts'] = $this->getListKasBank();
         $data['details'] = SalesReturnDtl::where('sales_return_detail.return_id', $data['id'])
             ->select([
-                'sales_payment_detail.*',
-                'sih.invoice_number',
-                'sih.invoice_date',
-                'sih.total_amount as total_amount_invoice',
-                'sih.discount_amount',
-                'sih.subtotal',
-                'sih.amount_paid',
+                'sales_return_detail.*',
+                'p.code as product_code',
+                'p.name as product_name',
+                'sid.qty',
+                'sid.discount',
+                'sid.tax',
+                'sid.tax_amount',
+                'sid.tax_rate',
+                'sid.type_tax',
             ])
-            ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
-            ->whereNull('sales_payment_detail.deleted')
-            ->orderBy('sales_payment_detail.id')
+            ->join('sales_invoice_detail as sid', 'sid.id', 'sales_return_detail.invoice_detail_id')
+            ->join('product as p', 'p.id', 'sales_return_detail.product_id')
+            ->whereNull('sales_return_detail.deleted')
+            ->orderBy('sales_return_detail.id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->return_number);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_return.formadd', $data);

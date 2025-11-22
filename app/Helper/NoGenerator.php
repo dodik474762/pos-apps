@@ -224,6 +224,25 @@ function generateNoSP()
     return $no;
 }
 
+function generateNoReturn()
+{
+    $no = 'SR'.strtoupper(date('m')).date('y');
+    $data = DB::table('sales_return')->where('return_number', 'LIKE', '%'.$no.'%')->orderBy('return_number', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->return_number);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateNoRoutePlan()
 {
     $no = 'RP'.strtoupper(date('m')).date('y');
