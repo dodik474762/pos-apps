@@ -41,7 +41,7 @@ class ProductController extends Controller
                 'u.name as unit_name',
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
-            ->join('unit as u', 'u.id', 'm.unit')
+            ->leftJoin('unit as u', 'u.id', 'm.unit')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {

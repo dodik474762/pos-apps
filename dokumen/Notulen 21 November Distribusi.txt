@@ -1,0 +1,73 @@
+Sales Faktur:
+- printout pakai separo (A5)
+- printout (filter date) nanti bisa beberapa page
+- ada keterangan status (sudah cetak/belum cetak)
+- jika ada revisi (keterangan cetak ulang)
+- Note : Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening (No. Rek seperti di contoh cetakan)
+- diterima oleh (harus ada cap dan ttd toko)
+- driver input setoran (update informasi ke invoicenya, dan akan jadi pengurang yang ditolak lalu di cetak ulang serta barang yg ditolak masuk good stock kembali)
+
+
+Sales Payment:
+- informasi nama customer dan kode customer
+- tambahkan fitur bisa pelunasan beberapa customer tapi tetap generate ke sales payment per customer
+
+Salesman:
+- limit frekuensi retur
+
+Customer:
+- limit frekuensi retur
+
+Credit Note:
+
+Retur Tidak Standar:
+ - bisa masuk good stock / bas stock
+
+Achiement Target per Periode untuk Salesman (diinput spv)
+
+
+Report :
+- Cetak Laporan Piutang Harian (Invoice) per sales
+- Report Warehouse (Stock)
+- Report Pengiriman (Delivery Order)
+- Report Packing List Kiriman (per kendaraan(armada))
+- Report Penjualan
+- Report Pembelian
+- Report Pembayaran
+- Report Retur
+- Report Bad Stock
+- Report Achievement Salesman (AO/EC/Omzet/Call)
+- Report Outlet Kandidat
+- Report Outlet Tidak Transaksi
+- Report Jumlah Customer Base (master outlet)
+- Laporan Setoran
+
+Mobile Salesman:
+- Absensi Karyawan (ini harus dikantor)
+- Route Plan Salesman (ada target qty, ada target nominal)
+- Penagihan Customer (ttd toko, foto toko)
+- Noo (kandidat/normal)
+- Sales Order (ttd toko, foto toko)
+- Sales Retur (Penolakan atas invoice)
+- Laporan Stock 
+- Laporan Rata2 Penjualan per Customer (keterangan transaksi terakhir, dan nominal berapa)
+- Achievment Target Bulanan per Salesman
+- Laporan Setoran Sales
+- Closing
+
+Mobile Driver:
+- Input Pembayaran Cash per Customer per Invoice (status customer cash/top)
+- Retur (Penolakan atas invoice)
+- Akses Foto hasil orderan customer berdasarkan invoicenya
+- konfirmasi ttd foto barang diterima customer
+- Laporan Setoran Delivery
+
+
+Note Tanggal 29 November 2025
+- kebutuhan device
+- total salesman
+- total admin
+- total driver
+- server 
+
+
