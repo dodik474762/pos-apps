@@ -4,7 +4,9 @@ namespace App\Http\Controllers\web\Transaction;
 
 use App\Http\Controllers\api\Transaction\SalesReturnController as TransactionSalesReturnController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
+use App\Models\Transaction\SalesPaymentHeader;
 use App\Models\Transaction\SalesReturnDtl;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -114,7 +116,7 @@ class SalesReturnController extends Controller
                 'sid.qty',
                 'sid.discount',
                 'sid.tax',
-                'sid.tax_amount',
+                'sid.tax_amount as tax_amount_invoice',
                 'sid.tax_rate',
                 'sid.type_tax',
             ])

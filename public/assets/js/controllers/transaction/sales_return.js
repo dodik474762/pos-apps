@@ -214,11 +214,12 @@ let SalesReturn = {
                 {
                     data: "id",
                     render: function (data, type, row) {
-                        var html = `<a href='${url.base_url(
-                            SalesReturn.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        var html = '';
+                        // var html = `<a href='${url.base_url(
+                        //     SalesReturn.module()
+                        // )}cetak?id=${data}' data_id="${
+                        //     row.id
+                        // }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesReturn.module()
@@ -227,7 +228,7 @@ let SalesReturn = {
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "PENDING") {
+                            if (row.status == "DRAFT") {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesReturn.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }

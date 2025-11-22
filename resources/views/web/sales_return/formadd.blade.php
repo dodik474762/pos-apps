@@ -156,7 +156,7 @@
                                             <td id="unit_price">{{ $d->unit_price }}</td>
                                             <td id="discount_amount" discount_return="{{ $d->discount_return }}">{{ $d->discount }}</td>
                                             <td id="tax" type_tax="{{ $d->type_tax }}" data_id="{{ $d->tax }}"
-                                                tax_rate="{{ $d->tax_rate }}" tax_amount="{{ $d->tax_amount_return }}">{{ $d->tax_amount }}</td>
+                                                tax_rate="{{ $d->tax_rate }}" tax_amount="{{ $d->tax_amount }}">{{ $d->tax_amount_invoice }}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger"
                                                     onclick="SalesReturn.removeRow(this)">

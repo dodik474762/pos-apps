@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class SalesReturnController extends Controller
 {
-      public function getTableName()
+    public function getTableName()
     {
         return 'sales_return';
     }
@@ -29,7 +29,7 @@ class SalesReturnController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
-                'i.invoice_number'
+                'i.invoice_number',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
@@ -69,7 +69,7 @@ class SalesReturnController extends Controller
         // print_r($query);die;
         return json_encode($data);
     }
-    
+
     public function getDataInvoice(Request $request)
     {
         DB::enableQueryLog();
@@ -77,14 +77,14 @@ class SalesReturnController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-         $datadb = DB::table('sales_invoice_header as m')
+        $datadb = DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'do.do_number',
                 'do.do_date',
-                'w.name as warehouse_name'
+                'w.name as warehouse_name',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
@@ -270,11 +270,10 @@ class SalesReturnController extends Controller
         // echo '<pre>';
         // print_r($data);die;
 
-
         DB::beginTransaction();
         try {
 
-             $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
+            $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
                 ->where('account_type', 'penjualan barang')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
@@ -310,7 +309,7 @@ class SalesReturnController extends Controller
 
             // === HEADER ===
             $header = empty($data['id'])
-                ? new SalesReturnHdr()
+                ? new SalesReturnHdr
                 : SalesReturnHdr::find($data['id']);
 
             if (empty($data['id'])) {
@@ -332,7 +331,7 @@ class SalesReturnController extends Controller
             $hdrId = $header->id;
 
             $reference = $header->return_number;
-            if($data['id'] != ''){
+            if ($data['id'] != '') {
                 cancelAllGL($reference);
             }
 
@@ -342,10 +341,10 @@ class SalesReturnController extends Controller
             $net_total = 0;
             $tax_total = 0;
             $line_no = 1;
-            foreach ($data['items'] as $key=>$value) {
+            foreach ($data['items'] as $key => $value) {
                 // Skip baris yang ditandai untuk dihapus
-                if (!empty($value['remove']) && $value['remove'] == 1) {
-                    if (!empty($value['id'])) {
+                if (! empty($value['remove']) && $value['remove'] == 1) {
+                    if (! empty($value['id'])) {
                         $exist = SalesReturnDtl::find($value['id']);
                         if ($exist) {
                             $exist->deleted = now();
@@ -357,14 +356,15 @@ class SalesReturnController extends Controller
                             $invoice->return_qty = $return_qty;
                             $invoice->save();
                         }
-                        
+
                     }
+
                     continue;
                 }
 
                 // Item baru atau update
                 $detail = empty($value['id'])
-                    ? new SalesReturnDtl()
+                    ? new SalesReturnDtl
                     : SalesReturnDtl::find($value['id']);
 
                 $detail->return_id = $hdrId;
@@ -384,27 +384,27 @@ class SalesReturnController extends Controller
                 $totalAmount += (($value['unit_price'] * $value['qty_return']));
                 $net_total += (($value['unit_price'] * $value['qty_return']) - $value['discount_return'] + $value['tax_amount_return']);
 
-                /*mapping coa */
+                /* mapping coa */
 
                 $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
                 $total_return = 0;
-                if($value['id'] == ''){
-                    $total_return = $invoice->return_qty +$value['qty_return'];
-                }else{
+                if ($value['id'] == '') {
+                    $total_return = $invoice->return_qty + $value['qty_return'];
+                } else {
                     $total_return = $invoice->return_qty - $value['qty_return_old'] + $value['qty_return'];
                 }
                 $invoice->return_qty = $total_return;
 
                 $outstanding = $invoice->qty - $invoice->return_qty;
-                if($outstanding < 0){
+                if ($outstanding < 0) {
                     DB::rollBack();
+
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Jumlah return melebihi outstanding invoice '
-                    ]); 
+                        'message' => 'Jumlah return melebihi outstanding invoice ',
+                    ]);
                 }
                 $invoice->save();
-
 
             }
 
@@ -418,10 +418,10 @@ class SalesReturnController extends Controller
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
             postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
             postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
-            if($data['return_type'] == 'REFUND'){
+            if ($data['return_type'] == 'REFUND') {
                 postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
             }
-            if($data['return_type'] == 'DEPOSIT'){
+            if ($data['return_type'] == 'DEPOSIT') {
                 postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, ($net_total), $currencyId);
             }
 
@@ -441,69 +441,57 @@ class SalesReturnController extends Controller
     public function confirmDelete(Request $request)
     {
         $data = $request->all();
-        $id = $data['id'];
+        $id = $request->id;
+        $userId = session('user_id');
+
         DB::beginTransaction();
 
         try {
-            $userId = session('user_id');
 
-            // ====== HEADER ======
-            $header = SalesPaymentHeader::find($id);
+            $header = SalesReturnHdr::find($id);
 
             if (! $header) {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Data tidak ditemukan'
+                    'message' => 'Sales Return tidak ditemukan.',
                 ]);
             }
 
-            // Jika sudah CANCEL, stop
-            if ($header->status == 'CANCELLED') {
+            if ($header->status == 'CANCELED') {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Sales Payment sudah dibatalkan sebelumnya'
+                    'message' => 'Sales Return sudah dibatalkan.',
                 ]);
             }
 
-            $reference = $header->payment_code;
-
-            // ====== DETAIL ======
-            $details = SalesPaymentDtl::where('payment_id', $id)->whereNull('deleted')->get();
+            // ambil semua detail termasuk yg sudah deleted
+            $details = SalesReturnDtl::where('return_id', $id)->whereNull('deleted')->get();
 
             foreach ($details as $dt) {
 
-                // Kembalikan amount_paid invoice
-                $invoice = SalesInvoiceHeader::find($dt->invoice_id);
+                $invoice = SalesInvoiceDtl::find($dt->invoice_detail_id);
+
                 if ($invoice) {
+                    // Kembalikan return_qty
+                    $invoice->return_qty = $invoice->return_qty - $dt->qty_return;
 
-                    // Kembalikan nilai amount_paid
-                    $invoice->amount_paid = $invoice->amount_paid - $dt->allocated_amount;
+                    if ($invoice->return_qty < 0) {
+                        DB::rollBack();
 
-                    // Tidak boleh minus
-                    if ($invoice->amount_paid < 0) {
-                        $invoice->amount_paid = 0;
-                    }
-
-                    // Update status invoice
-                    if ($invoice->amount_paid == 0) {
-                        $invoice->status = 'POSTED';
-                    } elseif ($invoice->amount_paid < $invoice->total_amount) {
-                        $invoice->status = 'PARTIAL PAID';
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Cancel gagal: return qty menjadi minus.',
+                        ]);
                     }
 
                     $invoice->save();
                 }
-
-                // Tandai detail sebagai deleted
-                $dt->deleted = now();
-                $dt->deleted_by = $userId;
-                $dt->save();
             }
 
-            // ====== CANCEL GL ======
-            cancelAllGL($reference);
+            // Batalkan jurnal (GL)
+            cancelAllGL($header->return_number);
 
-            // ====== UPDATE HEADER ======
+            // Ubah status
             $header->status = 'CANCELLED';
             $header->deleted = now();
             $header->deleted_by = $userId;
@@ -513,16 +501,16 @@ class SalesReturnController extends Controller
 
             return response()->json([
                 'is_valid' => true,
-                'message' => 'Sales Payment berhasil dibatalkan'
+                'message' => 'Sales Return berhasil dibatalkan.',
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (\Throwable $th) {
 
             DB::rollBack();
 
             return response()->json([
                 'is_valid' => false,
-                'message' => $e->getMessage()
+                'message' => $th->getMessage(),
             ]);
         }
     }
@@ -534,7 +522,7 @@ class SalesReturnController extends Controller
             ->select([
                 'm.*',
                 'c.nama_customer',
-                'i.invoice_number'
+                'i.invoice_number',
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
@@ -566,10 +554,11 @@ class SalesReturnController extends Controller
         return view('web.sales_return.modal.datainvoice', $data);
     }
 
-    public function getProductInvoice(Request $request){
+    public function getProductInvoice(Request $request)
+    {
         $data = $request->all();
         $invoice = $data['invoice'];
-            $datadb = DB::table('sales_invoice_detail as sid')
+        $datadb = DB::table('sales_invoice_detail as sid')
             ->select(
                 'sid.id',
                 'sid.product_id',
@@ -598,7 +587,7 @@ class SalesReturnController extends Controller
         return view('web.sales_return.datainvoiceoutstanding', $data);
     }
 
-     public function posted(Request $request)
+    public function posted(Request $request)
     {
         $data = $request->all();
         $result['is_valid'] = false;
@@ -606,7 +595,7 @@ class SalesReturnController extends Controller
         DB::beginTransaction();
         try {
 
-            $menu = SalesPaymentHeader::find($data['id']);
+            $menu = SalesReturnHdr::find($data['id']);
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();

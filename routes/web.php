@@ -458,4 +458,5 @@ Route::post('api/transaksi/sales_return/showModalCustomer', [TransactionSalesRet
 Route::post('api/transaksi/sales_return/showModalInvoice', [TransactionSalesReturnController::class, 'showModalInvoice']);
 Route::post('api/transaksi/sales_return/getDataInvoice', [TransactionSalesReturnController::class, 'getDataInvoice']);
 Route::post('api/transaksi/sales_return/getProductInvoice', [TransactionSalesReturnController::class, 'getProductInvoice']);
+Route::post('api/transaksi/sales_return/posted', [TransactionSalesReturnController::class, 'posted']);
 /*API */
