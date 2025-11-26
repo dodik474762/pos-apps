@@ -309,6 +309,18 @@ class SalesReturnController extends Controller
                 ]);
             }
 
+            if(empty($data['id'])){
+                $allow_retur_customer = getMaxReturCustomer($data['customer_id']);
+                if(!$allow_retur_customer){
+                    DB::rollBack();
+
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Jumlah retur customer sudah mencapai batas maksimal.',
+                    ]);
+                }
+            }
+
             // === HEADER ===
             $header = empty($data['id'])
                 ? new SalesReturnHdr
