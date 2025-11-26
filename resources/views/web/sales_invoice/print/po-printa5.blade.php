@@ -144,7 +144,7 @@
 
     <table class="no-border">
         <tr>
-            <td>Note: Barang telah diterima dengan cukup dan baik...</td>
+            <td>Note: Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening :<br/>{{ $company->akun_bank }} - {{ $company->akun_bank_number }} <br/>{{ $company->akun_bank_name }}</td>
         </tr>
     </table>
 
