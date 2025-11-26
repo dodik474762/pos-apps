@@ -52,9 +52,9 @@ let SalesInvoice = {
                 price: parseFloat($row.find("#price").text()) || 0,
                 discount: parseFloat($row.find("#discount").text()) || 0,
                 tax_amount: parseFloat($row.find("#tax").text()) || 0,
-                tax: parseFloat($row.find("#tax").attr('data_id')) || 0,
-                type_tax: $row.find("#tax").attr('type_tax') || '',
-                tax_rate: parseFloat($row.find("#tax").attr('rate')) || 0,
+                tax: parseFloat($row.find("#tax").attr("data_id")) || 0,
+                type_tax: $row.find("#tax").attr("type_tax") || "",
+                tax_rate: parseFloat($row.find("#tax").attr("rate")) || 0,
                 subtotal: parseFloat($row.find("#subtotal").text()) || 0,
 
                 note: $row.find("#note").val() || "",
@@ -74,8 +74,8 @@ let SalesInvoice = {
             customer_id: $("#customer_id").val() || null,
             subtotal: parseFloat($("#subtotal").val()) || 0,
             discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            tax:$("#tax").val() || 0,
-            tax_base: parseFloat($("#tax option:selected").attr('rate')) || 0,
+            tax: $("#tax").val() || 0,
+            tax_base: parseFloat($("#tax option:selected").attr("rate")) || 0,
             total_amount: parseFloat($("#grand-total").text()) || 0,
 
             items: SalesInvoice.getPostItem(),
@@ -243,23 +243,23 @@ let SalesInvoice = {
                 {
                     data: "print_date",
                     render: function (data, type, row) {
-                        if(data){
-                            if(row.reprint == 1){
+                        if (data) {
+                            if (row.reprint == 1) {
                                 return "Belum Cetak";
                             }
                             return "Sudah Cetak";
                         }
                         return "Belum Cetak";
-                    }
+                    },
                 },
                 {
                     data: "reprint",
                     render: function (data, type, row) {
-                        if(data == 1){
+                        if (data == 1) {
                             return "Ya";
                         }
                         return "Tidak";
-                    }
+                    },
                 },
                 {
                     data: "status",
@@ -581,13 +581,12 @@ let SalesInvoice = {
                 parseFloat(
                     $(tr).find("td#subtotal").text().replace(/,/g, "")
                 ) || 0;
-                const totalTax = isNaN(
-                    parseFloat($(tr).find("td#tax").text().replace(/,/g, ""))
-                );
+            const totalTax = isNaN(
+                parseFloat($(tr).find("td#tax").text().replace(/,/g, ""))
+            );
             total += subtotal;
             totalTaxs += totalTax;
         });
-
 
         total += totalTaxs;
         document.getElementById("grand-total").textContent = total.toFixed(2);
@@ -966,6 +965,41 @@ let SalesInvoice = {
                 );
             });
         }
+    },
+
+    search: (elm) => {
+        const url = $(elm).attr("url");
+        const date = $("#filterDate").val();
+        if (date == "") {
+            message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
+            return;
+        }
+        window.location.href = url + "?tanggal=" + date;
+    },
+
+    checkAll: (elm) => {
+        let checked = $(elm).is(":checked");
+        document.querySelectorAll(".check-item").forEach((el) => {
+            el.checked = checked;
+        });
+    },
+
+    cetakAll: (elm, e) => {
+        e.preventDefault();
+
+        let ids = [];
+        document.querySelectorAll(".check-item:checked").forEach((el) => {
+            ids.push(el.value);
+        });
+
+        if (ids.length === 0) {
+            alert("Pilih minimal 1 invoice untuk dicetak.");
+            return;
+        }
+
+        // 🔥 Kirim ke controller (sesuai backend Anda)
+        const url = $(elm).attr("url");
+        window.open(url + "?ids=" + ids.join(","), "_blank");
     },
 };
 

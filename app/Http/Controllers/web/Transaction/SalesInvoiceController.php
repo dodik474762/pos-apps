@@ -5,15 +5,16 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
-use App\Models\User;
+use App\Models\Master\Karyawan;
+use App\Models\Master\Tax;
+use App\Models\Transaction\DeliveryOrderHeader;
+use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesInvoiceHeader;
+use App\Models\Transaction\SalesOrderHeader;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use App\Models\Master\Tax;
-use App\Models\Master\Customer;
-use App\Models\Transaction\SalesInvoiceDtl;
-use App\Models\Transaction\SalesInvoiceHeader;
 
 class SalesInvoiceController extends Controller
 {
@@ -66,6 +67,53 @@ class SalesInvoiceController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getAllInvoiceCetak()
+    {
+        $datadb = DB::table('sales_invoice_header as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'do.do_number',
+                'do.do_date',
+                'w.name as warehouse_name',
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->whereNull('m.deleted')
+            ->where(function ($q) {
+                return $q->where('m.reprint', 1)
+                    ->orWhereNull('m.print_date');
+            })
+            ->orderBy('m.id', 'desc');
+
+        $datadb = $datadb->get();
+
+        return $datadb;
+    }
+
+    public function cetakAll(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['title'] = $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = $this->akses_menu;
+        $data['invoices'] = $this->getAllInvoiceCetak();
+        // echo '<pre>';
+        // print_r($data);die;
+        $view = view('web.sales_invoice.cetakall', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function add(Request $request)
     {
         $data = $request->all();
@@ -93,7 +141,7 @@ class SalesInvoiceController extends Controller
 
     public function ubah(Request $request)
     {
-        $api = new TransactionSalesInvoiceController();
+        $api = new TransactionSalesInvoiceController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
@@ -129,7 +177,8 @@ class SalesInvoiceController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -144,14 +193,14 @@ class SalesInvoiceController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['do.so','customers', 'warehouses','items.products', 'items.so_detail.units'])->findOrFail($data['id']);
+        $data = SalesInvoiceHeader::with(['do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
         $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
 
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
@@ -159,18 +208,52 @@ class SalesInvoiceController extends Controller
             'print_total' => $total_print + 1,
             'print_by' => session('user_id'),
             'print_date' => now(),
-            'reprint'=> 0 //tidak reprint
+            'reprint' => 0, // tidak reprint
         ]);
-        // $qr = '';
-        // echo '<pre>';
-        // print_r($data);
-        // die;
+        $do = DeliveryOrderHeader::where('id', $data->do_id)->first();
+        $so = SalesOrderHeader::where('id', $do->so_id)->first();
+        $salesman = Karyawan::where('id', $so->salesman)->first();
+        $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
-        // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
-
-        $pdf = Pdf::loadView('web.sales_invoice.print.po-print', compact('data',  'company', 'qr'))
+        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('SI-'.$data->invoice_number.'.pdf');
+    }
+
+    public function multiplePrint(Request $request)
+    {
+        $ids = explode(',', $request->ids);
+
+        $invoices = SalesInvoiceHeader::with([
+            'do.so',
+            'do.so.salesman',
+            'customers',
+            'customers.top',
+            'warehouses',
+            'items.products',
+            'items.so_detail.units',
+        ])
+            ->whereIn('id', $ids)
+            ->get();
+
+        $company = CompanyModel::where('id', session('id_company'))->first();
+
+        // Update print count per invoice
+        foreach ($invoices as $data) {
+            $total_print = empty($data->print_total) ? 0 : $data->print_total;
+            $invUpdate = SalesInvoiceHeader::where('id', $data->id);
+            $invUpdate->update([
+                'print_total' => $total_print + 1,
+                'print_by' => session('user_id'),
+                'print_date' => now(),
+                'reprint' => 0,
+            ]);
+        }
+
+        $pdf = Pdf::loadView('web.sales_invoice.print.multipleprinta5', compact('invoices', 'company'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Multiple-SIInvoice.pdf');
     }
 }

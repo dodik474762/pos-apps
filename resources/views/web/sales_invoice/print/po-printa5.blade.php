@@ -4,23 +4,28 @@
 <head>
     <meta charset="utf-8">
     <title>Sales Invoice - {{ $data->code }}</title>
+
     <style>
+        @page {
+            size: A5 landscape; /* 📌 Ukuran setengah A4 */
+            margin: 5mm;        /* 📌 Margin kecil khas dot matrix */
+        }
+
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             color: #000;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 8px;
         }
 
-        th,
-        td {
+        th, td {
             border: 1px solid #000;
-            padding: 6px;
+            padding: 4px;
             text-align: left;
         }
 
@@ -30,90 +35,72 @@
 
         .no-border td {
             border: none;
+            padding: 2px;
         }
 
-        .text-right {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
 
         .header-table td {
             border: none;
             vertical-align: middle;
+            padding: 2px;
         }
 
         .logo {
-            width: 90px;
+            width: 60px; /* diperkecil agar muat A5 */
         }
 
-        /* 🔹 Ukuran font kecil untuk tabel detail barang */
         .table-detail th,
         .table-detail td {
             font-size: 10px;
-            padding: 5px;
-        }
-
-        .table-detail th {
-            background: #f8f8f8;
+            padding: 3px;
         }
     </style>
 </head>
 
 <body>
     {{-- HEADER --}}
-    <table class="header-table" style="width:100%;">
+    <table class="header-table">
         <tr>
-            <td style="width: 90px;">
+            <td style="width:70px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
             </td>
-            <td style="text-align: left;">
-                <h3 style="margin:0; padding:0;">{{ $company->nama_company }}</h3>
+            <td>
+                <strong>{{ $company->nama_company }}</strong><br>
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">FAKTUR PENJUALAN</h4>
+                <strong>FAKTUR PENJUALAN</strong><br>
                 <small>No: {{ $data->invoice_number }}</small>
                 <br>
-                {{-- QR Code (otomatis di-generate) --}}
-                <div style="margin-top:5px;">
-                    <img src="data:image/png;base64,{{ $qr }}" alt="" width="70" height="70">
-                </div>
+                <img src="data:image/png;base64,{{ $qr }}" width="55" height="55">
             </td>
         </tr>
     </table>
 
-    <br>
-
-    {{-- INFORMASI PO --}}
-    <table class="no-border" style="width:100%;">
+    {{-- INFO PO --}}
+    <table class="no-border">
         <tr>
             <td><strong>Kode Pesanan:</strong> {{ $data->do->so->so_number }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal Pesanan:</strong> {{ date('d/m/Y', strtotime($data->do->so->so_date)) }}</td>
+            <td style="padding-left:20px;"><strong>Tanggal Pesanan:</strong> {{ date('d/m/Y', strtotime($data->do->so->so_date)) }}</td>
         </tr>
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:40px;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>
+            <td style="padding-left:20px;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>
         </tr>
         <tr>
             <td><strong>Syarat Pembarayan:</strong> {{ $data->customers->top->code ?? '-' }}</td>
-            <td style="padding-left:40px;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>
+            <td style="padding-left:20px;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>
         </tr>
         <tr>
             <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
-            <td style="padding-left:40px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
+            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
         </tr>
     </table>
 
-    <h4>Detail Barang</h4>
+    <h4 style="margin-top:6px;">Detail Barang</h4>
+
     <table class="table-detail">
         <thead>
             <tr>
@@ -154,28 +141,25 @@
             </tr>
         </tfoot>
     </table>
-    <table class="no-border" style="width:100%;">
+
+    <table class="no-border">
         <tr>
-            <td>Note: Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening</td>
+            <td>Note: Barang telah diterima dengan cukup dan baik...</td>
         </tr>
     </table>
 
-    <br><br>
-    <table class="no-border" style="width:100%;">
+    <table class="no-border">
         <tr>
             <td class="text-center">
-                <br><br><br>
-                <strong>Disetujui Oleh</strong>
-                <br><br><br>
+                <strong>Disetujui Oleh</strong><br><br><br>
                 (__________________)
             </td>
             <td class="text-center">
-                <br><br><br>
-                <strong>Dibuat Oleh</strong>
-                <br><br><br>
+                <strong>Dibuat Oleh</strong><br><br><br>
                 (__________________)
             </td>
         </tr>
     </table>
+
 </body>
 </html>

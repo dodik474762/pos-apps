@@ -28,43 +28,20 @@
                     <div class="card-header border-0">
                         <div class="row align-items-center gy-3">
                             <div class="col-sm">
-                                <h5 class="card-title mb-0">{{ $title }} History</h5>
+                                <h5 class="card-title mb-0">{{ $title }} </h5>
                             </div>
                             <div class="col-sm-auto">
-                                @if ($akses->sales_invoice->insert == 1)
+                                @if ($akses->sales_invoice->print == 1)
                                     <div class="d-flex gap-1 flex-wrap">
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
-                                            onclick="SalesInvoice.add(this, event)"><i
-                                                class="ri-add-line align-bottom me-1"></i> Create New</a>
+                                            url="{{ route('sales-invoice-print-multiple') }}"
+                                            onclick="SalesInvoice.cetakAll(this, event)"><i
+                                                class="ri-printer-line align-bottom me-1"></i> Cetak Semua</a>
                                     </div>
                                 @endif
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body border border-dashed border-end-0 border-start-0">
-                        <form class="">
-                            <div class="row g-3">
-                                <!--end col-->
-                                <div class="col-xxl-3 col-sm-4">
-                                    <div>
-                                        <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="d M, Y" data-range-date="true" id="filterDate"
-                                            placeholder="Select date">
-                                    </div>
-                                </div>
-                                <div class="col-xxl-2 col-sm-4">
-                                    <div>
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this);"> <i
-                                                class="ri-equalizer-fill me-1 align-bottom"></i>
-                                            Print All Invoice
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                            </div>
-                            <!--end row-->
-                        </form>
                     </div>
                     <div class="card-body pt-0">
                         <div>
@@ -80,7 +57,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="list-data">
                                     <div class="table-responsive table-card mb-1">
-                                        <table class="table table-nowrap align-middle" id="table-data">
+                                        <table class="table table-nowrap align-middle" id="table-data-cetak">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
@@ -93,13 +70,34 @@
                                                     <th>Dibuat Oleh</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
-                                                    <th>Status Cetak</th>
-                                                    <th>Re Print</th>
                                                     <th>Status</th>
-                                                    <th>Action</th>
+                                                    <th style="width: 40px;">
+                                                        <input type="checkbox" id="check-all" onchange="SalesInvoice.checkAll(this)">
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
+                                                @php
+                                                    $no = 1;
+                                                @endphp
+                                                @foreach ($invoices as $item)
+                                                    <tr>
+                                                        <td>{{ $no++ }}</td>
+                                                        <td>{{ $item->invoice_number }}</td>
+                                                        <td>{{ $item->invoice_date }}</td>
+                                                        <td>{{ $item->do_number }}</td>
+                                                        <td>{{ $item->do_date }}</td>
+                                                        <td>{{ $item->nama_customer }}</td>
+                                                        <td>{{ $item->warehouse_name }}</td>
+                                                        <td>{{ $item->created_by_name }}</td>
+                                                        <td>{{ $item->due_date }}</td>
+                                                        <td>{{ $item->print_date }}</td>
+                                                        <td>{{ $item->status }}</td>
+                                                        <td>
+                                                              <input type="checkbox" class="check-item" value="{{ $item->id }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
                                             </tbody>
                                         </table>
                                         <div class="noresult" style="display: none">

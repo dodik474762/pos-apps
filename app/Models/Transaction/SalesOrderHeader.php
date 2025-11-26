@@ -3,6 +3,7 @@
 namespace App\Models\Transaction;
 
 use App\Models\Master\Customer;
+use App\Models\Master\Karyawan;
 use Illuminate\Database\Eloquent\Model;
 
 class SalesOrderHeader extends Model
@@ -15,5 +16,9 @@ class SalesOrderHeader extends Model
 
     public function items(){
         return $this->hasMany(SalesOrderDetail::class, 'sales_order_id', 'id')->whereNull('deleted');
+    }
+
+    public function salesman(){
+        return $this->hasOne(Karyawan::class, 'id', 'salesman');
     }
 }
