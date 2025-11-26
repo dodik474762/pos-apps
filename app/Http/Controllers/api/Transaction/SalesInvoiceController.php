@@ -250,7 +250,7 @@ class SalesInvoiceController extends Controller
                     'message' => 'Item tidak boleh kosong.',
                 ]);
             }
-            
+
             //cek jika ada tipe tax yang berbeda dalam 1 invoice
             if(count(array_unique(array_column($data['items'], 'type_tax'))) > 1){
                 DB::rollBack();
@@ -321,6 +321,9 @@ class SalesInvoiceController extends Controller
             $header->tax_id = $data['tax'];
             $header->tax_amount = $tax_amount;
             $header->total_amount = $data['total_amount'];
+            if($data['id'] != ''){
+                $header->reprint = 1; //reprint
+            }
             $header->save();
 
             $hdrId = $header->id;
@@ -578,7 +581,7 @@ class SalesInvoiceController extends Controller
             "),
                 // Hitung line total = subtotal + tax_amount
             DB::raw("
-                sod.subtotal + 
+                sod.subtotal +
                 CASE
                     WHEN p.type_tax = 'include' THEN (sod.subtotal - (sod.subtotal / (1 + t.rate/100)))
                     WHEN p.type_tax = 'exclude' THEN (sod.subtotal * (t.rate/100))
