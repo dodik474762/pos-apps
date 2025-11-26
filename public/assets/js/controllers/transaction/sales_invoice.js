@@ -238,6 +238,18 @@ let SalesInvoice = {
                     data: "due_date",
                 },
                 {
+                    data: "print_date",
+                },
+                {
+                    data: "reprint",
+                    render: function (data, type, row) {
+                        if(data == 1){
+                            return "Ya";
+                        }
+                        return "Tidak";
+                    }
+                },
+                {
                     data: "status",
                 },
                 {
