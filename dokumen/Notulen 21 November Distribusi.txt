@@ -1,7 +1,7 @@
 Sales Faktur:
 - printout pakai separo (A5)
 - printout (filter date) nanti bisa beberapa page
-- ada keterangan status (sudah cetak/belum cetak)
+- ada keterangan status (sudah cetak/belum cetak) OK
 - jika ada revisi (keterangan cetak ulang) OK
 - Note : Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening (No. Rek seperti di contoh cetakan)
 - diterima oleh (harus ada cap dan ttd toko)

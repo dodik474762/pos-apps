@@ -241,6 +241,18 @@ let SalesInvoice = {
                     data: "print_date",
                 },
                 {
+                    data: "print_date",
+                    render: function (data, type, row) {
+                        if(data){
+                            if(row.reprint == 1){
+                                return "Belum Cetak";
+                            }
+                            return "Sudah Cetak";
+                        }
+                        return "Belum Cetak";
+                    }
+                },
+                {
                     data: "reprint",
                     render: function (data, type, row) {
                         if(data == 1){

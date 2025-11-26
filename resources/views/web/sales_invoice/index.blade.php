@@ -93,6 +93,7 @@
                                                     <th>Dibuat Oleh</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
+                                                    <th>Status Cetak</th>
                                                     <th>Re Print</th>
                                                     <th>Status</th>
                                                     <th>Action</th>
