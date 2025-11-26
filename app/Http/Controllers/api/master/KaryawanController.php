@@ -90,6 +90,7 @@ class KaryawanController extends Controller
             $roles->bank_name = $data['bank_name'];
             $roles->bank_number = $data['bank_number'];
             $roles->bank_complete_name = $data['bank_complete_name'];
+            $roles->max_retur = $data['max_retur'];
             // $roles->group = $data['group'];
             $roles->save();
             $kryId = $roles->id;

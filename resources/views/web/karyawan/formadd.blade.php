@@ -58,7 +58,7 @@
                             </div>
                             <div class="mb-3">
                                 <label>Bank Account</label>
-                                <select class="form-control select2 required" error="Bank Account" id="bank_name">
+                                <select class="form-control select2" error="Bank Account" id="bank_name">
                                     <option value=""></option>
                                     @foreach ($list_bank as $item)
                                         <option value="{{ $item['term_id'] }}"
@@ -106,6 +106,14 @@
                                     <input type="number" min="0" id="bank_number" class="form-control required"
                                         error="Bank Number" placeholder="Bank Number"
                                         value="{{ isset($data->bank_number) ? $data->bank_number : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Max Retur</label>
+                                <div>
+                                    <input type="number" min="0" id="max_retur" class="form-control required"
+                                        error="Max Retur" placeholder="Max Retur"
+                                        value="{{ isset($data->max_retur) ? $data->max_retur : '9999' }}">
                                 </div>
                             </div>
                         </div>

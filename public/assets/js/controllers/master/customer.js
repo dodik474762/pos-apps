@@ -54,6 +54,7 @@ let Customer = {
             kecamatan: $("#kecamatan").val(),
             kelurahan: $("#kelurahan").val(),
             reference_number: $("#reference_number").val(),
+            max_retur: $("#max_retur").val(),
         };
 
         return data;

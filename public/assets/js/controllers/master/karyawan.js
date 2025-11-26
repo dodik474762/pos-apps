@@ -43,6 +43,7 @@ let Karyawan = {
             bank_number: $("#bank_number").val(),
             bank_complete_name: $("#bank_name").find("option:selected").text(),
             group: $("#group").val(),
+            max_retur: $("#max_retur").val(),
             items: Karyawan.getPostItem(),
         };
 
