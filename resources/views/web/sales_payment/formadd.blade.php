@@ -143,6 +143,7 @@
                                 @if(!empty($details))
                                     @foreach($details as $i => $item)
                                         <tr data_id="{{ $item->id }}">
+                                            <td id="customer_id_tr" data_id="{{ $item->customer_id }}">{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                                             <td id="invoice_id" data_id="{{ $item->invoice_id }}" subtotal="{{ $item->subtotal + $item->discount_amount }}" discount_amount="{{ $item->discount_amount }}">{{ $item->invoice_number }}</td>
                                             <td id="date_invoice">{{ $item->invoice_date }}</td>
                                             <td>

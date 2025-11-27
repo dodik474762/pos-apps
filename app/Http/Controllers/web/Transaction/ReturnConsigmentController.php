@@ -2,19 +2,14 @@
 
 namespace App\Http\Controllers\web\Transaction;
 
-use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSalesPaymentController;
+use App\Http\Controllers\api\Transaction\ReturnConsigmentController as TransactionReturnConsigmentController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
-use App\Models\Transaction\SalesInvoiceHeader;
-use App\Models\Transaction\SalesPaymentDtl;
-use App\Models\Transaction\SalesPaymentHeader;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-class SalesPaymentController extends Controller
+class ReturnConsigmentController extends Controller
 {
     public $akses_menu = [];
 
@@ -27,14 +22,14 @@ class SalesPaymentController extends Controller
     public function getHeaderCss()
     {
         return [
-            'js-1' => asset('assets/js/controllers/transaction/sales_payment.js'),
+            'js-1' => asset('assets/js/controllers/transaction/return_consigment.js'),
             'js-2' => asset('assets/js/controllers/notification.js'),
         ];
     }
 
     public function getTitleParent()
     {
-        return 'Pembayaran';
+        return 'Return';
     }
 
     public function getTableName()
@@ -44,7 +39,7 @@ class SalesPaymentController extends Controller
 
     public function getTitle()
     {
-        return 'Sales Payment';
+        return 'Consignment';
     }
 
     public function index()
@@ -55,7 +50,7 @@ class SalesPaymentController extends Controller
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
         // print_r($data);die;
-        $view = view('web.sales_payment.index', $data);
+        $view = view('web.return_consigment.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
@@ -88,49 +83,7 @@ class SalesPaymentController extends Controller
         $data['details'] = [];
         $data['general_ledgers'] = [];
         $data['cashBankAccounts'] = $this->getListKasBank();
-        $view = view('web.sales_payment.formadd', $data);
-        $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
-        $put['title_parent'] = $this->getTitleParent();
-        $put['view_file'] = $view;
-        $put['header_data'] = $this->getHeaderCss();
-
-        return view('web.template.main', $put);
-    }
-
-    public function getListCustomer(){
-        $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID'])
-        ->select([
-            'c.id as id',
-            'c.nama_customer'
-        ])
-        ->distinct()
-        ->join('customer as c', 'c.id', 'sales_invoice_header.customer_id')
-        ->whereNull('sales_invoice_header.deleted')
-        ->get()
-        ->toArray();
-
-        return $datadb;
-    }
-
-    public function addAll(Request $request)
-    {
-        $data = $request->all();
-        $data['data'] = [];
-        $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
-        $data['title_parent'] = $this->getTitleParent();
-        $data['taxes'] = Tax::where('is_active', 1)
-            ->whereNull('deleted')
-            ->where('tax_type', 'Output')
-            ->orderBy('tax_name')
-            ->get(['id', 'tax_name', 'rate']);
-        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-        $data['details'] = [];
-        $data['general_ledgers'] = [];
-        $data['cashBankAccounts'] = $this->getListKasBank();
-        $data['data_customer'] = $this->getListCustomer();
-        $view = view('web.sales_payment.formaddbulk', $data);
+        $view = view('web.return_consigment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
@@ -142,7 +95,7 @@ class SalesPaymentController extends Controller
 
     public function ubah(Request $request)
     {
-        $api = new TransactionSalesPaymentController();
+        $api = new TransactionReturnConsigmentController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
@@ -151,29 +104,28 @@ class SalesPaymentController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['cashBankAccounts'] = $this->getListKasBank();
-        $data['details'] = SalesPaymentDtl::where('sales_payment_detail.payment_id', $data['id'])
+        $data['details'] = CreditNoteDtl::where('credit_note_detail.credit_note_id', $data['id'])
             ->select([
-                'sales_payment_detail.*',
-                'sih.invoice_number',
-                'sih.invoice_date',
-                'sih.total_amount as total_amount_invoice',
-                'sih.discount_amount',
-                'sih.subtotal',
-                'sih.amount_paid',
-                'c.code as customer_code',
-                'c.nama_customer',
-                'c.id as customer_id'
+                'credit_note_detail.*',
+                'p.code as product_code',
+                'p.name as product_name',
+                'sid.qty',
+                'sid.discount',
+                'sid.tax',
+                'sid.tax_amount as tax_amount_invoice',
+                'sid.tax_rate',
+                'sid.type_tax',
             ])
-            ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
-            ->join('customer as c', 'sih.customer_id', 'c.id')
-            ->whereNull('sales_payment_detail.deleted')
-            ->orderBy('sales_payment_detail.id')
+            ->join('sales_invoice_detail as sid', 'sid.id', 'credit_note_detail.invoice_detail_id')
+            ->join('product as p', 'p.id', 'credit_note_detail.product_id')
+            ->whereNull('credit_note_detail.deleted')
+            ->orderBy('credit_note_detail.id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->credit_note_number);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $view = view('web.sales_payment.formadd', $data);
+        $view = view('web.return_consigment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
@@ -199,24 +151,5 @@ class SalesPaymentController extends Controller
             ->get();
 
             return $customers;
-    }
-
-    public function cetak(Request $request)
-    {
-        $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesPaymentHeader::with(['customers', 'items.invoice'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
-        // $qr = '';
-        // echo '<pre>';
-        // print_r($data->items);
-        // die;
-
-        // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
-
-        $pdf = Pdf::loadView('web.sales_payment.print.po-print', compact('data',  'company', 'qr'))
-            ->setPaper('a4', 'portrait');
-
-        return $pdf->stream('SP-'.$data->payment_code.'.pdf');
     }
 }

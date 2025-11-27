@@ -30,6 +30,7 @@ use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionP
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
+use App\Http\Controllers\api\Transaction\ReturnConsigmentController as TransactionReturnConsigmentController;
 use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSalesOrderController;
 use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSalesPaymentController;
@@ -68,6 +69,7 @@ use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
+use App\Http\Controllers\web\Transaction\ReturnConsigmentController;
 use App\Http\Controllers\web\Transaction\SalesInvoiceController;
 use App\Http\Controllers\web\Transaction\SalesOrderController;
 use App\Http\Controllers\web\Transaction\SalesPaymentController;
@@ -237,6 +239,11 @@ Route::get('transaksi/credit_note', [CreditNoteController::class, 'index']);
 Route::get('transaksi/credit_note/add', [CreditNoteController::class, 'add'])->name('credit-note-add');
 Route::get('transaksi/credit_note/ubah', [CreditNoteController::class, 'ubah'])->name('credit-note-edit');;
 Route::get('transaksi/credit_note/cetak', [CreditNoteController::class, 'cetak'])->name('credit-note-print');;
+
+Route::get('transaksi/return_cs', [ReturnConsigmentController::class, 'index']);
+Route::get('transaksi/return_cs/add', [ReturnConsigmentController::class, 'add'])->name('return-cs-add');
+Route::get('transaksi/return_cs/ubah', [ReturnConsigmentController::class, 'ubah'])->name('return-cs-edit');;
+Route::get('transaksi/return_cs/cetak', [ReturnConsigmentController::class, 'cetak'])->name('return-cs-print');;
 
 /*API */
 
@@ -480,4 +487,11 @@ Route::post('api/transaksi/credit_note/showModalInvoice', [TransactionCreditNote
 Route::post('api/transaksi/credit_note/getDataInvoice', [TransactionCreditNoteController::class, 'getDataInvoice']);
 Route::post('api/transaksi/credit_note/getProductInvoice', [TransactionCreditNoteController::class, 'getProductInvoice']);
 Route::post('api/transaksi/credit_note/posted', [TransactionCreditNoteController::class, 'posted']);
+
+Route::post('api/transaksi/return_cs/getData', [TransactionReturnConsigmentController::class, 'getData']);
+Route::post('api/transaksi/return_cs/submit', [TransactionReturnConsigmentController::class, 'submit']);
+Route::post('api/transaksi/return_cs/delete', [TransactionReturnConsigmentController::class, 'delete']);
+Route::post('api/transaksi/return_cs/confirmDelete', [TransactionReturnConsigmentController::class, 'confirmDelete']);
+Route::post('api/transaksi/return_cs/showModalVendor', [TransactionReturnConsigmentController::class, 'showModalVendor']);
+Route::post('api/transaksi/return_cs/showModalProduct', [TransactionReturnConsigmentController::class, 'showModalProduct']);
 /*API */
