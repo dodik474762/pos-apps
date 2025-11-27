@@ -1,5 +1,6 @@
 @foreach ($data as $item)
     <tr data_id="">
+        <td id="customer_id_tr">{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
         <td id="invoice_id" data_id="{{ $item->id }}" subtotal="{{ $item->total_before_discount }}" discount_amount="{{ $item->discount_amount }}">{{ $item->invoice_number }}</td>
         <td id="date_invoice">{{ $item->invoice_date }}</td>
         <td>

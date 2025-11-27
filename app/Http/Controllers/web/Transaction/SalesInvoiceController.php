@@ -83,12 +83,12 @@ class SalesInvoiceController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('delivery_order_header as do', 'do.id', 'm.do_id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
-            ->where('m.invoice_date', $date)
+            // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
-            // ->where(function ($q) {
-            //     return $q->where('m.reprint', 1)
-            //         ->orWhereNull('m.print_date');
-            // })
+            ->where(function ($q) {
+                return $q->where('m.reprint', 1)
+                    ->orWhereNull('m.print_date');
+            })
             ->orderBy('m.id', 'desc');
 
         $datadb = $datadb->get();

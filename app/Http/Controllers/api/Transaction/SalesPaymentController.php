@@ -494,24 +494,32 @@ class SalesPaymentController extends Controller
     public function getOutstandingInvoice(Request $request){
         $data = $request->all();
         $customerId = $data['customer'];
-        $datadb = DB::table('sales_invoice_header')
-        ->select(
-            'id',
-            'invoice_number',
-            'invoice_date',
-            'customer_id',
-            'total_amount',
-            'discount_amount',
-            'subtotal',
-            'amount_paid',
-            DB::raw('(subtotal - discount_amount) AS total_before_discount'),
-            DB::raw('(total_amount - amount_paid) AS outstanding_amount')
-        )
-        ->whereIn('status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
-        ->whereNull('deleted')            // tidak termasuk deleted
-        ->where('customer_id', $customerId)
-        ->having('outstanding_amount', '>', 0)  // hanya invoice yang masih punya sisa tagihan
-        ->get();
+        try {
+            //code...
+            $datadb = DB::table('sales_invoice_header as sih')
+            ->select(
+                'sih.id',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.customer_id',
+                'sih.total_amount',
+                'sih.discount_amount',
+                'sih.subtotal',
+                'sih.amount_paid',
+                'c.code as customer_code',
+                'c.nama_customer',
+                DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
+                DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
+            )
+            ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
+            ->whereNull('sih.deleted')            // tidak termasuk deleted
+            ->where('sih.customer_id', $customerId)
+            ->having('outstanding_amount', '>', 0)  // hanya invoice yang masih punya sisa tagihan
+            ->get();
+        } catch (\Throwable $th) {
+            echo $th->getMessage();die;
+        }
 
         $data['data'] = $datadb;
 

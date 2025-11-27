@@ -4,7 +4,7 @@ Sales Faktur:
 - ada keterangan status (sudah cetak/belum cetak) OK
 - jika ada revisi (keterangan cetak ulang) OK
 - Note : Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening (No. Rek seperti di contoh cetakan) OK
-- diterima oleh (harus ada cap dan ttd toko)
+- diterima oleh (harus ada cap dan ttd toko) OK
 - driver input setoran (update informasi ke invoicenya, dan akan jadi pengurang yang ditolak lalu di cetak ulang serta barang yg ditolak masuk good stock kembali)
 
 
@@ -13,12 +13,12 @@ Sales Payment:
 - tambahkan fitur bisa pelunasan beberapa customer tapi tetap generate ke sales payment per customer
 
 Salesman:
-- limit frekuensi retur
+- limit frekuensi retur OK
 
 Customer:
-- limit frekuensi retur
+- limit frekuensi retur OK
 
-Credit Note:
+Credit Note: OK
 
 Retur Tidak Standar:
  - bisa masuk good stock / bas stock

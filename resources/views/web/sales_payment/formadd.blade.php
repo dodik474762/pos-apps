@@ -130,8 +130,9 @@
                         <table class="table table-bordered" id="table-items">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 30%">Invoice</th>
-                                    <th style="width: 20%">Tanggal Invoice</th>
+                                    <th style="width: 20%">Customer</th>
+                                    <th style="width: 15%">Invoice</th>
+                                    <th style="width: 15%">Tanggal Invoice</th>
                                     <th style="width: 20%">Outstanding Amount</th>
                                     <th style="width: 20%">Allocated Amount</th>
                                     <th style="width: 10%">Action</th>
