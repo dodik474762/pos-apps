@@ -33,6 +33,10 @@
                             <div class="col-sm-auto">
                                 @if ($akses->sales_payment->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
+                                        <a type="button" class="btn btn-primary add-btn" data-bs-toggle="modal"
+                                            id="create-btn" href="javascript:void(0);"
+                                            onclick="SalesPayment.addAll(this, event)"><i
+                                                class="ri-add-line align-bottom me-1"></i> Create Bulk Payment</a>
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesPayment.add(this, event)"><i

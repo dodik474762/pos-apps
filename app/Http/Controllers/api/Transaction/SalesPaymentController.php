@@ -204,9 +204,6 @@ class SalesPaymentController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
-        // echo '<pre>';
-        // print_r($data);die;
-
 
         DB::beginTransaction();
         try {
@@ -232,6 +229,7 @@ class SalesPaymentController extends Controller
 
             $kasAccount = Coa::find($data['account_id']);
             // === HEADER ===
+
             $header = empty($data['id'])
                 ? new SalesPaymentHeader()
                 : SalesPaymentHeader::find($data['id']);
@@ -251,6 +249,7 @@ class SalesPaymentController extends Controller
             $header->reference_no = $data['reference_no'];
             $header->remarks = $data['remarks'];
             $header->coa_kas = $data['account_id'];
+            $header->bulk = $data['bulk'];
             $header->save();
 
             $hdrId = $header->id;
@@ -362,6 +361,182 @@ class SalesPaymentController extends Controller
             DB::commit();
             $result['is_valid'] = true;
             $result['message'] = 'Sales Payment berhasil disimpan';
+            $result['so_id'] = $hdrId;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    public function submitBulk(Request $request)
+    {
+        $data = $request->all();
+        $userId = session('user_id');
+        $result = ['is_valid' => false];
+
+
+        DB::beginTransaction();
+        try {
+
+             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+                ->where('account_type', 'piutang usaha')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+                ->where('account_type', 'diskon bayar')
+                ->with('account')
+                ->first();
+
+            if (! $piutangAcc || ! $discBayarAcc) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
+                ]);
+            }
+
+            $kasAccount = Coa::find($data['account_id']);
+            // === HEADER ===
+
+            if(empty($data['customers'])){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Customer belum dipilih.'
+                ]);
+            }
+
+            foreach ($data['customers'] as $k => $v) {
+                $data['customer_id'] = $v;
+
+                $header = new SalesPaymentHeader();
+                $header->payment_code = generateNoSP(); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'PENDING';
+
+                $header->payment_date = $data['payment_date'];
+                $header->customer_id = $data['customer_id'];
+                $header->payment_method = $data['payment_method'];
+                $header->total_amount = 0;
+                $header->discount_amount = 0;
+                $header->net_amount = 0;
+                $header->reference_no = $data['reference_no'];
+                $header->remarks = $data['remarks'];
+                $header->coa_kas = $data['account_id'];
+                $header->bulk = $data['bulk'];
+                $header->save();
+
+                $hdrId = $header->id;
+
+                $reference = $header->payment_code;
+
+                // === DETAIL ===
+                $totalAmount = 0;
+                $disc_total = 0;
+                $net_total = 0;
+                $line_no = 1;
+                foreach ($data['details'] as $key=>$value) {
+                    // Skip baris yang ditandai untuk dihapus
+                    if (!empty($value['remove']) && $value['remove'] == 1) {
+                        if (!empty($value['id'])) {
+                            $exist = SalesPaymentDtl::find($value['id']);
+                            if ($exist) {
+                                $exist->deleted = now();
+                                $exist->deleted_by = $userId;
+                                $exist->save();
+                            }
+                        }
+                        continue;
+                    }
+
+                    $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
+                    if($outstanding_amount < 0){
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-'.($key+1)
+                        ]);
+                    }
+
+                    $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
+                    $disc_amount = 0;
+                    if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+                        $disc_amount = $value['discount_amount'];
+                        $disc_total += $disc_amount;
+                    }
+
+                    if($value['allocated_amount'] > 0){
+                        $net_total += ($value['allocated_amount'] - $disc_amount);
+                    }
+
+                    if($value['allocated_amount'] < $disc_amount){
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-'.($key+1)
+                        ]);
+
+                    }
+
+                    $totalAmount += $value['allocated_amount'];
+
+                    // Item baru atau update
+                    $detail = empty($value['id'])
+                        ? new SalesPaymentDtl()
+                        : SalesPaymentDtl::find($value['id']);
+
+                    $detail->payment_id = $hdrId;
+                    $detail->invoice_id = $value['invoice_id'];
+                    $detail->allocated_amount = $value['allocated_amount'];
+                    $detail->outstanding_amount = $value['outstanding_amount'];
+                    $detail->line_no = $line_no++;
+                    $detail->save();
+
+                    /*mapping coa */
+
+                    $invoice = SalesInvoiceHeader::find($value['invoice_id']);
+                    $total_paid = 0;
+                    if($value['id'] == ''){
+                        $total_paid = $invoice->amount_paid +$value['allocated_amount'];
+                    }else{
+                        $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
+                    }
+                    $invoice->amount_paid = $total_paid;
+                    if($outstanding_amount == 0){
+                        $invoice->status = 'PAID';
+                    }else{
+                        $invoice->status = 'PARTIAL PAID';
+                    }
+                    $invoice->save();
+                }
+
+                $currency = Currency::where('code', 'IDR')->first();
+                $currencyId = $currency->id;
+
+                $update = SalesPaymentHeader::find($hdrId);
+                $update->total_amount = $totalAmount;
+                $update->discount_amount = $disc_total;
+                $update->net_amount = $net_total;
+                $update->save();
+
+                postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId);
+
+                $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
+                postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
+                if($disc_total > 0){
+                    postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
+                }
+            }
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Sales Payment Bulk berhasil disimpan';
             $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -493,7 +668,7 @@ class SalesPaymentController extends Controller
 
     public function getOutstandingInvoice(Request $request){
         $data = $request->all();
-        $customerId = $data['customer'];
+        $customerId = isset($data['customer']) ? $data['customer'] : '';
         try {
             //code...
             $datadb = DB::table('sales_invoice_header as sih')
@@ -514,9 +689,19 @@ class SalesPaymentController extends Controller
             ->join('customer as c', 'c.id', '=', 'sih.customer_id')
             ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
             ->whereNull('sih.deleted')            // tidak termasuk deleted
-            ->where('sih.customer_id', $customerId)
-            ->having('outstanding_amount', '>', 0)  // hanya invoice yang masih punya sisa tagihan
-            ->get();
+            ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
+
+            if($customerId != ''){
+                $datadb->where('sih.customer_id', $customerId);
+            }else{
+                $ids = isset($data['customers']) ? $data['customers'] : [];
+                if(empty($ids)){
+                    $datadb->where('sih.customer_id', 0);
+                }else{
+                    $datadb->whereIn('sih.customer_id', $ids);
+                }
+            }
+            $datadb = $datadb->get();
         } catch (\Throwable $th) {
             echo $th->getMessage();die;
         }

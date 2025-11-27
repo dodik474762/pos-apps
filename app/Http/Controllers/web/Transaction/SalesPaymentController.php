@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
+use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -88,6 +89,48 @@ class SalesPaymentController extends Controller
         $data['general_ledgers'] = [];
         $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.sales_payment.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
+    public function getListCustomer(){
+        $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID'])
+        ->select([
+            'c.id as id',
+            'c.nama_customer'
+        ])
+        ->distinct()
+        ->join('customer as c', 'c.id', 'sales_invoice_header.customer_id')
+        ->whereNull('sales_invoice_header.deleted')
+        ->get()
+        ->toArray();
+
+        return $datadb;
+    }
+
+    public function addAll(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['code'] = generateNoPO();
+        $data['title'] = 'Form '.$this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['details'] = [];
+        $data['general_ledgers'] = [];
+        $data['cashBankAccounts'] = $this->getListKasBank();
+        $data['data_customer'] = $this->getListCustomer();
+        $view = view('web.sales_payment.formaddbulk', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();

@@ -39,6 +39,11 @@ let SalesPayment = {
         window.location.href = url.base_url(SalesPayment.module()) + "add";
     },
 
+    addAll: (elm, e) => {
+        e.preventDefault();
+        window.location.href = url.base_url(SalesPayment.module()) + "addAll";
+    },
+
     getPostItem: () => {
         const rows = $("#table-items tbody tr");
         let result = [];
@@ -48,6 +53,7 @@ let SalesPayment = {
 
             result.push({
                 id: $row.attr("data_id") || null,
+                customer_id: $row.find("#customer_id_tr").attr("data_id") || null,
                 invoice_id: $row.find("#invoice_id").attr("data_id") || null,
                 discount_amount: $row.find("#invoice_id").attr("discount_amount") || 0,
                 outstanding_amount: parseFloat($row.find("#outstanding_amount").val()) || 0,
@@ -60,7 +66,7 @@ let SalesPayment = {
         return result;
     },
 
-    getPostInput: () => {
+    getPostInput: (bulk = false) => {
         let data = {
             id: $("#id").val() || null,
             payment_code: $("#payment_code").val() || null,
@@ -69,6 +75,7 @@ let SalesPayment = {
 
             customer_id: $("#customer_id").attr("data_id") || null,
             account_id: $("#account_id").val() || null,
+            customers: $("#customer_id").val() || null,
 
             total_amount: parseFloat($("#total_amount").val()) || 0,
             discount_amount: parseFloat($("#discount_amount").val()) || 0,
@@ -76,7 +83,7 @@ let SalesPayment = {
 
             reference_no: $("#reference_no").val() || null,
             remarks: $("#remarks").val() || null,
-
+            bulk: bulk ? 1 : 0,
             details: SalesPayment.getPostItem(),
         };
 
@@ -87,12 +94,51 @@ let SalesPayment = {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
-            let params = SalesPayment.getPostInput();
+            let params = SalesPayment.getPostInput(false);
             $.ajax({
                 type: "POST",
                 dataType: "json",
                 data: params,
                 url: url.base_url(SalesPayment.moduleApi()) + "submit",
+                headers: {
+                    "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+                },
+                beforeSend: () => {
+                    message.loadingProses("Proses Simpan Data...");
+                },
+                error: function () {
+                    message.closeLoading();
+                    message.sweetError("Informasi", "Gagal");
+                },
+
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        message.sweetSuccess();
+                        setTimeout(function () {
+                            // window.location.reload();
+                            SalesPayment.back();
+                        }, 1000);
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
+        } else {
+            message.sweetError("Informasi", "Data Belum Lengkap");
+        }
+    },
+
+    submitBulk: (elm, e) => {
+        e.preventDefault();
+        let form = $(elm).closest("div.row");
+        if (validation.runWithElement(form)) {
+            let params = SalesPayment.getPostInput(true);
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: params,
+                url: url.base_url(SalesPayment.moduleApi()) + "submitBulk",
                 headers: {
                     "X-CSRF-TOKEN": SalesPayment.csrf_token(),
                 },
@@ -463,9 +509,46 @@ let SalesPayment = {
         SalesPayment.getOutstandingInvoice(data_id);
     },
 
+    getListItemOutstandingCustomer:(elm)=>{
+        const ids = $(elm).val();
+        SalesPayment.getOutstandingInvoiceAllCustomer(ids);
+    },
+
     getOutstandingInvoice: (customer) => {
         let params = {
             customer: customer,
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesPayment.moduleApi()) + "getOutstandingInvoice",
+            headers: {
+                "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-items");
+                table_items.find("tbody").html(resp);
+                SalesPayment.hitungSummaryAll();
+            },
+        });
+    },
+
+    getOutstandingInvoiceAllCustomer: (customers) => {
+        let params = {
+            customers: customers,
         };
 
         $.ajax({

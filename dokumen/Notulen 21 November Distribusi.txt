@@ -9,8 +9,8 @@ Sales Faktur:
 
 
 Sales Payment:
-- informasi nama customer dan kode customer
-- tambahkan fitur bisa pelunasan beberapa customer tapi tetap generate ke sales payment per customer
+- informasi nama customer dan kode customer OK
+- tambahkan fitur bisa pelunasan beberapa customer tapi tetap generate ke sales payment per customer OK
 
 Salesman:
 - limit frekuensi retur OK
