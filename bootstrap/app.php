@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+         // Tambahkan rute API publik Anda yang dikecualikan di sini
+        $middleware->validateCsrfTokens(except: [
+            'api_mobile/master/product/getDataProductMobile',
+            // Tambahkan URI webhook atau callback eksternal lainnya di sini
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -1,5 +1,5 @@
 Sales Faktur:
-- printout pakai separo (A5)
+- printout pakai separo (A5) OK
 - printout (filter date) nanti bisa beberapa page OK
 - ada keterangan status (sudah cetak/belum cetak) OK
 - jika ada revisi (keterangan cetak ulang) OK
@@ -13,15 +13,15 @@ Sales Payment:
 - tambahkan fitur bisa pelunasan beberapa customer tapi tetap generate ke sales payment per customer OK
 
 Salesman:
-- limit frekuensi retur OK
+- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1
 
 Customer:
-- limit frekuensi retur OK
+- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1
 
 Credit Note: OK
 
 Retur Tidak Standar:
- - bisa masuk good stock / bas stock
+ - bisa masuk good stock / bas stock OK (kurang potong/nambah stock)
 
 Achiement Target per Periode untuk Salesman (diinput spv)
 
@@ -64,10 +64,10 @@ Mobile Driver:
 
 
 Note Tanggal 29 November 2025
-- kebutuhan device
-- total salesman
-- total admin
-- total driver
+- kebutuhan device (16) 
+- total salesman (10)
+- total admin (6)
+- total driver (6)
 - server 
 
 

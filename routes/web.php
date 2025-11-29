@@ -286,6 +286,7 @@ Route::post('api/master/product/addItemDiscFreeGood', [MasterProductController::
 Route::post('api/master/product/removeItemDiscFree', [MasterProductController::class, 'removeItemDiscFree']);
 Route::post('api/master/product/showDataProduct', [MasterProductController::class, 'showDataProduct']);
 Route::post('api/master/product/getDataProduct', [MasterProductController::class, 'getDataProduct']);
+Route::post('api_mobile/master/product/getDataProductMobile', [MasterProductController::class, 'getDataProductMobile']);
 
 Route::post('api/master/item/getData', [MasterItemController::class, 'getData']);
 Route::post('api/master/item/submit', [MasterItemController::class, 'submit'])->name('item-submit');
