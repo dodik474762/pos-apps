@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
          // Tambahkan rute API publik Anda yang dikecualikan di sini
         $middleware->validateCsrfTokens(except: [
             'api_mobile/master/product/getDataProductMobile',
+            'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })

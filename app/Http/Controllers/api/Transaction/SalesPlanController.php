@@ -417,4 +417,48 @@ class SalesPlanController extends Controller
         // print_r($query);die;
         return json_encode($data);
     }
+
+    public function getSalesRoutePlan(Request $request){
+        $data = $request->all();
+        $month = date('m');
+        $year = date('Y');
+        $salesman = isset($data['salesman']) ? $data['salesman'] : 1;
+
+        $datadb = DB::table('sales_plan_header as h')
+        ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
+        ->join('customer as c', 'c.id', '=', 'd.customer_id')
+        ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
+        ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
+        ->leftJoin('region as kt', 'kt.id', '=', 'c.kota')
+        ->leftJoin('region as kc', 'kc.id', '=', 'c.kecamatan')
+        ->leftJoin('region as kl', 'kl.id', '=', 'c.kelurahan')
+        ->leftJoin('product as p', 'p.id', '=', 'd.product_id')
+        ->select(
+            'h.*',
+            'd.*',
+            'c.code as customer_code',
+            'c.nama_customer',
+            'pr.name as nama_provinsi',
+            'kt.name as nama_kota',
+            'kc.name as nama_kecamatan',
+            'kl.name as nama_kelurahan',
+            'c.address',
+            'p.name as product_name',
+            'p.code as product_code',
+            'cc.category'
+        )
+        ->whereNull('h.deleted')
+         ->where('h.period_year', $year)
+        ->where('h.period_month', $month)
+        ->where('h.salesman', $salesman)
+        ->orderBy('h.id')
+        ->orderBy('d.week_number')
+        ->get();
+
+
+        $result['is_valid'] = empty($datadb)  ? false : true;
+        $result['data'] = $datadb;
+
+        return response()->json($result);
+    }
 }

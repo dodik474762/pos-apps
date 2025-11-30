@@ -142,6 +142,7 @@ class ProductController extends Controller
                 'm.name as product_name',
                 'u.name as product_unit',
                 'pup.price as product_price',
+                'u.id as product_unit_id'
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
             ->join('product_uom_price as pup',function($q){
@@ -153,7 +154,9 @@ class ProductController extends Controller
         $data = $datadb->get()->toArray();
         // echo '<pre>';
         // print_r($query);die;
-        return response()->json($data);
+        $result['is_valid'] = empty($data) ? false : true;
+        $result['data'] = $data;
+        return response()->json($result);
     }
 
     public function getProductCatalog(Request $request)

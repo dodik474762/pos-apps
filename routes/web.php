@@ -442,6 +442,7 @@ Route::post('api/transaksi/sales_plan/showDataCustomer', [TransactionSalesPlanCo
 Route::post('api/transaksi/sales_plan/getDataCustomer', [TransactionSalesPlanController::class, 'getDataCustomer']);
 Route::post('api/transaksi/sales_plan/showDataProduct', [TransactionSalesPlanController::class, 'showDataProduct']);
 Route::post('api/transaksi/sales_plan/getDataProduct', [TransactionSalesPlanController::class, 'getDataProduct']);
+Route::post('api_mobile/transaksi/sales_plan/getSalesRoutePlan', [TransactionSalesPlanController::class, 'getSalesRoutePlan']);
 
 Route::post('api/transaksi/delivery_order/getData', [TransactionDeliveryOrderController::class, 'getData']);
 Route::post('api/transaksi/delivery_order/submit', [TransactionDeliveryOrderController::class, 'submit']);
