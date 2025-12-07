@@ -149,17 +149,18 @@ class SalesPlanController extends Controller
         try {
             // Pastikan currency default ada
             $currency = Currency::where('code', 'IDR')->first();
-            if (!$currency) {
+            if (! $currency) {
                 DB::rollBack();
+
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Currency IDR tidak ditemukan'
+                    'message' => 'Currency IDR tidak ditemukan',
                 ]);
             }
 
             // === HEADER ===
             $header = empty($data['id'])
-                ? new SalesPlanHeader()
+                ? new SalesPlanHeader
                 : SalesPlanHeader::find($data['id']);
 
             if (empty($data['id'])) {
@@ -179,14 +180,15 @@ class SalesPlanController extends Controller
             // === DETAIL ===
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
-                if (!empty($item['remove']) && $item['remove'] == 1) {
-                    if (!empty($item['id'])) {
+                if (! empty($item['remove']) && $item['remove'] == 1) {
+                    if (! empty($item['id'])) {
                         $exist = SalesPlanDetail::find($item['id']);
                         if ($exist && $exist->status !== 'DRAFT') {
                             DB::rollBack();
+
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
+                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
                             ]);
                         }
                         if ($exist) {
@@ -195,21 +197,22 @@ class SalesPlanController extends Controller
                             $exist->save();
                         }
                     }
+
                     continue;
                 }
 
                 // Item baru atau update
                 $detail = empty($item['id'])
-                    ? new SalesPlanDetail()
+                    ? new SalesPlanDetail
                     : SalesPlanDetail::find($item['id']);
 
-                list($cust_id, $cust_name) = explode('//', $item['customer_name']);
+                [$cust_id, $cust_name] = explode('//', $item['customer_name']);
                 $detail->header_id = $hdrId;
                 $detail->customer_id = $cust_id;
-                if($item['product_name'] != ''){
-                    list($prod_id, $prod_name) = explode('//', $item['product_name']);
+                if ($item['product_name'] != '') {
+                    [$prod_id, $prod_name] = explode('//', $item['product_name']);
                     $detail->product_id = $prod_id;
-                }else{
+                } else {
                     $detail->product_id = 0;
                 }
                 $detail->week_number = $item['week_number'];
@@ -321,7 +324,7 @@ class SalesPlanController extends Controller
         $data['recordsTotal'] = $datadb->count();
 
         // --- Pencarian ---
-        if (!empty($_POST['search']['value'])) {
+        if (! empty($_POST['search']['value'])) {
             $keyword = $_POST['search']['value'];
             $datadb->where(function ($query) use ($keyword) {
                 $query->where('m.name', 'like', "%{$keyword}%")
@@ -332,7 +335,7 @@ class SalesPlanController extends Controller
         }
 
         // --- Urutan (Sorting) ---
-        if (!empty($_POST['order'][0]['dir'])) {
+        if (! empty($_POST['order'][0]['dir'])) {
             $dir = $_POST['order'][0]['dir'];
             $datadb->orderBy('m.id', $dir);
         } else {
@@ -388,14 +391,14 @@ class SalesPlanController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.nama_customer', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
-                    $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
+                    $query->where('m.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.pic', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.address', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.email', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.code', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.numbering_code', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.kota', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.category', 'LIKE', '%'.$keyword.'%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -413,50 +416,66 @@ class SalesPlanController extends Controller
         $data['data'] = $datadb->get()->toArray();
         $data['draw'] = $_POST['draw'];
         $query = DB::getQueryLog();
+
         // echo '<pre>';
         // print_r($query);die;
         return json_encode($data);
     }
 
-    public function getSalesRoutePlan(Request $request){
+    public function getSalesRoutePlan(Request $request)
+    {
         $data = $request->all();
         $month = date('m');
         $year = date('Y');
         $salesman = isset($data['salesman']) ? $data['salesman'] : 1;
 
+        // Subquery invoice dengan outstanding
+        $invoiceSubquery = DB::table('sales_invoice_header as sih')
+            ->select(
+                'sih.customer_id',
+                DB::raw('SUM(sih.total_amount - sih.amount_paid) AS total_outstanding')
+            )
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])
+            ->whereNull('sih.deleted')
+            ->groupBy('sih.customer_id');
+
+        // Query sales plan + join invoice
         $datadb = DB::table('sales_plan_header as h')
-        ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
-        ->join('customer as c', 'c.id', '=', 'd.customer_id')
-        ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
-        ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
-        ->leftJoin('region as kt', 'kt.id', '=', 'c.kota')
-        ->leftJoin('region as kc', 'kc.id', '=', 'c.kecamatan')
-        ->leftJoin('region as kl', 'kl.id', '=', 'c.kelurahan')
-        ->leftJoin('product as p', 'p.id', '=', 'd.product_id')
-        ->select(
-            'h.*',
-            'd.*',
-            'c.code as customer_code',
-            'c.nama_customer',
-            'pr.name as nama_provinsi',
-            'kt.name as nama_kota',
-            'kc.name as nama_kecamatan',
-            'kl.name as nama_kelurahan',
-            'c.address',
-            'p.name as product_name',
-            'p.code as product_code',
-            'cc.category'
-        )
-        ->whereNull('h.deleted')
-         ->where('h.period_year', $year)
-        ->where('h.period_month', $month)
-        ->where('h.salesman', $salesman)
-        ->orderBy('h.id')
-        ->orderBy('d.week_number')
-        ->get();
+            ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
+            ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
+            ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
+            ->leftJoin('region as kt', 'kt.id', '=', 'c.kota')
+            ->leftJoin('region as kc', 'kc.id', '=', 'c.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'c.kelurahan')
+            ->leftJoin('product as p', 'p.id', '=', 'd.product_id')
+            ->leftJoinSub($invoiceSubquery, 'inv', function ($join) {
+                $join->on('inv.customer_id', '=', 'c.id');
+            })
+            ->select(
+                'h.*',
+                'd.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'pr.name as nama_provinsi',
+                'kt.name as nama_kota',
+                'kc.name as nama_kecamatan',
+                'kl.name as nama_kelurahan',
+                'c.address',
+                'p.name as product_name',
+                'p.code as product_code',
+                'cc.category',
+                DB::raw('COALESCE(inv.total_outstanding, 0) as total_outstanding')
+            )
+            ->whereNull('h.deleted')
+            ->where('h.period_year', $year)
+            ->where('h.period_month', $month)
+            ->where('h.salesman', $salesman)
+            ->orderBy('h.id')
+            ->orderBy('d.week_number')
+            ->get();
 
-
-        $result['is_valid'] = empty($datadb)  ? false : true;
+        $result['is_valid'] = empty($datadb) ? false : true;
         $result['data'] = $datadb;
 
         return response()->json($result);
