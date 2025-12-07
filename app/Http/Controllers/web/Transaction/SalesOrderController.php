@@ -75,9 +75,9 @@ class SalesOrderController extends Controller
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
-        ->select(['customer.*', 'top.nilai as top_value'])
-        ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
-        ->get();
+            ->select(['customer.*', 'top.nilai as top_value'])
+            ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->orderBy('tax_name')
@@ -102,9 +102,9 @@ class SalesOrderController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
         $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
-        ->select(['customer.*', 'top.nilai as top_value'])
-        ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
-        ->get();
+            ->select(['customer.*', 'top.nilai as top_value'])
+            ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+            ->get();
 
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -137,7 +137,8 @@ class SalesOrderController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -153,7 +154,7 @@ class SalesOrderController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
@@ -161,11 +162,11 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->so_number));
+        // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);
+        // $qr = 'data:image/png;base64,'.base64_encode($rawQr);
+        $qr = '';
+
         // $qr = '';
-        // echo '<pre>';
-        // print_r($data);
-        // die;
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
