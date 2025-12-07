@@ -134,7 +134,8 @@ class PurchaseInvoiceController extends Controller
         $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail','items.products', 'items.units'])->findOrFail($data['id']);
         // echo '<pre>';
         // print_r($data);die;
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
+        $qr = '';
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');

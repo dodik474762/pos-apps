@@ -74,7 +74,7 @@
                 <strong>FAKTUR PENJUALAN</strong><br>
                 <small>No: {{ $data->invoice_number }}</small>
                 <br>
-                <img src="data:image/png;base64,{{ $qr }}" width="55" height="55">
+                {{-- <img src="data:image/png;base64,{{ $qr }}" width="55" height="55"> --}}
             </td>
         </tr>
     </table>

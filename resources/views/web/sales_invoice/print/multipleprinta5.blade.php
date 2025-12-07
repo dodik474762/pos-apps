@@ -47,7 +47,8 @@
 @foreach ($invoices as $data)
 
     @php
-        $qr = base64_encode(QrCode::format('png')->size(70)->generate($data->invoice_number));
+        // $qr = base64_encode(QrCode::format('png')->size(70)->generate($data->invoice_number));
+        $qr = '';
         $do = $data->do;
         $so = $do->so;
         $salesman = $so->salesman;

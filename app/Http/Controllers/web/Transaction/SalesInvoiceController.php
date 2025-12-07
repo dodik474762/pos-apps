@@ -203,7 +203,8 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesInvoiceHeader::with(['do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
+        $qr = '';
 
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
         SalesInvoiceHeader::where('id', $data->id)->update([

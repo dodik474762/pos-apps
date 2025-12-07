@@ -206,8 +206,8 @@ class SalesPaymentController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesPaymentHeader::with(['customers', 'items.invoice'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
-        // $qr = '';
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
+        $qr = '';
         // echo '<pre>';
         // print_r($data->items);
         // die;

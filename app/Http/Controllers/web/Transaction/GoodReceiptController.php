@@ -138,8 +138,8 @@ class GoodReceiptController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = GoodReceipt::with(['po','po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
-        $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
-        // $qr = '';
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
+        $qr = '';
         // echo '<pre>';
         // print_r($data);
         // die;
