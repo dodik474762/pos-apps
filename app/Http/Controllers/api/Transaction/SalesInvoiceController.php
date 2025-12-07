@@ -607,6 +607,7 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
         $customerId = isset($data['customer']) ? $data['customer'] : '1';
         $customers = explode(',', $customerId);
+        $customers = array_unique($customers);
 
         $result['message'] = '';
         $result['is_valid'] = true;
