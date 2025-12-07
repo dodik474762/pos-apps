@@ -602,4 +602,45 @@ class SalesInvoiceController extends Controller
 
         return view('web.sales_invoice.datadodetail', $data);
     }
+
+     public function getOutstandingInvoice(Request $request){
+        $data = $request->all();
+        $customerId = isset($data['customer']) ? $data['customer'] : '1';
+        $customers = explode(',', $customerId);
+
+        $result['message'] = '';
+        $result['is_valid'] = true;
+        try {
+            //code...
+            $datadb = DB::table('sales_invoice_header as sih')
+            ->select(
+                'sih.id',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.customer_id',
+                'sih.total_amount',
+                'sih.discount_amount',
+                'sih.subtotal',
+                'sih.amount_paid',
+                'c.code as customer_code',
+                'c.nama_customer',
+                DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
+                DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
+            )
+            ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
+            ->whereNull('sih.deleted')            // tidak termasuk deleted
+            ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
+
+            $datadb->whereIn('sih.customer_id', $customers);
+            $datadb = $datadb->get();
+            $result['message'] = 'Success';
+        } catch (\Throwable $th) {
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
+        }
+
+        $result['data'] = $datadb;
+        return response()->json($result);
+    }
 }

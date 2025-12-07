@@ -460,6 +460,7 @@ Route::post('api/transaksi/sales_invoice/showModalDO', [TransactionSalesInvoiceC
 Route::post('api/transaksi/sales_invoice/getDataDo', [TransactionSalesInvoiceController::class, 'getDataDo']);
 Route::post('api/transaksi/sales_invoice/getDoDetail', [TransactionSalesInvoiceController::class, 'getDoDetail']);
 Route::post('api/transaksi/sales_invoice/posted', [TransactionSalesInvoiceController::class, 'posted']);
+Route::post('api_mobile/transaksi/sales_invoice/getOutstandingInvoice', [TransactionSalesInvoiceController::class, 'getOutstandingInvoice']);
 
 Route::post('api/transaksi/sales_payment/getData', [TransactionSalesPaymentController::class, 'getData']);
 Route::post('api/transaksi/sales_payment/submit', [TransactionSalesPaymentController::class, 'submit']);

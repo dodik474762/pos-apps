@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api_mobile/master/product/getDataProductMobile',
             'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
+            'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
+            'api_mobile/transaksi/sales_invoice/getOutstandingInvoice'
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })
