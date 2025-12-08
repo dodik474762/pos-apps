@@ -328,7 +328,7 @@ CREATE TABLE `customer` (
   `kecamatan` int DEFAULT NULL,
   `kelurahan` int DEFAULT NULL,
   `reference_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `max_retur` int DEFAULT '0',
+  `max_retur` double DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `customer_kota_IDX` (`kota`) USING BTREE,
   KEY `customer_code_IDX` (`code`) USING BTREE,
@@ -897,7 +897,7 @@ CREATE TABLE `karyawan` (
   `bank_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `bank_complete_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `group` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `max_retur` int DEFAULT '0',
+  `max_retur` double DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -908,7 +908,7 @@ CREATE TABLE `karyawan` (
 
 LOCK TABLES `karyawan` WRITE;
 /*!40000 ALTER TABLE `karyawan` DISABLE KEYS */;
-INSERT INTO `karyawan` VALUES (1,1,'administrator','ADMINISTRATOR','ADMINISTRATOR',NULL,NULL,'2025-11-26 14:35:44','0','-',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0',NULL,'GROUP_25JAN0003',9999);
+INSERT INTO `karyawan` VALUES (1,1,'administrator','ADMINISTRATOR','ADMINISTRATOR',NULL,NULL,'2025-12-08 13:48:32','0','-',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'0',NULL,'GROUP_25JAN0003',99999999999);
 /*!40000 ALTER TABLE `karyawan` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -928,7 +928,7 @@ CREATE TABLE `karyawan_group` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -937,7 +937,7 @@ CREATE TABLE `karyawan_group` (
 
 LOCK TABLES `karyawan_group` WRITE;
 /*!40000 ALTER TABLE `karyawan_group` DISABLE KEYS */;
-INSERT INTO `karyawan_group` VALUES (2,1,'GROUP_25OCT0001',0,NULL,'2025-11-26 14:35:44','2025-11-26 14:35:44');
+INSERT INTO `karyawan_group` VALUES (3,1,'GROUP_25OCT0001',0,NULL,'2025-12-08 13:48:32','2025-12-08 13:48:32');
 /*!40000 ALTER TABLE `karyawan_group` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -963,7 +963,7 @@ CREATE TABLE `menu` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `routing` int DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=130 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -972,7 +972,7 @@ CREATE TABLE `menu` (
 
 LOCK TABLES `menu` WRITE;
 /*!40000 ALTER TABLE `menu` DISABLE KEYS */;
-INSERT INTO `menu` VALUES (1,'Master','bx bx-layout',NULL,NULL,NULL,2,NULL,NULL,NULL,NULL,NULL,0),(2,'Menu',NULL,NULL,'master/menu','1',20,NULL,NULL,NULL,NULL,NULL,0),(3,'Users & Permissions','bx bx-user-circle',NULL,'-',NULL,3,NULL,NULL,NULL,'2022-07-26 18:28:30','2022-07-26 18:28:30',0),(4,'Users',NULL,NULL,'master/users','3',1,NULL,NULL,NULL,'2022-07-26 18:28:42','2024-11-13 22:32:30',0),(5,'Permissions',NULL,NULL,'master/permission','3',2,NULL,NULL,NULL,'2022-07-26 18:28:56','2022-07-26 18:28:56',0),(6,'Data','bx bx-detail',NULL,'-',NULL,4,NULL,NULL,NULL,'2022-07-26 21:47:58','2022-07-26 21:47:58',0),(7,'Karyawan',NULL,NULL,'master/karyawan','1',11,NULL,NULL,NULL,'2022-07-26 21:48:12','2024-12-03 02:48:13',0),(8,'Perusahaan',NULL,NULL,'master/company','1',1,NULL,NULL,NULL,'2022-07-26 21:50:11','2024-11-13 22:42:30',0),(9,'Roles',NULL,NULL,'master/roles','3',NULL,NULL,NULL,NULL,'2022-07-26 21:50:56','2022-07-26 21:50:56',0),(10,'Dashboard','bx bx-home-circle',NULL,'dashboard',NULL,1,NULL,NULL,NULL,'2022-07-26 21:57:29','2022-07-26 21:57:29',0),(14,'Transaksi','bx bx-file',NULL,'-',NULL,4,NULL,NULL,NULL,'2022-07-28 00:08:03','2022-07-28 00:08:03',0),(28,'Vendor',NULL,NULL,'master/vendor','1',10,NULL,NULL,NULL,'2022-08-31 19:53:40','2024-12-03 02:47:57',0),(34,'Invoice',NULL,NULL,'transaksi/invoice','14',NULL,NULL,NULL,NULL,'2022-09-30 18:39:08','2024-01-06 09:57:57',0),(36,'Report','bx bxs-report',NULL,'-',NULL,7,NULL,NULL,NULL,'2022-10-28 07:08:04','2022-10-28 07:08:04',0),(55,'Approval','bx bx-paper-plane',NULL,'-',NULL,5,NULL,NULL,NULL,'2024-10-15 12:54:18','2024-10-15 12:54:18',0),(63,'Customer',NULL,NULL,'master/customer','1',3,NULL,NULL,NULL,'2024-11-26 08:50:34','2024-12-03 02:46:52',0),(64,'Customer Category',NULL,NULL,'master/customer_category','1',2,NULL,NULL,NULL,'2024-11-26 09:07:40','2024-11-26 09:07:40',0),(65,'Product Unit',NULL,NULL,'master/unit','1',5,NULL,NULL,NULL,'2024-11-26 09:07:58','2024-11-26 09:07:58',0),(66,'Attandance','bx bxs-user-account',NULL,'-',NULL,6,NULL,NULL,NULL,'2024-11-28 02:20:19','2024-11-28 02:20:19',0),(67,'Day Off',NULL,NULL,'master/dayoff','1',14,NULL,NULL,NULL,'2024-11-28 02:20:47','2024-12-03 02:49:02',0),(68,'Work Hour',NULL,NULL,'master/working_hours','1',15,NULL,NULL,NULL,'2024-11-28 02:48:57','2024-12-03 02:49:18',0),(69,'Job Category',NULL,NULL,'master/job_category','1',7,NULL,NULL,NULL,'2024-11-28 03:18:36','2024-11-28 03:18:36',0),(70,'Travel Item',NULL,NULL,'master/travel_item','1',8,NULL,NULL,NULL,'2024-11-28 03:19:00','2024-11-28 03:19:00',0),(71,'Product Type',NULL,NULL,'master/product_type','1',4,NULL,NULL,NULL,'2024-11-28 03:33:15','2024-11-28 03:33:15',0),(72,'Product',NULL,NULL,'master/product','1',6,NULL,NULL,NULL,'2024-11-28 03:40:20','2024-12-03 02:47:31',0),(73,'Wilayah','bx bx-map-alt',NULL,'-',NULL,NULL,NULL,NULL,NULL,'2024-11-28 04:52:13','2024-11-28 04:52:13',0),(74,'Province',NULL,NULL,'master/province','1',16,NULL,NULL,NULL,'2024-11-28 04:52:45','2024-12-03 02:49:46',0),(75,'City',NULL,NULL,'master/city','1',17,NULL,NULL,NULL,'2024-11-28 04:53:02','2024-12-03 02:50:03',0),(76,'Forecast',NULL,NULL,'transaksi/forecast','14',NULL,NULL,NULL,NULL,'2024-11-28 09:11:26','2024-11-28 09:11:26',0),(77,'Visit Plan',NULL,NULL,'transaksi/visit_plan','14',NULL,NULL,NULL,NULL,'2024-11-28 09:11:55','2024-11-28 09:11:55',0),(78,'Budgeting',NULL,NULL,'transaksi/budgeting','14',NULL,NULL,NULL,NULL,'2024-11-28 09:12:17','2024-11-28 09:12:17',1),(79,'Reimbursement',NULL,NULL,'transaksi/reimbursment','14',NULL,NULL,NULL,NULL,'2024-11-28 09:12:51','2024-11-28 09:12:51',1),(80,'Presensi',NULL,NULL,'transaksi/presensi','14',NULL,NULL,NULL,NULL,'2024-11-28 09:13:24','2024-12-03 02:52:10',0),(81,'Employee Leave',NULL,NULL,'transaksi/employee_leave','14',NULL,NULL,NULL,NULL,'2024-11-28 09:14:13','2024-12-03 02:52:27',1),(82,'Budgeting',NULL,NULL,'approval/bugeting','55',1,NULL,NULL,NULL,'2024-12-02 06:46:37','2024-12-02 06:46:37',0),(83,'Routing Approval',NULL,NULL,'master/routing','1',13,NULL,NULL,NULL,'2024-12-02 08:46:45','2024-12-03 02:48:37',0),(84,'Generate Id Project',NULL,NULL,'transaksi/generate_project','14',NULL,NULL,NULL,NULL,'2024-12-03 02:51:45','2024-12-03 02:51:45',0),(85,'Perdin',NULL,NULL,'approval/perdin','55',2,NULL,NULL,NULL,'2024-12-03 02:53:14','2024-12-03 02:53:14',0),(86,'Realisasi Perdin',NULL,NULL,'approval/realisasi_perdin','55',3,NULL,NULL,NULL,'2024-12-03 02:53:42','2024-12-03 02:53:42',0),(87,'Reimbursement',NULL,NULL,'approval/approval_reimbursement','55',4,NULL,NULL,NULL,'2024-12-03 02:54:23','2024-12-03 02:54:23',0),(88,'Leave',NULL,NULL,'approval/approval_leave','55',6,NULL,NULL,NULL,'2024-12-03 02:54:52','2024-12-03 02:54:52',0),(89,'Perdin',NULL,NULL,'transaksi/perdin','14',NULL,NULL,NULL,NULL,'2024-12-03 02:55:42','2024-12-03 02:55:42',1),(90,'Sales Order',NULL,NULL,'transaksi/sales_order','14',6,NULL,NULL,NULL,'2024-12-04 01:58:01','2025-11-10 07:15:43',0),(91,'Realisasi Perdin',NULL,NULL,'transaksi/realisasi_perdin','14',NULL,NULL,NULL,NULL,'2024-12-04 03:08:24','2024-12-04 03:08:24',1),(92,'Travel Cost',NULL,NULL,'master/travel_cost','1',9,NULL,NULL,NULL,'2024-12-26 07:15:36','2024-12-26 07:15:36',0),(93,'Payment Perdin',NULL,NULL,'transaksi/payment_perdin','14',NULL,NULL,NULL,NULL,'2024-12-27 09:08:00','2024-12-27 09:08:00',0),(94,'Karyawan Group',NULL,NULL,'master/group','1',12,NULL,NULL,NULL,'2025-01-08 22:01:36','2025-01-08 22:01:36',0),(95,'Perdin After Sales',NULL,NULL,'transaksi/perdin_after_sales','14',NULL,NULL,NULL,NULL,'2025-01-09 08:51:15','2025-01-09 08:51:15',1),(96,'Perdin After Sales',NULL,NULL,'approval/perdin_after_sales','55',5,NULL,NULL,NULL,'2025-01-09 08:51:37','2025-01-09 08:51:37',0),(97,'Tax',NULL,NULL,'master/tax','1',21,NULL,NULL,NULL,'2025-01-14 03:04:49','2025-11-03 06:41:57',0),(98,'Purchase Order',NULL,NULL,'transaksi/purchase_order','14',1,NULL,NULL,NULL,'2025-01-14 07:08:19','2025-01-14 07:08:19',1),(99,'Purchase Invoice',NULL,NULL,'transaksi/purchase-invoice','14',3,NULL,NULL,NULL,'2025-01-14 07:08:38','2025-11-05 07:08:54',1),(100,'Purchase Order',NULL,NULL,'approval/purchase_order','55',7,NULL,NULL,NULL,'2025-01-14 07:09:44','2025-01-14 07:09:44',0),(101,'Invoice',NULL,NULL,'approval/invoice','55',8,NULL,NULL,NULL,'2025-01-14 07:10:00','2025-01-14 07:10:00',0),(102,'Pengembalian Perdin',NULL,NULL,'transaksi/pengembalian','14',NULL,NULL,NULL,NULL,'2025-02-07 00:51:33','2025-02-07 00:51:33',0),(103,'Company Profile',NULL,NULL,'master/company_profile','1',NULL,NULL,NULL,NULL,'2025-04-17 08:33:14','2025-04-17 08:33:14',0),(104,'Product Catalog',NULL,NULL,'master/product_catalog','1',NULL,NULL,NULL,NULL,'2025-04-17 08:33:32','2025-04-17 08:33:32',0),(105,'Report Perdin Item',NULL,NULL,'report/perdin-item','36',NULL,NULL,NULL,NULL,'2025-07-17 22:46:29','2025-07-17 22:46:29',0),(106,'SPK Jasa Instalasi',NULL,NULL,'transaksi/spk_jasa_instalasi','14',NULL,NULL,NULL,NULL,'2025-07-21 22:29:26','2025-07-21 22:29:26',1),(107,'SPK Jasa Instalasi',NULL,NULL,'approval/spk','55',9,NULL,NULL,NULL,'2025-07-23 22:21:19','2025-07-23 22:21:19',0),(108,'Forecast Detail',NULL,NULL,'report/forecast_detail','36',NULL,NULL,NULL,NULL,'2025-08-01 22:59:07','2025-08-01 22:59:07',0),(109,'Sales Detail',NULL,NULL,'report/sales_detail','36',NULL,NULL,NULL,NULL,'2025-08-01 22:59:20','2025-08-01 22:59:20',0),(110,'Forecast Vs Sales',NULL,NULL,'report/forecast_vs_sales','36',NULL,NULL,NULL,NULL,'2025-08-06 22:30:35','2025-08-06 22:30:35',0),(111,'Sales Shipment',NULL,NULL,'report/sales_shipment','36',NULL,NULL,NULL,NULL,'2025-08-09 01:53:26','2025-08-09 01:53:26',0),(112,'Gross Profit',NULL,NULL,'report/gross_profit','36',NULL,NULL,NULL,NULL,'2025-08-11 23:02:40','2025-08-11 23:02:40',0),(113,'Budgeting Report',NULL,NULL,'report/budgeting_report','36',NULL,NULL,NULL,NULL,'2025-08-12 22:44:02','2025-08-12 22:44:02',0),(114,'Warehouse',NULL,NULL,'master/warehouse','1',NULL,NULL,NULL,NULL,'2025-10-30 02:19:23','2025-10-30 02:19:23',0),(115,'Kecamatan',NULL,NULL,'master/kecamatan','1',18,NULL,NULL,NULL,'2025-10-31 19:54:22','2025-10-31 19:54:22',0),(116,'Kelurahan',NULL,NULL,'master/kelurahan','1',19,NULL,NULL,NULL,'2025-11-01 05:35:30','2025-11-01 05:35:30',0),(117,'Chart of Account',NULL,NULL,'master/coa','1',22,NULL,NULL,NULL,'2025-11-03 06:18:45','2025-11-03 06:18:45',0),(118,'Good Receipt',NULL,NULL,'transaksi/good-receipt','14',2,NULL,NULL,NULL,'2025-11-04 01:37:21','2025-11-04 01:37:21',0),(119,'Vendor Bill',NULL,NULL,'transaksi/vendor-bill','14',4,NULL,NULL,NULL,'2025-11-07 16:04:54','2025-11-07 16:10:55',0),(120,'Purchase Return',NULL,NULL,'transaksi/purchase-return','14',5,NULL,NULL,NULL,'2025-11-08 04:48:09','2025-11-08 04:48:09',0),(121,'Salesman','bx bx-layout',NULL,'-',NULL,5,NULL,NULL,NULL,'2025-11-12 07:38:36','2025-11-12 07:38:36',0),(122,'Sales Plan',NULL,NULL,'transaksi/sales_plan','121',1,NULL,NULL,NULL,'2025-11-12 07:38:54','2025-11-12 07:38:54',0),(123,'Delivery Order',NULL,NULL,'transaksi/delivery_order','14',7,NULL,NULL,NULL,'2025-11-14 06:10:44','2025-11-14 06:10:44',0),(124,'Sales Invoice',NULL,NULL,'transaksi/sales_invoice','14',8,NULL,NULL,NULL,'2025-11-14 07:36:03','2025-11-14 07:36:03',0),(125,'Sales Payment',NULL,NULL,'transaksi/sales_payment','14',9,NULL,NULL,NULL,'2025-11-18 14:53:56','2025-11-18 14:53:56',0),(126,'Sales Return',NULL,NULL,'transaksi/sales_return','14',10,NULL,NULL,NULL,'2025-11-20 14:34:41','2025-11-20 14:34:41',0),(127,'Credit Note',NULL,NULL,'transaksi/credit_note','14',11,NULL,NULL,NULL,'2025-11-25 13:32:19','2025-11-25 13:32:19',0),(128,'Return Consigment',NULL,NULL,'transaksi/return_cs','14',12,NULL,NULL,NULL,'2025-11-27 14:30:35','2025-11-27 14:30:35',0);
+INSERT INTO `menu` VALUES (1,'Master','bx bx-layout',NULL,NULL,NULL,2,NULL,NULL,NULL,NULL,NULL,0),(2,'Menu',NULL,NULL,'master/menu','1',20,NULL,NULL,NULL,NULL,NULL,0),(3,'Users & Permissions','bx bx-user-circle',NULL,'-',NULL,3,NULL,NULL,NULL,'2022-07-26 18:28:30','2022-07-26 18:28:30',0),(4,'Users',NULL,NULL,'master/users','3',1,NULL,NULL,NULL,'2022-07-26 18:28:42','2024-11-13 22:32:30',0),(5,'Permissions',NULL,NULL,'master/permission','3',2,NULL,NULL,NULL,'2022-07-26 18:28:56','2022-07-26 18:28:56',0),(6,'Data','bx bx-detail',NULL,'-',NULL,4,NULL,NULL,NULL,'2022-07-26 21:47:58','2022-07-26 21:47:58',0),(7,'Karyawan',NULL,NULL,'master/karyawan','1',11,NULL,NULL,NULL,'2022-07-26 21:48:12','2024-12-03 02:48:13',0),(8,'Perusahaan',NULL,NULL,'master/company','1',1,NULL,NULL,NULL,'2022-07-26 21:50:11','2024-11-13 22:42:30',0),(9,'Roles',NULL,NULL,'master/roles','3',NULL,NULL,NULL,NULL,'2022-07-26 21:50:56','2022-07-26 21:50:56',0),(10,'Dashboard','bx bx-home-circle',NULL,'dashboard',NULL,1,NULL,NULL,NULL,'2022-07-26 21:57:29','2022-07-26 21:57:29',0),(14,'Transaksi','bx bx-file',NULL,'-',NULL,4,NULL,NULL,NULL,'2022-07-28 00:08:03','2022-07-28 00:08:03',0),(28,'Vendor',NULL,NULL,'master/vendor','1',10,NULL,NULL,NULL,'2022-08-31 19:53:40','2024-12-03 02:47:57',0),(34,'Invoice',NULL,NULL,'transaksi/invoice','14',NULL,NULL,NULL,NULL,'2022-09-30 18:39:08','2024-01-06 09:57:57',0),(36,'Report','bx bxs-report',NULL,'-',NULL,7,NULL,NULL,NULL,'2022-10-28 07:08:04','2022-10-28 07:08:04',0),(55,'Approval','bx bx-paper-plane',NULL,'-',NULL,5,NULL,NULL,NULL,'2024-10-15 12:54:18','2024-10-15 12:54:18',0),(63,'Customer',NULL,NULL,'master/customer','1',3,NULL,NULL,NULL,'2024-11-26 08:50:34','2024-12-03 02:46:52',0),(64,'Customer Category',NULL,NULL,'master/customer_category','1',2,NULL,NULL,NULL,'2024-11-26 09:07:40','2024-11-26 09:07:40',0),(65,'Product Unit',NULL,NULL,'master/unit','1',5,NULL,NULL,NULL,'2024-11-26 09:07:58','2024-11-26 09:07:58',0),(66,'Attandance','bx bxs-user-account',NULL,'-',NULL,6,NULL,NULL,NULL,'2024-11-28 02:20:19','2024-11-28 02:20:19',0),(67,'Day Off',NULL,NULL,'master/dayoff','1',14,NULL,NULL,NULL,'2024-11-28 02:20:47','2024-12-03 02:49:02',0),(68,'Work Hour',NULL,NULL,'master/working_hours','1',15,NULL,NULL,NULL,'2024-11-28 02:48:57','2024-12-03 02:49:18',0),(69,'Job Category',NULL,NULL,'master/job_category','1',7,NULL,NULL,NULL,'2024-11-28 03:18:36','2024-11-28 03:18:36',0),(70,'Travel Item',NULL,NULL,'master/travel_item','1',8,NULL,NULL,NULL,'2024-11-28 03:19:00','2024-11-28 03:19:00',0),(71,'Product Type',NULL,NULL,'master/product_type','1',4,NULL,NULL,NULL,'2024-11-28 03:33:15','2024-11-28 03:33:15',0),(72,'Product',NULL,NULL,'master/product','1',6,NULL,NULL,NULL,'2024-11-28 03:40:20','2024-12-03 02:47:31',0),(73,'Wilayah','bx bx-map-alt',NULL,'-',NULL,NULL,NULL,NULL,NULL,'2024-11-28 04:52:13','2024-11-28 04:52:13',0),(74,'Province',NULL,NULL,'master/province','1',16,NULL,NULL,NULL,'2024-11-28 04:52:45','2024-12-03 02:49:46',0),(75,'City',NULL,NULL,'master/city','1',17,NULL,NULL,NULL,'2024-11-28 04:53:02','2024-12-03 02:50:03',0),(76,'Forecast',NULL,NULL,'transaksi/forecast','14',NULL,NULL,NULL,NULL,'2024-11-28 09:11:26','2024-11-28 09:11:26',0),(77,'Visit Plan',NULL,NULL,'transaksi/visit_plan','14',NULL,NULL,NULL,NULL,'2024-11-28 09:11:55','2024-11-28 09:11:55',0),(78,'Budgeting',NULL,NULL,'transaksi/budgeting','14',NULL,NULL,NULL,NULL,'2024-11-28 09:12:17','2024-11-28 09:12:17',1),(79,'Reimbursement',NULL,NULL,'transaksi/reimbursment','14',NULL,NULL,NULL,NULL,'2024-11-28 09:12:51','2024-11-28 09:12:51',1),(80,'Presensi',NULL,NULL,'transaksi/presensi','14',NULL,NULL,NULL,NULL,'2024-11-28 09:13:24','2024-12-03 02:52:10',0),(81,'Employee Leave',NULL,NULL,'transaksi/employee_leave','14',NULL,NULL,NULL,NULL,'2024-11-28 09:14:13','2024-12-03 02:52:27',1),(82,'Budgeting',NULL,NULL,'approval/bugeting','55',1,NULL,NULL,NULL,'2024-12-02 06:46:37','2024-12-02 06:46:37',0),(83,'Routing Approval',NULL,NULL,'master/routing','1',13,NULL,NULL,NULL,'2024-12-02 08:46:45','2024-12-03 02:48:37',0),(84,'Generate Id Project',NULL,NULL,'transaksi/generate_project','14',NULL,NULL,NULL,NULL,'2024-12-03 02:51:45','2024-12-03 02:51:45',0),(85,'Perdin',NULL,NULL,'approval/perdin','55',2,NULL,NULL,NULL,'2024-12-03 02:53:14','2024-12-03 02:53:14',0),(86,'Realisasi Perdin',NULL,NULL,'approval/realisasi_perdin','55',3,NULL,NULL,NULL,'2024-12-03 02:53:42','2024-12-03 02:53:42',0),(87,'Reimbursement',NULL,NULL,'approval/approval_reimbursement','55',4,NULL,NULL,NULL,'2024-12-03 02:54:23','2024-12-03 02:54:23',0),(88,'Leave',NULL,NULL,'approval/approval_leave','55',6,NULL,NULL,NULL,'2024-12-03 02:54:52','2024-12-03 02:54:52',0),(89,'Perdin',NULL,NULL,'transaksi/perdin','14',NULL,NULL,NULL,NULL,'2024-12-03 02:55:42','2024-12-03 02:55:42',1),(90,'Sales Order',NULL,NULL,'transaksi/sales_order','14',6,NULL,NULL,NULL,'2024-12-04 01:58:01','2025-11-10 07:15:43',0),(91,'Realisasi Perdin',NULL,NULL,'transaksi/realisasi_perdin','14',NULL,NULL,NULL,NULL,'2024-12-04 03:08:24','2024-12-04 03:08:24',1),(92,'Travel Cost',NULL,NULL,'master/travel_cost','1',9,NULL,NULL,NULL,'2024-12-26 07:15:36','2024-12-26 07:15:36',0),(93,'Payment Perdin',NULL,NULL,'transaksi/payment_perdin','14',NULL,NULL,NULL,NULL,'2024-12-27 09:08:00','2024-12-27 09:08:00',0),(94,'Karyawan Group',NULL,NULL,'master/group','1',12,NULL,NULL,NULL,'2025-01-08 22:01:36','2025-01-08 22:01:36',0),(95,'Perdin After Sales',NULL,NULL,'transaksi/perdin_after_sales','14',NULL,NULL,NULL,NULL,'2025-01-09 08:51:15','2025-01-09 08:51:15',1),(96,'Perdin After Sales',NULL,NULL,'approval/perdin_after_sales','55',5,NULL,NULL,NULL,'2025-01-09 08:51:37','2025-01-09 08:51:37',0),(97,'Tax',NULL,NULL,'master/tax','1',21,NULL,NULL,NULL,'2025-01-14 03:04:49','2025-11-03 06:41:57',0),(98,'Purchase Order',NULL,NULL,'transaksi/purchase_order','14',1,NULL,NULL,NULL,'2025-01-14 07:08:19','2025-01-14 07:08:19',1),(99,'Purchase Invoice',NULL,NULL,'transaksi/purchase-invoice','14',3,NULL,NULL,NULL,'2025-01-14 07:08:38','2025-11-05 07:08:54',1),(100,'Purchase Order',NULL,NULL,'approval/purchase_order','55',7,NULL,NULL,NULL,'2025-01-14 07:09:44','2025-01-14 07:09:44',0),(101,'Invoice',NULL,NULL,'approval/invoice','55',8,NULL,NULL,NULL,'2025-01-14 07:10:00','2025-01-14 07:10:00',0),(102,'Pengembalian Perdin',NULL,NULL,'transaksi/pengembalian','14',NULL,NULL,NULL,NULL,'2025-02-07 00:51:33','2025-02-07 00:51:33',0),(103,'Company Profile',NULL,NULL,'master/company_profile','1',NULL,NULL,NULL,NULL,'2025-04-17 08:33:14','2025-04-17 08:33:14',0),(104,'Product Catalog',NULL,NULL,'master/product_catalog','1',NULL,NULL,NULL,NULL,'2025-04-17 08:33:32','2025-04-17 08:33:32',0),(105,'Report Perdin Item',NULL,NULL,'report/perdin-item','36',NULL,NULL,NULL,NULL,'2025-07-17 22:46:29','2025-07-17 22:46:29',0),(106,'SPK Jasa Instalasi',NULL,NULL,'transaksi/spk_jasa_instalasi','14',NULL,NULL,NULL,NULL,'2025-07-21 22:29:26','2025-07-21 22:29:26',1),(107,'SPK Jasa Instalasi',NULL,NULL,'approval/spk','55',9,NULL,NULL,NULL,'2025-07-23 22:21:19','2025-07-23 22:21:19',0),(108,'Forecast Detail',NULL,NULL,'report/forecast_detail','36',NULL,NULL,NULL,NULL,'2025-08-01 22:59:07','2025-08-01 22:59:07',0),(109,'Sales Detail',NULL,NULL,'report/sales_detail','36',NULL,NULL,NULL,NULL,'2025-08-01 22:59:20','2025-08-01 22:59:20',0),(110,'Forecast Vs Sales',NULL,NULL,'report/forecast_vs_sales','36',NULL,NULL,NULL,NULL,'2025-08-06 22:30:35','2025-08-06 22:30:35',0),(111,'Sales Shipment',NULL,NULL,'report/sales_shipment','36',NULL,NULL,NULL,NULL,'2025-08-09 01:53:26','2025-08-09 01:53:26',0),(112,'Gross Profit',NULL,NULL,'report/gross_profit','36',NULL,NULL,NULL,NULL,'2025-08-11 23:02:40','2025-08-11 23:02:40',0),(113,'Budgeting Report',NULL,NULL,'report/budgeting_report','36',NULL,NULL,NULL,NULL,'2025-08-12 22:44:02','2025-08-12 22:44:02',0),(114,'Warehouse',NULL,NULL,'master/warehouse','1',NULL,NULL,NULL,NULL,'2025-10-30 02:19:23','2025-10-30 02:19:23',0),(115,'Kecamatan',NULL,NULL,'master/kecamatan','1',18,NULL,NULL,NULL,'2025-10-31 19:54:22','2025-10-31 19:54:22',0),(116,'Kelurahan',NULL,NULL,'master/kelurahan','1',19,NULL,NULL,NULL,'2025-11-01 05:35:30','2025-11-01 05:35:30',0),(117,'Chart of Account',NULL,NULL,'master/coa','1',22,NULL,NULL,NULL,'2025-11-03 06:18:45','2025-11-03 06:18:45',0),(118,'Good Receipt',NULL,NULL,'transaksi/good-receipt','14',2,NULL,NULL,NULL,'2025-11-04 01:37:21','2025-11-04 01:37:21',0),(119,'Vendor Bill',NULL,NULL,'transaksi/vendor-bill','14',4,NULL,NULL,NULL,'2025-11-07 16:04:54','2025-11-07 16:10:55',0),(120,'Purchase Return',NULL,NULL,'transaksi/purchase-return','14',5,NULL,NULL,NULL,'2025-11-08 04:48:09','2025-11-08 04:48:09',0),(121,'Salesman','bx bx-layout',NULL,'-',NULL,5,NULL,NULL,NULL,'2025-11-12 07:38:36','2025-11-12 07:38:36',0),(122,'Sales Plan',NULL,NULL,'transaksi/sales_plan','121',1,NULL,NULL,NULL,'2025-11-12 07:38:54','2025-11-12 07:38:54',0),(123,'Delivery Order',NULL,NULL,'transaksi/delivery_order','14',7,NULL,NULL,NULL,'2025-11-14 06:10:44','2025-11-14 06:10:44',0),(124,'Sales Invoice',NULL,NULL,'transaksi/sales_invoice','14',8,NULL,NULL,NULL,'2025-11-14 07:36:03','2025-11-14 07:36:03',0),(125,'Sales Payment',NULL,NULL,'transaksi/sales_payment','14',9,NULL,NULL,NULL,'2025-11-18 14:53:56','2025-11-18 14:53:56',0),(126,'Sales Return',NULL,NULL,'transaksi/sales_return','14',10,NULL,NULL,NULL,'2025-11-20 14:34:41','2025-11-20 14:34:41',0),(127,'Credit Note',NULL,NULL,'transaksi/credit_note','14',11,NULL,NULL,NULL,'2025-11-25 13:32:19','2025-11-25 13:32:19',0),(128,'Return Consigment',NULL,NULL,'transaksi/return_cs','14',12,NULL,NULL,NULL,'2025-11-27 14:30:35','2025-11-27 14:30:35',0),(129,'Packing List',NULL,NULL,'transaksi/packing_list','14',13,NULL,NULL,NULL,'2025-12-08 14:08:24','2025-12-08 14:08:24',0);
 /*!40000 ALTER TABLE `menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -998,6 +998,105 @@ CREATE TABLE `migrations` (
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `packing_list`
+--
+
+DROP TABLE IF EXISTS `packing_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `packing_list` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `packing_list_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `packing_date` date NOT NULL,
+  `vehicle_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `driver_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expedition_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` datetime DEFAULT NULL,
+  `deleted_by` int DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `packing_list_no` (`packing_list_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `packing_list`
+--
+
+LOCK TABLES `packing_list` WRITE;
+/*!40000 ALTER TABLE `packing_list` DISABLE KEYS */;
+/*!40000 ALTER TABLE `packing_list` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `packing_list_detail`
+--
+
+DROP TABLE IF EXISTS `packing_list_detail`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `packing_list_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `packing_list_id` bigint NOT NULL,
+  `delivery_order_id` bigint NOT NULL,
+  `product_id` bigint NOT NULL,
+  `qty_do` decimal(12,2) NOT NULL,
+  `qty_packed` decimal(12,2) NOT NULL,
+  `remark` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `delivery_detail_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_pld_pl` (`packing_list_id`),
+  KEY `fk_pld_do` (`delivery_order_id`),
+  CONSTRAINT `fk_pld_do` FOREIGN KEY (`delivery_order_id`) REFERENCES `delivery_order_header` (`id`),
+  CONSTRAINT `fk_pld_pl` FOREIGN KEY (`packing_list_id`) REFERENCES `packing_list` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `packing_list_detail`
+--
+
+LOCK TABLES `packing_list_detail` WRITE;
+/*!40000 ALTER TABLE `packing_list_detail` DISABLE KEYS */;
+/*!40000 ALTER TABLE `packing_list_detail` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `packing_list_do`
+--
+
+DROP TABLE IF EXISTS `packing_list_do`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `packing_list_do` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `packing_list_id` bigint NOT NULL,
+  `delivery_order_id` bigint NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_pldo_pl` (`packing_list_id`),
+  KEY `fk_pldo_do` (`delivery_order_id`),
+  CONSTRAINT `fk_pldo_do` FOREIGN KEY (`delivery_order_id`) REFERENCES `delivery_order_header` (`id`),
+  CONSTRAINT `fk_pldo_pl` FOREIGN KEY (`packing_list_id`) REFERENCES `packing_list` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `packing_list_do`
+--
+
+LOCK TABLES `packing_list_do` WRITE;
+/*!40000 ALTER TABLE `packing_list_do` DISABLE KEYS */;
+/*!40000 ALTER TABLE `packing_list_do` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1096,6 +1195,7 @@ CREATE TABLE `product` (
   `model_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `tax_sale` int DEFAULT NULL,
   `type_tax` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `type_retur` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1106,7 +1206,7 @@ CREATE TABLE `product` (
 
 LOCK TABLES `product` WRITE;
 /*!40000 ALTER TABLE `product` DISABLE KEYS */;
-INSERT INTO `product` VALUES (1,'P25OCT0001','TES',1,1,'test',NULL,'2025-10-18 07:21:15','2025-11-21 16:33:49',NULL,NULL,NULL,1,'TES',1,'exclude');
+INSERT INTO `product` VALUES (1,'P25OCT0001','TES',1,1,'test',NULL,'2025-10-18 07:21:15','2025-12-08 13:44:23',NULL,NULL,NULL,1,'TES',1,'exclude','RETUR');
 /*!40000 ALTER TABLE `product` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1221,7 +1321,7 @@ CREATE TABLE `product_log` (
   `creator` int DEFAULT NULL,
   `model_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1230,7 +1330,7 @@ CREATE TABLE `product_log` (
 
 LOCK TABLES `product_log` WRITE;
 /*!40000 ALTER TABLE `product_log` DISABLE KEYS */;
-INSERT INTO `product_log` VALUES (1,1,'TES',1,NULL,'test',NULL,'2025-11-01 07:10:42','2025-11-01 07:10:42',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(3,1,'TES',1,NULL,'test',NULL,'2025-11-01 07:59:48','2025-11-01 07:59:48',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(4,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:13:03','2025-11-01 08:13:03',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(5,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:13:43','2025-11-01 08:13:43',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(6,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:54:19','2025-11-01 08:54:19',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(7,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:54:52','2025-11-01 08:54:52',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(8,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:03:23','2025-11-01 19:03:23',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(9,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:03:34','2025-11-01 19:03:34',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(13,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:37:09','2025-11-01 19:37:09',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(18,1,'TES',1,NULL,'test',NULL,'2025-11-01 20:25:00','2025-11-01 20:25:00',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(20,1,'TES',1,NULL,'test',NULL,'2025-11-01 20:30:08','2025-11-01 20:30:08',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(21,1,'TES',1,NULL,'test',NULL,'2025-11-07 20:38:24','2025-11-07 20:38:24',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(22,1,'TES',1,NULL,'test',NULL,'2025-11-07 20:42:00','2025-11-07 20:42:00',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(24,1,'TES',1,NULL,'test',NULL,'2025-11-10 06:23:02','2025-11-10 06:23:02',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(25,1,'TES',1,NULL,'test',NULL,'2025-11-10 06:41:27','2025-11-10 06:41:27',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(26,1,'TES',1,NULL,'test',NULL,'2025-11-12 07:00:05','2025-11-12 07:00:05',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(27,1,'TES',1,NULL,'test',NULL,'2025-11-21 16:33:49','2025-11-21 16:33:49',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES');
+INSERT INTO `product_log` VALUES (1,1,'TES',1,NULL,'test',NULL,'2025-11-01 07:10:42','2025-11-01 07:10:42',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(3,1,'TES',1,NULL,'test',NULL,'2025-11-01 07:59:48','2025-11-01 07:59:48',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(4,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:13:03','2025-11-01 08:13:03',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(5,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:13:43','2025-11-01 08:13:43',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(6,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:54:19','2025-11-01 08:54:19',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(7,1,'TES',1,NULL,'test',NULL,'2025-11-01 08:54:52','2025-11-01 08:54:52',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(8,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:03:23','2025-11-01 19:03:23',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(9,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:03:34','2025-11-01 19:03:34',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(13,1,'TES',1,NULL,'test',NULL,'2025-11-01 19:37:09','2025-11-01 19:37:09',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(18,1,'TES',1,NULL,'test',NULL,'2025-11-01 20:25:00','2025-11-01 20:25:00',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(20,1,'TES',1,NULL,'test',NULL,'2025-11-01 20:30:08','2025-11-01 20:30:08',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(21,1,'TES',1,NULL,'test',NULL,'2025-11-07 20:38:24','2025-11-07 20:38:24',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(22,1,'TES',1,NULL,'test',NULL,'2025-11-07 20:42:00','2025-11-07 20:42:00',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(24,1,'TES',1,NULL,'test',NULL,'2025-11-10 06:23:02','2025-11-10 06:23:02',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(25,1,'TES',1,NULL,'test',NULL,'2025-11-10 06:41:27','2025-11-10 06:41:27',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(26,1,'TES',1,NULL,'test',NULL,'2025-11-12 07:00:05','2025-11-12 07:00:05',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(27,1,'TES',1,NULL,'test',NULL,'2025-11-21 16:33:49','2025-11-21 16:33:49',NULL,NULL,'','/berkas/document/product/2025/11/',1,'TES'),(28,1,'TES',1,NULL,'test',NULL,'2025-12-08 13:44:23','2025-12-08 13:44:23',NULL,NULL,'','/berkas/document/product/2025/12/',1,'TES');
 /*!40000 ALTER TABLE `product_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2540,7 +2640,7 @@ CREATE TABLE `users_permissions` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5578 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5625 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2549,7 +2649,7 @@ CREATE TABLE `users_permissions` (
 
 LOCK TABLES `users_permissions` WRITE;
 /*!40000 ALTER TABLE `users_permissions` DISABLE KEYS */;
-INSERT INTO `users_permissions` VALUES (5532,1,1,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5533,1,2,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5534,1,7,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5535,1,8,1,1,1,1,0,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5536,1,28,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5537,1,63,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5538,1,64,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5539,1,65,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5540,1,67,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5541,1,68,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5542,1,71,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5543,1,72,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5544,1,74,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5545,1,75,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5546,1,83,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5547,1,94,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5548,1,97,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5549,1,114,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5550,1,115,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5551,1,116,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5552,1,117,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5553,1,3,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5554,1,4,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5555,1,5,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5556,1,9,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5557,1,10,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5558,1,14,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5559,1,90,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5560,1,98,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5561,1,99,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5562,1,118,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5563,1,119,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5564,1,120,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5565,1,123,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5566,1,124,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5567,1,125,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5568,1,126,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5569,1,127,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5570,1,128,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5571,1,36,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5572,1,109,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5573,1,111,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5574,1,112,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5575,1,55,0,0,0,0,0,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5576,1,121,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03'),(5577,1,122,1,1,1,1,1,NULL,'2025-11-27 14:31:03','2025-11-27 14:31:03');
+INSERT INTO `users_permissions` VALUES (5578,1,1,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5579,1,2,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5580,1,7,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5581,1,8,1,1,1,1,0,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5582,1,28,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5583,1,63,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5584,1,64,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5585,1,65,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5586,1,67,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5587,1,68,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5588,1,71,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5589,1,72,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5590,1,74,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5591,1,75,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5592,1,83,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5593,1,94,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5594,1,97,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5595,1,114,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5596,1,115,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5597,1,116,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5598,1,117,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5599,1,3,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5600,1,4,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5601,1,5,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5602,1,9,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5603,1,10,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5604,1,14,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5605,1,90,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5606,1,98,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5607,1,99,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5608,1,118,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5609,1,119,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5610,1,120,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5611,1,123,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5612,1,124,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5613,1,125,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5614,1,126,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5615,1,127,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5616,1,128,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5617,1,129,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5618,1,36,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5619,1,109,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5620,1,111,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5621,1,112,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5622,1,55,0,0,0,0,0,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5623,1,121,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50'),(5624,1,122,1,1,1,1,1,NULL,'2025-12-08 14:08:50','2025-12-08 14:08:50');
 /*!40000 ALTER TABLE `users_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2772,4 +2872,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-07 10:22:02
+-- Dump completed on 2025-12-09  5:08:07

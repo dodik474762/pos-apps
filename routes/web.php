@@ -28,6 +28,7 @@ use App\Http\Controllers\api\Transaction\CreditNoteController as TransactionCred
 use App\Http\Controllers\api\Transaction\DeliveryOrderController as TransactionDeliveryOrderController;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
+use App\Http\Controllers\api\Transaction\PackingListController as TransactionPackingListController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
 use App\Http\Controllers\api\Transaction\PurchaseReturnController as TransactionPurchaseReturnController;
 use App\Http\Controllers\api\Transaction\ReturnConsigmentController as TransactionReturnConsigmentController;
@@ -67,6 +68,7 @@ use App\Http\Controllers\web\Transaction\CreditNoteController;
 use App\Http\Controllers\web\Transaction\DeliveryOrderController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
+use App\Http\Controllers\web\Transaction\PackingListController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\ReturnConsigmentController;
@@ -244,6 +246,11 @@ Route::get('transaksi/return_cs', [ReturnConsigmentController::class, 'index']);
 Route::get('transaksi/return_cs/add', [ReturnConsigmentController::class, 'add'])->name('return-cs-add');
 Route::get('transaksi/return_cs/ubah', [ReturnConsigmentController::class, 'ubah'])->name('return-cs-edit');;
 Route::get('transaksi/return_cs/cetak', [ReturnConsigmentController::class, 'cetak'])->name('return-cs-print');;
+
+Route::get('transaksi/packing_list', [PackingListController::class, 'index']);
+Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])->name('packing-list-add');
+Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');;
+Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');;
 
 /*API */
 
@@ -497,4 +504,13 @@ Route::post('api/transaksi/return_cs/delete', [TransactionReturnConsigmentContro
 Route::post('api/transaksi/return_cs/confirmDelete', [TransactionReturnConsigmentController::class, 'confirmDelete']);
 Route::post('api/transaksi/return_cs/showModalVendor', [TransactionReturnConsigmentController::class, 'showModalVendor']);
 Route::post('api/transaksi/return_cs/showModalProduct', [TransactionReturnConsigmentController::class, 'showModalProduct']);
+
+Route::post('api/transaksi/packing_list/getData', [TransactionPackingListController::class, 'getData']);
+Route::post('api/transaksi/packing_list/submit', [TransactionPackingListController::class, 'submit']);
+Route::post('api/transaksi/packing_list/delete', [TransactionPackingListController::class, 'delete']);
+Route::post('api/transaksi/packing_list/confirmDelete', [TransactionPackingListController::class, 'confirmDelete']);
+Route::post('api/transaksi/packing_list/showModalDO', [TransactionPackingListController::class, 'showModalDO']);
+Route::post('api/transaksi/packing_list/getDataDO', [TransactionPackingListController::class, 'getDataDO']);
+Route::post('api/transaksi/packing_list/getDOConfirmed', [TransactionPackingListController::class, 'getDOConfirmed']);
+Route::post('api/transaksi/packing_list/getDODetailConfirmed', [TransactionPackingListController::class, 'getDODetailConfirmed']);
 /*API */
