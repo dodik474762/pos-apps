@@ -92,6 +92,18 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label>Retur Type</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Retur Type' id="type_retur" name="type_retur">
+                                        @foreach ($retur_type as $item)
+                                            <option value="{{ $item }}"
+                                                {{ isset($data->type_retur) ? ($data->type_retur == $item ? 'selected' : '') : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label for="">File Produk</label>
                                 <div class="input-group">
                                     {{-- <button class="btn btn-outline-secondary" type="button" id="button-addon1"
