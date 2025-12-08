@@ -1,12 +1,12 @@
 Sales Retur:
 
-- master product harus ada kateogir retur dan non retur (checklist kontrol retur)
+- master product harus ada kateogir retur dan non retur (checklist kontrol retur) OK
 
 Salesman:
-- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1
+- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1 OK
 
 Customer:
-- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1
+- limit frekuensi retur OK (nominal transaksi) reset per tanggal 1 
 
 
 Packing List Berdasarkan Armada (Kiriman)

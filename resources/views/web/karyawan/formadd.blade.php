@@ -113,7 +113,7 @@
                                 <div>
                                     <input type="number" min="0" id="max_retur" class="form-control required"
                                         error="Max Retur" placeholder="Max Retur"
-                                        value="{{ isset($data->max_retur) ? $data->max_retur : '9999' }}">
+                                        value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
                                 </div>
                             </div>
                         </div>
