@@ -1051,14 +1051,15 @@ function getMaxReturCustomer($customer = 0)
     $datadb = DB::table('customer')->where('id', $customer)->first();
     // ambil sales retur dalam satu bulan
 
-    $jumlah_retur = DB::table('sales_return')
+    $total_refund = DB::table('sales_return')
         ->where('customer_id', $customer)
         ->whereMonth('created_at', date('m'))
         ->whereYear('created_at', date('Y'))
         ->whereNull('deleted')
-        ->count();
+        ->where('status', '!=', 'CANCELLED')
+        ->sum('refund_amount');
 
-    if ($jumlah_retur >= $datadb->max_retur) {
+    if ($total_refund >= $datadb->max_retur) {
         return false;
     }
 
@@ -1069,7 +1070,7 @@ function getMaxReturKaryawan($karyawan = 0)
 {
     $datadb = DB::table('karyawan')->where('id', $karyawan)->first();
 
-    $jumlah_retur = DB::table('sales_return as sr')
+    $total_refund = DB::table('sales_return as sr')
     ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
     ->join('delivery_order_header as doh', 'doh.id', 'sih.do_id')
     ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
@@ -1077,9 +1078,10 @@ function getMaxReturKaryawan($karyawan = 0)
     ->whereMonth('sr.created_at', date('m'))
     ->whereYear('sr.created_at', date('Y'))
     ->whereNull('sr.deleted')
-    ->count();
+    ->where('sr.status', '!=', 'CANCELLED')
+    ->sum('sr.refund_amount');
 
-    if ($jumlah_retur >= $datadb->max_retur) {
+    if ($total_refund >= $datadb->max_retur) {
         return false;
     }
 
