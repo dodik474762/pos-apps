@@ -337,6 +337,13 @@ class PackingListController extends Controller
             $header->deleted_by = $userId;
             $header->save();
 
+            $doDtl = PackingListDo::where('packing_list_id', $id)->get();
+            foreach ($doDtl as $key => $value) {
+                $do = DeliveryOrderHeader::find($value->delivery_order_id);
+                $do->status = 'CONFIRMED';
+                $do->save();
+            }
+
             DB::commit();
 
             return response()->json([
