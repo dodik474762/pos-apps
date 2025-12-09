@@ -90,7 +90,6 @@
                                                     <th>Sopir</th>
                                                     <th>Expedisi </th>
                                                     <th>Dibuat Oleh</th>
-                                                    <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

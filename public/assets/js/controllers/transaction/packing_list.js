@@ -53,21 +53,33 @@ let PackingList = {
 
             result.push({
                 id: $row.attr("data_id") || null,
-                customer_id:
-                    $row.find("#customer_id_tr").attr("data_id") || null,
-                invoice_id: $row.find("#invoice_id").attr("data_id") || null,
-                discount_amount:
-                    $row.find("#invoice_id").attr("discount_amount") || 0,
-                outstanding_amount:
-                    parseFloat($row.find("#outstanding_amount").val()) || 0,
-                allocated_amount:
-                    parseFloat($row.find("#allocated_amount").val()) || 0,
-                allocated_amount_old:
-                    parseFloat(
-                        $row
-                            .find("#allocated_amount")
-                            .attr("allocated_amount_old")
-                    ) || 0,
+                do_id: $row.attr("do_id"),
+                product_id: $row.find("#product_id").attr("data_id") || null,
+                product_name: $row.find("#product_id").text() || null,
+                qty_do: parseFloat($row.find("#product_qty").text()) || 0,
+                qty_packed: parseFloat($row.find("#qty_pack").val()) || 0,
+                remark: $row.find("input[type='text']").val() || null,
+            });
+        });
+
+        return result;
+    },
+
+    getPostDo: () => {
+        const rows = $("#table-do tbody tr");
+        let result = [];
+
+        rows.each((index, elm) => {
+            const $row = $(elm);
+
+            result.push({
+                id: $row.attr("data_id") || null,
+                delivery_order_id:
+                    $row.find("#do_number").attr("data_id") || null,
+                do_number: $row.find("#do_number").text().trim() || null,
+                do_date: $row.find("#do_date").text().trim() || null,
+                customer_id: $row.find("#do_customer").attr("data_id") || null,
+                customer_name: $row.find("#do_customer").text().trim() || null,
                 remove: $row.hasClass("remove") ? 1 : 0,
             });
         });
@@ -78,22 +90,15 @@ let PackingList = {
     getPostInput: (bulk = false) => {
         let data = {
             id: $("#id").val() || null,
-            payment_code: $("#payment_code").val() || null,
-            payment_date: $("#payment_date").val() || null,
-            payment_method: $("#payment_method").val() || null,
-
-            customer_id: $("#customer_id").attr("data_id") || null,
-            account_id: $("#account_id").val() || null,
-            customers: $("#customer_id").val() || null,
-
-            total_amount: parseFloat($("#total_amount").val()) || 0,
-            discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            net_amount: parseFloat($("#net_amount").val()) || 0,
-
-            reference_no: $("#reference_no").val() || null,
+            packing_list_no: $("#packing_list_no").val() || null,
+            packing_date: $("#packing_date").val() || null,
+            vehicle_no: $("#vehicle_no").val() || null,
+            driver_name: $("#driver_name").val() || null,
+            expedition_name: $("#expedition_name").val() || null,
             remarks: $("#remarks").val() || null,
-            bulk: bulk ? 1 : 0,
-            details: PackingList.getPostItem(),
+
+            do_list: PackingList.getPostDo(),      // 🔥 DO LIST
+            details: PackingList.getPostItem(),    // 🔥 ITEM LIST
         };
 
         return data;
@@ -245,9 +250,6 @@ let PackingList = {
                 },
                 {
                     data: "created_by_name",
-                },
-                {
-                    data: "status",
                 },
                 {
                     data: "id",
@@ -468,7 +470,7 @@ let PackingList = {
                 url: url.base_url(PackingList.moduleApi()) + `getDataDO`,
                 type: "POST",
                 data: {
-                    data_do_chooce: data_do_chooce
+                    data_do_chooce: data_do_chooce,
                 },
                 headers: {
                     "X-CSRF-TOKEN": PackingList.csrf_token(),
@@ -634,7 +636,7 @@ let PackingList = {
 
     removeRow: (elm) => {
         const data_id = $(elm).closest("tr").attr("data_id");
-        const do_id = $(elm).closest("tr").find('td#do_number').attr("data_id");
+        const do_id = $(elm).closest("tr").find("td#do_number").attr("data_id");
         if (data_id == "") {
             $(elm).closest("tr").remove();
         } else {
@@ -642,7 +644,7 @@ let PackingList = {
             $(elm).closest("tr").addClass("d-none");
         }
 
-        $('tr.do_detail_'+do_id).remove();
+        $("tr.do_detail_" + do_id).remove();
     },
 
     addRow: () => {

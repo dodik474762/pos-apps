@@ -1,5 +1,5 @@
 @foreach ($data as $d)
-    <tr class="do_detail_{{ $d->do_id }}" data_id="{{ $d->id }}">
+    <tr class="do_detail_{{ $d->do_id }}" do_id="{{ $d->do_id }}" data_id="{{ $d->id }}">
         <td id="product_id" data_id="{{ $d->product_id }}">{{ $d->product_code }} - {{ $d->product_name }}</td>
         <td id="product_qty">{{ $d->qty }}</td>
         <td>

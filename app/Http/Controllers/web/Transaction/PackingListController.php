@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use App\Models\Transaction\PackingList;
+use App\Models\Transaction\PackingListDo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -89,7 +90,7 @@ class PackingListController extends Controller
 
     public function ubah(Request $request)
     {
-        $api = new TransactionPackingListController();
+        $api = new TransactionPackingListController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
@@ -97,26 +98,13 @@ class PackingListController extends Controller
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['details'] = SalesPaymentDtl::where('sales_payment_detail.payment_id', $data['id'])
-            ->select([
-                'sales_payment_detail.*',
-                'sih.invoice_number',
-                'sih.invoice_date',
-                'sih.total_amount as total_amount_invoice',
-                'sih.discount_amount',
-                'sih.subtotal',
-                'sih.amount_paid',
-                'c.code as customer_code',
-                'c.nama_customer',
-                'c.id as customer_id'
-            ])
-            ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
-            ->join('customer as c', 'sih.customer_id', 'c.id')
-            ->whereNull('sales_payment_detail.deleted')
-            ->orderBy('sales_payment_detail.id')
+        $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
+            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'c.id as customer_id'])
+            ->with(['detail', 'detail.product'])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('customer as c', 'c.id', 'doh.customer_id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.packing_list.formadd', $data);
@@ -129,7 +117,8 @@ class PackingListController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -144,23 +133,26 @@ class PackingListController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PackingList::with(['customers', 'items.invoice'])->findOrFail($data['id']);
+        $data = PackingList::where('id', $data['id'])->first();
+        $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
+            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date'])
+            ->with(['detail', 'detail.product'])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->get();
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
-        // echo '<pre>';
-        // print_r($data->items);
-        // die;
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
-        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data',  'company', 'qr'))
+        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-'.$data->payment_code.'.pdf');

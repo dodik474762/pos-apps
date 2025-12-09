@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Sales Payment - {{ $data->code }}</title>
+    <title>Packing List - {{ $data->code }}</title>
+
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -40,12 +41,6 @@
             text-align: center;
         }
 
-        .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
         .header-table td {
             border: none;
             vertical-align: middle;
@@ -55,7 +50,7 @@
             width: 90px;
         }
 
-        /* 🔹 Ukuran font kecil untuk tabel detail barang */
+        /* TABLE DETAIL */
         .table-detail th,
         .table-detail td {
             font-size: 10px;
@@ -65,10 +60,20 @@
         .table-detail th {
             background: #f8f8f8;
         }
+
+        /* PAGE BREAK CSS */
+        .table-detail tr {
+            page-break-inside: avoid;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
     </style>
 </head>
 
 <body>
+
     {{-- HEADER --}}
     <table class="header-table" style="width:100%;">
         <tr>
@@ -80,72 +85,128 @@
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">PEMBAYARAN PELANGGAN</h4>
-                <small>No: {{ $data->payment_code }}</small>
-                <br>
-                {{-- QR Code (otomatis di-generate) --}}
-                <div style="margin-top:5px;">
-                    {{-- <img src="data:image/png;base64,{{ $qr }}" alt="" width="70" height="70"> --}}
-                </div>
+                <h4 style="margin:0; padding:0;">PACKING LIST</h4>
+                <small>No: {{ $data->packing_list_no }}</small>
             </td>
         </tr>
     </table>
 
     <br>
 
-    {{-- INFORMASI PO --}}
+    {{-- INFORMASI --}}
     <table class="no-border" style="width:100%;">
         <tr>
-            <td><strong>Kode Pelanggan:</strong> {{ $data->customers->code }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal Pembayaran:</strong> {{ date('d/m/Y', strtotime($data->payment_date)) }}</td>
+            <td><strong>No. Kendaraan:</strong> {{ $data->vehicle_no }}</td>
+            <td style="padding-left:40px;"><strong>Tanggal Packing:</strong>
+                {{ date('d/m/Y', strtotime($data->packing_date)) }}</td>
         </tr>
         <tr>
-            <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:40px;"><strong>Alamat:</strong> {{ $data->customers->address ?? '-' }}</td>
+            <td><strong>Sopir:</strong> {{ $data->driver_name ?? '-' }}</td>
+            <td style="padding-left:40px;"><strong>Ekspedisi:</strong> {{ $data->expedition_name ?? '-' }}</td>
         </tr>
         <tr>
-            <td><strong>Nomor Pembayaran:</strong> {{ $data->payment_code }}</td>
-            <td style="padding-left:40px;"><strong>Keterangan:</strong> {{ $data->remarks }}</td>
+            <td><strong>Keterangan:</strong> {{ $data->remarks ?? '-' }}</td>
         </tr>
     </table>
 
-    <h4>Detail</h4>
+    {{-- ==================== DATA DO ==================== --}}
+    <h4>Detail Delivery Order</h4>
+
     <table class="table-detail">
         <thead>
             <tr>
                 <th>No</th>
-                <th>No. Invoice</th>
-                <th>Tanggal Invoice</th>
-                <th>Jumlah Belum Dibayar</th>
-                <th>Jumlah Dibayar</th>
+                <th>No. DO</th>
+                <th>Tanggal DO</th>
+                <th>Kode Customer</th>
+                <th>Nama Customer</th>
             </tr>
         </thead>
+
         <tbody>
-            @php
-                $total = 0;
-            @endphp
-            @foreach ($data->items as $i => $item)
+            @php $no = 1; @endphp
+            @foreach ($details as $item)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->invoice->invoice_number }}</td>
-                    <td>{{ $item->invoice->invoice_date }}</td>
-                    <td>{{ $item->outstanding_amount }}</td>
-                    <td class="text-right">{{ $item->allocated_amount }}</td>
+                    <td>{{ $no++ }}</td>
+                    <td>{{ $item->do_number }}</td>
+                    <td>{{ $item->do_date }}</td>
+                    <td>{{ $item->customer_code }}</td>
+                    <td>{{ $item->nama_customer }}</td>
                 </tr>
-                @php
-                    $total += $item->allocated_amount ?? 0;
-                @endphp
             @endforeach
         </tbody>
+
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
+                <td colspan="4" class="text-right"><strong>Total DO</strong></td>
+                <td class="text-right">
+                    <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
+                </td>
             </tr>
         </tfoot>
     </table>
 
+
+    {{-- ==================== HITUNG TOTAL PRODUK ==================== --}}
+    @php
+        $totalProduk = 0;
+        foreach ($details as $d) {
+            if (!empty($d->detail)) {
+                $totalProduk += count($d->detail);
+            }
+        }
+    @endphp
+
+    {{-- ==================== PAGE BREAK HANYA JIKA PRODUK > 10 ==================== --}}
+    @if($totalProduk > 10)
+        <div class="page-break"></div>
+    @endif
+
+
+    {{-- ==================== DAFTAR PRODUK ==================== --}}
+    <h4>Daftar Produk</h4>
+
+    <table class="table-detail">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>No. DO</th>
+                <th>Kode Produk</th>
+                <th>Nama Produk</th>
+                <th>Qty DO</th>
+                <th>Qty Pack</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @php $p = 1; @endphp
+
+            @foreach ($details as $d)
+                @if (!empty($d->detail))
+                    @foreach ($d->detail as $prod)
+                        <tr>
+                            <td>{{ $p++ }}</td>
+                            <td>{{ $d->do_number }}</td>
+
+                            <td>{{ $prod->product->code ?? '-' }}</td>
+                            <td>{{ $prod->product->name ?? '-' }}</td>
+
+                            <td class="text-right">{{ number_format($prod->qty_do, 2, ',', '.') }}</td>
+                            <td class="text-right">{{ number_format($prod->qty_packed, 2, ',', '.') }}</td>
+
+                            <td>{{ $prod->remark ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                @endif
+            @endforeach
+        </tbody>
+    </table>
+
+
     <br><br>
+
+    {{-- SIGN --}}
     <table class="no-border" style="width:100%;">
         <tr>
             <td class="text-center">
@@ -162,5 +223,7 @@
             </td>
         </tr>
     </table>
+
 </body>
+
 </html>

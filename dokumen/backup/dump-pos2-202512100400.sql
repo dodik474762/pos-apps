@@ -488,7 +488,7 @@ CREATE TABLE `delivery_order_header` (
   `so_id` bigint DEFAULT NULL,
   `customer_id` bigint NOT NULL,
   `warehouse_id` bigint NOT NULL,
-  `status` enum('DRAFT','CONFIRMED','CANCELED') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'DRAFT',
+  `status` enum('DRAFT','CONFIRMED','CANCELED','PACKED') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'DRAFT',
   `total_qty` decimal(18,2) DEFAULT '0.00',
   `total_item` int DEFAULT '0',
   `created_at` datetime DEFAULT NULL,
@@ -512,7 +512,7 @@ CREATE TABLE `delivery_order_header` (
 
 LOCK TABLES `delivery_order_header` WRITE;
 /*!40000 ALTER TABLE `delivery_order_header` DISABLE KEYS */;
-INSERT INTO `delivery_order_header` VALUES (10,'DO11250001','2025-11-14',6,1,1,'DRAFT',2.00,2,'2025-11-14 14:03:24',1,'2025-11-14 14:10:21',NULL,'2025-11-14 14:10:21',1),(11,'DO11250002','2025-11-14',6,1,1,'CONFIRMED',2.00,2,'2025-11-14 14:11:15',1,'2025-11-18 21:34:55',NULL,NULL,NULL),(12,'DO11250003','2025-11-21',7,1,1,'CONFIRMED',2.00,2,'2025-11-20 20:34:34',1,'2025-11-26 21:58:04',NULL,NULL,NULL),(13,'DO11250004','2025-11-22',8,2,1,'CONFIRMED',5.00,1,'2025-11-21 23:44:50',1,'2025-11-21 23:45:45',NULL,NULL,NULL),(14,'DO11250005','2025-11-22',9,1,1,'CONFIRMED',3.00,2,'2025-11-22 01:20:39',1,'2025-11-22 01:56:34',NULL,NULL,NULL),(15,'DO11250006','2025-11-27',10,2,1,'CONFIRMED',4.00,1,'2025-11-26 21:54:36',1,'2025-11-26 21:55:26',NULL,NULL,NULL);
+INSERT INTO `delivery_order_header` VALUES (10,'DO11250001','2025-11-14',6,1,1,'DRAFT',2.00,2,'2025-11-14 14:03:24',1,'2025-11-14 14:10:21',NULL,'2025-11-14 14:10:21',1),(11,'DO11250002','2025-11-14',6,1,1,'PACKED',2.00,2,'2025-11-14 14:11:15',1,'2025-12-09 20:34:12',NULL,NULL,NULL),(12,'DO11250003','2025-11-21',7,1,1,'CONFIRMED',2.00,2,'2025-11-20 20:34:34',1,'2025-11-26 21:58:04',NULL,NULL,NULL),(13,'DO11250004','2025-11-22',8,2,1,'PACKED',5.00,1,'2025-11-21 23:44:50',1,'2025-12-09 20:34:12',NULL,NULL,NULL),(14,'DO11250005','2025-11-22',9,1,1,'CONFIRMED',3.00,2,'2025-11-22 01:20:39',1,'2025-11-22 01:56:34',NULL,NULL,NULL),(15,'DO11250006','2025-11-27',10,2,1,'CONFIRMED',4.00,1,'2025-11-26 21:54:36',1,'2025-11-26 21:55:26',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `delivery_order_header` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1022,7 +1022,7 @@ CREATE TABLE `packing_list` (
   `created_by` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `packing_list_no` (`packing_list_no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1031,6 +1031,7 @@ CREATE TABLE `packing_list` (
 
 LOCK TABLES `packing_list` WRITE;
 /*!40000 ALTER TABLE `packing_list` DISABLE KEYS */;
+INSERT INTO `packing_list` VALUES (1,'PL12250001','2025-12-10','TES','TES','TES','TES','2025-12-09 20:34:12','2025-12-09 20:34:12',NULL,NULL,1);
 /*!40000 ALTER TABLE `packing_list` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1057,7 +1058,7 @@ CREATE TABLE `packing_list_detail` (
   KEY `fk_pld_do` (`delivery_order_id`),
   CONSTRAINT `fk_pld_do` FOREIGN KEY (`delivery_order_id`) REFERENCES `delivery_order_header` (`id`),
   CONSTRAINT `fk_pld_pl` FOREIGN KEY (`packing_list_id`) REFERENCES `packing_list` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1066,6 +1067,7 @@ CREATE TABLE `packing_list_detail` (
 
 LOCK TABLES `packing_list_detail` WRITE;
 /*!40000 ALTER TABLE `packing_list_detail` DISABLE KEYS */;
+INSERT INTO `packing_list_detail` VALUES (1,1,11,1,1.00,1.00,'testing DO','2025-12-09 20:34:12','2025-12-09 20:34:12',NULL),(2,1,11,1,1.00,1.00,'FREE GOOD','2025-12-09 20:34:12','2025-12-09 20:34:12',NULL),(3,1,13,1,5.00,5.00,'kirim','2025-12-09 20:34:12','2025-12-09 20:34:12',NULL);
 /*!40000 ALTER TABLE `packing_list_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1087,7 +1089,7 @@ CREATE TABLE `packing_list_do` (
   KEY `fk_pldo_do` (`delivery_order_id`),
   CONSTRAINT `fk_pldo_do` FOREIGN KEY (`delivery_order_id`) REFERENCES `delivery_order_header` (`id`),
   CONSTRAINT `fk_pldo_pl` FOREIGN KEY (`packing_list_id`) REFERENCES `packing_list` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1096,6 +1098,7 @@ CREATE TABLE `packing_list_do` (
 
 LOCK TABLES `packing_list_do` WRITE;
 /*!40000 ALTER TABLE `packing_list_do` DISABLE KEYS */;
+INSERT INTO `packing_list_do` VALUES (1,1,11,'2025-12-09 20:34:12','2025-12-09 20:34:12'),(2,1,13,'2025-12-09 20:34:12','2025-12-09 20:34:12');
 /*!40000 ALTER TABLE `packing_list_do` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2872,4 +2875,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-09  5:08:07
+-- Dump completed on 2025-12-10  4:00:44

@@ -7,6 +7,8 @@ use App\Models\Master\Currency;
 use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\PackingList;
+use App\Models\Transaction\PackingListDo;
+use App\Models\Transaction\PackingListDtl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -207,159 +209,96 @@ class PackingListController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
+        // echo '<pre>';
+        // print_r($data);die;
+
 
         DB::beginTransaction();
         try {
 
-             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'piutang usaha')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'diskon bayar')
-                ->with('account')
-                ->first();
-
-            if (! $piutangAcc || ! $discBayarAcc) {
-                DB::rollBack();
-
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
-                ]);
-            }
-
-            $kasAccount = Coa::find($data['account_id']);
-            // === HEADER ===
-
             $header = empty($data['id'])
-                ? new SalesPaymentHeader()
-                : SalesPaymentHeader::find($data['id']);
+                ? new PackingList()
+                : PackingList::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->payment_code = generateNoSP(); // misal helper
+                $header->packing_list_no = generateNoPL(); // misal helper
                 $header->created_by = $userId;
-                $header->status = 'PENDING';
             }
 
-            $header->payment_date = $data['payment_date'];
-            $header->customer_id = $data['customer_id'];
-            $header->payment_method = $data['payment_method'];
-            $header->total_amount = 0;
-            $header->discount_amount = 0;
-            $header->net_amount = 0;
-            $header->reference_no = $data['reference_no'];
+            $header->packing_date = $data['packing_date'];
+            $header->vehicle_no = $data['vehicle_no'];
+            $header->driver_name = $data['driver_name'];
+            $header->expedition_name = $data['expedition_name'];
             $header->remarks = $data['remarks'];
-            $header->coa_kas = $data['account_id'];
-            $header->bulk = $data['bulk'];
             $header->save();
 
             $hdrId = $header->id;
 
-            $reference = $header->payment_code;
-            if($data['id'] != ''){
-                cancelAllGL($reference);
+            // === DETAIL DO===
+            $details = empty($data['details']) ?  [] : collect($data['details']);
+            if(empty($details)){
+                DB::rollBack();
+                $result['is_valid'] = false;
+                $result['message'] = 'Detail DO tidak boleh kosong';
+                return response()->json($result);
             }
 
-            // === DETAIL ===
-            $totalAmount = 0;
-            $disc_total = 0;
-            $net_total = 0;
-            $line_no = 1;
-            foreach ($data['details'] as $key=>$value) {
+            foreach ($data['do_list'] as $key=>$value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
-                        $exist = SalesPaymentDtl::find($value['id']);
+                        $exist = PackingListDo::find($value['id']);
                         if ($exist) {
-                            $exist->deleted = now();
-                            $exist->deleted_by = $userId;
-                            $exist->save();
+                            $exist->delete();
+
+                            //DO kembali ke status confirm
+                            $do = DeliveryOrderHeader::find($value['delivery_order_id']);
+                            $do->status = 'CONFIRMED';
+                            $do->save();
+
+                            $details = PackingListDtl::where('packing_list_id', $hdrId)->where('delivery_order_id', $value['delivery_order_id'])->get();
+                            foreach ($details as $key2 => $value2) {
+                                $value2->delete();
+                            }
                         }
                     }
                     continue;
                 }
 
-                $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
-                if($outstanding_amount < 0){
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-'.($key+1)
-                    ]);
-                }
-
-                $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
-                $disc_amount = 0;
-                if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
-                    $disc_amount = $value['discount_amount'];
-                    $disc_total += $disc_amount;
-                }
-
-                if($value['allocated_amount'] > 0){
-                    $net_total += ($value['allocated_amount'] - $disc_amount);
-                }
-
-                if($value['allocated_amount'] < $disc_amount){
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-'.($key+1)
-                    ]);
-
-                }
-
-                $totalAmount += $value['allocated_amount'];
-
-                // Item baru atau update
                 $detail = empty($value['id'])
-                    ? new SalesPaymentDtl()
-                    : SalesPaymentDtl::find($value['id']);
+                    ? new PackingListDo()
+                    : PackingListDo::find($value['id']);
 
-                $detail->payment_id = $hdrId;
-                $detail->invoice_id = $value['invoice_id'];
-                $detail->allocated_amount = $value['allocated_amount'];
-                $detail->outstanding_amount = $value['outstanding_amount'];
-                $detail->line_no = $line_no++;
+                $detail->packing_list_id = $hdrId;
+                $detail->delivery_order_id = $value['delivery_order_id'];
                 $detail->save();
 
-                /*mapping coa */
+                $do = DeliveryOrderHeader::find($value['delivery_order_id']);
+                $do->status = 'PACKED';
+                $do->save();
 
-                $invoice = SalesInvoiceHeader::find($value['invoice_id']);
-                $total_paid = 0;
-                if($value['id'] == ''){
-                    $total_paid = $invoice->amount_paid +$value['allocated_amount'];
-                }else{
-                    $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
+
+                $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
+                if(empty($details_do)){
+                    DB::rollBack();
+                    $result['is_valid'] = false;
+                    $result['message'] = 'Detail DO '.$value['do_number'].' tidak boleh kosong';
+                    return response()->json($result);
                 }
-                $invoice->amount_paid = $total_paid;
-                if($outstanding_amount == 0){
-                    $invoice->status = 'PAID';
-                }else{
-                    $invoice->status = 'PARTIAL PAID';
+
+                foreach ($details_do as $key2 => $value2) {
+                    $detailDo = new PackingListDtl();
+                    $detailDo->packing_list_id = $hdrId;
+                    $detailDo->delivery_order_id = $value['delivery_order_id'];
+                    $detailDo->product_id = $value2['product_id'];
+                    $detailDo->qty_do = $value2['qty_do'];
+                    $detailDo->qty_packed = $value2['qty_packed'];
+                    $detailDo->remark = $value2['remark'];
+                    $detailDo->delivery_detail_id = $value2['id'];
+                    $detailDo->save();
                 }
-                $invoice->save();
-
-
             }
 
-            $currency = Currency::where('code', 'IDR')->first();
-            $currencyId = $currency->id;
-
-            $update = SalesPaymentHeader::find($hdrId);
-            $update->total_amount = $totalAmount;
-            $update->discount_amount = $disc_total;
-            $update->net_amount = $net_total;
-            $update->save();
-
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId);
-
-            $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
-            postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
-            if($disc_total > 0){
-                postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
-            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -422,9 +361,7 @@ class PackingListController extends Controller
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
-                'c.nama_customer'
             ])
-            ->join('customer as c', 'c.id', 'm.customer_id')
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();

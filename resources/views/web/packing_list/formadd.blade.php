@@ -103,15 +103,15 @@
                             </thead>
 
                             <tbody id="do-body">
-                                @if(!empty($do_list))
-                                    @foreach($do_list as $row)
+                                @if(!empty($details))
+                                    @foreach($details as $row)
                                         <tr data_id="{{ $row->id }}">
                                             <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }}</td>
                                             <td id="do_date">{{ $row->do_date }}</td>
                                             <td id="do_customer" data_id="{{ $row->customer_id }}">{{ $row->customer_code }} - {{ $row->nama_customer }}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-danger btn-sm"
-                                                        onclick="PackingList.removeDORow(this)">
+                                                        onclick="PackingList.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button>
                                             </td>
@@ -141,19 +141,21 @@
                             <tbody id="detail-body">
                                 @if(!empty($details))
                                     @foreach($details as $d)
-                                        <tr class="do_detail_{{ $d->delivery_order_id }}">
-                                            <td id="product_id" data_id="{{ $d->product_id }}">{{ $d->product_code }} - {{ $d->product_name }}</td>
-                                            <td id="product_qty">{{ $d->qty_do }}</td>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    id="qty_pack"
-                                                       value="{{ $d->qty_packed }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control"
-                                                       value="{{ $d->remark }}">
-                                            </td>
-                                        </tr>
+                                        @foreach ($d->detail as $prod)
+                                            <tr class="do_detail_{{ $prod->delivery_order_id }}" do_id="{{ $prod->delivery_order_id }}" data_id="{{ $prod->delivery_detail_id }}">
+                                                <td id="product_id" data_id="{{ $prod->product->id }}">{{ $prod->product->code }} - {{ $prod->product->name }}</td>
+                                                <td id="product_qty">{{ $prod->qty_do }}</td>
+                                                <td>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        id="qty_pack"
+                                                        value="{{ $prod->qty_packed }}">
+                                                </td>
+                                                <td>
+                                                    <input disabled type="text" class="form-control"
+                                                        value="{{ $prod->remark }}">
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     @endforeach
                                 @endif
                             </tbody>
