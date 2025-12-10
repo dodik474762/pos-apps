@@ -69,6 +69,7 @@ use App\Http\Controllers\web\Transaction\DeliveryOrderController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PackingListController;
+use App\Http\Controllers\web\Transaction\PLTagihanController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\ReturnConsigmentController;
@@ -251,6 +252,9 @@ Route::get('transaksi/packing_list', [PackingListController::class, 'index']);
 Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])->name('packing-list-add');
 Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');;
 Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');;
+
+Route::get('transaksi/pl_tagihan', [PLTagihanController::class, 'index'])->name('pl-tagihan-print-all');
+Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])->name('pl-tagihan-print');;
 
 /*API */
 
