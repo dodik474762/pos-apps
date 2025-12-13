@@ -1,0 +1,26 @@
+Packing List Kiriman
+- tambahkan no faktur
+- tambahkan nominal fakturnya
+
+Packing List Salesman
+- keterangan
+- ditagihkan oleh di sebelahnya dibuat oleh
+
+Mobile Salesman
+- Hanya Visit ada keterangan kenapa tidak order
+- Average Transaksi
+- Jenis Kategori Outlet
+- Stock
+- Target Bulanan Sales
+- NOO (online)
+- Laporan EC/CALL/AO (tujuannya untuk mengetahui target dan realisasi)
+ -> Call (jumlah toko yang kunjungi sales) 
+ -> EC (jumlah toko yang order)
+ -> AO (jumlah toko yang bertransaksi minimal 1x dalam 1 bulan)
+
+
+Sopir:
+- tambah keterangan di payment
+- Visit berdasarkan packing list
+- konfirmasi pengiriman
+

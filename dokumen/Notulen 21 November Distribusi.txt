@@ -49,9 +49,9 @@ Mobile Salesman:
 - Noo (kandidat/normal)
 - Sales Order (ttd toko, foto toko)
 - Sales Retur (Penolakan atas invoice)
-- Laporan Stock 
-- Laporan Rata2 Penjualan per Customer (keterangan transaksi terakhir, dan nominal berapa)
-- Achievment Target Bulanan per Salesman
+- Laporan Stock (online)
+- Laporan Rata2 Penjualan per Customer (keterangan transaksi terakhir, dan nominal berapa) (online)
+- Achievment Target Bulanan per Salesman (online)
 - Laporan Setoran Sales
 - Closing
 
