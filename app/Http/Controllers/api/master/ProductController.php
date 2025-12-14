@@ -142,15 +142,19 @@ class ProductController extends Controller
                 'm.name as product_name',
                 'u.name as product_unit',
                 'pup.price as product_price',
-                'u.id as product_unit_id'
+                'u.id as product_unit_id',
+                'ps.qty as stock_product',
+                'pup.id as product_uom_price_id'
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
             ->join('product_uom_price as pup',function($q){
                 return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
             })
+            ->join('product_stock as ps', 'ps.product', 'm.id')
             ->join('unit as u', 'u.id', 'pup.unit')
             ->whereNull('m.deleted')
-            ->orderBy('m.id', 'desc');
+            ->orderBy('m.id', 'desc')
+            ->orderBy('pup.id', 'asc');
         $data = $datadb->get()->toArray();
         // echo '<pre>';
         // print_r($query);die;
