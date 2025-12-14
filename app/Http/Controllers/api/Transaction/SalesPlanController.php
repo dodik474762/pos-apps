@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\Currency;
 use App\Models\Transaction\SalesPlanDetail;
 use App\Models\Transaction\SalesPlanHeader;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -424,12 +425,25 @@ class SalesPlanController extends Controller
 
     public function getSalesRoutePlan(Request $request)
     {
+        $today = Carbon::today();
+
+        // Nama hari (Monday, Tuesday, ...)
+        $dayName = $today->format('l');
+
+        // Minggu ke berapa dalam bulan
+        $weekOfMonth = $today->weekOfMonth;
+
+        // Tentukan ganjil / genap
+        $weekType = ($weekOfMonth % 2 === 0) ? 'EVEN' : 'ODD';
+
         $data = $request->all();
         $month = date('m');
         $year = date('Y');
         $salesman = isset($data['salesman']) ? $data['salesman'] : 1;
 
-        // Subquery invoice dengan outstanding
+        // =======================
+        // Subquery invoice
+        // =======================
         $invoiceSubquery = DB::table('sales_invoice_header as sih')
             ->select(
                 'sih.customer_id',
@@ -439,7 +453,9 @@ class SalesPlanController extends Controller
             ->whereNull('sih.deleted')
             ->groupBy('sih.customer_id');
 
-        // Query sales plan + join invoice
+        // =======================
+        // Query utama
+        // =======================
         $datadb = DB::table('sales_plan_header as h')
             ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
@@ -471,12 +487,25 @@ class SalesPlanController extends Controller
             ->where('h.period_year', $year)
             ->where('h.period_month', $month)
             ->where('h.salesman', $salesman)
+
+            // =======================
+            // FILTER HARI & MINGGU
+            // =======================
+            ->where('d.week_number', $weekOfMonth)
+            ->where('d.week_type', $weekType)
+            ->where('d.day_of_week', $dayName)
+
             ->orderBy('h.id')
             ->orderBy('d.week_number')
             ->get();
 
         $result['is_valid'] = empty($datadb) ? false : true;
         $result['data'] = $datadb;
+        $result['week'] = [
+            'week_number' => $weekOfMonth,
+            'week_type' => $weekType,
+            'day_of_week' => $dayName
+        ];
 
         return response()->json($result);
     }
