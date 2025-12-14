@@ -12,9 +12,23 @@ use Illuminate\Support\Facades\File;
 
 class PresensiController extends Controller
 {
-     public function __construct()
+    public function __construct()
     {
         date_default_timezone_set('Asia/Jakarta');
+    }
+
+    public function getDataPresensi(Request $request) {
+        $data = $request->all();
+        $date = date('Y-m-d');
+        $result['is_valid'] = true;
+        $datadb = Presence::where('presence.creator', $data['users'])
+            ->select(['presence.*', 'kry.nik'])
+            ->join('karyawan as kry', 'kry.id', 'presence.karyawan')
+            ->whereNull('presence.deleted')
+            ->where('presence.presence_date', '=', $date)
+            ->get()->toArray();
+        $result['data'] = $datadb;
+        return response()->json($result);
     }
 
     public function submitPresensi(Request $request) {
@@ -28,6 +42,7 @@ class PresensiController extends Controller
 
         // 2. Jika mau format MySQL datetime
         $date = $periode->format('Y-m-d H:i:s');
+        $periode_date = $periode->format('Y-m-d');
 
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -44,7 +59,7 @@ class PresensiController extends Controller
             }
 
             $checkSudahAbsen = Presence::where('creator', $userId)
-                ->where('presence_date', $periode)
+                ->where('presence_date', $periode_date)
                 ->first();
 
             $fileName = time() . '.jpg';
@@ -66,7 +81,7 @@ class PresensiController extends Controller
                 $absen = new Presence();
                 $absen->code = generateCodePresence();
                 $absen->creator = $userId;
-                $absen->presence_date = $periode;
+                $absen->presence_date = $periode_date;
                 $absen->karyawan = $karyawan->id_karyawan;
                 $absen->start_date = $date;
                 $absen->status = 'DRAFT';

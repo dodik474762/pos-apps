@@ -521,4 +521,5 @@ Route::post('api/transaksi/packing_list/getDOConfirmed', [TransactionPackingList
 Route::post('api/transaksi/packing_list/getDODetailConfirmed', [TransactionPackingListController::class, 'getDODetailConfirmed']);
 
 Route::post('api_mobile/transaksi/presensi/submitPresensi', [PresensiController::class, 'submitPresensi']);
+Route::post('api_mobile/transaksi/presensi/getDataPresensi', [PresensiController::class, 'getDataPresensi']);
 /*API */
