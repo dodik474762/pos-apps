@@ -5,6 +5,8 @@ namespace App\Http\Controllers\api\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Currency;
+use App\Models\Master\ProductUom;
+use App\Models\Master\ProductUomPrice;
 use App\Models\Transaction\ReturnOfConsigment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -135,6 +137,19 @@ class ReturnConsigmentController extends Controller
 
             $totalAmount = $data['qty'] * $data['price'];
 
+            if($data['status_supply']){
+                $productPrice = ProductUomPrice::find($data['price_id']);
+                $qtyBaseUnit = getSmallestUnit($data['product_id'], $productPrice->unit, $data['qty']);
+                $productUomLevel1 = ProductUom::where('product', $data['product_id'])->where('level', '1')->first();
+                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+
+                $data['product'] = $data['product_id'];
+                    stockUpdate($hdrId,
+                    1,
+                    $data['product_id'],
+                    $productUomLevel1->unit_tujuan, $qtyBaseUnit, $data, 'add', 'return_consigment');
+            }
+
             postingGL($reference, $inventoryAcc->account_id, $inventoryAcc->account->account_name, $inventoryAcc->cd, $totalAmount, $currencyId);
             postingGL($reference, $otherAcc->account_id, $otherAcc->account->account_name, $otherAcc->cd, $totalAmount, $currencyId);
 
@@ -158,75 +173,56 @@ class ReturnConsigmentController extends Controller
         $userId = session('user_id');
 
         DB::beginTransaction();
-
         try {
-
-            $header = ReturnOfConsigment::find($id);
-
-            if (! $header) {
+            // Cari data retur berdasarkan ID
+            $header = ReturnOfConsigment::find($data['id']);
+            if (!$header) {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Credit Note tidak ditemukan.',
+                    'message' => 'Retur tidak ditemukan.',
                 ]);
             }
 
-            if ($header->status == 'CANCELED') {
+            // Cek apakah retur sudah dibatalkan sebelumnya
+            if ($header->status == 'CANCELLED') {
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Credit Note sudah dibatalkan.',
+                    'message' => 'Retur sudah dibatalkan.',
                 ]);
             }
 
-            // ambil semua detail termasuk yg sudah deleted
-            $details = CreditNoteDtl::where('credit_note_id', $id)->whereNull('deleted')->get();
-
-            foreach ($details as $dt) {
-
-                $invoice = CreditNoteDtl::find($dt->invoice_detail_id);
-
-                if ($invoice) {
-                    // Kembalikan return_qty
-                    $cn_amount = (($dt->unit_price * $dt->qty_affected) - $dt->discount_amount + $dt->tax_amount);
-                    $invoice->credit_note_amount = $invoice->credit_note_amount - $cn_amount;
-
-                    if ($invoice->credit_note_amount < 0) {
-                        DB::rollBack();
-
-                        return response()->json([
-                            'is_valid' => false,
-                            'message' => 'Cancel gagal: Credit Note amount menjadi minus.',
-                        ]);
-                    }
-
-                    $invoice->save();
-                }
-            }
-
-            // Batalkan jurnal (GL)
+            // Cancelling all GL entries related to this return
             cancelAllGL($header->return_number);
 
-            // Ubah status
-            $header->status = 'CANCELLED';
-            $header->deleted = now();
+            // Update status retur menjadi 'CANCELLED'
+            $header->status = 'CANCELED';
+            $header->deleted = date('Y-m-d H:i:s');
             $header->deleted_by = $userId;
             $header->save();
 
+            // Revert stock updates if needed (mengurangi stok jika sudah ditambahkan sebelumnya)
+            if ($header->status_supply) {
+                $productPrice = ProductUomPrice::find($header->price_id);
+                $qtyBaseUnit = getSmallestUnit($header->product_id, $productPrice->unit, $header->qty);
+                $productUomLevel1 = ProductUom::where('product', $header->product_id)->where('level', '1')->first();
+                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+
+                // Mengurangi stok yang sudah ditambahkan saat retur
+                stockUpdate($header->id, 1, $header->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit, $data, 'min', 'return_consigment');
+            }
+
+            // Commit transaksi
             DB::commit();
 
-            return response()->json([
-                'is_valid' => true,
-                'message' => 'Credit Note berhasil dibatalkan.',
-            ]);
-
+            $result['is_valid'] = true;
+            $result['message'] = 'Retur berhasil dibatalkan.';
         } catch (\Throwable $th) {
-
             DB::rollBack();
-
-            return response()->json([
-                'is_valid' => false,
-                'message' => $th->getMessage(),
-            ]);
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
         }
+
+        return response()->json($result);
     }
 
     public function getDetailData($id)
