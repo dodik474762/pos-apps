@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -74,6 +75,17 @@ class PLTagihanController extends Controller
         }
         $salesman = isset($data['salesman']) ? $data['salesman'] : 0;
 
+        $today = Carbon::parse($data['tanggal']);
+
+        // Nama hari (Monday, Tuesday, ...)
+        $dayName = $today->format('l');
+
+        // Minggu ke berapa dalam bulan
+        $weekOfMonth = $today->weekOfMonth;
+
+        // Tentukan ganjil / genap
+        $weekType = ($weekOfMonth % 2 === 0) ? 'EVEN' : 'ODD';
+
          $datadb = DB::table('sales_plan_header as h')
             ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
@@ -101,6 +113,13 @@ class PLTagihanController extends Controller
             ->where('h.period_year', $year)
             ->where('h.period_month', $month)
             ->where('h.salesman', $salesman)
+             // =======================
+            // FILTER HARI & MINGGU
+            // =======================
+            ->where('d.week_number', $weekOfMonth)
+            ->where('d.week_type', $weekType)
+            ->where('d.day_of_week', $dayName)
+
             ->orderBy('h.id')
             ->orderBy('d.week_number')
             ->get();
