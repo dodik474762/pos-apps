@@ -71,6 +71,7 @@ use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
 use App\Http\Controllers\web\Transaction\PackingListController;
 use App\Http\Controllers\web\Transaction\PLTagihanController;
+use App\Http\Controllers\web\Transaction\PresensiController as TransactionPresensiController;
 use App\Http\Controllers\web\Transaction\PurchaseInvoiceController;
 use App\Http\Controllers\web\Transaction\PurchaseReturnController;
 use App\Http\Controllers\web\Transaction\ReturnConsigmentController;
@@ -247,16 +248,19 @@ Route::get('transaksi/credit_note/cetak', [CreditNoteController::class, 'cetak']
 
 Route::get('transaksi/return_cs', [ReturnConsigmentController::class, 'index']);
 Route::get('transaksi/return_cs/add', [ReturnConsigmentController::class, 'add'])->name('return-cs-add');
-Route::get('transaksi/return_cs/ubah', [ReturnConsigmentController::class, 'ubah'])->name('return-cs-edit');;
-Route::get('transaksi/return_cs/cetak', [ReturnConsigmentController::class, 'cetak'])->name('return-cs-print');;
+Route::get('transaksi/return_cs/ubah', [ReturnConsigmentController::class, 'ubah'])->name('return-cs-edit');
+Route::get('transaksi/return_cs/cetak', [ReturnConsigmentController::class, 'cetak'])->name('return-cs-print');
 
 Route::get('transaksi/packing_list', [PackingListController::class, 'index']);
 Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])->name('packing-list-add');
-Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');;
-Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');;
+Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');
+Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');
 
 Route::get('transaksi/pl_tagihan', [PLTagihanController::class, 'index'])->name('pl-tagihan-print-all');
-Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])->name('pl-tagihan-print');;
+Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])->name('pl-tagihan-print');
+
+Route::get('transaksi/presensi', [TransactionPresensiController::class, 'index']);
+Route::get('transaksi/presensi/add', [TransactionPresensiController::class, 'add'])->name('presensi-add');
 
 /*API */
 
@@ -522,4 +526,9 @@ Route::post('api/transaksi/packing_list/getDODetailConfirmed', [TransactionPacki
 
 Route::post('api_mobile/transaksi/presensi/submitPresensi', [PresensiController::class, 'submitPresensi']);
 Route::post('api_mobile/transaksi/presensi/getDataPresensi', [PresensiController::class, 'getDataPresensi']);
+Route::post('api/transaksi/presensi/getData', [PresensiController::class, 'getData']);
+Route::post('api/transaksi/presensi/delete', [PresensiController::class, 'delete']);
+Route::post('api/transaksi/presensi/confirmDelete ',[PresensiController::class, 'confirmDelete']);
+Route::post('api/transaksi/presensi/showDataKaryawan ', [PresensiController::class, 'showDataKaryawan']);
+Route::post('api/transaksi/presensi/submit ', [PresensiController::class, 'submit']);
 /*API */
