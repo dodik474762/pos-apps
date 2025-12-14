@@ -16,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/master/product/getDataProductMobile',
             'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
             'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
-            'api_mobile/transaksi/sales_invoice/getOutstandingInvoice'
+            'api_mobile/transaksi/sales_invoice/getOutstandingInvoice',
+            'api_mobile/auth/login'
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })

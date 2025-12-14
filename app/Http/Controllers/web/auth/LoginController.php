@@ -135,6 +135,88 @@ class LoginController extends Controller
         }
     }
 
+    public function signInApps(Request $request)
+    {
+        $data = $request->all();
+        $credentials = $request->only('username', 'password');
+
+        $result['is_valid'] = false;
+
+        try {
+            if (! $token = JWTAuth::attempt($credentials)) {
+                $result['message'] = 'Pengguna Tidak Ditemukan';
+                return response()->json($result);
+            }
+        } catch (JWTException $e) {
+            $result['message'] = 'Pengguna Tidak Valid, Tidak Dapat Login.';
+            return response()->json($result);
+        }
+
+
+        $userdata = DB::table('users as usr')
+            ->select([
+                'usr.*',
+                'ha.group as akses',
+                'kry.company',
+                'ut.nama_company',
+                'kry.nama_lengkap',
+                'kry.group as group_karyawan',
+                'dic.keterangan as group_karyawan_name',
+                'kry.id as id_karyawan'
+            ])
+            ->join('karyawan as kry', 'kry.nik', 'usr.nik')
+            ->join('company as ut', 'ut.id', 'kry.company')
+            ->join('users_group as ha', 'ha.id', '=', 'usr.user_group')
+            ->leftJoin('dictionary as dic', 'dic.term_id', '=', 'kry.group')
+            ->where(function ($query) use ($data) {
+                return $query->where('usr.username', '=', $data['username'])
+                    ->orWhere('usr.nik', '=', $data['username']);
+            })
+            ->whereNull('usr.deleted')
+            ->first();
+
+        if (!empty($userdata)) {
+            $dataMenu = UsersPermission::where('users_permissions.users_group', $userdata->user_group)
+                ->select([
+                    'users_permissions.*',
+                    'am.nama as menu'
+                ])
+                ->join('menu as am', 'am.id', '=', 'users_permissions.menu')
+                ->whereNull('users_permissions.deleted')
+                ->get()->toArray();
+
+            $result_akses = [];
+            foreach ($dataMenu as $key => $value) {
+                $value['id_menu'] = strtolower(str_replace(' ', '_', $value['menu']));
+                $result_akses[$value['id_menu']] = $value;
+            }
+
+            $dataRoles = $this->checkDataRoles($userdata->nik);
+
+            Session::put('user_id', $userdata->id);
+            Session::put('group', $userdata->group_karyawan);
+            Session::put('group_karyawan', $userdata->group_karyawan);
+            Session::put('group_karyawan_name', $userdata->group_karyawan_name);
+            Session::put('nama_lengkap', $userdata->nama_lengkap);
+            Session::put('username', $userdata->username);
+            Session::put('akses', $userdata->akses);
+            Session::put('nik', $userdata->nik);
+            Session::put('id_company', $userdata->company ?? '');
+            Session::put('area_kerja', $userdata->nama_company ?? '');
+            Session::put('id_karyawan', $userdata->id_karyawan ?? '0');
+            Session::put('akses_menu', json_encode($result_akses));
+
+            $result['is_valid'] = true;
+            $result['data'] = $userdata;
+            $result['token'] = $token;
+
+            return response()->json($result);
+        } else {
+            $result['message'] = 'Pengguna Tidak Ditemukan';
+            return response()->json($result);
+        }
+    }
+
     public function submitNewPassword(Request $request)
     {
         $data = $request->all();
