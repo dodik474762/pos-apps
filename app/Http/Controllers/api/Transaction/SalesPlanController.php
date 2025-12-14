@@ -504,7 +504,8 @@ class SalesPlanController extends Controller
         $result['week'] = [
             'week_number' => $weekOfMonth,
             'week_type' => $weekType,
-            'day_of_week' => $dayName
+            'day_of_week' => $dayName,
+            'date' => $today->format('Y-m-d'),
         ];
 
         return response()->json($result);
