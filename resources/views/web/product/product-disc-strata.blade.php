@@ -1,3 +1,4 @@
+{{-- jika ada discount bertingkat pakai rumus D=1−(1−D1)(1−D2)(1−D3) --}}
 <tr data_id="">
     <td class="text-center">
         <button class="btn btn-sm btn-danger" onclick="Product.removeItemDiscStrata(this, event)"><i
