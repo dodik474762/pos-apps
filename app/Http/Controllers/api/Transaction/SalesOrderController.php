@@ -9,11 +9,14 @@ use App\Models\Master\ProductDisc;
 use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
+use App\Models\Master\TermOfPayment;
 use App\Models\Master\Unit;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class SalesOrderController extends Controller
 {
@@ -182,6 +185,7 @@ class SalesOrderController extends Controller
             $header->currency = $data['currency'];
             $header->remarks = $data['remarks'] ?? null;
             $header->total_amount = 0; // akan dihitung ulang di bawah
+            $header->platform = 'web'; // akan dihitung ulang di bawah
             $header->save();
 
             $hdrId = $header->id;
@@ -248,6 +252,142 @@ class SalesOrderController extends Controller
             $result['message'] = $th->getMessage();
         }
 
+        return response()->json($result);
+    }
+
+    public function sync(Request $request){
+        $data = json_decode($request->input('data'), true);
+        $files_outlet = $request->file('files_outlet');
+        $files_ttd = $request->file('files_ttd');
+        $users_id = $data['user_id'];
+
+        $periode = Carbon::parse($data['so_date'])->setTimezone('Asia/Jakarta');
+        $so_date = $periode->format('Y-m-d H:i:s');
+
+        list($customer_code, $customer_name) = explode('/', $data['customer_id']);
+        $customers = Customer::where('code', trim($customer_code))->first();
+        $customersId = $customers->id;
+        $top = TermOfPayment::where('id', $customers->payment_terms)->first();
+        $payment_term = $top->nilai;
+
+        $result['is_valid'] = false;
+        $result['message'] = '';
+        $result['so_date'] = $so_date;
+        $result['data'] = $data;
+        return response()->json($result);
+
+
+        DB::beginTransaction();
+        try {
+            $dir = 'berkas/document/sales_order/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
+            // Create the directory if it doesn't exist
+            if (!File::isDirectory($pathlamp)) {
+                File::makeDirectory($pathlamp, 0777, true, true);
+            }
+
+            $fileOutletName = 'outlet_'.time() . '.jpg';
+            $fileTtdName = 'signature_'.time() . '.jpg';
+
+            $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            $dbpathlamp = '/' . $dir . '/';
+
+            $path = $files_ttd->move(public_path($dir), $fileTtdName);
+            $dbpathlamp = '/' . $dir . '/';
+
+            $currency = Currency::where('code', 'IDR')->first();
+            if (!$currency) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Currency IDR tidak ditemukan'
+                ]);
+            }
+            $currencyId = $currency->id;
+
+             // === HEADER ===
+            $header = new SalesOrderHeader();
+            $header->so_number = generateNoSO(); // misal helper
+            $header->created_by = $users_id;
+            $header->status = 'draft';
+
+            $header->so_date = $so_date;
+            $header->customer_id = $customersId;
+            $header->payment_term = $payment_term;
+            $header->salesman = $users_id;
+            $header->currency = $currencyId;
+            $header->remarks = $data['remarks'];
+            $header->total_amount = 0; // akan dihitung ulang di bawah
+            $header->platform = 'mobile'; // akan dihitung ulang di bawah
+            $header->save();
+
+            $hdrId = $header->id;
+            $grandTotal = 0;
+
+             // === DETAIL ===
+            foreach ($data['details'] as $item) {
+                // Item baru atau update
+                list($products, $product_unit) = explode(':', $item['product_id']);
+                $products = explode('/', $products);
+                $product_unit = explode('/', $product_unit);
+                $puom_price = ProductUomPrice::find('product', trim($products[0]))->where('uom_id', trim($product_unit[0]))
+                ->whereNull('deleted')
+                ->first();
+
+                if(empty($puom_price)){
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Product UOM Price tidak ditemukan'
+                    ]);
+                }
+
+                $uom_price_id = $puom_price->id;
+
+
+                $detail = new SalesOrderDetail();
+
+                $detail->sales_order_id = $hdrId;
+                $detail->product_id = trim($products[0]);
+                $detail->qty = $item['qty'];
+                $detail->unit = trim($product_unit[0]);
+                $detail->unit_price = trim($product_unit[1]);
+                //perhitungan diskon dan free good
+                $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
+                $detail->discount_percent = $item['disc_percent'];
+                $detail->discount_amount = $item['disc_amount'];
+                $detail->subtotal = $item['subtotal']; // ini sudah dikurangi diskon
+                $detail->is_free_good = $item['is_freegood'] ?? 0;
+                $detail->free_for = $item['free_for'] ?? null;
+                $detail->status = 'draft';
+                $detail->save();
+
+                // Hanya tambahkan ke total jika bukan free good
+                if (empty($item['is_freegood'])) {
+                    $grandTotal += $item['subtotal'];
+                }
+            }
+
+            // Update total header
+            $header->total_amount = $grandTotal;
+            $header->save();
+
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['path'] = $dbpathlamp;
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        // $result['data'] = $data['details'][0]['product_id'];
+        // $result['customer_id'] = $data['customer_id'];
+        // $result['files_outlet'] = $files_outlet;
+        // $result['files_ttd'] = $files_ttd;
         return response()->json($result);
     }
 

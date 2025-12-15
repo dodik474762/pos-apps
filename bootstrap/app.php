@@ -19,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/sales_invoice/getOutstandingInvoice',
             'api_mobile/auth/login',
             'api_mobile/transaksi/presensi/getDataPresensi',
-            'api_mobile/transaksi/presensi/submitPresensi'
+            'api_mobile/transaksi/presensi/submitPresensi',
+            'api_mobile/transaksi/sales_order/sync',
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })
