@@ -522,10 +522,7 @@ class SalesOrderController extends Controller
                     $detail->save();
                 }
 
-                // Hanya tambahkan ke total jika bukan free good
-                if (empty($item['is_freegood'])) {
-                    $grandTotal += $item['subtotal'];
-                }
+                $grandTotal += $calculateDisc['subtotal'];
             }
 
             // Update total header
@@ -535,6 +532,8 @@ class SalesOrderController extends Controller
             DB::commit();
             $result['is_valid'] = true;
             $result['path'] = $dbpathlamp;
+            $result['message'] = 'Success';
+            $result['sales_order_id'] = $hdrId;
         } catch (\Throwable $th) {
             // throw $th;
             DB::rollBack();
