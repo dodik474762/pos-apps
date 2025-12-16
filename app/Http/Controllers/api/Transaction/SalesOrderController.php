@@ -159,17 +159,18 @@ class SalesOrderController extends Controller
         try {
             // Pastikan currency default ada
             $currency = Currency::where('code', 'IDR')->first();
-            if (!$currency) {
+            if (! $currency) {
                 DB::rollBack();
+
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Currency IDR tidak ditemukan'
+                    'message' => 'Currency IDR tidak ditemukan',
                 ]);
             }
 
             // === HEADER ===
             $header = empty($data['id'])
-                ? new SalesOrderHeader()
+                ? new SalesOrderHeader
                 : SalesOrderHeader::find($data['id']);
 
             if (empty($data['id'])) {
@@ -194,14 +195,15 @@ class SalesOrderController extends Controller
             // === DETAIL ===
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
-                if (!empty($item['remove']) && $item['remove'] == 1) {
-                    if (!empty($item['id'])) {
+                if (! empty($item['remove']) && $item['remove'] == 1) {
+                    if (! empty($item['id'])) {
                         $exist = SalesOrderDetail::find($item['id']);
                         if ($exist && $exist->status !== 'draft') {
                             DB::rollBack();
+
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
+                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
                             ]);
                         }
                         if ($exist) {
@@ -210,12 +212,13 @@ class SalesOrderController extends Controller
                             $exist->save();
                         }
                     }
+
                     continue;
                 }
 
                 // Item baru atau update
                 $detail = empty($item['id'])
-                    ? new SalesOrderDetail()
+                    ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
 
                 $detail->sales_order_id = $hdrId;
@@ -255,7 +258,133 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-    public function sync(Request $request){
+    public function calculateDisc($params)
+    {
+        try {
+            //code...
+            $qtyBaseUnit = getSmallestUnit($params['product_id'], $params['unit'], $params['qty']);
+            $qtySmallest = $qtyBaseUnit['qty_in_base_unit'];
+            // get discount product
+            $discounts = $this->getDataDiscProduct($params);
+            $discount_free = $this->getProductFreeGood($params);
+
+            $applicableDiscount = null;
+            foreach ($discounts as $d) {
+
+                $minSmall = getSmallestUnit(
+                    $d->product,
+                    $d->unit,
+                    $d->min_qty
+                )['qty_in_base_unit'];
+
+                $maxSmall = getSmallestUnit(
+                    $d->product_id,
+                    $d->unit,
+                    $d->max_qty
+                )['qty_in_base_unit'];
+
+                if (
+                    $d->product == $params['product_id'] &&
+                    $qtySmallest >= $minSmall &&
+                    $qtySmallest <= $maxSmall &&
+                    (
+                        empty($d->customer) ||
+                        $d->customer == $params['customer_id']
+                    ) &&
+                    $params['today'] >= $d->berlaku_from
+                ) {
+                    $applicableDiscount = $d;
+                    break;
+                }
+            }
+
+            // =========================
+            // HITUNG DISKON
+            // =========================
+            $discPercent = 0;
+            $discAmount  = 0;
+            $discountType = null;
+
+            if ($applicableDiscount) {
+                $discountType = $applicableDiscount->discount_type;
+
+                if ($applicableDiscount->discount_type === 'percent') {
+                    $discPercent = $applicableDiscount->discount_value;
+                    $discAmount = ($params['price'] * $params['qty'] * $discPercent) / 100;
+                } else {
+                    $discAmount = $applicableDiscount->discount_value;
+                }
+            }
+
+            $subtotal = ($params['price'] * $params['qty']) - $discAmount;
+
+            // =========================
+            // CARI FREE GOOD
+            // =========================
+            $applicableFree = null;
+
+            foreach ($discount_free as $d) {
+                $minSmall = getSmallestUnit(
+                    $d->product,
+                    $d->unit,
+                    $d->min_qty
+                )['qty_in_base_unit'];
+
+                $maxSmall = getSmallestUnit(
+                    $d->product,
+                    $d->unit,
+                    $d->max_qty
+                )['qty_in_base_unit'];
+
+                if (
+                    $d->product == $params['product_id'] &&
+                    $qtySmallest >= $minSmall &&
+                    $qtySmallest <= $maxSmall &&
+                    (
+                        empty($d->customer_id) ||
+                        $d->customer_id == $params['customer_id']
+                    ) &&
+                    $params['today'] >= $d->berlaku_from
+                ) {
+                    $applicableFree = $d;
+                    break;
+                }
+            }
+
+
+            // =========================
+            // RESPONSE
+            // =========================
+            return [
+                'is_valid'=> true,
+                'qty_base_unit'   => $qtySmallest,
+                'discount'        => $applicableDiscount,
+                'discount_type'   => $discountType,
+                'disc_percent'    => $discPercent,
+                'disc_amount'     => $discAmount,
+                'subtotal'        => round($subtotal, 2),
+                'discount_free'   => $applicableFree,
+                'free_qty'        => $applicableFree->free_qty ?? 0,
+                'message'         => 'Success'
+            ];
+        } catch (\Throwable $th) {
+             return [
+                'is_valid'=> false,
+                'qty_base_unit'   => 0,
+                'discount'        => 0,
+                'discount_type'   => $discountType,
+                'disc_percent'    => 0,
+                'disc_amount'     => 0,
+                'subtotal'        => 0,
+                'discount_free'   => 0,
+                'free_qty'        => 0,
+                'message'         => $th->getMessage()
+            ];
+        }
+    }
+
+    public function sync(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $files_outlet = $request->file('files_outlet');
         $files_ttd = $request->file('files_ttd');
@@ -274,40 +403,41 @@ class SalesOrderController extends Controller
         $result['message'] = '';
         $result['so_date'] = $so_date;
         $result['data'] = $data;
-        return response()->json($result);
 
+        return response()->json($result);
 
         DB::beginTransaction();
         try {
             $dir = 'berkas/document/sales_order/';
-            $dir .= date('Y') . '/' . date('m');
-            $pathlamp = public_path() . '/' . $dir . '/';
+            $dir .= date('Y').'/'.date('m');
+            $pathlamp = public_path().'/'.$dir.'/';
             // Create the directory if it doesn't exist
-            if (!File::isDirectory($pathlamp)) {
+            if (! File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_'.time() . '.jpg';
-            $fileTtdName = 'signature_'.time() . '.jpg';
+            $fileOutletName = 'outlet_'.time().'.jpg';
+            $fileTtdName = 'signature_'.time().'.jpg';
 
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlamp = '/' . $dir . '/';
+            $dbpathlamp = '/'.$dir.'/';
 
             $path = $files_ttd->move(public_path($dir), $fileTtdName);
-            $dbpathlamp = '/' . $dir . '/';
+            $dbpathlamp = '/'.$dir.'/';
 
             $currency = Currency::where('code', 'IDR')->first();
-            if (!$currency) {
+            if (! $currency) {
                 DB::rollBack();
+
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Currency IDR tidak ditemukan'
+                    'message' => 'Currency IDR tidak ditemukan',
                 ]);
             }
             $currencyId = $currency->id;
 
-             // === HEADER ===
-            $header = new SalesOrderHeader();
+            // === HEADER ===
+            $header = new SalesOrderHeader;
             $header->so_number = generateNoSO(); // misal helper
             $header->created_by = $users_id;
             $header->status = 'draft';
@@ -325,43 +455,72 @@ class SalesOrderController extends Controller
             $hdrId = $header->id;
             $grandTotal = 0;
 
-             // === DETAIL ===
+            // === DETAIL ===
             foreach ($data['details'] as $item) {
                 // Item baru atau update
-                list($products, $product_unit) = explode(':', $item['product_id']);
+                [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
                 $puom_price = ProductUomPrice::find('product', trim($products[0]))->where('uom_id', trim($product_unit[0]))
-                ->whereNull('deleted')
-                ->first();
+                    ->whereNull('deleted')
+                    ->first();
 
-                if(empty($puom_price)){
+                if (empty($puom_price)) {
                     DB::rollBack();
+
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Product UOM Price tidak ditemukan'
+                        'message' => 'Product UOM Price tidak ditemukan',
                     ]);
                 }
 
                 $uom_price_id = $puom_price->id;
 
-
-                $detail = new SalesOrderDetail();
+                $detail = new SalesOrderDetail;
 
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = trim($products[0]);
                 $detail->qty = $item['qty'];
                 $detail->unit = trim($product_unit[0]);
                 $detail->unit_price = trim($product_unit[1]);
-                //perhitungan diskon dan free good
-                $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
-                $detail->discount_percent = $item['disc_percent'];
-                $detail->discount_amount = $item['disc_amount'];
-                $detail->subtotal = $item['subtotal']; // ini sudah dikurangi diskon
-                $detail->is_free_good = $item['is_freegood'] ?? 0;
-                $detail->free_for = $item['free_for'] ?? null;
+
+                // perhitungan diskon dan free good
+                $params['product_id'] = trim($products[0]);
+                $params['produk_id'] = trim($products[0]);
+                $params['unit'] = trim($product_unit[0]);
+                $params['customer'] = '1';
+                $params['customer_id'] = '1';
+                $params['price'] = doubleval(trim($product_unit[1]));
+                $params['today'] = $data['so_date'];
+                $params['qty'] = $item['qty'];
+                $calculateDisc = $this->calculateDisc($params);
+
+                $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
+                $detail->discount_percent = $calculateDisc['disc_percent'];
+                $detail->discount_amount = $calculateDisc['disc_amount'];
+                $detail->subtotal = $calculateDisc['subtotal']; // ini sudah dikurangi diskon
+                $detail->is_free_good = 0;
                 $detail->status = 'draft';
                 $detail->save();
+
+                //cek jika ada free good
+                if($calculateDisc['free_qty'] > 0){
+                    $detail = new SalesOrderDetail();
+
+                    $detail->sales_order_id = $hdrId;
+                    $detail->product_id = $calculateDisc['discount_free']->free_product;
+                    $detail->qty = $calculateDisc['free_qty'];
+                    $detail->unit = $calculateDisc['discount_free']->free_unit;
+                    $detail->unit_price = 0;
+                    $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';;
+                    $detail->discount_percent = 0;
+                    $detail->discount_amount = 0;
+                    $detail->subtotal = 0;
+                    $detail->is_free_good = 1;
+                    $detail->free_for = trim($products[0]);
+                    $detail->status = 'draft';
+                    $detail->save();
+                }
 
                 // Hanya tambahkan ke total jika bukan free good
                 if (empty($item['is_freegood'])) {
@@ -373,13 +532,11 @@ class SalesOrderController extends Controller
             $header->total_amount = $grandTotal;
             $header->save();
 
-
-
             DB::commit();
             $result['is_valid'] = true;
             $result['path'] = $dbpathlamp;
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             DB::rollBack();
             $result['message'] = $th->getMessage();
         }
@@ -482,14 +639,13 @@ class SalesOrderController extends Controller
         $data['data_uom'] = [];
         try {
             $data_uom = ProductUom::whereNull('product_uom.deleted')->where('product_uom.product', $data['produk_id'])
-            ->select(['product_uom.*', 'p.name as product_name', 'p.code'])
-            ->join('product as p', 'p.id', 'product_uom.product')
-            ->orderBy('product_uom.level')->get();
+                ->select(['product_uom.*', 'p.name as product_name', 'p.code'])
+                ->join('product as p', 'p.id', 'product_uom.product')
+                ->orderBy('product_uom.level')->get();
             $units = collect($data_uom)->pluck('unit_tujuan')->unique()->values()->all();
             $unit = Unit::whereNull('deleted')
-            ->whereIn('id', $units)
-            ->get();
-
+                ->whereIn('id', $units)
+                ->get();
 
             $data_result = [];
             foreach ($data_uom as $key => $value) {
@@ -530,7 +686,7 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    function getProductFreeGood($params)
+    public function getProductFreeGood($params)
     {
         $data = $params;
         $product_id = $data['produk_id'];
@@ -556,7 +712,7 @@ class SalesOrderController extends Controller
                 'c.nama_customer',
                 'cc.category',
                 'p.code',
-                'fp.code as free_code'
+                'fp.code as free_code',
             ])
             ->join('product as p', 'p.id', 'product_free_good.product')
             ->join('product as fp', 'fp.id', 'product_free_good.free_product')
@@ -574,10 +730,11 @@ class SalesOrderController extends Controller
             //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
             // })
             ->get();
+
         return $datadb;
     }
 
-    function getProductPrice($product_id, $unit_id, $customer_id, $qty)
+    public function getProductPrice($product_id, $unit_id, $customer_id, $qty)
     {
         return ProductUomPrice::where('product', $product_id)
             ->where('unit', $unit_id)
@@ -586,9 +743,9 @@ class SalesOrderController extends Controller
             })
             ->where(function ($q) use ($qty) {
                 $q->where('min_qty', '<=', $qty)
-                ->where(function ($q2) use ($qty) {
-                    $q2->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
-                });
+                    ->where(function ($q2) use ($qty) {
+                        $q2->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
+                    });
             })
             ->whereDate('date_start', '<=', now())
             ->orderByDesc('min_qty')
@@ -633,6 +790,7 @@ class SalesOrderController extends Controller
             //     $q->where('max_qty', '>=', $qty)->orWhereNull('max_qty');
             // })
             ->get();
+
         return $datadb;
     }
 
@@ -665,17 +823,17 @@ class SalesOrderController extends Controller
                 'pup.date_start',
                 'pup.date_end',
                 'pup.customer_name',
-                'pup.id as price_id'
+                'pup.id as price_id',
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->join('product_uom as pu', 'pu.product', '=', 'm.id')
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
-            ->leftJoin('product_uom_price as pup', function($join) {
+            ->leftJoin('product_uom_price as pup', function ($join) {
                 $join->on('pup.product', '=', 'm.id')
                     ->on('pup.unit', '=', 'pu.unit_tujuan')
                     ->whereNull('pup.deleted')
-                    ->where(function($query) {
+                    ->where(function ($query) {
                         $query->whereNull('pup.date_end')
                             ->orWhere('pup.date_end', '>=', now());
                     })
@@ -683,16 +841,16 @@ class SalesOrderController extends Controller
             })
             ->whereNull('m.deleted');
 
-            if(isset($data['customer'])){
-                if($data['customer'] != ''){
-                    $datadb->where('pup.customer', $data['customer']);
-                }
+        if (isset($data['customer'])) {
+            if ($data['customer'] != '') {
+                $datadb->where('pup.customer', $data['customer']);
             }
+        }
         // --- Total tanpa filter ---
         $data['recordsTotal'] = $datadb->count();
 
         // --- Pencarian ---
-        if (!empty($_POST['search']['value'])) {
+        if (! empty($_POST['search']['value'])) {
             $keyword = $_POST['search']['value'];
             $datadb->where(function ($query) use ($keyword) {
                 $query->where('m.name', 'like', "%{$keyword}%")
@@ -705,7 +863,7 @@ class SalesOrderController extends Controller
         }
 
         // --- Urutan (Sorting) ---
-        if (!empty($_POST['order'][0]['dir'])) {
+        if (! empty($_POST['order'][0]['dir'])) {
             $dir = $_POST['order'][0]['dir'];
             $datadb->orderBy('m.id', $dir);
         } else {
