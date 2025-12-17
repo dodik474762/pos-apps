@@ -841,7 +841,7 @@ function terbilang($angka)
     }
 }
 
-function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '')
+function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '', $user_id = '')
 {
     $postingDate = now();
 
@@ -857,7 +857,7 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $post->amount = $amount;
     $post->currency = $currency;
     $post->description = $desc;
-    $post->created_by = session('user_id');
+    $post->created_by = $user_id == '' ? session('user_id') : $user_id;
     $post->save();
 }
 

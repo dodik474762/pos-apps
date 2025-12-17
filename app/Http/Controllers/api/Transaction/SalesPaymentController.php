@@ -9,6 +9,7 @@ use App\Models\Master\Currency;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -204,7 +205,8 @@ class SalesPaymentController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
-
+        // echo '<pre>';
+        // print_r($data);die;
         DB::beginTransaction();
         try {
 
@@ -372,11 +374,22 @@ class SalesPaymentController extends Controller
     }
 
     public function sync(Request $request){
-        $data = $request->all();
+        $data = json_decode($request->input('data'), true);
         $result['is_valid'] = false;
+        $userId = $data['user_id'];
+
+        $result['data'] = $data;
+        $result['user_id'] = $userId;
+        $data['account_id'] = 3;//kas kecil
+        // return response()->json($result);
 
         DB::beginTransaction();
         try {
+            $periode = Carbon::parse($data['payment_date'])->setTimezone('Asia/Jakarta');
+            $payment_date = $periode->format('Y-m-d');
+
+            list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
                 ->with('account') // kalau kamu pakai relasi
@@ -398,7 +411,113 @@ class SalesPaymentController extends Controller
 
             $kasAccount = Coa::find($data['account_id']);
 
+            $header = new SalesPaymentHeader();
+
+            $header->payment_code = generateNoSP(); // misal helper
+            $header->created_by = $userId;
+            $header->status = 'PENDING';
+
+            $header->payment_date = $payment_date;
+            $header->customer_id = $customer_id;
+            $header->payment_method = 'CASH';
+            $header->total_amount = 0;
+            $header->discount_amount = 0;
+            $header->net_amount = 0;
+            $header->reference_no = $data['_id'];
+            $header->remarks = '-';
+            $header->coa_kas = $data['account_id'];
+            $header->bulk = 0;
+            $header->platform = 'mobile';
+            $header->save();
+
+            $hdrId = $header->id;
+            $reference = $header->payment_code;
+
+             // === DETAIL ===
+            $totalAmount = 0;
+            $disc_total = 0;
+            $net_total = 0;
+
+            // Item baru atau update
+            $invoice = SalesInvoiceHeader::where('invoice_number',trim($invoice_number))->first();
+            if(empty($invoice)){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Invoice tidak ditemukan '.$invoice_number,
+                    'invoice'=> $invoice
+                ]);
+            }
+            $invoiceId = $invoice->id;
+            $discount_amount = $invoice->discount_amount;
+
+            $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $invoiceId)->count();
+            $disc_amount = 0;
+            if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+                $disc_amount = $discount_amount;
+                $disc_total += $disc_amount;
+            }
+
+            if($data['total_amount'] > 0){
+                $net_total += ($data['total_amount'] - $disc_amount);
+            }
+
+            if($data['total_amount'] < $disc_amount){
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-1'
+                ]);
+
+            }
+
+            $totalAmount += $data['total_amount'];
+
+            $detail = new SalesPaymentDtl();
+
+            $detail->payment_id = $hdrId;
+            $detail->invoice_id = $invoiceId;
+            $detail->allocated_amount = $data['total_amount'];
+            $detail->outstanding_amount = $outstanding_amount;
+            $detail->line_no = 1;
+            $detail->save();
+
+            /*mapping coa */
+
+            $total_paid = 0;
+            $total_paid = $invoice->amount_paid +$data['total_amount'];
+            $invoice->amount_paid = $total_paid;
+
+            $outstanding_amount = $invoice->outstanding_amount - $data['total_amount'];
+            if($outstanding_amount == 0){
+                $invoice->status = 'PAID';
+            }else{
+                $invoice->status = 'PARTIAL PAID';
+            }
+            $invoice->save();
+
+
+            $currency = Currency::where('code', 'IDR')->first();
+            $currencyId = $currency->id;
+
+            $update = SalesPaymentHeader::find($hdrId);
+            $update->total_amount = $totalAmount;
+            $update->discount_amount = $disc_total;
+            $update->net_amount = $net_total;
+            $update->save();
+
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId, '',$userId);
+
+            $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
+            postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId, '',$userId);
+            if($disc_total > 0){
+                postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId, '', $userId);
+            }
+
             DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Sales Payment berhasil disimpan';
+            $result['payment_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = $th->getMessage();

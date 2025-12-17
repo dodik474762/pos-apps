@@ -606,8 +606,10 @@ let SalesPayment = {
             total_subtotal += subtotal;
             const discount_amount = parseFloat(invoice_id.attr("discount_amount")) || 0;
             total_disc += discount_amount;
+
             // const outstanding = parseFloat($(tr).find("#outstanding_amount").val()) || 0;
             const netAmount = subtotal - discount_amount;
+            console.log(invoice_id, subtotal, discount_amount, netAmount, allocated);
             net_total += netAmount;
             total += allocated;
         });
