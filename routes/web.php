@@ -488,6 +488,7 @@ Route::post('api/transaksi/sales_payment/confirmDelete', [TransactionSalesPaymen
 Route::post('api/transaksi/sales_payment/showModalCustomer', [TransactionSalesPaymentController::class, 'showModalCustomer']);
 Route::post('api/transaksi/sales_payment/getOutstandingInvoice', [TransactionSalesPaymentController::class, 'getOutstandingInvoice']);
 Route::post('api/transaksi/sales_payment/posted', [TransactionSalesPaymentController::class, 'posted']);
+Route::post('api_mobile/transaksi/sales_payment/sync', [TransactionSalesPaymentController::class, 'sync']);
 
 Route::post('api/transaksi/sales_return/getData', [TransactionSalesReturnController::class, 'getData']);
 Route::post('api/transaksi/sales_return/submit', [TransactionSalesReturnController::class, 'submit']);

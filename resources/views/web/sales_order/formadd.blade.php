@@ -96,6 +96,51 @@
 
                     <hr>
 
+                    <!-- Outlet Image & Signature -->
+                    @if (isset($data->platform))
+                        @if ($data->platform == 'mobile')
+                            <div class="row mb-4">
+                                <!-- Gambar Outlet -->
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Foto Outlet</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <img
+                                                id="outlet-image-preview"
+                                                src="{{ isset($data->photo_path) ? asset($data->photo_path) : asset('assets/images/no-image.png') }}"
+                                                alt="Outlet Image"
+                                                class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tanda Tangan Outlet -->
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Tanda Tangan Outlet</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <img
+                                                id="outlet-image-preview"
+                                                src="{{ isset($data->signature_path) ? asset($data->signature_path) : asset('assets/images/no-image.png') }}"
+                                                alt="Outlet Image"
+                                                class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                        @endif
+                    @endif
+
                     <!-- Detail Barang -->
 
                     <ul class="nav nav-tabs" id="diskonTab" role="tablist">

@@ -371,6 +371,42 @@ class SalesPaymentController extends Controller
         return response()->json($result);
     }
 
+    public function sync(Request $request){
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+            $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+                ->where('account_type', 'piutang usaha')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+                ->where('account_type', 'diskon bayar')
+                ->with('account')
+                ->first();
+
+            if (! $piutangAcc || ! $discBayarAcc) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
+                ]);
+            }
+
+            $kasAccount = Coa::find($data['account_id']);
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
     public function submitBulk(Request $request)
     {
         $data = $request->all();

@@ -404,8 +404,6 @@ class SalesOrderController extends Controller
         $result['so_date'] = $so_date;
         $result['data'] = $data;
 
-        return response()->json($result);
-
         DB::beginTransaction();
         try {
             $dir = 'berkas/document/sales_order/';
@@ -420,10 +418,10 @@ class SalesOrderController extends Controller
             $fileTtdName = 'signature_'.time().'.jpg';
 
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlamp = '/'.$dir.'/';
+            $dbpathlampOutlet = '/'.$dir.'/';
 
             $path = $files_ttd->move(public_path($dir), $fileTtdName);
-            $dbpathlamp = '/'.$dir.'/';
+            $dbpathlampSignature = '/'.$dir.'/';
 
             $currency = Currency::where('code', 'IDR')->first();
             if (! $currency) {
@@ -450,6 +448,10 @@ class SalesOrderController extends Controller
             $header->remarks = $data['remarks'];
             $header->total_amount = 0; // akan dihitung ulang di bawah
             $header->platform = 'mobile'; // akan dihitung ulang di bawah
+            $header->photo_path = $dbpathlampOutlet.$fileOutletName;
+            $header->signature_path = $dbpathlampSignature.$fileTtdName;
+            $header->latitude = $data['latitude'];
+            $header->longitude = $data['longitude'];
             $header->save();
 
             $hdrId = $header->id;
@@ -461,7 +463,13 @@ class SalesOrderController extends Controller
                 [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
-                $puom_price = ProductUomPrice::find('product', trim($products[0]))->where('uom_id', trim($product_unit[0]))
+                // DB::rollBack();
+                // return response()->json([
+                //     'is_valid' => false,
+                //     'message' => 'Product UOM Price tidak ditemukan',
+                //     'data'=> $products[0].' dan unit '.$product_unit[0]
+                // ]);
+                $puom_price = ProductUomPrice::where('product', trim($products[0]))->where('unit', trim($product_unit[0]))
                     ->whereNull('deleted')
                     ->first();
 
@@ -531,7 +539,7 @@ class SalesOrderController extends Controller
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['path'] = $dbpathlamp;
+            $result['path'] = $dbpathlampOutlet.$fileOutletName;
             $result['message'] = 'Success';
             $result['sales_order_id'] = $hdrId;
         } catch (\Throwable $th) {
