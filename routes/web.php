@@ -499,6 +499,7 @@ Route::post('api/transaksi/sales_return/showModalInvoice', [TransactionSalesRetu
 Route::post('api/transaksi/sales_return/getDataInvoice', [TransactionSalesReturnController::class, 'getDataInvoice']);
 Route::post('api/transaksi/sales_return/getProductInvoice', [TransactionSalesReturnController::class, 'getProductInvoice']);
 Route::post('api/transaksi/sales_return/posted', [TransactionSalesReturnController::class, 'posted']);
+Route::post('api_mobile/transaksi/sales_return/sync', [TransactionSalesReturnController::class, 'sync']);
 
 Route::post('api/transaksi/credit_note/getData', [TransactionCreditNoteController::class, 'getData']);
 Route::post('api/transaksi/credit_note/submit', [TransactionCreditNoteController::class, 'submit']);
