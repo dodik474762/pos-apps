@@ -7,9 +7,11 @@ use App\Models\Master\AccountMapping;
 use App\Models\Master\Currency;
 use App\Models\Master\ProductUom;
 use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesReturnDtl;
 use App\Models\Transaction\SalesReturnHdr;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -459,6 +461,279 @@ class SalesReturnController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    function hitungSummaryAll($invoice_number = '', $product_id= 0, $unit_id = 0, $qty_retur = 0, $product_code = '')
+    {
+        $total_subtotal = 0;
+        $total_disc     = 0;
+        $total_tax      = 0;
+        $total_net      = 0;
+
+        $invoice = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
+        $items = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $invoice->id)
+        ->where('sales_invoice_detail.product_id', trim($product_id))
+        ->whereNull('sales_invoice_detail.deleted')
+        ->select(['sales_invoice_detail.*'])
+        ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
+        ->where('sod.unit_price', '>', 0)
+        ->where('sod.unit', trim($unit_id))->first();
+
+        if(empty($items)){
+            return [
+                'is_valid' => false,
+                'message' => 'Data Product '.$product_code.' tidak ditemukan di Invoice ini : '.trim($invoice_number),
+            ];
+        }
+
+        $qty            = floatval($qty_retur ?? 0);
+        $qty_invoice    = floatval($items->qty ?? 0);
+        $price          = floatval($items->price ?? 0);
+        $discount       = floatval($items->discount ?? 0);
+        $type_tax       = strtoupper($items->type_tax ?? 'NON-TAX');
+        $tax_rate       = floatval($items->tax_rate ?? 0);
+
+        // subtotal
+        $subtotal = $price * $qty;
+
+        // diskon proporsional
+        $discount_return = ($qty_invoice > 0)
+            ? ($qty / $qty_invoice) * $discount
+            : 0;
+
+        $net_before_tax = $subtotal - $discount_return;
+
+        // pajak
+        $tax_amount = 0;
+        $net_total  = 0;
+
+        switch (strtoupper($type_tax)) {
+            case 'INCLUDE':
+                // sudah termasuk pajak
+                $tax_amount = $net_before_tax - ($net_before_tax / (1 + $tax_rate / 100));
+                $net_total  = $net_before_tax;
+                break;
+
+            case 'EXCLUDE':
+                // belum termasuk pajak
+                $tax_amount = $net_before_tax * ($tax_rate / 100);
+                $net_total  = $net_before_tax + $tax_amount;
+                break;
+
+            case 'NON-TAX':
+            default:
+                $tax_amount = 0;
+                $net_total  = $net_before_tax;
+                break;
+        }
+
+        // simpan ke item (opsional, untuk response)
+        $items->subtotal         = round($subtotal, 2);
+        $items->discount_return  = round($discount_return, 2);
+        $items->tax_amount       = round($tax_amount, 2);
+        $items->net_total        = round($net_total, 2);
+
+        // total summary
+        $total_subtotal += $subtotal;
+        $total_disc     += $discount_return;
+        $total_tax      += $tax_amount;
+        $total_net      += $net_total;
+
+        // refund / deposit
+        $refund_amount  = 0;
+        $deposit_amount = 0;
+
+        $refund_amount = round($total_net, 2);
+
+        return [
+            'is_valid'=> true,
+            'items'           => $items,
+            'item_subtotal' => $subtotal,
+            'item_discount' => $discount_return,
+            'item_tax'      => $tax_amount,
+            'item_net'      => $net_total,
+            'type_tax'=> $type_tax,
+            'total_subtotal'  => round($total_subtotal, 2),
+            'total_discount'  => round($total_disc, 2),
+            'total_tax'       => round($total_tax, 2),
+            'total_net'       => round($total_net, 2),
+            'refund_amount'   => $refund_amount,
+            'deposit_amount'  => $deposit_amount,
+        ];
+    }
+
+
+    public function sync(Request $request){
+        $data = json_decode($request->input('data'), true);
+        $userId = $data['user_id'];
+
+        $result['is_valid'] = false;
+        $result['data'] = $data;
+        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+        [$products, $product_unit] = explode(':', $data['product_id']);
+        $products = explode('/', $products);
+        $product_unit = explode('/', $product_unit);
+
+
+        $product_id = $products[0];
+        $product_code = trim($products[1]);
+        $unit_id = $product_unit[0];
+        $result['product_id'] = trim($product_id);
+        $result['unit_id'] = trim($unit_id);
+
+        DB::beginTransaction();
+        try {
+            $periode = Carbon::parse($data['return_date'])->setTimezone('Asia/Jakarta');
+            $return_date = $periode->format('Y-m-d');
+
+
+            $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'penjualan barang')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'ppn keluaran')
+                ->with('account')
+                ->first();
+
+            $discAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'diskon penjualan')
+                ->with('account')
+                ->first();
+
+            $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'kas bank')
+                ->with('account')
+                ->first();
+
+            $depositAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'deposit pelanggan')
+                ->with('account')
+                ->first();
+
+            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc || ! $kasBankAcc || ! $depositAcc) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Sales Return belum lengkap.',
+                ]);
+            }
+
+            if(empty($data['id'])){
+                $allow_retur_customer = getMaxReturCustomer(trim($customer_id));
+                if(!$allow_retur_customer){
+                    DB::rollBack();
+
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Jumlah retur customer sudah mencapai batas maksimal.',
+                    ]);
+                }
+            }
+
+            $calculateReturn = $this->hitungSummaryAll($invoice_number, $product_id, $unit_id, $data['qty_return'], $product_code);
+
+              // === HEADER ===
+            $header = new SalesReturnHdr();
+
+            if (empty($data['id'])) {
+                $header->return_number = generateNoReturn(); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'DRAFT';
+            }
+
+            $header->return_date = $return_date;
+            $header->customer_id = trim($customer_id);
+            $header->return_type = 'REFUND';
+            $header->types = $data['return_type'];
+            $header->refund_amount = $calculateReturn['refund_amount'];
+            $header->deposit_amount = $calculateReturn['deposit_amount'];
+            $header->total_return_value = 0;
+            $header->reason = $data['reason'];
+            $header->platform = 'mobile';
+            $header->invoice_id = $calculateReturn['items']->invoice_id;
+            $header->save();
+
+            $hdrId = $header->id;
+            $reference = $header->return_number;
+
+            // === DETAIL ===
+            $totalAmount = 0;
+            $disc_total = 0;
+            $net_total = 0;
+            $tax_total = 0;
+
+            // Item baru atau update
+            $detail = new SalesReturnDtl();
+
+            $detail->return_id = $hdrId;
+            $detail->product_id = trim($product_id);
+            $detail->qty_return = $data['qty_return'];
+            $detail->unit_price = $calculateReturn['items']->price;
+            $detail->discount_amount = $calculateReturn['total_discount'];
+            $detail->tax_amount = $calculateReturn['total_tax'];
+            $detail->type_tax = $calculateReturn['type_tax'];
+            $detail->tax_rate = $calculateReturn['items']->tax_rate;
+            $detail->invoice_detail_id = $calculateReturn['items']->id;
+            $detail->tax = $calculateReturn['items']->tax;
+            $detail->save();
+
+            $disc_total += $calculateReturn['total_discount'];
+            $tax_total += $calculateReturn['total_tax'];
+            $totalAmount += (($calculateReturn['items']->price * $data['qty_return']));
+            $net_total += (($calculateReturn['items']->price * $data['qty_return']) - $calculateReturn['total_discount'] + $calculateReturn['total_tax']);
+
+            $invoice = SalesInvoiceDtl::find($calculateReturn['items']->id);
+            $total_return = $invoice->return_qty + $data['qty_return'];
+            $invoice->return_qty = $total_return;
+
+            $outstanding = $invoice->qty - $invoice->return_qty;
+            if ($outstanding < 0) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Jumlah return melebihi outstanding invoice ',
+                ]);
+            }
+
+            $invoice->save();
+
+            /*menambah stock gudang */
+            if($data['return_type'] == 'good'){
+                $so_detail = SalesOrderDetail::find($invoice->so_detail_id);
+                $qtyBaseUnit = getSmallestUnit(trim($product_id), $so_detail->unit, $data['qty_return']);
+                $productUomLevel1 = ProductUom::where('product', trim($product_id))->where('level', '1')->first();
+                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+
+                $value['product'] = trim($product_id);
+                stockUpdate($hdrId,
+                1,
+                trim($product_id),
+                $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'sales_return');
+            }
+            /*menambah stock gudang */
+
+            $updateHdr = SalesReturnHdr::find($hdrId);
+            $updateHdr->total_return_value = $net_total;
+            $updateHdr->save();
+
+            $currency = Currency::where('code', 'IDR')->first();
+            $currencyId = $currency->id;
+
+            DB::commit();
+
+            $result['is_valid'] = true;
+            $result['message'] = 'Data berhasil disimpan';
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
             $result['message'] = $th->getMessage();
         }
 
