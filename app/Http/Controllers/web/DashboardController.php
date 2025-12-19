@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Region;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -38,12 +39,19 @@ class DashboardController extends Controller
         return "";
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $year = date('Y');
+        $data = $request->all();
+        $year = isset($data['year']) ? $data['year'] : date('Y');
+        $data['year'] = $year;
         $data['data'] = [];
         $data['username'] = session('username');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['summary_po'] = $this->getSummaryPO($year);
+        $data['summary_so'] = $this->getSummarySO($year);
+        $data['summary_invoice'] = $this->getSummaryInvoice($year);
+
+        $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
         $view = view('web.dashboard.index', $data);
 
         $put['group_karyawan'] = $this->getListGroupKaryawan();
@@ -66,6 +74,57 @@ class DashboardController extends Controller
         ->where('usr.id', session('user_id'))
         ->get()->toArray();
         return $data;
+    }
+
+    public function getSummaryPO($year = ''){
+        $year = ($year == '') ? date('Y') : $year;
+
+        $totalPO = DB::table('purchase_order')
+            ->whereYear('po_date', $year)
+            ->where('is_active', 1)
+            ->whereNull('deleted');
+        $summaryPO = $totalPO->sum('grand_total');
+        $jumlahPO = $totalPO->count();
+
+        return [
+            'summary_po' => $summaryPO,
+            'jumlah_po' => $jumlahPO
+        ];
+    }
+
+    public function getSummarySO($year = ''){
+        $year = ($year == '') ? date('Y') : $year;
+
+        $totalSales = DB::table('sales_order_headers')
+            ->whereYear('so_date', $year)
+            ->whereNull('deleted')
+            ->whereIn('status', ['confirmed', 'completed', 'partial']);
+
+        $summary = $totalSales->sum('total_amount');
+        $jumlah = $totalSales->count();
+
+        return [
+            'summary' => $summary,
+            'jumlah' => $jumlah
+        ];
+    }
+
+    public function getSummaryInvoice($year = ''){
+        $year = ($year == '') ? date('Y') : $year;
+
+        $outstandingReceivable = DB::table('sales_invoice_header')
+            ->whereNull('deleted')
+            ->whereIn('status', ['POSTED', 'PARTIAL PAID']);
+
+
+        $summary = $outstandingReceivable->selectRaw('SUM(total_amount - amount_paid) as outstanding')
+            ->value('outstanding');
+        $jumlah = $outstandingReceivable->count();
+
+        return [
+            'summary' => $summary,
+            'jumlah' => $jumlah
+        ];
     }
 
 }

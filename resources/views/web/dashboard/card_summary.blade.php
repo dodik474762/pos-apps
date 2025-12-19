@@ -16,10 +16,9 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                data-target="0">0</span></h4>
-                        <a href="{{ url('/transaksi/forecast?status=FORECAST') }}" class="text-decoration-underline">IDR
-                            0
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span >{{ $summary_po['jumlah_po'] }}</span></h4>
+                        <a href="#" class="text-decoration-underline">IDR
+                            {{ number_format($summary_po['summary_po'], 0, ',', '.') }}
                         </a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -48,10 +47,10 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                data-target="0">0</span></h4>
-                        <a href="{{ url('/transaksi/forecast?status=BATAL') }}" class="text-decoration-underline">IDR
-                            {{ number_format(0, 0, ',', '.') }}
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
+                                data-target="0">{{ $summary_so['jumlah'] }}</span></h4>
+                        <a href="#" class="text-decoration-underline">IDR
+                            {{ number_format($summary_so['summary'], 0, ',', '.') }}
                         </a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -80,10 +79,11 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                data-target=""></span></h4>
-                        <a href="{{ url('/transaksi/generate_project?status=PROJECT') }}" class="text-decoration-underline">IDR
-                            {{ number_format(0, 0, ',', '.') }}</a>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
+                                data-target="0">{{ number_format($gross_profit, 0, ',', '.') }}</span></h4>
+                        <a href="#" class="text-decoration-underline">IDR
+                            {{ number_format($gross_profit, 0, ',', '.') }}
+                        </a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-primary-subtle rounded fs-3">
@@ -101,7 +101,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
-                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Total Laba Netto
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Total Tagihan Outstanding
                         </p>
                     </div>
                     <div class="flex-shrink-0">
@@ -112,10 +112,10 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value"
-                                data-target="0">0</span></h4>
-                        <a href="{{ url('/transaksi/project?status=CLICK') }}" class="text-decoration-underline">IDR
-                            {{ number_format(0, 0, ',', '.') }}
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
+                                data-target="0">{{ $summary_invoice['jumlah'] }}</span></h4>
+                        <a href="#" class="text-decoration-underline">IDR
+                            {{ number_format($summary_invoice['summary'], 0, ',', '.') }}
                         </a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">

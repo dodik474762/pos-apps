@@ -30,6 +30,7 @@
             <!--end row-->
 
             @include('web.dashboard.card_summary')
+            @include('web.dashboard.list_sales_order')
 
             <div class="row">
                 <div class="col-xl-12">
@@ -132,7 +133,7 @@
                         </div>
                     </div> <!-- .card-->
                 </div> <!-- .col-->
-            </div> <!-- end row-->
+            </div>
 
         </div> <!-- end .h-100-->
 
