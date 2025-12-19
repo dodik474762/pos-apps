@@ -914,6 +914,71 @@ class SalesReturnController extends Controller
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();
+
+            if($menu->platform == 'mobile'){
+                $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'penjualan barang')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+                $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')
+                    ->where('account_type', 'ppn keluaran')
+                    ->with('account')
+                    ->first();
+
+                $discAcc = AccountMapping::where('module', 'SALES_RETURN')
+                    ->where('account_type', 'diskon penjualan')
+                    ->with('account')
+                    ->first();
+
+                $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')
+                    ->where('account_type', 'kas bank')
+                    ->with('account')
+                    ->first();
+
+                $depositAcc = AccountMapping::where('module', 'SALES_RETURN')
+                    ->where('account_type', 'deposit pelanggan')
+                    ->with('account')
+                    ->first();
+
+                if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc || ! $kasBankAcc || ! $depositAcc) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Konfigurasi akun untuk Sales Return belum lengkap.',
+                    ]);
+                }
+
+                $currency = Currency::where('code', 'IDR')->first();
+                $currencyId = $currency->id;
+
+                $reference = $menu->return_number;
+
+                $salesReturnDetails = SalesReturnDtl::where('return_id', $data['id'])->whereNull('deleted')->get()->toArray();
+
+                $totalAmount = 0;
+                $tax_total = 0;
+                $net_total = 0;
+                $disc_total = 0;
+
+                foreach ($salesReturnDetails as $value) {
+                    $disc_total += $value['discount_amount'];
+                    $tax_total += $value['tax_amount'];
+                    $totalAmount += (($value['unit_price'] * $value['qty_return']));
+                    $net_total += (($value['unit_price'] * $value['qty_return']) - $value['discount_amount'] + $value['tax_amount']);
+                }
+
+                postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
+                postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
+                postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
+                if ($menu->return_type == 'REFUND') {
+                    postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
+                }
+                if ($menu->return_type == 'DEPOSIT') {
+                    postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, ($net_total), $currencyId);
+                }
+            }
             DB::commit();
 
             $result['is_valid'] = true;

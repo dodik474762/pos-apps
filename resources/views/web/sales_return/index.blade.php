@@ -92,6 +92,7 @@
                                                     <th>Total </th>
                                                     <th>Dibuat Oleh</th>
                                                     <th>Status</th>
+                                                    <th>Platform</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

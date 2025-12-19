@@ -212,6 +212,9 @@ let SalesReturn = {
                     data: "status",
                 },
                 {
+                    data: "platform",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = '';
@@ -661,7 +664,7 @@ let SalesReturn = {
             const subtotal = price * qty;
             const discount_return = (qty / qty_invoice) * discount_amount;
             const net_before_tax = subtotal - discount_return;
-            $(tr).find("td#discount_amount").attr('discount_return', discount_return.toFixed(2));            
+            $(tr).find("td#discount_amount").attr('discount_return', discount_return.toFixed(2));
 
             let tax_amount = 0;
             let net_total = 0;
