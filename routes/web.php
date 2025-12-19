@@ -38,6 +38,7 @@ use App\Http\Controllers\api\Transaction\SalesOrderController as TransactionSale
 use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSalesPaymentController;
 use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSalesPlanController;
 use App\Http\Controllers\api\Transaction\SalesReturnController as TransactionSalesReturnController;
+use App\Http\Controllers\api\Transaction\SessionsController as TransactionSessionsController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\web\Transaction\SalesOrderController;
 use App\Http\Controllers\web\Transaction\SalesPaymentController;
 use App\Http\Controllers\web\Transaction\SalesPlanController;
 use App\Http\Controllers\web\Transaction\SalesReturnController;
+use App\Http\Controllers\web\Transaction\SessionsController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use Illuminate\Support\Facades\Route;
 
@@ -261,6 +263,8 @@ Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])-
 
 Route::get('transaksi/presensi', [TransactionPresensiController::class, 'index']);
 Route::get('transaksi/presensi/add', [TransactionPresensiController::class, 'add'])->name('presensi-add');
+
+Route::get('transaksi/sessions', [SessionsController::class, 'index']);
 
 /*API */
 
@@ -534,4 +538,6 @@ Route::post('api/transaksi/presensi/delete', [PresensiController::class, 'delete
 Route::post('api/transaksi/presensi/confirmDelete ',[PresensiController::class, 'confirmDelete']);
 Route::post('api/transaksi/presensi/showDataKaryawan ', [PresensiController::class, 'showDataKaryawan']);
 Route::post('api/transaksi/presensi/submit ', [PresensiController::class, 'submit']);
+
+Route::post('api/transaksi/sessions/getData', [TransactionSessionsController::class, 'getData']);
 /*API */
