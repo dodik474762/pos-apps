@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\web\auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\MobileSession;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
 use App\Models\User;
@@ -191,7 +192,20 @@ class LoginController extends Controller
                 $result_akses[$value['id_menu']] = $value;
             }
 
-            $dataRoles = $this->checkDataRoles($userdata->nik);
+            // $dataRoles = $this->checkDataRoles($userdata->nik);
+
+            /*open mobile session */
+            $mobile_session = MobileSession::where('users', $userdata->id)
+            ->where('date_process', date('Y-m-d'))
+            ->first();
+
+            if (empty($mobile_session)) {
+                $mobile_session = new MobileSession();
+                $mobile_session->users = $userdata->id;
+                $mobile_session->date_process = date('Y-m-d');
+                $mobile_session->status = 'OPEN';
+                $mobile_session->save();
+            }
 
             Session::put('user_id', $userdata->id);
             Session::put('group', $userdata->group_karyawan);
