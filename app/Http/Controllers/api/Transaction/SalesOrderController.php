@@ -434,6 +434,15 @@ class SalesOrderController extends Controller
             }
             $currencyId = $currency->id;
 
+            /*update koordinat customer */
+            $customerFind = Customer::find($customersId)->whereNull('latitude');
+            if($customerFind){
+                $customerFind->latitude = $data['latitude'];
+                $customerFind->longitude = $data['longitude'];
+                $customerFind->save();
+            }
+            /*update koordinat customer */
+
             // === HEADER ===
             $header = new SalesOrderHeader;
             $header->so_number = generateNoSO(); // misal helper
