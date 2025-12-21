@@ -72,6 +72,8 @@ class PLTagihanController extends Controller
         $year = date('Y');
         if(isset($data['tanggal'])){
             list($year, $month, $day) = explode('-', $data['tanggal']);
+        }else{
+            $data['tanggal'] = date('Y-m-d');
         }
         $salesman = isset($data['salesman']) ? $data['salesman'] : 0;
 
@@ -80,12 +82,14 @@ class PLTagihanController extends Controller
         // Nama hari (Monday, Tuesday, ...)
         $dayName = $today->format('l');
 
+        // echo $dayName;die;die;
         // Minggu ke berapa dalam bulan
         $weekOfMonth = $today->weekOfMonth;
 
         // Tentukan ganjil / genap
         $weekType = ($weekOfMonth % 2 === 0) ? 'EVEN' : 'ODD';
 
+        DB::enableQueryLog();
          $datadb = DB::table('sales_plan_header as h')
             ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
@@ -123,6 +127,8 @@ class PLTagihanController extends Controller
             ->orderBy('h.id')
             ->orderBy('d.week_number')
             ->get();
+        // echo '<pre>';
+        // print_r(DB::getQueryLog());die;
 
         return $datadb;
     }

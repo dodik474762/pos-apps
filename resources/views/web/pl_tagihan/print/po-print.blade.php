@@ -173,6 +173,12 @@
                 <br><br><br>
                 (__________________)
             </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Ditagihkan Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>
         </tr>
     </table>
 </body>
