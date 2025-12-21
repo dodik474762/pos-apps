@@ -270,6 +270,7 @@ Route::get('transaksi/sessions', [SessionsController::class, 'index']);
 
 Route::post('api/dashboard/getGrafikPenjualan', [DashboardController::class, 'getGrafikPenjualan']);
 Route::post('api/dashboard/getInvoiceOutstanding', [DashboardController::class, 'getInvoiceOutstanding']);
+Route::post('api/dashboard/getMapVisit', [DashboardController::class, 'getMapVisit']);
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
 Route::post('api/master/company/submit', [MasterCompanyController::class, 'submit']);

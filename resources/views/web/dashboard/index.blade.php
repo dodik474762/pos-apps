@@ -61,10 +61,10 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="input-group mb-3">
-                                        <select class="form-select select2" onchange="Dashboard.getCity(this)"
-                                            id="province" style="width:80%;">
-                                            <option value="">.:: Pilih Provinsi ::.</option>
-                                            @foreach ($data_province as $item)
+                                        <select class="form-select select2" onchange="Dashboard.getMapVisit(this)"
+                                            id="salesman" style="width:80%;">
+                                            <option value="">.:: Pilih Salesman ::.</option>
+                                            @foreach ($data_salesman as $item)
                                                 <option value="{{ $item['id'] }}">{{ $item['name'] }}</option>
                                             @endforeach
                                         </select>
@@ -72,28 +72,14 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="input-group mb-3">
-                                        <select class="form-select select2" onchange="Dashboard.getMapProject()"
-                                            id="city" style="width:80%;">
-                                            <option value="">.:: Pilih Kota ::.</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="input-group mb-3">
-                                        <select class="form-select select2" onchange="Dashboard.getMapProject()"
-                                            id="years" style="width:80%;">
-                                            @for ($i = intval(date('Y')) - 5; $i <= date('Y'); $i++)
-                                                <option value="{{ $i }}"
-                                                    {{ intval(date('Y')) == $i ? 'selected' : '' }}>
-                                                    {{ $i }}</option>
-                                            @endfor
-                                        </select>
+                                        <input type="date" class="form-control" id="date-visit"
+                                            onchange="Dashboard.getMapVisit()" value="}">
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div id="content-map=project">
+                                    <div id="content-map-visit">
                                         <div id="map" style="min-height: 700px;" class=""></div>
                                     </div>
                                 </div>

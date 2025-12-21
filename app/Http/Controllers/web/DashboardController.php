@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Region;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -47,6 +48,7 @@ class DashboardController extends Controller
         $data['data'] = [];
         $data['username'] = session('username');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['data_salesman'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['summary_po'] = $this->getSummaryPO($year);
         $data['summary_so'] = $this->getSummarySO($year);
         $data['summary_invoice'] = $this->getSummaryInvoice($year);
@@ -222,6 +224,44 @@ class DashboardController extends Controller
         $result['so_cancel'] = $resultsStatusSoCancel;
         $result['so_ok'] = $resultStatusSo;
 
+        return response()->json($result);
+    }
+
+     public function getMapVisit(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $date_visit = $data['date_visit'];
+        $salesman = $data['salesman'];
+
+        $result['is_valid'] = true;
+        $datadb =DB::table('sales_order_headers as soh')
+        ->select([
+            'soh.*',
+            'c.code as customer_code',
+            'c.nama_customer',
+        ])
+        ->join('customer as c', 'c.id', '=', 'soh.customer_id')            
+            ->where('soh.platform', 'mobile')
+            ->whereNull('soh.deleted');
+        if($salesman != ''){            
+            $datadb->where('soh.salesman', $salesman);
+        }
+        if($date_visit != ''){
+            $datadb->where('soh.so_date', $date_visit);
+        }else{
+            $datadb->whereYear('soh.so_date', date('Y'));
+        }
+
+        $datadb = $datadb->get()->toArray();
+        $resultdb = [];
+        foreach ($datadb as $key => $value) {
+            $resultdb[] = $value;
+        }
+
+        $result['data'] = $resultdb;
+        $result['total_rows'] = count($resultdb);
+        $result['query'] = DB::getQueryLog();
         return response()->json($result);
     }
 

@@ -399,6 +399,139 @@ let Dashboard = {
             });
         }
     },
+
+    getMapVisit: () => {
+        const salesman = $("#salesman").val();
+        const date_visit = $("#date-visit").val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                salesman: salesman,
+                date_visit: date_visit,
+            },
+            url: url.base_url(Dashboard.moduleApi()) + "getMapVisit",
+            headers: {
+                "X-CSRF-TOKEN": Dashboard.csrf_token(),
+            },
+            beforeSend: () => {
+                // $("div#content-map-visit")
+                //     .html(`<div class="text-center mb-3"><div class="spinner-border text-primary" role="status">
+                //                                             <span class="sr-only">Loading...</span>
+                //                                         </div></div>`);
+            },
+            error: function () {
+                // $("div#content-map-visit").html(``);
+            },
+
+            success: function (resp) {
+                // $("div#content-map-visit").html(``);
+                if (resp.is_valid) {
+                    if (resp.data.length > 0) {
+                        Dashboard.setLocations(resp);
+                    } else {
+                        // message.sweetError(
+                        //     "Informasi",
+                        //     "Data Tidak Ditemukan untuk filter terkait"
+                        // );
+                    }
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    setLocations: (result) => {
+        let index_ = 0;
+        if(result.data.length > 0){
+            markers = [];
+            try {
+                group.clearLayers();
+            } catch (error) {
+                console.log('group marker layer ',error);
+            }
+        }
+
+        
+        result.data.forEach((element) => {
+            if (isNaN(element.latitude) || isNaN(element.longitude)) {
+                console.log("invalid gps location");
+                console.log(element.latitude, element.longitude);
+                return;
+            }
+
+            let content_ = element;
+
+            let keterangan = ``;
+            if (content_) {
+                keterangan = `
+                    <div style="">
+                        <img src="${content_.photo_path}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
+                    </div>
+                    SO Number : <b>${content_.so_number}</b> <br>
+                    Visit Date : <b>${content_.so_date ?? ""}</b> <br>
+                    Amount IDR : <b>${content_.total_amount}</b> <br>
+                    Customer : <b>${content_.customer_code} - ${content_.nama_customer}</b> <br>
+                    Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${
+                        content_.latitude
+                    },${content_.longitude}" target="_blank">${
+                    content_.latitude
+                }, ${content_.longitude}</a></b> <br>
+                `;
+            }
+
+            var myIconMarkerOutlet = L.icon({
+                iconUrl: url.base_url("assets/images/") + "marker_shop.png",
+                iconSize: [40, 40],
+            });
+
+            if (element.latitude != null && element.longitude != null) {
+                let markerOutlet = L.marker(
+                    [
+                        parseFloat(element.latitude),
+                        parseFloat(element.longitude),
+                    ],
+                    { customId: element.id, icon: myIconMarkerOutlet }
+                ).bindPopup(keterangan);
+                markers.push(markerOutlet);
+            }
+
+            index_++;
+            map.setView(
+                [parseFloat(element.latitude), parseFloat(element.longitude)],
+                12
+            );
+        });
+
+        if (markers.length > 0) {
+            group = L.featureGroup(markers).addTo(map);
+            map.fitBounds(group.getBounds());
+        }
+    },
+
+     mapVisitInit: () => {
+        map = L.map("map", { scrollWheelZoom: false }).setView(
+            [-4.286684, 112.338392],
+            6
+        ); // , maxZoom: 10
+        L.tileLayer(
+            "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaXRwcm9ncmFtbWVybXRzIiwiYSI6ImNsaGp6anByMDBtc3gza3VwNjRwNWk2N2sifQ.aaXm2ry5dSHPlmfNSCkr9w",
+            {
+                maxZoom: 18,
+                attribution:
+                    'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                    'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                id: "mapbox/streets-v11",
+                tileSize: 512,
+                zoomOffset: -1,
+            }
+        ).addTo(map);
+
+        setTimeout(() => {
+            Dashboard.getMapVisit();
+        }, 200);
+    },
 };
 
 $(function () {
@@ -406,4 +539,5 @@ $(function () {
     Dashboard.getDataSo();
     Dashboard.getDataInvoiceOutstanding();
     Dashboard.getGrafikPenjualan();
+    Dashboard.mapVisitInit();
 });
