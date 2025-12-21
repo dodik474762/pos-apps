@@ -459,6 +459,7 @@ Route::post('api/transaksi/sales_order/showDiscountProduct', [TransactionSalesOr
 Route::post('api/transaksi/sales_order/showDiscountFreeProduct', [TransactionSalesOrderController::class, 'showDiscountFreeProduct']);
 Route::post('api/transaksi/sales_order/showQtySmallestProduct', [TransactionSalesOrderController::class, 'showQtySmallestProduct']);
 Route::post('api_mobile/transaksi/sales_order/sync', [TransactionSalesOrderController::class, 'sync']);
+Route::post('api_mobile/transaksi/sales_order/getAverageTransaction', [TransactionSalesOrderController::class, 'getAverageTransaction']);
 
 Route::post('api/transaksi/sales_plan/getData', [TransactionSalesPlanController::class, 'getData']);
 Route::post('api/transaksi/sales_plan/submit', [TransactionSalesPlanController::class, 'submit']);

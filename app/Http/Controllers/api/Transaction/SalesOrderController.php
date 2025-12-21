@@ -906,4 +906,39 @@ class SalesOrderController extends Controller
 
         return response()->json($data);
     }
+
+    public function getAverageTransaction(Request $request)
+    {
+        $data = $request->all();
+        $month = intval(date('m'));   // Januari
+        $year  = date('Y');
+        $customer = $data['customer_id'] ?? null;
+
+        $data = DB::table('sales_order_headers')
+            ->select(
+                'customer_id',
+                DB::raw('COUNT(id) as total_transaksi'),
+                DB::raw('SUM(total_amount) as total_nilai'),
+                DB::raw('AVG(total_amount) as avg_transaksi')
+            )
+            ->whereMonth('so_date', $month)
+            ->whereYear('so_date', $year)
+            ->whereIn('status', ['confirmed', 'completed', 'partial', 'draft'])
+            ->whereNull('deleted')
+            ->groupBy('customer_id')
+            ->get();
+        if ($customer) {
+            $data = $data->where('customer_id', $customer)->first();
+        }
+
+        if(empty($data)){
+            $data = [
+                'customer_id' => $customer,
+                'total_transaksi' => 0,
+                'total_nilai' => 0,
+                'avg_transaksi' => 0
+            ];
+        }
+        return response()->json($data);
+    }
 }

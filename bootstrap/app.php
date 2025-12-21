@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/presensi/getDataPresensi',
             'api_mobile/transaksi/presensi/submitPresensi',
             'api_mobile/transaksi/sales_order/sync',
+            'api_mobile/transaksi/sales_order/getAverageTransaction',
             'api_mobile/transaksi/sales_payment/sync',
             'api_mobile/transaksi/sales_return/sync'
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
