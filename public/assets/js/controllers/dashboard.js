@@ -53,7 +53,7 @@ let Dashboard = {
         });
     },
 
-     getDataSo: async () => {
+    getDataSo: async () => {
         let tableData = $("table#table-data-so");
 
         let updateAction = $("#update").val();
@@ -181,7 +181,9 @@ let Dashboard = {
                 );
             },
             ajax: {
-                url: url.base_url(Dashboard.moduleApi()) + `getInvoiceOutstanding`,
+                url:
+                    url.base_url(Dashboard.moduleApi()) +
+                    `getInvoiceOutstanding`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": Dashboard.csrf_token(),
@@ -213,6 +215,20 @@ let Dashboard = {
                 },
                 {
                     data: "due_date",
+                    render: function (data, type, row) {
+                        if (!data) return data;
+
+                        let today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        let dueDate = new Date(data);
+
+                        if (dueDate < today) {
+                            return `<span style="color:red; font-weight:bold;">${data}</span>`;
+                        }
+
+                        return data;
+                    },
                 },
                 {
                     data: "outstanding",
@@ -248,7 +264,7 @@ let Dashboard = {
             });
     },
 
-     getGrafikPenjualan: (elm) => {
+    getGrafikPenjualan: (elm) => {
         let params = {
             year: $("#year").val(),
         };
@@ -279,7 +295,7 @@ let Dashboard = {
         });
     },
 
-     getChartColorsArray: (e) => {
+    getChartColorsArray: (e) => {
         if (null !== document.getElementById(e)) {
             var t = document.getElementById(e).getAttribute("data-colors");
             if (t)
@@ -444,16 +460,15 @@ let Dashboard = {
 
     setLocations: (result) => {
         let index_ = 0;
-        if(result.data.length > 0){
+        if (result.data.length > 0) {
             markers = [];
             try {
                 group.clearLayers();
             } catch (error) {
-                console.log('group marker layer ',error);
+                console.log("group marker layer ", error);
             }
         }
 
-        
         result.data.forEach((element) => {
             if (isNaN(element.latitude) || isNaN(element.longitude)) {
                 console.log("invalid gps location");
@@ -467,12 +482,16 @@ let Dashboard = {
             if (content_) {
                 keterangan = `
                     <div style="">
-                        <img src="${content_.photo_path}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
+                        <img src="${
+                            content_.photo_path
+                        }" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
                     </div>
                     SO Number : <b>${content_.so_number}</b> <br>
                     Visit Date : <b>${content_.so_date ?? ""}</b> <br>
                     Amount IDR : <b>${content_.total_amount}</b> <br>
-                    Customer : <b>${content_.customer_code} - ${content_.nama_customer}</b> <br>
+                    Customer : <b>${content_.customer_code} - ${
+                    content_.nama_customer
+                }</b> <br>
                     Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${
                         content_.latitude
                     },${content_.longitude}" target="_blank">${
@@ -510,7 +529,7 @@ let Dashboard = {
         }
     },
 
-     mapVisitInit: () => {
+    mapVisitInit: () => {
         map = L.map("map", { scrollWheelZoom: false }).setView(
             [-4.286684, 112.338392],
             6
