@@ -145,7 +145,7 @@ class PackingListController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
-            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number'])
+            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number', 'sih.total_amount'])
             ->with(['detail', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
             ->join('sales_invoice_header as sih', function($q){
