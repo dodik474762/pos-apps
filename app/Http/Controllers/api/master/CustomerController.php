@@ -208,4 +208,15 @@ class CustomerController extends Controller
         $result['data'] = $datadb;
         return response()->json($result);
     }
+    
+    public function getProvinsi(Request $request)
+    {
+        $data = $request->all();
+        $datadb = Region::where('type', 'PROVINSI')
+            ->whereNull('deleted')->get()->toArray();
+
+        $result['is_valid'] = true;
+        $result['data'] = $datadb;
+        return response()->json($result);
+    }
 }

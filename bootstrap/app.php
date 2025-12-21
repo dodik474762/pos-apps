@@ -23,7 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/sales_order/sync',
             'api_mobile/transaksi/sales_order/getAverageTransaction',
             'api_mobile/transaksi/sales_payment/sync',
-            'api_mobile/transaksi/sales_return/sync'
+            'api_mobile/transaksi/sales_return/sync',
+            'api_mobile/master/customer/getCity',
+            'api_mobile/master/customer/getKecamatan',
+            'api_mobile/master/customer/getKelurahan',
+            'api_mobile/master/customer/getProvinsi'
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })
