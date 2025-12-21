@@ -118,6 +118,7 @@
                 <th>No</th>
                 <th>No. DO</th>
                 <th>Tanggal DO</th>
+                <th>No. Faktur</th>
                 <th>Kode Customer</th>
                 <th>Nama Customer</th>
             </tr>
@@ -130,6 +131,7 @@
                     <td>{{ $no++ }}</td>
                     <td>{{ $item->do_number }}</td>
                     <td>{{ $item->do_date }}</td>
+                    <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->customer_code }}</td>
                     <td>{{ $item->nama_customer }}</td>
                 </tr>
@@ -138,7 +140,7 @@
 
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right"><strong>Total DO</strong></td>
+                <td colspan="5" class="text-right"><strong>Total DO</strong></td>
                 <td class="text-right">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
@@ -182,23 +184,19 @@
         <tbody>
             @php $p = 1; @endphp
 
-            @foreach ($details as $d)
-                @if (!empty($d->detail))
-                    @foreach ($d->detail as $prod)
-                        <tr>
-                            <td>{{ $p++ }}</td>
-                            <td>{{ $d->do_number }}</td>
+            @foreach ($packingListDetail as $d)
+                    <tr>
+                        <td>{{ $p++ }}</td>
+                        <td>{{ $d->do_number }}</td>
 
-                            <td>{{ $prod->product->code ?? '-' }}</td>
-                            <td>{{ $prod->product->name ?? '-' }}</td>
+                        <td>{{ $d->product->code ?? '-' }}</td>
+                        <td>{{ $d->product->name ?? '-' }}</td>
 
-                            <td class="text-right">{{ number_format($prod->qty_do, 2, ',', '.') }}</td>
-                            <td class="text-right">{{ number_format($prod->qty_packed, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($d->qty_do, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($d->qty_packed, 2, ',', '.') }}</td>
 
-                            <td>{{ $prod->remark ?? '-' }}</td>
-                        </tr>
-                    @endforeach
-                @endif
+                        <td>{{ $d->remark ?? '-' }}</td>
+                    </tr>
             @endforeach
         </tbody>
     </table>

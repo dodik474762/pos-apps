@@ -8,6 +8,7 @@ use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
+use App\Models\Transaction\PackingListDtl;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -141,18 +142,37 @@ class PackingListController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = PackingList::where('id', $data['id'])->first();
+        // echo '<pre>';
+        // print_r($data);die;
         $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
-            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date'])
+            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number'])
             ->with(['detail', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('sales_invoice_header as sih', function($q){
+                return $q->on('sih.do_id', 'doh.id')
+                ->whereNull('sih.deleted');
+            })
             ->join('customer as c', 'c.id', 'doh.customer_id')
+            // ->where('doh.do_number', 'DO11250004')
             ->get();
+        $doIds = $details->pluck('delivery_order_id')->toArray();        
+        $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
+        ->select([
+            'packing_list_detail.*',
+            'doh.do_number',
+        ])
+        ->with(['product'])
+        ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
+        ->where('packing_list_detail.packing_list_id', $data->id)
+        ->get();
+        // echo '<pre>';
+        // print_r($packingListDetail);die;
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
-        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details'))
+        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-'.$data->payment_code.'.pdf');
