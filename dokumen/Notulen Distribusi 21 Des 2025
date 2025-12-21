@@ -1,0 +1,35 @@
+Mobile Salesman :
+Order
+  - keterangan dikategorikan (pak qholib)
+Visit
+  - informasi kunjungan terakhir outlet
+  - informasi histori pengambilan terakhir produki
+NOO
+  - input salesman
+  - pilihan daftar rute 
+Input Izin
+
+Web
+Dashboard
+- informasi date in out salesman di map
+
+Presensi
+- butuh data koordinat (company)
+
+Karyawan
+- tambah field kode salesman
+
+NOO
+- buat di section approval (bisa di adjustmen spv utk rutenya)
+
+Data :
+- produk (produk, unit, diskon, harga, stock)
+- produk tipe 
+- Vendor (principal)
+- Karyawan 
+- Customer Category 
+- customer (kandidat, reguler)
+- Rute
+
+
+
