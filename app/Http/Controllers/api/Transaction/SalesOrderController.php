@@ -914,31 +914,42 @@ class SalesOrderController extends Controller
         $year  = date('Y');
         $customer = $data['customer_id'] ?? null;
 
-        $data = DB::table('sales_order_headers')
+        $data = DB::table('sales_order_headers as soh')
             ->select(
-                'customer_id',
-                DB::raw('COUNT(id) as total_transaksi'),
-                DB::raw('SUM(total_amount) as total_nilai'),
-                DB::raw('AVG(total_amount) as avg_transaksi')
+                'soh.customer_id',
+                'c.nama_customer',
+                DB::raw('COUNT(soh.id) as total_transaksi'),
+                DB::raw('SUM(soh.total_amount) as total_nilai'),
+                DB::raw('AVG(soh.total_amount) as avg_transaksi')
             )
-            ->whereMonth('so_date', $month)
-            ->whereYear('so_date', $year)
-            ->whereIn('status', ['confirmed', 'completed', 'partial', 'draft'])
-            ->whereNull('deleted')
-            ->groupBy('customer_id')
-            ->get();
+            ->join('customer as c', 'c.id', 'soh.customer_id')
+            ->whereMonth('soh.so_date', $month)
+            ->whereYear('soh.so_date', $year)
+            ->whereIn('soh.status', ['confirmed', 'completed', 'partial', 'draft'])
+            ->whereNull('soh.deleted')
+            ->groupBy('soh.customer_id', 'c.nama_customer');
         if ($customer) {
-            $data = $data->where('customer_id', $customer)->first();
+            $data = $data->where('soh.customer_id', $customer);
         }
+
+        $data = $data->first();
 
         if(empty($data)){
             $data = [
-                'customer_id' => $customer,
-                'total_transaksi' => 0,
-                'total_nilai' => 0,
-                'avg_transaksi' => 0
+                'is_valid'=> true,
+                'data' => [
+                    'customer_id' => $customer,
+                    // 'customer_name' => $customer_name,
+                    'total_transaksi' => 0,
+                    'total_nilai' => 0,
+                    'avg_transaksi' => 0,
+                    'periode' => date('Y-m')
+                ]
             ];
         }
-        return response()->json($data);
+        $data->periode = date('Y-m');
+        $result['is_valid'] = true;
+        $result['data'] = $data;
+        return response()->json($result);
     }
 }
