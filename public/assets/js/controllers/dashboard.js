@@ -152,8 +152,106 @@ let Dashboard = {
             });
     },
 
+    getDataInvoiceOutstanding: async () => {
+        let tableData = $("table#table-data-invoice");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(Dashboard.moduleApi()) + `getInvoiceOutstanding`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": Dashboard.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "due_date",
+                },
+                {
+                    data: "outstanding",
+                },
+                {
+                    data: "status",
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
      getGrafikPenjualan: (elm) => {
-        let params = {};
+        let params = {
+            year: $("#year").val(),
+        };
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -293,9 +391,19 @@ let Dashboard = {
             options
         ).render();
     },
+
+    setSelect2: () => {
+        if ($(".select2").length > 0) {
+            $.each($(".select2"), function () {
+                $(this).select2();
+            });
+        }
+    },
 };
 
 $(function () {
+    Dashboard.setSelect2();
     Dashboard.getDataSo();
+    Dashboard.getDataInvoiceOutstanding();
     Dashboard.getGrafikPenjualan();
 });

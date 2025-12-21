@@ -114,6 +114,7 @@ class DashboardController extends Controller
 
         $outstandingReceivable = DB::table('sales_invoice_header')
             ->whereNull('deleted')
+            ->whereYear('invoice_date', $year)
             ->whereIn('status', ['POSTED', 'PARTIAL PAID']);
 
 
@@ -127,9 +128,72 @@ class DashboardController extends Controller
         ];
     }
 
+    public function getInvoiceOutstanding(Request $request){
+        $data = $request->all();
+        $year = isset($data['year']) ? $data['year'] : date('Y');
+
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $outstandingReceivable = DB::table('sales_invoice_header as sih')
+            ->whereNull('sih.deleted')
+            ->whereYear('sih.invoice_date', $year)
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID']);
+
+
+        $datadb = $outstandingReceivable->select([
+            'sih.*',
+            DB::raw('(sih.total_amount - sih.amount_paid) as outstanding'),
+            'c.code as customer_code',
+            'c.nama_customer'
+        ])
+        ->join('customer as c', 'c.id', '=', 'sih.customer_id');
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('sih.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('c.code', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                switch ($_POST['order'][0]['column']) {
+                    case 0:
+                        $datadb->orderBy('sih.id', $_POST['order'][0]['dir']);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $resultdb = [];
+        $datadb = $datadb->get()->toArray();
+        foreach ($datadb as $key => $value) {
+            $value->akses = session('akses');
+            $resultdb[] = $value;
+        }
+        $data['data'] = $resultdb;
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        return response()->json($data);
+    }
+
     public function getGrafikPenjualan(Request $request){
         $data = $request->all();
-        $year = date('Y');
+        $year = isset($data['year']) ? $data['year'] : date('Y');
         $resultStatusSo = [];
         for ($i = 1; $i < 13; $i++) {
             $month = $i < 10 ? '0' . $i : $i;

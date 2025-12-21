@@ -1,5 +1,6 @@
 <div class="row">
     <div class="col">
+        <input type="hidden" id="year" value="{{ $year }}">
 
         <div class="h-100">
             <div class="row mb-3 pb-1">
@@ -54,7 +55,7 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Total Outlet</h4>
+                            <h4 class="card-title mb-0 flex-grow-1">Salesman Visit</h4>
                         </div><!-- end card header -->
                         <div class="card-body">
                             <div class="row">
@@ -107,23 +108,23 @@
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Penjualan</h4>
+                            <h4 class="card-title mb-0 flex-grow-1">Invoice Outstanding</h4>
                         </div><!-- end card header -->
 
                         <div class="card-body">
                             <div class="table-responsive table-card">
-                                <table id="table-data-presensi"
+                                <table id="table-data-invoice"
                                     class="table table-borderless table-centered align-middle table-nowrap mb-0">
                                     <thead class="text-muted table-light">
                                         <tr class="text-uppercase">
                                             <th>No</th>
-                                            <th>Code</th>
-                                            <th>Tanggal</th>
-                                            <th>Pelanggan</th>
-                                            <th>Produk</th>
-                                            <th>Jumlah</th>
-                                            <th>Total</th>
-                                            <th>Action</th>
+                                            <th>Customer Code</th>
+                                            <th>Customer Name</th>
+                                            <th>Invoice Number</th>
+                                            <th>Invoice Date</th>
+                                            <th>Due Date</th>
+                                            <th>Outstanding</th>
+                                            <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody class="list">
