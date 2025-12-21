@@ -127,4 +127,38 @@ class DashboardController extends Controller
         ];
     }
 
+    public function getGrafikPenjualan(Request $request){
+        $data = $request->all();
+        $year = date('Y');
+        $resultStatusSo = [];
+        for ($i = 1; $i < 13; $i++) {
+            $month = $i < 10 ? '0' . $i : $i;
+            $total = DB::table('sales_order_headers')->whereNull('sales_order_headers.deleted')
+                ->where('sales_order_headers.status', '!=', 'CANCELLED')
+                ->where(function ($q) use ($year, $month) {
+                    return $q->where('sales_order_headers.created_at', 'like', '%' . $year . '-' . $month . '%');
+                })
+                ->count();
+            $resultStatusSo[] = $total;
+        }
+
+        $resultsStatusSoCancel = [];
+        for ($i = 1; $i < 13; $i++) {
+            $month = $i < 10 ? '0' . $i : $i;
+              $total = DB::table('sales_order_headers')
+                ->whereNotNull('sales_order_headers.deleted')
+                ->where(function ($q) use ($year, $month) {
+                    return $q->where('sales_order_headers.created_at', 'like', '%' . $year . '-' . $month . '%');
+                })
+                ->count();
+            $resultsStatusSoCancel[] = $total;
+        }
+
+        $result['is_valid'] = true;
+        $result['so_cancel'] = $resultsStatusSoCancel;
+        $result['so_ok'] = $resultStatusSo;
+
+        return response()->json($result);
+    }
+
 }

@@ -151,8 +151,151 @@ let Dashboard = {
                 },
             });
     },
+
+     getGrafikPenjualan: (elm) => {
+        let params = {};
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Dashboard.moduleApi()) + "getGrafikPenjualan",
+            headers: {
+                "X-CSRF-TOKEN": Dashboard.csrf_token(),
+            },
+            beforeSend: () => {
+                $("div#penjualan_chart")
+                    .html(`<div class="text-center mb-3"><div class="spinner-border text-primary" role="status">
+                                                            <span class="sr-only">Loading...</span>
+                                                        </div></div>`);
+            },
+            error: function () {
+                $("div#penjualan_chart").html(``);
+            },
+
+            success: function (resp) {
+                $("div#penjualan_chart").html(``);
+                if (resp.is_valid) {
+                    Dashboard.setGrafikPenjualan(resp);
+                }
+            },
+        });
+    },
+
+     getChartColorsArray: (e) => {
+        if (null !== document.getElementById(e)) {
+            var t = document.getElementById(e).getAttribute("data-colors");
+            if (t)
+                return (t = JSON.parse(t)).map(function (e) {
+                    var t = e.replace(" ", "");
+                    return -1 === t.indexOf(",")
+                        ? getComputedStyle(
+                              document.documentElement
+                          ).getPropertyValue(t) || t
+                        : 2 == (e = e.split(",")).length
+                        ? "rgba(" +
+                          getComputedStyle(
+                              document.documentElement
+                          ).getPropertyValue(e[0]) +
+                          "," +
+                          e[1] +
+                          ")"
+                        : t;
+                });
+        }
+    },
+
+    setGrafikPenjualan: (data) => {
+        const linechartcustomerColors =
+            Dashboard.getChartColorsArray("penjualan_chart");
+        const options = {
+            series: [
+                {
+                    name: "Penjualan OK",
+                    type: "bar",
+                    data: data.so_ok,
+                },
+                {
+                    name: "Penjualan Cancel",
+                    type: "bar",
+                    data: data.so_cancel,
+                },
+            ],
+            chart: { height: 370, type: "line", toolbar: { show: !1 } },
+            stroke: {
+                curve: "straight",
+                dashArray: [0, 0, 8],
+                width: [2, 0, 2.2],
+            },
+            fill: { opacity: [0.1, 0.9, 1] },
+            markers: {
+                size: [0, 0, 0],
+                strokeWidth: 2,
+                hover: { size: 4 },
+            },
+            xaxis: {
+                categories: [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                ],
+                axisTicks: { show: !1 },
+                axisBorder: { show: !1 },
+            },
+            grid: {
+                show: !0,
+                xaxis: { lines: { show: !0 } },
+                yaxis: { lines: { show: !1 } },
+                padding: { top: 0, right: -2, bottom: 15, left: 10 },
+            },
+            legend: {
+                show: !0,
+                horizontalAlign: "center",
+                offsetX: 0,
+                offsetY: -5,
+                markers: { width: 9, height: 9, radius: 6 },
+                itemMargin: { horizontal: 10, vertical: 0 },
+            },
+            plotOptions: { bar: { columnWidth: "30%", barHeight: "70%" } },
+            colors: linechartcustomerColors,
+            tooltip: {
+                shared: !0,
+                y: [
+                    {
+                        formatter: function (e) {
+                            return void 0 !== e ? e.toFixed(0) : e;
+                        },
+                    },
+                    {
+                        formatter: function (e) {
+                            return void 0 !== e ? "" + e.toFixed(2) + "" : e;
+                        },
+                    },
+                    {
+                        formatter: function (e) {
+                            return void 0 !== e ? e.toFixed(0) + " " : e;
+                        },
+                    },
+                ],
+            },
+        };
+
+        const chart = new ApexCharts(
+            document.querySelector("#penjualan_chart"),
+            options
+        ).render();
+    },
 };
 
 $(function () {
     Dashboard.getDataSo();
+    Dashboard.getGrafikPenjualan();
 });

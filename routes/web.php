@@ -268,6 +268,8 @@ Route::get('transaksi/sessions', [SessionsController::class, 'index']);
 
 /*API */
 
+Route::post('api/dashboard/getGrafikPenjualan', [DashboardController::class, 'getGrafikPenjualan']);
+
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
 Route::post('api/master/company/submit', [MasterCompanyController::class, 'submit']);
 Route::post('api/master/company/delete', [MasterCompanyController::class, 'delete']);

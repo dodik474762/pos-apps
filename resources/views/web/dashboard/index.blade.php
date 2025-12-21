@@ -41,7 +41,7 @@
 
                         <div class="card-body p-0 pb-2">
                             <div class="w-100">
-                                <div id="forecast_chart" data-colors='["--vz-primary", "--vz-success", "--vz-danger"]'
+                                <div id="penjualan_chart" data-colors='["--vz-primary", "--vz-success", "--vz-danger"]'
                                     class="apex-charts" dir="ltr"></div>
                             </div>
                         </div><!-- end card body -->
