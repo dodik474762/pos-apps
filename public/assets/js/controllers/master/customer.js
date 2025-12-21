@@ -55,6 +55,8 @@ let Customer = {
             kelurahan: $("#kelurahan").val(),
             reference_number: $("#reference_number").val(),
             max_retur: $("#max_retur").val(),
+            latitude: $("#latitude").val(),
+            longitude: $("#longitude").val(),
         };
 
         return data;

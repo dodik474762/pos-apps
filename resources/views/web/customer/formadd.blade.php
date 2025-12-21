@@ -116,6 +116,13 @@
                                         placeholder="Max Retur" value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
                                 </div>
                             </div>
+                             <div class="mb-3">
+                                <label>Longitude</label>
+                                <div>
+                                    <input tabindex="12" type="text" id="longitude" class="form-control" error="Longitude"
+                                        placeholder="Longitude Ex : 106.816666" value="{{ isset($data->longitude) ? $data->longitude : '' }}">
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -182,6 +189,13 @@
                                 <div>
                                     <input tabindex="10" type="text" id="reference_number" class="form-control" error="Reference Number"
                                         placeholder="Reference Number" value="{{ isset($data->reference_number) ? $data->reference_number : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Latitude</label>
+                                <div>
+                                    <input tabindex="11" type="text" id="latitude" class="form-control" error="Latitude"
+                                        placeholder="Latitude Ex : -6.200000" value="{{ isset($data->latitude) ? $data->latitude : '' }}">
                                 </div>
                             </div>
                         </div>
