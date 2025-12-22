@@ -294,6 +294,7 @@ Route::post('api_mobile/master/customer/getCity', [MasterCustomerController::cla
 Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
 Route::post('api_mobile/master/customer/getProvinsi', [MasterCustomerController::class, 'getProvinsi']);
+Route::post('api_mobile/master/customer/submitNoo', [MasterCustomerController::class, 'submitNoo']);
 
 Route::post('api/master/unit/getData', [MasterUnitController::class, 'getData']);
 Route::post('api/master/unit/submit', [MasterUnitController::class, 'submit']);

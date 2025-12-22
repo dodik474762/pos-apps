@@ -331,6 +331,8 @@ CREATE TABLE `customer` (
   `max_retur` double DEFAULT '0',
   `latitude` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `longitude` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `photo_path` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `platform` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `customer_kota_IDX` (`kota`) USING BTREE,
   KEY `customer_code_IDX` (`code`) USING BTREE,
@@ -340,7 +342,7 @@ CREATE TABLE `customer` (
   KEY `customer_kelurahan_IDX` (`kelurahan`) USING BTREE,
   KEY `customer_payment_terms_IDX` (`payment_terms`) USING BTREE,
   KEY `customer_reference_number_IDX` (`reference_number`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -349,7 +351,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'TES','TES','TES','0','-','TES','3572','35','0','IDR','2025-10-18 07:06:19','2025-11-26 14:33:24',NULL,1,'CUST25OCT0001','TES',0,3,NULL,'01234',NULL,NULL,NULL,9999,NULL,NULL),(2,'TEST 2','TEST 2','0','0','TEST 2','TEST 2','3502','35','0',NULL,'2025-11-21 16:24:07','2025-11-26 14:55:23',NULL,1,'CUST11250001',NULL,1e18,1,NULL,NULL,12373,49883,NULL,9999,NULL,NULL);
+INSERT INTO `customer` VALUES (1,'TES','TES','TES','0','-','TES','3572','35','0','IDR','2025-10-18 07:06:19','2025-12-22 14:21:43',NULL,1,'CUST25OCT0001','TES',0,3,NULL,'01234',NULL,NULL,NULL,9999,'-7.3440941','112.5973731',NULL,NULL),(2,'TEST 2','TEST 2','0','0','TEST 2','TEST 2','3502','35','0',NULL,'2025-11-21 16:24:07','2025-11-26 14:55:23',NULL,1,'CUST11250001',NULL,1e18,1,NULL,NULL,12373,49883,NULL,9999,NULL,NULL,NULL,NULL),(3,'okeee','okee',NULL,'9081981','oke@gmaill.com','okeee','3403','34','dadadasdad',NULL,'2025-12-22 14:52:13','2025-12-22 14:52:13',NULL,2,'CUST12250001',NULL,NULL,NULL,NULL,'1313131',NULL,NULL,NULL,0,'-7.3440979','112.5973828','/berkas/document/outlet/2025/12/outlet_noo1766440333.jpg','mobile');
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2126,7 +2128,7 @@ CREATE TABLE `sales_order_details` (
   KEY `sales_order_details_free_for_IDX` (`free_for`) USING BTREE,
   CONSTRAINT `sales_order_details_ibfk_1` FOREIGN KEY (`sales_order_id`) REFERENCES `sales_order_headers` (`id`) ON DELETE CASCADE,
   CONSTRAINT `sales_order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2135,7 +2137,7 @@ CREATE TABLE `sales_order_details` (
 
 LOCK TABLES `sales_order_details` WRITE;
 /*!40000 ALTER TABLE `sales_order_details` DISABLE KEYS */;
-INSERT INTO `sales_order_details` VALUES (2,6,1,1.00,15000.00,0.00,14850.00,'2025-11-12 07:23:03','2025-11-12 07:23:03',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(3,6,1,1.00,0.00,0.00,0.00,'2025-11-12 07:23:03','2025-11-12 07:23:03',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(4,7,1,1.00,15000.00,0.00,14850.00,'2025-11-20 13:34:11','2025-11-20 13:34:11',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(5,7,1,1.00,0.00,0.00,0.00,'2025-11-20 13:34:11','2025-11-20 13:34:11',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(6,8,1,5.00,15000.00,0.00,75000.00,'2025-11-21 16:44:20','2025-11-21 16:44:20',3,'nominal',0,0,NULL,NULL,NULL,NULL,0,NULL,'draft'),(7,9,1,2.00,15000.00,0.00,29700.00,'2025-11-21 18:20:17','2025-11-21 18:20:17',3,'percent',300,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(8,9,1,1.00,0.00,0.00,0.00,'2025-11-21 18:20:17','2025-11-21 18:20:17',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(9,10,1,4.00,15000.00,0.00,60000.00,'2025-11-26 14:54:19','2025-11-26 14:54:19',3,'nominal',0,0,NULL,NULL,NULL,NULL,0,NULL,'draft'),(10,14,1,1.00,1000.00,0.00,990.00,'2025-12-17 13:36:41','2025-12-17 13:36:41',1,'percent',10,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(11,14,1,1.00,0.00,0.00,0.00,'2025-12-17 13:36:41','2025-12-17 13:36:41',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(12,15,1,1.00,15000.00,0.00,14850.00,'2025-12-17 13:43:41','2025-12-17 13:43:41',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(13,15,1,1.00,0.00,0.00,0.00,'2025-12-17 13:43:41','2025-12-17 13:43:41',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(14,16,1,1.00,5000.00,0.00,4950.00,'2025-12-17 13:56:09','2025-12-17 13:56:09',2,'percent',50,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(15,16,1,1.00,0.00,0.00,0.00,'2025-12-17 13:56:09','2025-12-17 13:56:09',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(16,17,1,1.00,5000.00,0.00,4950.00,'2025-12-17 13:57:03','2025-12-17 13:57:03',2,'percent',50,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(17,17,1,1.00,0.00,0.00,0.00,'2025-12-17 13:57:03','2025-12-17 13:57:03',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(18,18,1,1.00,1000.00,0.00,990.00,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,'percent',10,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(19,18,1,1.00,0.00,0.00,0.00,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft');
+INSERT INTO `sales_order_details` VALUES (2,6,1,1.00,15000.00,0.00,14850.00,'2025-11-12 07:23:03','2025-11-12 07:23:03',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(3,6,1,1.00,0.00,0.00,0.00,'2025-11-12 07:23:03','2025-11-12 07:23:03',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(4,7,1,1.00,15000.00,0.00,14850.00,'2025-11-20 13:34:11','2025-11-20 13:34:11',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(5,7,1,1.00,0.00,0.00,0.00,'2025-11-20 13:34:11','2025-11-20 13:34:11',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(6,8,1,5.00,15000.00,0.00,75000.00,'2025-11-21 16:44:20','2025-11-21 16:44:20',3,'nominal',0,0,NULL,NULL,NULL,NULL,0,NULL,'draft'),(7,9,1,2.00,15000.00,0.00,29700.00,'2025-11-21 18:20:17','2025-11-21 18:20:17',3,'percent',300,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(8,9,1,1.00,0.00,0.00,0.00,'2025-11-21 18:20:17','2025-11-21 18:20:17',1,'nominal',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(9,10,1,4.00,15000.00,0.00,60000.00,'2025-11-26 14:54:19','2025-11-26 14:54:19',3,'nominal',0,0,NULL,NULL,NULL,NULL,0,NULL,'draft'),(10,14,1,1.00,1000.00,0.00,990.00,'2025-12-17 13:36:41','2025-12-17 13:36:41',1,'percent',10,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(11,14,1,1.00,0.00,0.00,0.00,'2025-12-17 13:36:41','2025-12-17 13:36:41',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(12,15,1,1.00,15000.00,0.00,14850.00,'2025-12-17 13:43:41','2025-12-17 13:43:41',3,'percent',150,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(13,15,1,1.00,0.00,0.00,0.00,'2025-12-17 13:43:41','2025-12-17 13:43:41',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(14,16,1,1.00,5000.00,0.00,4950.00,'2025-12-17 13:56:09','2025-12-17 13:56:09',2,'percent',50,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(15,16,1,1.00,0.00,0.00,0.00,'2025-12-17 13:56:09','2025-12-17 13:56:09',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(16,17,1,1.00,5000.00,0.00,4950.00,'2025-12-17 13:57:03','2025-12-17 13:57:03',2,'percent',50,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(17,17,1,1.00,0.00,0.00,0.00,'2025-12-17 13:57:03','2025-12-17 13:57:03',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(18,18,1,1.00,1000.00,0.00,990.00,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,'percent',10,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(19,18,1,1.00,0.00,0.00,0.00,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft'),(20,19,1,1.00,1000.00,0.00,990.00,'2025-12-22 14:21:43','2025-12-22 14:21:43',1,'percent',10,0,NULL,NULL,NULL,NULL,1,NULL,'draft'),(21,19,1,1.00,0.00,0.00,0.00,'2025-12-22 14:21:43','2025-12-22 14:21:43',1,'percent',0,1,NULL,NULL,NULL,NULL,0,1,'draft');
 /*!40000 ALTER TABLE `sales_order_details` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2173,7 +2175,7 @@ CREATE TABLE `sales_order_headers` (
   KEY `sales_order_headers_deleted_IDX` (`deleted`) USING BTREE,
   KEY `sales_order_headers_salesman_IDX` (`salesman`) USING BTREE,
   CONSTRAINT `sales_order_headers_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2182,7 +2184,7 @@ CREATE TABLE `sales_order_headers` (
 
 LOCK TABLES `sales_order_headers` WRITE;
 /*!40000 ALTER TABLE `sales_order_headers` DISABLE KEYS */;
-INSERT INTO `sales_order_headers` VALUES (6,'SO11250001','2025-11-12',1,'14',14850.00,'confirmed',1,'2025-11-12 07:23:03','2025-11-14 07:11:15',1,NULL,NULL,NULL,'testing so',NULL,NULL,NULL,NULL,NULL),(7,'SO11250002','2025-11-21',1,NULL,14850.00,'confirmed',1,'2025-11-20 13:34:11','2025-11-20 13:34:34',1,NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL),(8,'SO11250003','2025-11-22',2,'7',75000.00,'confirmed',1,'2025-11-21 16:44:20','2025-11-21 16:44:50',1,NULL,NULL,NULL,'test top',NULL,NULL,NULL,NULL,NULL),(9,'SO11250004','2025-11-22',1,'0',29700.00,'confirmed',1,'2025-11-21 18:20:17','2025-11-21 18:20:39',1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(10,'SO11250005','2025-11-27',2,'7',60000.00,'confirmed',1,'2025-11-26 14:54:19','2025-11-26 14:54:37',1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(14,'SO12250001','2025-12-16',1,'0',990.00,'draft',1,'2025-12-17 13:36:41','2025-12-17 20:40:58',1,NULL,NULL,1,'testing','-7.3440906','112.59737','berkas/document/sales_order/2025/12/outlet_1766003801.jpg','berkas/document/sales_order/2025/12/signature_1766003801.jpg','mobile'),(15,'SO12250002','2025-12-18',1,'0',14850.00,'draft',1,'2025-12-17 13:43:41','2025-12-17 13:43:41',1,NULL,NULL,1,'test lagi','-7.3440911','112.5973703','/berkas/document/sales_order/2025/12/outlet_1766004221.jpg','/berkas/document/sales_order/2025/12/signature_1766004221.jpg','mobile'),(16,'SO12250003','2025-12-18',1,'0',4950.00,'draft',1,'2025-12-17 13:56:09','2025-12-17 13:56:09',1,NULL,NULL,1,'ty','-7.3440401','112.5974204','/berkas/document/sales_order/2025/12/outlet_1766004969.jpg','/berkas/document/sales_order/2025/12/signature_1766004969.jpg','mobile'),(17,'SO12250004','2025-12-18',1,'0',4950.00,'draft',1,'2025-12-17 13:57:03','2025-12-17 13:57:03',1,NULL,NULL,1,'','-7.3440918','112.5973718','/berkas/document/sales_order/2025/12/outlet_1766005023.jpg','/berkas/document/sales_order/2025/12/signature_1766005023.jpg','mobile'),(18,'SO12250005','2025-12-18',1,'0',990.00,'draft',1,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,NULL,NULL,1,'','-7.3440914','112.597372','/berkas/document/sales_order/2025/12/outlet_1766005078.jpg','/berkas/document/sales_order/2025/12/signature_1766005078.jpg','mobile');
+INSERT INTO `sales_order_headers` VALUES (6,'SO11250001','2025-11-12',1,'14',14850.00,'confirmed',1,'2025-11-12 07:23:03','2025-11-14 07:11:15',1,NULL,NULL,NULL,'testing so',NULL,NULL,NULL,NULL,NULL),(7,'SO11250002','2025-11-21',1,NULL,14850.00,'confirmed',1,'2025-11-20 13:34:11','2025-11-20 13:34:34',1,NULL,NULL,1,NULL,NULL,NULL,NULL,NULL,NULL),(8,'SO11250003','2025-11-22',2,'7',75000.00,'confirmed',1,'2025-11-21 16:44:20','2025-11-21 16:44:50',1,NULL,NULL,NULL,'test top',NULL,NULL,NULL,NULL,NULL),(9,'SO11250004','2025-11-22',1,'0',29700.00,'confirmed',1,'2025-11-21 18:20:17','2025-11-21 18:20:39',1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(10,'SO11250005','2025-11-27',2,'7',60000.00,'confirmed',1,'2025-11-26 14:54:19','2025-11-26 14:54:37',1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(14,'SO12250001','2025-12-16',1,'0',990.00,'draft',1,'2025-12-17 13:36:41','2025-12-17 20:40:58',1,NULL,NULL,1,'testing','-7.3440906','112.59737','berkas/document/sales_order/2025/12/outlet_1766003801.jpg','berkas/document/sales_order/2025/12/signature_1766003801.jpg','mobile'),(15,'SO12250002','2025-12-18',1,'0',14850.00,'draft',1,'2025-12-17 13:43:41','2025-12-17 13:43:41',1,NULL,NULL,1,'test lagi','-7.3440911','112.5973703','/berkas/document/sales_order/2025/12/outlet_1766004221.jpg','/berkas/document/sales_order/2025/12/signature_1766004221.jpg','mobile'),(16,'SO12250003','2025-12-18',1,'0',4950.00,'draft',1,'2025-12-17 13:56:09','2025-12-17 13:56:09',1,NULL,NULL,1,'ty','-7.3440401','112.5974204','/berkas/document/sales_order/2025/12/outlet_1766004969.jpg','/berkas/document/sales_order/2025/12/signature_1766004969.jpg','mobile'),(17,'SO12250004','2025-12-18',1,'0',4950.00,'draft',1,'2025-12-17 13:57:03','2025-12-17 13:57:03',1,NULL,NULL,1,'','-7.3440918','112.5973718','/berkas/document/sales_order/2025/12/outlet_1766005023.jpg','/berkas/document/sales_order/2025/12/signature_1766005023.jpg','mobile'),(18,'SO12250005','2025-12-18',1,'0',990.00,'draft',1,'2025-12-17 13:57:58','2025-12-17 13:57:58',1,NULL,NULL,1,'','-7.3440914','112.597372','/berkas/document/sales_order/2025/12/outlet_1766005078.jpg','/berkas/document/sales_order/2025/12/signature_1766005078.jpg','mobile'),(19,'SO12250006','2025-12-21',1,'0',990.00,'draft',1,'2025-12-22 14:21:43','2025-12-22 14:21:43',1,NULL,NULL,1,'','-7.3440941','112.5973731','/berkas/document/sales_order/2025/12/outlet_1766438503.jpg','/berkas/document/sales_order/2025/12/signature_1766438503.jpg','mobile');
 /*!40000 ALTER TABLE `sales_order_headers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2918,4 +2920,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-22  4:35:09
+-- Dump completed on 2025-12-23  4:53:27

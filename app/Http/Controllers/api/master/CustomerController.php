@@ -7,6 +7,7 @@ use App\Models\Master\Customer;
 use App\Models\Master\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class CustomerController extends Controller
 {
@@ -85,6 +86,7 @@ class CustomerController extends Controller
             $roles = $data['id'] == '' ? new Customer() : Customer::find($data['id']);
             if ($data['id'] == '') {
                 $roles->code = generateCodeCustomer();
+                $roles->users = session('user_id');
             }
             // $roles->branch = $data['branch'];
             $roles->pic = $data['pic'];
@@ -116,6 +118,60 @@ class CustomerController extends Controller
             // $nik_upt->nama = $data['nama'];
             // $nik_upt->upt = $data['upt'];
             // $nik_upt->save();
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function submitNoo(Request $request)
+    {
+        $data = json_decode($request->input('data'), true);
+        $files_outlet = $request->file('files_outlet');
+        $users_id = $data['user_id'];
+        // echo '<pre>';
+        // print_r($data);die;
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+
+            $dir = 'berkas/document/outlet/';
+            $dir .= date('Y').'/'.date('m');
+            $pathlamp = public_path().'/'.$dir.'/';
+            // Create the directory if it doesn't exist
+            if (! File::isDirectory($pathlamp)) {
+                File::makeDirectory($pathlamp, 0777, true, true);
+            }
+
+            $fileOutletName = 'outlet_noo'.time().'.jpg';
+
+            $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            $dbpathlampOutlet = '/'.$dir.'/';
+
+            $roles = new Customer();
+            $roles->code = generateCodeCustomer();
+
+            $roles->pic = $data['pic'];
+            $roles->no_ktp = $data['no_ktp'];
+            $roles->nama_customer = $data['nama_customer'];
+            $roles->phone = $data['phone'];
+            $roles->email = $data['email'];
+            $roles->address = $data['address'];
+            $roles->kota = $data['kota'];
+            $roles->provinsi = $data['provinsi'];
+            $roles->npwp = $data['npwp'];
+            $roles->customer_category = 2; //kandidat
+            $roles->latitude = $data['latitude'];
+            $roles->longitude = $data['longitude'];
+            $roles->platform = 'mobile';
+            $roles->users = $users_id;
+            $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+            $roles->save();
 
             DB::commit();
             $result['is_valid'] = true;
@@ -208,7 +264,7 @@ class CustomerController extends Controller
         $result['data'] = $datadb;
         return response()->json($result);
     }
-    
+
     public function getProvinsi(Request $request)
     {
         $data = $request->all();
