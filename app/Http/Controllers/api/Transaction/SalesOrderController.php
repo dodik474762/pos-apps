@@ -439,6 +439,9 @@ class SalesOrderController extends Controller
             if($customers){
                 $customers->latitude = $data['latitude'];
                 $customers->longitude = $data['longitude'];
+                if($customers->customer_category == '2'){
+                    $customers->customer_category = '1';
+                }
                 $customers->save();
             }
             /*update koordinat customer */

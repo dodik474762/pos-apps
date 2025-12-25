@@ -74,6 +74,65 @@ class CustomerController extends Controller
         return json_encode($data);
     }
 
+    public function getDataAcc()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $company = session('id_company');
+        $akses = session('akses');
+
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'cc.category as customer_category_name',
+                'r.name as city_name',
+                'k.name as kecamatan_name',
+                'kl.name as kelurahan_name',
+            ])
+            ->join('customer_category as cc', 'cc.id', 'm.customer_category')
+            ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->whereNull('m.deleted')
+            ->where('m.platform', 'mobile');
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function submit(Request $request)
     {
         $data = $request->all();
@@ -118,6 +177,36 @@ class CustomerController extends Controller
             // $nik_upt->nama = $data['nama'];
             // $nik_upt->upt = $data['upt'];
             // $nik_upt->save();
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function approve(Request $request)
+    {
+        date_default_timezone_set('Asia/Jakarta');
+        $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            //code...
+            $roles = Customer::find($data['id']);
+            // $roles->branch = $data['branch'];
+            $roles->status = $data['status'] == 'acc' ? 'APPROVED' : 'REJECTED';
+            $roles->approved_date = date('Y-m-d H:i:s');
+            $roles->approved_by = session('user_id');
+            $roles->remarks = isset($data['remarks']) ? $data['remarks'] : '';
+            $roles->office_contact = $data['office_contact'];
+            $roles->reference_number = $data['reference_number'];
+            $roles->save();
 
             DB::commit();
             $result['is_valid'] = true;

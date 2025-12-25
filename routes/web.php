@@ -102,7 +102,10 @@ Route::get('master/customer_category/ubah', [CustomerCategoryController::class, 
 
 Route::get('master/customer', [CustomerController::class, 'index']);
 Route::get('master/customer/add', [CustomerController::class, 'add']);
+Route::get('master/customer/detail', [CustomerController::class, 'detail']);
 Route::get('master/customer/ubah', [CustomerController::class, 'ubah']);
+
+Route::get('approval/customer', [CustomerController::class, 'index_acc']);
 
 Route::get('master/unit', [UnitController::class, 'index']);
 Route::get('master/unit/add', [UnitController::class, 'add']);
@@ -284,7 +287,9 @@ Route::post('api/master/customer_category/delete', [MasterCustomerCategoryContro
 Route::post('api/master/customer_category/confirmDelete', [MasterCustomerCategoryController::class, 'confirmDelete']);
 
 Route::post('api/master/customer/getData', [MasterCustomerController::class, 'getData']);
+Route::post('api/master/customer/getDataAcc', [MasterCustomerController::class, 'getDataAcc']);
 Route::post('api/master/customer/submit', [MasterCustomerController::class, 'submit']);
+Route::post('api/master/customer/approve', [MasterCustomerController::class, 'approve']);
 Route::post('api/master/customer/delete', [MasterCustomerController::class, 'delete']);
 Route::post('api/master/customer/confirmDelete', [MasterCustomerController::class, 'confirmDelete']);
 Route::post('api/master/customer/getCity', [MasterCustomerController::class, 'getCity']);

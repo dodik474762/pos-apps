@@ -30,14 +30,6 @@
                                 <h5 class="card-title mb-0">{{ $title }} History</h5>
                             </div>
                             <div class="col-sm-auto">
-                                @if ($akses->customer->insert == 1)
-                                    <div class="d-flex gap-1 flex-wrap">
-                                        <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
-                                            id="create-btn" href="javascript:void(0);"
-                                            onclick="Customer.add(this, event)"><i
-                                                class="ri-add-line align-bottom me-1"></i> Create New</a>
-                                    </div>
-                                @endif
                             </div>
                         </div>
                     </div>
@@ -79,7 +71,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="list-data">
                                     <div class="table-responsive table-card mb-1">
-                                        <table class="table table-nowrap align-middle" id="table-data">
+                                        <table class="table table-nowrap align-middle" id="table-data-acc">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
@@ -90,6 +82,8 @@
                                                     <th>PIC</th>
                                                     <th>Email</th>
                                                     <th>No. HP</th>
+                                                    <th>Status</th>
+                                                    <th>Keterangan</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

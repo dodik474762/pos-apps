@@ -31,6 +31,10 @@ class CustomerController extends Controller
         return "Data";
     }
 
+    public function getTitleParentAcc(){
+        return "Approval";
+    }
+
     public function getTableName(){
         return "";
     }
@@ -50,6 +54,22 @@ class CustomerController extends Controller
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
+    public function index_acc(){
+        $data['data'] = [];
+        $data['title'] = $this->getTitle();
+        $data['title_parent'] = $this->getTitleParentAcc();
+        $data['akses'] = $this->akses_menu;
+        // echo '<pre>';
+        // print_r(session()->all());die;
+        $view = view('web.customer.index_acc', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParentAcc();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
@@ -96,6 +116,28 @@ class CustomerController extends Controller
         $data['data_price_list'] = $this->getListPriceList();
         $data['tops'] = $this->getTerms();
         $view = view('web.customer.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
+    public function detail(Request $request){
+        $api = new MasterCustomerController();
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['akses'] = session('akses');
+        $data['company'] = session('id_company');
+        $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
+
+        $data['title'] = 'Form '.$this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
+        $data['data_price_list'] = $this->getListPriceList();
+        $data['tops'] = $this->getTerms();
+        $view = view('web.customer.detail', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
