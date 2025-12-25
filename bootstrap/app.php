@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/master/customer/getKelurahan',
             'api_mobile/master/customer/getProvinsi',
             'api_mobile/master/customer/submitNoo',
+            'api_mobile/transaksi/packing_list/getData',
+            'api_mobile/transaksi/packing_list/confirmDeliver',
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })

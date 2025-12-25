@@ -11,6 +11,7 @@ use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\PackingListDtl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PackingListController extends Controller
 {
@@ -435,5 +436,91 @@ class PackingListController extends Controller
         $data['data'] = $datadb;
 
         return view('web.packing_list.datadetaildo', $data);
+    }
+
+    public function getDataPackingList(Request $request){
+        $data = $request->all();
+        $packing_date = date('Y-m-d');
+        $result['is_valid'] = true;
+
+        $datadb = DB::table($this->getTableName().' as m')
+            ->select([
+                'pld.id',
+                'm.packing_list_no',
+                'u.name as created_by_name',
+                'doh.do_number',
+                'doh.do_date',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'doh.total_item',
+                'pld.confirm_date'
+            ])
+            ->join('packing_list_do as pld', 'pld.packing_list_id', 'm.id')
+            ->join('delivery_order_header as doh', 'doh.id', 'pld.delivery_order_id')
+            ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->whereNull('m.deleted')
+            ->orderBy('c.nama_customer')
+            ->orderBy('doh.id', 'asc');
+        $datadb = $datadb->get()->toArray();
+
+        $result['data'] = $datadb;
+        $result['message'] = 'Data berhasil diambil';
+
+        return response()->json($result);
+    }
+
+    public function confirmDeliver(Request $request){
+        $data = json_decode($request->input('data'), true);
+        $users_id = $data['user_id'];
+        // echo '<pre>';
+        // print_r($data);die;
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+
+            $roles = PackingListDo::where('id', $data['id'])->first();
+            if(empty($roles)){
+                $result['message'] = 'Data tidak ditemukan';
+                return response()->json($result);
+            }
+
+            $periode = Carbon::parse($data['confirm_date'])->setTimezone('Asia/Jakarta');
+            $confirm_date = $periode->format('Y-m-d H:i:s');
+            $roles->confirm_date = $confirm_date;
+            $roles->latitude = $data['latitude'];
+            $roles->longitude = $data['longitude'];
+            $roles->platform = 'mobile';
+            $roles->remarks = $data['remarks'];
+            $roles->status = $data['state'] == 'delivered' ? 'CONFIRMED' : 'NOT DELIVERED';
+            $roles->confirm_by = $users_id;
+            $roles->save();
+
+            $allDetailDo = PackingListDo::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
+            $delivered = 0;
+            foreach ($allDetailDo as $key => $value) {
+                if($value['status'] == 'CONFIRMED'){
+                    $delivered++;
+                }
+            }
+            if($delivered == count($allDetailDo)){
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'CONFIRMED';
+                $plHeader->save();
+            }else{
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'PARTIAL';
+                $plHeader->save();
+            }
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
     }
 }
