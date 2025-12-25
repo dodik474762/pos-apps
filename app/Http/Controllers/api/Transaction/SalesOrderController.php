@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use App\Models\Master\MobileSession;
 
 class SalesOrderController extends Controller
 {
@@ -949,6 +950,47 @@ class SalesOrderController extends Controller
         $data->periode = date('Y-m');
         $result['is_valid'] = true;
         $result['data'] = $data;
+        return response()->json($result);
+    }
+
+    public function closingOrder(Request $request){
+        $data = json_decode($request->input('data'), true);
+        $users_id = $data['user_id'];
+        $now = $data['close_date'];
+
+        $closing_date = Carbon::parse($now)->setTimezone('Asia/Jakarta');
+        $closing_date = $closing_date->format('Y-m-d H:i:s');
+        $result['is_valid'] = false;
+        $result['message'] = '';
+        DB::beginTransaction();
+        try {
+
+            $mobile_session = MobileSession::where('users', $users_id)
+            ->where('date_process', date('Y-m-d'))
+            ->first();
+
+            if(empty($mobile_session)){
+                DB::rollBack();
+                $result['message'] = 'Session Tidak Ditemukan';
+                return response()->json($result);
+            }
+
+            $mobile_session->total_visit = $data['total_visit'];
+            $mobile_session->total_tagihan = $data['total_tagihan'];
+            $mobile_session->total_retur = $data['total_retur'];
+            $mobile_session->status = 'CLOSE';
+            $mobile_session->updated_at = $closing_date;
+            $mobile_session->save();
+
+            DB::commit();
+            $result['message'] = 'Success';
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
         return response()->json($result);
     }
 }
