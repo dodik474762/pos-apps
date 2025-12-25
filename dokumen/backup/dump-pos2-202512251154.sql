@@ -333,6 +333,7 @@ CREATE TABLE `customer` (
   `longitude` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `photo_path` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `platform` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `users` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `customer_kota_IDX` (`kota`) USING BTREE,
   KEY `customer_code_IDX` (`code`) USING BTREE,
@@ -351,7 +352,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'TES','TES','TES','0','-','TES','3572','35','0','IDR','2025-10-18 07:06:19','2025-12-22 14:21:43',NULL,1,'CUST25OCT0001','TES',0,3,NULL,'01234',NULL,NULL,NULL,9999,'-7.3440941','112.5973731',NULL,NULL),(2,'TEST 2','TEST 2','0','0','TEST 2','TEST 2','3502','35','0',NULL,'2025-11-21 16:24:07','2025-11-26 14:55:23',NULL,1,'CUST11250001',NULL,1e18,1,NULL,NULL,12373,49883,NULL,9999,NULL,NULL,NULL,NULL),(3,'okeee','okee',NULL,'9081981','oke@gmaill.com','okeee','3403','34','dadadasdad',NULL,'2025-12-22 14:52:13','2025-12-22 14:52:13',NULL,2,'CUST12250001',NULL,NULL,NULL,NULL,'1313131',NULL,NULL,NULL,0,'-7.3440979','112.5973828','/berkas/document/outlet/2025/12/outlet_noo1766440333.jpg','mobile');
+INSERT INTO `customer` VALUES (1,'TES','TES','TES','0','-','TES','3572','35','0','IDR','2025-10-18 07:06:19','2025-12-22 14:21:43',NULL,1,'CUST25OCT0001','TES',0,3,NULL,'01234',NULL,NULL,NULL,9999,'-7.3440941','112.5973731',NULL,NULL,NULL),(2,'TEST 2','TEST 2','0','0','TEST 2','TEST 2','3502','35','0',NULL,'2025-11-21 16:24:07','2025-11-26 14:55:23',NULL,1,'CUST11250001',NULL,1e18,1,NULL,NULL,12373,49883,NULL,9999,NULL,NULL,NULL,NULL,NULL),(3,'okeee','okee',NULL,'9081981','oke@gmaill.com','okeee','3403','34','dadadasdad',NULL,'2025-12-22 14:52:13','2025-12-22 14:52:13',NULL,2,'CUST12250001',NULL,NULL,NULL,NULL,'1313131',NULL,NULL,NULL,0,'-7.3440979','112.5973828','/berkas/document/outlet/2025/12/outlet_noo1766440333.jpg','mobile',NULL);
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1028,7 +1029,7 @@ CREATE TABLE `mobile_session` (
   `deleted_by` int DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1037,6 +1038,7 @@ CREATE TABLE `mobile_session` (
 
 LOCK TABLES `mobile_session` WRITE;
 /*!40000 ALTER TABLE `mobile_session` DISABLE KEYS */;
+INSERT INTO `mobile_session` VALUES (1,1,'2025-12-25',6,1,1,'CLOSE','2025-12-25 11:22:34','2025-12-25 11:46:28',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `mobile_session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1060,6 +1062,7 @@ CREATE TABLE `packing_list` (
   `deleted` datetime DEFAULT NULL,
   `deleted_by` int DEFAULT NULL,
   `created_by` int DEFAULT NULL,
+  `status` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `packing_list_no` (`packing_list_no`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1071,7 +1074,7 @@ CREATE TABLE `packing_list` (
 
 LOCK TABLES `packing_list` WRITE;
 /*!40000 ALTER TABLE `packing_list` DISABLE KEYS */;
-INSERT INTO `packing_list` VALUES (1,'PL12250001','2025-12-10','TES','TES','TES','TES','2025-12-09 20:34:12','2025-12-09 20:34:12',NULL,NULL,1);
+INSERT INTO `packing_list` VALUES (1,'PL12250001','2025-12-10','TES','TES','TES','TES','2025-12-09 20:34:12','2025-12-25 04:06:42',NULL,NULL,1,'CONFIRMED');
 /*!40000 ALTER TABLE `packing_list` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1124,6 +1127,13 @@ CREATE TABLE `packing_list_do` (
   `delivery_order_id` bigint NOT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
+  `confirm_date` datetime DEFAULT NULL,
+  `latitude` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `longitude` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `confirm_by` int DEFAULT NULL,
+  `platform` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remarks` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_pldo_pl` (`packing_list_id`),
   KEY `fk_pldo_do` (`delivery_order_id`),
@@ -1138,7 +1148,7 @@ CREATE TABLE `packing_list_do` (
 
 LOCK TABLES `packing_list_do` WRITE;
 /*!40000 ALTER TABLE `packing_list_do` DISABLE KEYS */;
-INSERT INTO `packing_list_do` VALUES (1,1,11,'2025-12-09 20:34:12','2025-12-09 20:34:12'),(2,1,13,'2025-12-09 20:34:12','2025-12-09 20:34:12');
+INSERT INTO `packing_list_do` VALUES (1,1,11,'2025-12-09 20:34:12','2025-12-25 03:59:30','2025-12-25 03:59:30','-7.3440831','112.5973737',1,'mobile','CONFIRMED','okeee'),(2,1,13,'2025-12-09 20:34:12','2025-12-25 04:10:24','2025-12-25 11:09:38','-7.3440939','112.5973715',1,'mobile','CONFIRMED','okeee');
 /*!40000 ALTER TABLE `packing_list_do` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2920,4 +2930,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-23  4:53:27
+-- Dump completed on 2025-12-25 11:54:15
