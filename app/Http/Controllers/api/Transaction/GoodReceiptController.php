@@ -126,7 +126,11 @@ class GoodReceiptController extends Controller
             $roles->currency = $currency->id;
             $roles->save();
             $hdrId = $roles->id;
-            $gr_number = $roles->code;
+            $gr_number = $roles->gr_number;
+
+            if($data['id'] != ''){
+                cancelAllGL($gr_number);
+            }
 
             $grand_total = 0;
             $totalFullyReceived = 0;
