@@ -440,6 +440,8 @@ class PackingListController extends Controller
 
     public function getDataPackingList(Request $request){
         $data = $request->all();
+        date_default_timezone_set('Asia/Jakarta');
+
         $packing_date = date('Y-m-d');
         $result['is_valid'] = true;
 
@@ -466,6 +468,7 @@ class PackingListController extends Controller
         $datadb = $datadb->get()->toArray();
 
         $result['data'] = $datadb;
+        $result['date'] = $packing_date;
         $result['message'] = 'Data berhasil diambil';
 
         return response()->json($result);
