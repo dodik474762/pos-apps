@@ -453,6 +453,7 @@ class PackingListController extends Controller
                 'doh.do_number',
                 'doh.do_date',
                 'c.code as customer_code',
+                'c.id as customer_id',
                 'c.nama_customer',
                 'doh.total_item',
                 'pld.confirm_date'
