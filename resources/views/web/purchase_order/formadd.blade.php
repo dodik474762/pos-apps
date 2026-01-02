@@ -1,5 +1,5 @@
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-  data-bs-target="#data-modal-karyawan"></button>
+  data-bs-target="#data-modal-product"></button>
 <div id="content-modal-form"></div><input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 
 <!-- start page title -->

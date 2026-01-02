@@ -312,6 +312,6 @@ class PurchaseOrderController extends Controller
     public function showDataProduct(Request $request)
     {
         $data = $request->all();
-        return view('web.product.modal.dataproduct', $data);
+        return view('web.purchase_order.modal.dataproduct', $data);
     }
 }

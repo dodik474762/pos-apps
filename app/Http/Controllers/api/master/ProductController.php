@@ -89,12 +89,18 @@ class ProductController extends Controller
                 'u.name as unit_name',
                 'uo.name as unit_tujuan_name',
                 'uo.id as unit_tujuan_id',
-                'pu.id as id_uom'
+                'pu.id as id_uom',
+                'puc.cost as product_cost',
+                'puc.date_start as product_cost_date_start',
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
             ->join('product_uom as pu', 'pu.product', 'm.id')
             ->join('unit as uo', 'uo.id', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', 'm.unit')
+            ->leftJoin('product_uom_cost  as puc', function($q){
+                return $q->on('puc.product_uom', 'pu.id')
+                ->where('puc.is_active', '1');
+            })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {

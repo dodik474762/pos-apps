@@ -395,10 +395,18 @@ let PurchaseOrder = {
                     data: "unit_tujuan_name",
                 },
                 {
+                    data: "product_cost",
+                },
+                {
+                    data: "product_cost_date_start",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}" code="${row.code}" produk_name="${row.name}"
+                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}" code="${row.code}"
+                        produk_name="${row.name}"
+                        price="${row.product_cost || 0}"
                         onclick="PurchaseOrder.pilihDataProduct(this, event)"
                         data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
@@ -414,6 +422,7 @@ let PurchaseOrder = {
         let produk_id = $(elm).attr("produk_id");
         let unit = $(elm).attr("unit");
         let unit_name = $(elm).attr("unit_name");
+        let price = $(elm).attr("price");
         let product_uom_id = $(elm).attr("data_id");
         $(elmChoose)
             .closest("div")
@@ -421,6 +430,7 @@ let PurchaseOrder = {
             .val(product_uom_id + "//" + produk_id + "//" + produk_name);
         console.log($(elmChoose).closest("tr").find("td#unit"));
         $(elmChoose).closest("tr").find("td#unit").text(unit_name);
+        $(elmChoose).closest("tr").find("input#price").val(price);;
         $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
         $("button.btn-close").trigger("click");
     },
