@@ -19,4 +19,7 @@
     <td>
         <input type="number" id="nilai_konversi" name="nilai_konversi[]" class="form-control required" error="Nilai Konversi">
     </td>
+    <td>
+        <input type="number" id="nilai_konversi_terkecil" name="nilai_konversi_terkecil[]" class="form-control required" error="Nilai Konversi Terkecil">
+    </td>
 </tr>

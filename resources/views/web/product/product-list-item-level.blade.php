@@ -10,12 +10,13 @@
                         <th style="width: 10%;">#</th>
                         <th style="width: 40%;">Satuan Dasar</th>
                         <th style="width: 40%;">Satuan Tujuan</th>
-                        <th style="width: 10%;">Konversi</th>
+                        <th style="width: 5%;">Konversi</th>
+                        <th style="width: 5%;">Konversi Terkecil</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="4">
+                        <td colspan="5">
                             <a href="javascript:;" class="btn btn-primary btn-sm"
                                 onclick="Product.addItemLevel(this, event)">Add
                                 Item</a>
@@ -44,6 +45,10 @@
                             </td>
                             <td>
                                 <input type="number" id="nilai_konversi" name="nilai_konversi[]" class="form-control required" error="Nilai Konversi" value="{{ $v->nilai_konversi }}">
+                            </td>
+                            <td>
+                                <input type="number" id="nilai_konversi_terkecil" name="nilai_konversi_terkecil[]" class="form-control required" error="Nilai Konversi Terkecil"
+                                value="{{ $v->nilai_konversi_terkecil }}">
                             </td>
                         </tr>
                     @endforeach
