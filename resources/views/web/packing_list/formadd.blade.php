@@ -141,7 +141,27 @@
 
                             <tbody id="detail-body">
                                 @if(!empty($details))
-                                    @foreach($details as $d)
+                                    @foreach ($grouped as $item)
+                                        @foreach ($item as $items)
+                                            @foreach ($items as $prod)
+                                                <tr class="do_detail_{{ $prod->delivery_order_id }}" do_id="{{ $prod->delivery_order_id }}" data_id="{{ $prod->delivery_detail_id }}">
+                                                    <td id="product_id" data_id="{{ $prod->product->id }}">{{ $prod->product->code }} - {{ $prod->product->name }}</td>
+                                                    <td id="product_qty">{{ $prod->qty_do }}</td>
+                                                    <td>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="qty_pack"
+                                                            value="{{ $prod->qty_packed }}">
+                                                    </td>
+                                                    <td>{{ $prod->deliveryDetail->units->name }}</td>
+                                                    <td>
+                                                        <input disabled type="text" class="form-control"
+                                                            value="{{ $prod->remark }}">
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @endforeach
+                                    @endforeach
+                                    {{-- @foreach($details as $d)
                                         @foreach ($d->detail as $prod)
                                             <tr class="do_detail_{{ $prod->delivery_order_id }}" do_id="{{ $prod->delivery_order_id }}" data_id="{{ $prod->delivery_detail_id }}">
                                                 <td id="product_id" data_id="{{ $prod->product->id }}">{{ $prod->product->code }} - {{ $prod->product->name }}</td>
@@ -158,7 +178,7 @@
                                                 </td>
                                             </tr>
                                         @endforeach
-                                    @endforeach
+                                    @endforeach --}}
                                 @endif
                             </tbody>
                         </table>

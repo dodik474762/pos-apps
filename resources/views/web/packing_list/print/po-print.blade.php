@@ -174,7 +174,6 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th>No. DO</th>
                 <th>Kode Produk</th>
                 <th>Nama Produk</th>
                 <th>Qty DO</th>
@@ -187,7 +186,34 @@
         <tbody>
             @php $p = 1; @endphp
 
-            @foreach ($packingListDetail as $d)
+            @foreach ($grouped as $item)
+                @foreach ($item as $items)
+                    @foreach ($items as $d)
+                        @php
+                            $assembly = '';
+                            if(isset($productLargest[$d->product->code]) && strtolower($d->deliveryDetail->units->name) != 'karton' && strtolower($d->deliveryDetail->units->name) != 'box'){
+                                if ($productLargest[$d->product->code] >= 1) {
+                                    $assembly = 'Assembly '. number_format($productLargest[$d->product->code], 0).' Karton/Box';
+                                }
+                            }
+                        @endphp
+                        <tr>
+                            <td>{{ $p++ }}</td>
+
+                            <td>{{ $d->product->code ?? '-' }}</td>
+                            <td>{{ $d->product->name ?? '-' }}</td>
+
+                            <td class="text-right">{{ number_format($d->qty_do, 2, ',', '.') }}</td>
+                            <td class="text-right">{{ number_format($d->qty_packed, 2, ',', '.') }}</td>
+
+                            <td>{{ $d->deliveryDetail->units->name ?? '-' }}</td>
+                            <td>{{ $d->remark ?? '-' }} {{ $assembly }}</td>
+                        </tr>
+                    @endforeach
+                @endforeach
+            @endforeach
+
+            {{-- @foreach ($packingListDetail as $d)
                     <tr>
                         <td>{{ $p++ }}</td>
                         <td>{{ $d->do_number }}</td>
@@ -201,7 +227,7 @@
                         <td>{{ $d->deliveryDetail->units->name ?? '-' }}</td>
                         <td>{{ $d->remark ?? '-' }}</td>
                     </tr>
-            @endforeach
+            @endforeach --}}
         </tbody>
     </table>
 

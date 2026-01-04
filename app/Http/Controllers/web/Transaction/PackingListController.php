@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\PackingListController as TransactionPackingListController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
+use App\Models\Master\ProductUom;
 use App\Models\Master\Tax;
 use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
@@ -69,7 +70,7 @@ class PackingListController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -81,7 +82,7 @@ class PackingListController extends Controller
         $data['general_ledgers'] = [];
         $view = view('web.packing_list.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -105,14 +106,21 @@ class PackingListController extends Controller
             ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
             ->leftJoin('customer as c', 'c.id', 'doh.customer_id')
             ->get();
+        $data['grouped'] = $data['details']
+            ->pluck('detail')
+            ->flatten()
+            ->groupBy([
+                fn($item) => $item->product->product_code,
+                fn($item) => $item->deliveryDetail->units->name,
+            ]);
         // echo '<pre>';
         // print_r($data['details']);die;
 
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.packing_list.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -150,33 +158,56 @@ class PackingListController extends Controller
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number', 'sih.total_amount'])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
-            ->join('sales_invoice_header as sih', function($q){
+            ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.do_id', 'doh.id')
-                ->whereNull('sih.deleted');
+                    ->whereNull('sih.deleted');
             })
             ->join('customer as c', 'c.id', 'doh.customer_id')
             // ->where('doh.do_number', 'DO11250004')
             ->get();
         $doIds = $details->pluck('delivery_order_id')->toArray();
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
-        ->select([
-            'packing_list_detail.*',
-            'doh.do_number',
-        ])
-        ->with(['product'])
-        ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
-        ->where('packing_list_detail.packing_list_id', $data->id)
-        ->get();
-        // echo '<pre>';
-        // print_r($packingListDetail);die;
+            ->select([
+                'packing_list_detail.*',
+                'doh.do_number',
+            ])
+            ->with(['product'])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
+            ->where('packing_list_detail.packing_list_id', $data->id)
+            ->get();
+
+        $grouped = $details
+            ->pluck('detail')
+            ->flatten()
+            ->groupBy([
+                fn($item) => $item->product->product_code,
+                fn($item) => $item->deliveryDetail->units->name,
+            ]);
+
+        $productLargest = [];
+        foreach ($grouped as $key => $value) {
+            foreach ($value as $items) {
+                foreach ($items as $item) {
+                    if (strtolower($item->deliveryDetail->units->name) != 'karton' && strtolower($item->deliveryDetail->units->name) != 'box') {
+                        $largestUnit = getLargestUnit($item->product->id, $item->deliveryDetail->id, $item->qty_packed);
+                        $qtyLarge = $largestUnit['qty_in_largest_unit'];
+                        $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
+                    }
+                }
+            }
+        }
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
 
+
+
+        $productSatuan = ProductUom::where('product', '1')->get()->toArray();
+
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
-        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail'))
+        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('PL-'.$data->payment_code.'.pdf');
+        return $pdf->stream('PL-' . $data->payment_code . '.pdf');
     }
 }
