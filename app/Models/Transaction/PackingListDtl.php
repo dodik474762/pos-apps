@@ -12,4 +12,8 @@ class PackingListDtl extends Model
     public function product(){
         return $this->hasOne(Product::class, 'id', 'product_id');
     }
+
+    public function deliveryDetail(){
+        return $this->hasOne(DeliveryOrderDtl::class, 'id', 'delivery_detail_id');
+    }
 }

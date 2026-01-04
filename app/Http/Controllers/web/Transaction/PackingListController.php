@@ -101,10 +101,12 @@ class PackingListController extends Controller
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'c.id as customer_id'])
-            ->with(['detail', 'detail.product'])
-            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
-            ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
+            ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->leftJoin('customer as c', 'c.id', 'doh.customer_id')
             ->get();
+        // echo '<pre>';
+        // print_r($data['details']);die;
 
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -146,7 +148,7 @@ class PackingListController extends Controller
         // print_r($data);die;
         $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number', 'sih.total_amount'])
-            ->with(['detail', 'detail.product'])
+            ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
             ->join('sales_invoice_header as sih', function($q){
                 return $q->on('sih.do_id', 'doh.id')
@@ -155,7 +157,7 @@ class PackingListController extends Controller
             ->join('customer as c', 'c.id', 'doh.customer_id')
             // ->where('doh.do_number', 'DO11250004')
             ->get();
-        $doIds = $details->pluck('delivery_order_id')->toArray();        
+        $doIds = $details->pluck('delivery_order_id')->toArray();
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
         ->select([
             'packing_list_detail.*',

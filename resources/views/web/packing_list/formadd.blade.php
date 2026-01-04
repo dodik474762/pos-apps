@@ -134,6 +134,7 @@
                                     <th>Product</th>
                                     <th>Qty DO</th>
                                     <th>Qty Packed</th>
+                                    <th>Satuan</th>
                                     <th>Remark</th>
                                 </tr>
                             </thead>
@@ -150,6 +151,7 @@
                                                         id="qty_pack"
                                                         value="{{ $prod->qty_packed }}">
                                                 </td>
+                                                <td>{{ $prod->deliveryDetail->units->name }}</td>
                                                 <td>
                                                     <input disabled type="text" class="form-control"
                                                         value="{{ $prod->remark }}">

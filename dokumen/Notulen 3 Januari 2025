@@ -1,0 +1,27 @@
+Packing List (Kepala Gudang)
+- Informasi Satuan di Packing List di sebelum field remark
+- grouping daftar product per satuan
+
+
+Toko A          Toko B  Toko C
+10 Karton 5 Pack 10 Pack 9 Pack
+Laporan Packing List
+- Product A 10 Karton | Product A 1 Karton (Assembly) (pakai satuan terbesar dan terkecil)
+
+To be:
+- Product A 10 Karton
+- Product A 24 Pack | 1 Karton (Assembly)
+- Product A 1 Pcs 
+
+
+- Batal Kirim 
+- Alasan *Batal* (ini akan trigger batal kirim ke nomor DO tersebut)
+- Jika dikirim ulang (kepala gudang akan action ke program)
+- Retur Tetap diaktifkan untuk driver
+- Invoice pengambilannya untuk driver harus berdasarkan PL bukan outstanding 
+- return bad stock diajukan oleh sales diotorisasi oleh superadmin 
+
+Modul Pickup Retur (ngambil dari peganjuan sales pickup dan not pickup)
+
+
+

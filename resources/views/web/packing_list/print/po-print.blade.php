@@ -179,6 +179,7 @@
                 <th>Nama Produk</th>
                 <th>Qty DO</th>
                 <th>Qty Pack</th>
+                <th>Satuan</th>
                 <th>Remark</th>
             </tr>
         </thead>
@@ -197,6 +198,7 @@
                         <td class="text-right">{{ number_format($d->qty_do, 2, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($d->qty_packed, 2, ',', '.') }}</td>
 
+                        <td>{{ $d->deliveryDetail->units->name ?? '-' }}</td>
                         <td>{{ $d->remark ?? '-' }}</td>
                     </tr>
             @endforeach
