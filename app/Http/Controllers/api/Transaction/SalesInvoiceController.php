@@ -606,10 +606,15 @@ class SalesInvoiceController extends Controller
      public function getOutstandingInvoice(Request $request){
         $data = $request->all();
         $customerId = isset($data['customer']) ? $data['customer'] : '0';
-        $customers = explode(',', $customerId);
-        $customers = array_unique($customers);
+        try {
+            $customers = explode(',', $customerId);
+            $customers = array_unique($customers);
+        } catch (\Throwable $th) {
+            //throw $th;
+            $customers = [];
+        }
 
-        if($customerId == '0'){
+        if($customerId == '0' || empty($customers)){
             /*driver invoice */
             $pl = new PackingListController();
             $packingListCustomer = $pl->getDataPackingList($request)->original;
