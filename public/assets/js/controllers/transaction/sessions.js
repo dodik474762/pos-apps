@@ -243,13 +243,13 @@ let Sessions = {
                     },
                 },
                 {
-                    data: "karyawan",
+                    data: "karyawan_name",
                     render: function (data, type, row) {
                         return row.karyawan_name;
                     },
                 },
                 {
-                    data: "date_prcess",
+                    data: "date_process",
                 },
                 {
                     data: "status",

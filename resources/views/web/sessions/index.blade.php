@@ -85,6 +85,7 @@
                                         <table class="table table-nowrap align-middle" id="table-data">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
+                                                    <th>No</th>
                                                     <th>Karyawan</th>
                                                     <th>Tanggal</th>
                                                     <th>Status</th>
