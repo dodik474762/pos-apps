@@ -462,8 +462,14 @@ class PackingListController extends Controller
             ->join('delivery_order_header as doh', 'doh.id', 'pld.delivery_order_id')
             ->join('customer as c', 'c.id', 'doh.customer_id')
             ->join('users as u', 'u.id', 'm.created_by')
-            ->where('m.packing_date', $packing_date)
+            // ->where('m.packing_date', $packing_date)
             ->whereNull('m.deleted')
+            ->where(function($q){
+                return $q->whereIn('m.status', ['PARTIAL'])->orWhereNull('m.status');
+            })
+            ->where(function($q){
+                return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
+            })
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
         $datadb = $datadb->get()->toArray();

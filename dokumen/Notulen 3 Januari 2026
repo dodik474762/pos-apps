@@ -15,7 +15,7 @@ To be:
 OK
 
 
-- Batal Kirim 
+- Batal Kirim (ikut not deliered)
 - Alasan *Batal* (ini akan trigger batal kirim ke nomor DO tersebut)
 - Jika dikirim ulang (kepala gudang akan action ke program)
 - Retur Tetap diaktifkan untuk driver OK
