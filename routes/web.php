@@ -546,6 +546,8 @@ Route::post('api/transaksi/packing_list/showModalDO', [TransactionPackingListCon
 Route::post('api/transaksi/packing_list/getDataDO', [TransactionPackingListController::class, 'getDataDO']);
 Route::post('api/transaksi/packing_list/getDOConfirmed', [TransactionPackingListController::class, 'getDOConfirmed']);
 Route::post('api/transaksi/packing_list/getDODetailConfirmed', [TransactionPackingListController::class, 'getDODetailConfirmed']);
+Route::post('api/transaksi/packing_list/cancelPl', [TransactionPackingListController::class, 'cancelPl']);
+Route::post('api/transaksi/packing_list/confirmCancel', [TransactionPackingListController::class, 'confirmCancel']);
 Route::post('api_mobile/transaksi/packing_list/getData', [TransactionPackingListController::class, 'getDataPackingList']);
 Route::post('api_mobile/transaksi/packing_list/confirmDeliver', [TransactionPackingListController::class, 'confirmDeliver']);
 

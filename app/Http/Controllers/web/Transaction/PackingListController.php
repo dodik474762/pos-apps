@@ -111,7 +111,7 @@ class PackingListController extends Controller
             ->flatten()
             ->groupBy([
                 fn($item) => $item->product->product_code,
-                fn($item) => $item->deliveryDetail->units->name,
+                fn($item) => $item->deliveryDetail->units->name ?? '',
             ]);
         // echo '<pre>';
         // print_r($data['details']);die;

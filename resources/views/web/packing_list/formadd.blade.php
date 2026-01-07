@@ -105,8 +105,20 @@
                             <tbody id="do-body">
                                 @if(!empty($details))
                                     @foreach($details as $row)
+                                        @php
+                                            $statusColor = '';
+                                            if($row->status == 'CONFIRMED'){
+                                                $statusColor = 'text-success';
+                                            }
+                                            if($row->status == 'NOT DELIVERED'){
+                                                $statusColor = 'text-danger';
+                                            }
+                                            if($row->status == 'CANCEL'){
+                                                $statusColor = 'text-danger';
+                                            }
+                                        @endphp
                                         <tr data_id="{{ $row->id }}">
-                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }}</td>
+                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }} {!!  $row->status == '' ? '' : '<label class="'.$statusColor.'" data_id="'.$row->id.'" status="'.$row->status.'" onclick="PackingList.cancelPl(this, event)">(' . $row->status . ') '.$row->remarks.'</label>' !!}</td>
                                             <td id="do_date">{{ $row->do_date }}</td>
                                             <td id="do_customer" data_id="{{ $row->customer_id }}">{{ $row->customer_code }} - {{ $row->nama_customer }}</td>
                                             <td class="text-center">
@@ -152,7 +164,7 @@
                                                             id="qty_pack"
                                                             value="{{ $prod->qty_packed }}">
                                                     </td>
-                                                    <td>{{ $prod->deliveryDetail->units->name }}</td>
+                                                    <td>{{ $prod->deliveryDetail->units->name ?? '-' }}</td>
                                                     <td>
                                                         <input disabled type="text" class="form-control"
                                                             value="{{ $prod->remark }}">

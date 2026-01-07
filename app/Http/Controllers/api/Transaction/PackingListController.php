@@ -363,6 +363,47 @@ class PackingListController extends Controller
         }
     }
 
+    public function confirmCancel(Request $request)
+    {
+        $data = $request->all();
+        $id = $data['id'];
+        DB::beginTransaction();
+
+        try {
+            $userId = session('user_id');
+
+            // ====== HEADER ======
+            $header = PackingListDo::find($id);
+
+            if (! $header) {
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+
+            // ====== UPDATE HEADER ======
+            $header->status = 'CANCEL';
+            $header->save();
+
+            DB::commit();
+
+            return response()->json([
+                'is_valid' => true,
+                'message' => 'Packing List berhasil dibatalkan'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'is_valid' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
     public function getDetailData($id)
     {
         DB::enableQueryLog();
@@ -382,6 +423,13 @@ class PackingListController extends Controller
         $data = $request->all();
 
         return view('web.packing_list.modal.confirmdelete', $data);
+    }
+
+    public function cancelPl(Request $request)
+    {
+        $data = $request->all();
+
+        return view('web.packing_list.modal.confirmbatal', $data);
     }
 
     public function showModalDO(Request $request)

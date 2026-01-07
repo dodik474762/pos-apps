@@ -252,6 +252,16 @@ let PackingList = {
                     data: "created_by_name",
                 },
                 {
+                    data: "status",
+                    render: function (data, type, row) {
+                        if(data){
+                            return data;
+                        }
+
+                        return 'Menunggu Konfirmasi Pengiriman';
+                    }
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
@@ -330,6 +340,45 @@ let PackingList = {
         });
     },
 
+    cancelPl: (elm, e) => {
+        e.preventDefault();
+        const status = $(elm).attr('status');
+        let allow = false;
+        if(status == 'NOT DELIVERED'){
+            allow = true;
+        }
+
+        if(allow == false){
+            message.sweetError('Informasi', 'Packing List Sudah Tidak Bisa Dibatalkan');
+            return;
+        }
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "cancelPl",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+
+            },
+        });
+    },
+
     confirmDelete: (elm) => {
         let params = {};
         params.id = $(elm).attr("data_id");
@@ -353,6 +402,39 @@ let PackingList = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    confirmCancel: (elm) => {
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "confirmCancel",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Dibatalkan");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
