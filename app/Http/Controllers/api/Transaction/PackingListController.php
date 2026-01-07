@@ -513,7 +513,7 @@ class PackingListController extends Controller
             // ->where('m.packing_date', $packing_date)
             ->whereNull('m.deleted')
             ->where(function($q){
-                return $q->whereIn('m.status', ['PARTIAL'])->orWhereNull('m.status');
+                return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
             })
             ->where(function($q){
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
@@ -562,6 +562,12 @@ class PackingListController extends Controller
                     $delivered++;
                 }
             }
+            if($delivered == 0){
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'NOT DELIVERED';
+                $plHeader->save();
+            }
+
             if($delivered == count($allDetailDo)){
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'CONFIRMED';
