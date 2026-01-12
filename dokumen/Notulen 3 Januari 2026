@@ -15,9 +15,9 @@ To be:
 OK
 
 
-- Batal Kirim (ikut not deliered)
-- Alasan *Batal* (ini akan trigger batal kirim ke nomor DO tersebut)
-- Jika dikirim ulang (kepala gudang akan action ke program)
+- Batal Kirim (ikut not deliered) OK
+- Alasan *Batal* (ini akan trigger batal kirim ke nomor DO tersebut) OK
+- Jika dikirim ulang (kepala gudang akan action ke program) OK
 - Retur Tetap diaktifkan untuk driver OK
 - Invoice pengambilannya untuk driver harus berdasarkan PL bukan outstanding  OK
 - return bad stock diajukan oleh sales diotorisasi oleh superadmin 
