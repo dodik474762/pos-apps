@@ -47,6 +47,11 @@ class PackingListController extends Controller
         return 'Packing List';
     }
 
+    public function getTitleSr()
+    {
+        return 'Packing List Pickup Retur';
+    }
+
     public function index()
     {
         $data['data'] = [];
@@ -58,6 +63,24 @@ class PackingListController extends Controller
         $view = view('web.packing_list.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
+    public function index_sr()
+    {
+        $data['data'] = [];
+        $data['title'] = $this->getTitleSr();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = $this->akses_menu;
+        // echo '<pre>';
+        // print_r($data);die;
+        $view = view('web.packing_list.index_sr', $data);
+        $put['title_content'] = $this->getTitleSr();
+        $put['title_top'] = $this->getTitleSr();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -83,6 +106,31 @@ class PackingListController extends Controller
         $view = view('web.packing_list.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
+    public function add_sr(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['code'] = generateNoPO();
+        $data['title'] = 'Form ' . $this->getTitleSr();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['details'] = [];
+        $data['general_ledgers'] = [];
+        $view = view('web.packing_list.formaddsr', $data);
+        $put['title_content'] = $this->getTitleSr();
+        $put['title_top'] = 'Form ' . $this->getTitleSr();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();

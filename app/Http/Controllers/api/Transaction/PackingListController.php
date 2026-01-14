@@ -9,6 +9,10 @@ use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\PackingListDtl;
+use App\Models\Transaction\PackingListReturn;
+use App\Models\Transaction\PackingListReturnDtl;
+use App\Models\Transaction\SalesReturnDtl;
+use App\Models\Transaction\SalesReturnHdr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -33,6 +37,55 @@ class PackingListController extends Controller
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->whereNull('m.deleted')
+            ->where('m.type_transaction', 'PL')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.packing_list_no', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.packing_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.vehicle_no', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.driver_name', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.expedition_name', 'LIKE', '%'.$keyword.'%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
+    public function getDataSr()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName().' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->whereNull('m.deleted')
+            ->where('m.type_transaction', 'SR')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -105,6 +158,67 @@ class PackingListController extends Controller
                     $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
+    public function getDataSalesRetur(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $do_choose = isset($data['data_do_chooce']) ? $data['data_do_chooce'] : [];
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+
+        $datadb = DB::table('sales_return as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'i.invoice_number',
+            ])
+            ->where('m.status', 'POSTED')
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->whereNull('m.deleted');
+         if(!empty($do_choose)){
+            $datadb->whereNotIn('m.id', $do_choose);
+        }
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                 $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.return_type', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.return_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.return_number', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('i.invoice_number', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
                 });
@@ -231,6 +345,7 @@ class PackingListController extends Controller
             $header->driver_name = $data['driver_name'];
             $header->expedition_name = $data['expedition_name'];
             $header->remarks = $data['remarks'];
+            $header->type_transaction = 'PL';
             $header->save();
 
             $hdrId = $header->id;
@@ -303,7 +418,118 @@ class PackingListController extends Controller
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Sales Payment berhasil disimpan';
+            $result['message'] = 'Packing List berhasil disimpan';
+            $result['so_id'] = $hdrId;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    public function submitSr(Request $request)
+    {
+        $data = $request->all();
+        $userId = session('user_id');
+        $result = ['is_valid' => false];
+
+        // echo '<pre>';
+        // print_r($data);die;
+
+
+        DB::beginTransaction();
+        try {
+
+            $header = empty($data['id'])
+                ? new PackingList()
+                : PackingList::find($data['id']);
+
+            if (empty($data['id'])) {
+                $header->packing_list_no = generateNoPL(); // misal helper
+                $header->created_by = $userId;
+            }
+
+            $header->packing_date = $data['packing_date'];
+            $header->vehicle_no = $data['vehicle_no'];
+            $header->driver_name = $data['driver_name'];
+            $header->expedition_name = $data['expedition_name'];
+            $header->remarks = $data['remarks'];
+            $header->type_transaction = 'SR';
+            $header->save();
+
+            $hdrId = $header->id;
+
+            // === DETAIL DO===
+            $details = empty($data['details']) ?  [] : collect($data['details']);
+            if(empty($details)){
+                DB::rollBack();
+                $result['is_valid'] = false;
+                $result['message'] = 'Detail SR tidak boleh kosong';
+                return response()->json($result);
+            }
+
+            foreach ($data['do_list'] as $key=>$value) {
+                // Skip baris yang ditandai untuk dihapus
+                if (!empty($value['remove']) && $value['remove'] == 1) {
+                    if (!empty($value['id'])) {
+                        $exist = PackingListReturn::find($value['id']);
+                        if ($exist) {
+                            $exist->delete();
+
+                            //DO kembali ke status confirm
+                            $do = SalesReturnHdr::find($value['delivery_order_id']);
+                            $do->status = 'POSTED';
+                            $do->save();
+
+                            $details = PackingListReturnDtl::where('packing_list_id', $hdrId)->where('sales_return_id', $value['delivery_order_id'])->get();
+                            foreach ($details as $key2 => $value2) {
+                                $value2->delete();
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                $detail = empty($value['id'])
+                    ? new PackingListReturn()
+                    : PackingListReturn::find($value['id']);
+
+                $detail->packing_list_id = $hdrId;
+                $detail->sales_return_id = $value['delivery_order_id'];
+                $detail->save();
+
+                $do = SalesReturnHdr::find($value['delivery_order_id']);
+                $do->status = 'PACKED';
+                $do->save();
+
+
+                $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
+                if(empty($details_do)){
+                    DB::rollBack();
+                    $result['is_valid'] = false;
+                    $result['message'] = 'Detail SR '.$value['do_number'].' tidak boleh kosong';
+                    return response()->json($result);
+                }
+
+                foreach ($details_do as $key2 => $value2) {
+                    $detailDo = new PackingListReturnDtl();
+                    $detailDo->packing_list_id = $hdrId;
+                    $detailDo->sales_return_id = $value['delivery_order_id'];
+                    $detailDo->product_id = $value2['product_id'];
+                    $detailDo->qty_do = $value2['qty_do'];
+                    $detailDo->qty_packed = $value2['qty_packed'];
+                    $detailDo->remark = $value2['remark'];
+                    $detailDo->sales_return_detail_id = $value2['id'];
+                    $detailDo->save();
+                }
+            }
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Packing List berhasil disimpan';
             $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -439,6 +665,41 @@ class PackingListController extends Controller
         return view('web.packing_list.modal.datado', $data);
     }
 
+    public function showModalSR(Request $request)
+    {
+        $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);die;
+
+        return view('web.packing_list.modal.datasr', $data);
+    }
+
+    public function getSRConfirmed(Request $request){
+        $data = $request->all();
+        $do_id = isset($data['do_id']) ? $data['do_id'] : '';
+        try {
+            //code...
+            $datadb = SalesReturnHdr::where('sales_return.id', $do_id)
+            ->select([
+                'sales_return.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'sales_return.return_number as do_number',
+                'sales_return.return_date as do_date'
+            ])
+            ->join('customer as c', 'c.id', 'sales_return.customer_id');
+
+            $datadb->where('sales_return.id', $do_id);
+            $datadb = $datadb->get();
+        } catch (\Throwable $th) {
+            echo $th->getMessage();die;
+        }
+
+        $data['data'] = $datadb;
+
+        return view('web.packing_list.datadooutstanding', $data);
+    }
+
     public function getDOConfirmed(Request $request){
         $data = $request->all();
         $do_id = isset($data['do_id']) ? $data['do_id'] : '';
@@ -476,6 +737,31 @@ class PackingListController extends Controller
             ])
             ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
             ->whereNull('delivery_order_detail.deleted');
+            $datadb = $datadb->get();
+        } catch (\Throwable $th) {
+            echo $th->getMessage();die;
+        }
+
+        $data['data'] = $datadb;
+
+        return view('web.packing_list.datadetaildo', $data);
+    }
+
+    public function getSRDetailConfirmed(Request $request){
+        $data = $request->all();
+        $do_id = isset($data['do_id']) ? $data['do_id'] : '';
+        try {
+            //code...
+            $datadb = SalesReturnDtl::where('sales_return_detail.return_id', $do_id)
+            ->select([
+                'sales_return_detail.*',
+                'p.code as product_code',
+                'p.name as product_name',
+                'sales_return_detail.return_id as do_id',
+                'sales_return_detail.qty_return as qty'
+            ])
+            ->join('product as p', 'p.id', 'sales_return_detail.product_id')
+            ->whereNull('sales_return_detail.deleted');
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
             echo $th->getMessage();die;

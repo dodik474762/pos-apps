@@ -261,6 +261,11 @@ Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])-
 Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');
 Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');
 
+Route::get('transaksi/packing_list_pr', [PackingListController::class, 'index_sr']);
+Route::get('transaksi/packing_list_pr/add', [PackingListController::class, 'add_sr'])->name('packing-list-sr-add');
+Route::get('transaksi/packing_list_pr/ubah', [PackingListController::class, 'ubah_sr'])->name('packing-list-sr-edit');
+Route::get('transaksi/packing_list_pr/cetak', [PackingListController::class, 'cetak_sr'])->name('packing-list-sr-print');
+
 Route::get('transaksi/pl_tagihan', [PLTagihanController::class, 'index'])->name('pl-tagihan-print-all');
 Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])->name('pl-tagihan-print');
 
@@ -550,6 +555,19 @@ Route::post('api/transaksi/packing_list/cancelPl', [TransactionPackingListContro
 Route::post('api/transaksi/packing_list/confirmCancel', [TransactionPackingListController::class, 'confirmCancel']);
 Route::post('api_mobile/transaksi/packing_list/getData', [TransactionPackingListController::class, 'getDataPackingList']);
 Route::post('api_mobile/transaksi/packing_list/confirmDeliver', [TransactionPackingListController::class, 'confirmDeliver']);
+
+Route::post('api/transaksi/packing_list_pr/getData', [TransactionPackingListController::class, 'getDataSr']);
+Route::post('api/transaksi/packing_list_pr/submit', [TransactionPackingListController::class, 'submitSr']);
+Route::post('api/transaksi/packing_list_pr/delete', [TransactionPackingListController::class, 'delete']);
+Route::post('api/transaksi/packing_list_pr/confirmDelete', [TransactionPackingListController::class, 'confirmDelete']);
+Route::post('api/transaksi/packing_list_pr/showModalSR', [TransactionPackingListController::class, 'showModalSR']);
+Route::post('api/transaksi/packing_list_pr/getDataSR', [TransactionPackingListController::class, 'getDataSalesRetur']);
+Route::post('api/transaksi/packing_list_pr/getSRConfirmed', [TransactionPackingListController::class, 'getSRConfirmed']);
+Route::post('api/transaksi/packing_list_pr/getSRDetailConfirmed', [TransactionPackingListController::class, 'getSRDetailConfirmed']);
+Route::post('api/transaksi/packing_list_pr/cancelPl', [TransactionPackingListController::class, 'cancelPl']);
+Route::post('api/transaksi/packing_list_pr/confirmCancel', [TransactionPackingListController::class, 'confirmCancel']);
+Route::post('api_mobile/transaksi/packing_list_pr/getData', [TransactionPackingListController::class, 'getDataPackingList']);
+Route::post('api_mobile/transaksi/packing_list_pr/confirmDeliver', [TransactionPackingListController::class, 'confirmDeliver']);
 
 Route::post('api_mobile/transaksi/presensi/submitPresensi', [PresensiController::class, 'submitPresensi']);
 Route::post('api_mobile/transaksi/presensi/getDataPresensi', [PresensiController::class, 'getDataPresensi']);

@@ -32,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/master/customer/submitNoo',
             'api_mobile/transaksi/packing_list/getData',
             'api_mobile/transaksi/packing_list/confirmDeliver',
+            'api_mobile/transaksi/packing_list_pr/getData',
+            'api_mobile/transaksi/packing_list_pr/confirmDeliver',
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })

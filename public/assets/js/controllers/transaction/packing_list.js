@@ -5,12 +5,20 @@ let PackingList = {
         return "transaksi/packing_list";
     },
 
+    modulePr: () => {
+        return "transaksi/packing_list_pr";
+    },
+
     csrf_token: () => {
         return $('meta[name="csrf-token"]').attr("content");
     },
 
     moduleApi: () => {
         return "api/" + PackingList.module();
+    },
+
+    modulePrApi: () => {
+        return "api/" + PackingList.modulePr();
     },
 
     moduleApiProduct: () => {
@@ -37,6 +45,11 @@ let PackingList = {
     add: (elm, e) => {
         e.preventDefault();
         window.location.href = url.base_url(PackingList.module()) + "add";
+    },
+
+    addSr: (elm, e) => {
+        e.preventDefault();
+        window.location.href = url.base_url(PackingList.modulePr()) + "add";
     },
 
     addAll: (elm, e) => {
@@ -143,6 +156,45 @@ let PackingList = {
         }
     },
 
+    submitSr: (elm, e) => {
+        e.preventDefault();
+        let form = $(elm).closest("div.row");
+        if (validation.runWithElement(form)) {
+            let params = PackingList.getPostInput(false);
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: params,
+                url: url.base_url(PackingList.modulePrApi()) + "submit",
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+                beforeSend: () => {
+                    message.loadingProses("Proses Simpan Data...");
+                },
+                error: function () {
+                    message.closeLoading();
+                    message.sweetError("Informasi", "Gagal");
+                },
+
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        message.sweetSuccess();
+                        setTimeout(function () {
+                            // window.location.reload();
+                            PackingList.back();
+                        }, 1000);
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
+        } else {
+            message.sweetError("Informasi", "Data Belum Lengkap");
+        }
+    },
+
     submitBulk: (elm, e) => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
@@ -186,6 +238,10 @@ let PackingList = {
         window.location.href = url.base_url(PackingList.module()) + "/";
     },
 
+    backSr: (elm) => {
+        window.location.href = url.base_url(PackingList.modulePr()) + "/";
+    },
+
     getData: async () => {
         let tableData = $("table#table-data");
 
@@ -216,6 +272,160 @@ let PackingList = {
             },
             ajax: {
                 url: url.base_url(PackingList.moduleApi()) + `getData`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "packing_list_no",
+                },
+                {
+                    data: "packing_date",
+                },
+                {
+                    data: "vehicle_no",
+                },
+                {
+                    data: "driver_name",
+                },
+                {
+                    data: "expedition_name",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
+                    data: "status",
+                    render: function (data, type, row) {
+                        if(data){
+                            return data;
+                        }
+
+                        return 'Menunggu Konfirmasi Pengiriman';
+                    }
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = `<a href='${url.base_url(
+                            PackingList.module()
+                        )}cetak?id=${data}' data_id="${
+                            row.id
+                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        if (updateAction == 1) {
+                            html += `<a href='${url.base_url(
+                                PackingList.module()
+                            )}ubah?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        }
+                        if (deleteAction == 1) {
+                            if (row.status == "PENDING") {
+                                html += `<button type="button" data_id="${row.id}" onclick="PackingList.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            }
+                        }
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
+    delete: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "delete",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-confirm-delete").html(resp);
+                $("#confirm-delete-btn").trigger("click");
+            },
+        });
+    },
+
+    getDataSr: async () => {
+        let tableData = $("table#table-data-sr");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(PackingList.modulePrApi()) + `getData`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": PackingList.csrf_token(),
@@ -517,6 +727,45 @@ let PackingList = {
         });
     },
 
+    showModalSR: (elm) => {
+        let params = {};
+        const payment_method = $("#payment_method").val();
+        if (payment_method == "") {
+            message.sweetError(
+                "Informasi",
+                "Pilih Payment Method Terlebih Dahulu"
+            );
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.modulePrApi()) + "showModalSR",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                PackingList.getDataSR();
+            },
+        });
+    },
+
     getDataDO: () => {
         const data_do_chooce = [];
         const table_do = $("#table-do tbody tr");
@@ -603,6 +852,86 @@ let PackingList = {
         });
     },
 
+    getDataSR: () => {
+        const data_do_chooce = [];
+        const table_do = $("#table-do tbody tr");
+        table_do.each(function () {
+            let do_ids = $(this).find("td#do_number").attr("data_id");
+            data_do_chooce.push(do_ids);
+        });
+
+        let tableData = $("table#table-data-modal");
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(PackingList.modulePrApi()) + `getDataSR`,
+                type: "POST",
+                data: {
+                    data_do_chooce: data_do_chooce,
+                },
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "return_number",
+                },
+                {
+                    data: "return_date",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="PackingList.pilihDataSR(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+
     pilihDataDO: (elm, e) => {
         e.preventDefault();
         const data_id = $(elm).attr("data_id");
@@ -610,6 +939,47 @@ let PackingList = {
 
         PackingList.getDOConfirmed(data_id);
         PackingList.getDODetailConfirmed(data_id);
+    },
+
+    pilihDataSR: (elm, e) => {
+        e.preventDefault();
+        const data_id = $(elm).attr("data_id");
+        $("button.btn-close").trigger("click");
+
+        PackingList.getSRConfirmed(data_id);
+        PackingList.getSRDetailConfirmed(data_id);
+    },
+
+    getSRConfirmed: (do_id) => {
+        let params = {
+            do_id: do_id,
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.modulePrApi()) + "getSRConfirmed",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-do");
+                table_items.find("tbody").append(resp);
+                // PackingList.hitungSummaryAll();
+            },
+        });
     },
 
     getDOConfirmed: (do_id) => {
@@ -654,6 +1024,37 @@ let PackingList = {
             dataType: "html",
             data: params,
             url: url.base_url(PackingList.moduleApi()) + "getDODetailConfirmed",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-items");
+                table_items.find("tbody").append(resp);
+            },
+        });
+    },
+
+    getSRDetailConfirmed: (do_id) => {
+        let params = {
+            do_id: do_id,
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.modulePrApi()) + "getSRDetailConfirmed",
             headers: {
                 "X-CSRF-TOKEN": PackingList.csrf_token(),
             },
@@ -1096,5 +1497,6 @@ let PackingList = {
 $(function () {
     PackingList.setSelect2();
     PackingList.getData();
+    PackingList.getDataSr();
     PackingList.editReload();
 });
