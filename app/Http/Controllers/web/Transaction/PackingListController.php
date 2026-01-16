@@ -10,6 +10,8 @@ use App\Models\Master\Tax;
 use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\PackingListDtl;
+use App\Models\Transaction\PackingListReturn;
+use App\Models\Transaction\PackingListReturnDtl;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -176,6 +178,46 @@ class PackingListController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function ubah_sr(Request $request)
+    {
+        $api = new TransactionPackingListController;
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['details'] = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])
+            ->select(['packing_list_sales_return.*', 'c.code as customer_code', 'c.nama_customer', 'sr.return_number as do_number', 'sr.return_date as do_date', 'c.id as customer_id'])
+            ->with(['detail', 'detail.returnDetail', 'detail.returnDetail.invoice.so_detail.units', 'detail.product'])
+            ->leftJoin('sales_return as sr', 'sr.id', 'packing_list_sales_return.sales_return_id')
+            ->leftJoin('customer as c', 'c.id', 'sr.customer_id')
+            ->get();
+        // echo '<pre>';
+        // print_r($data['details']);die;
+        $data['grouped'] = $data['details']
+            ->pluck('detail')
+            ->flatten()
+            ->groupBy([
+                fn($item) => $item->product->product_code,
+                fn($item) => $item->returnDetail->invoice->so_detail->units->name ?? '',
+            ]);
+        // echo '<pre>';
+        // print_r($data['details']);die;
+
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $view = view('web.packing_list.formaddsr', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function getCustomer($salesmanId)
     {
         $periodYear = intval(date('Y'));  // misal dari form input
@@ -254,6 +296,76 @@ class PackingListController extends Controller
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
         $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('PL-' . $data->payment_code . '.pdf');
+    }
+
+    public function cetak_sr(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data = PackingList::where('id', $data['id'])->first();
+        // echo '<pre>';
+        // print_r($data);die;
+        $details = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])
+            ->select(['packing_list_sales_return.*',
+            'c.code as customer_code', 'c.nama_customer', 'sr.return_number as do_number', 'sr.return_date as do_date',
+            'c.id as customer_id',
+            'sih.invoice_number',
+                'sih.total_amount',])
+            ->with(['detail', 'detail.returnDetail', 'detail.returnDetail.invoice.so_detail.units', 'detail.product'])
+            ->leftJoin('sales_return as sr', 'sr.id', 'packing_list_sales_return.sales_return_id')
+            ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
+            ->leftJoin('customer as c', 'c.id', 'sr.customer_id')
+            ->get();
+        // echo '<pre>';
+        // print_r($data['details']);die;
+
+        $doIds = $details->pluck('sales_return_id')->toArray();
+        $packingListDetail = PackingListReturnDtl::whereIn('packing_list_sales_return_detail.sales_return_id', $doIds)
+            ->select([
+                'packing_list_sales_return_detail.*',
+                'sr.return_number as do_number',
+                'sih.invoice_number',
+                'sih.total_amount',
+            ])
+            ->with(['product'])
+            ->join('sales_return as sr', 'sr.id', 'packing_list_sales_return_detail.sales_return_id')
+            ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
+            ->where('packing_list_sales_return_detail.packing_list_id', $data->id)
+            ->get();
+
+        $grouped = $details
+            ->pluck('detail')
+            ->flatten()
+            ->groupBy([
+                fn($item) => $item->product->product_code,
+                fn($item) => $item->returnDetail->invoice->so_detail->units->name
+            ]);
+
+        $productLargest = [];
+        foreach ($grouped as $key => $value) {
+            foreach ($value as $items) {
+                foreach ($items as $item) {
+                    if (strtolower($item->returnDetail->invoice->so_detail->units->name) != 'karton' && strtolower($item->returnDetail->invoice->so_detail->units->name) != 'box') {
+                        $largestUnit = getLargestUnit($item->product->id, $item->returnDetail->id, $item->qty_packed);
+                        $qtyLarge = $largestUnit['qty_in_largest_unit'];
+                        $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
+                    }
+                }
+            }
+        }
+        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
+        $qr = '';
+
+
+
+        $productSatuan = ProductUom::where('product', '1')->get()->toArray();
+
+        // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
+
+        $pdf = Pdf::loadView('web.packing_list.print.po-print-sr', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-' . $data->payment_code . '.pdf');

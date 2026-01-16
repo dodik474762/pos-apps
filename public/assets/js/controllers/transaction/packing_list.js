@@ -183,7 +183,7 @@ let PackingList = {
                         message.sweetSuccess();
                         setTimeout(function () {
                             // window.location.reload();
-                            PackingList.back();
+                            PackingList.backSr();
                         }, 1000);
                     } else {
                         message.sweetError("Informasi", resp.message);
@@ -468,20 +468,20 @@ let PackingList = {
                             return data;
                         }
 
-                        return 'Menunggu Konfirmasi Pengiriman';
+                        return 'Menunggu Konfirmasi Pickup';
                     }
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            PackingList.module()
+                            PackingList.modulePr()
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                PackingList.module()
+                                PackingList.modulePr()
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;

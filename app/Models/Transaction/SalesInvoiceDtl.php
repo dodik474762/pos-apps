@@ -3,6 +3,7 @@
 namespace App\Models\Transaction;
 
 use App\Models\Master\Product;
+use App\Models\Master\Unit;
 use Illuminate\Database\Eloquent\Model;
 
 class SalesInvoiceDtl extends Model
