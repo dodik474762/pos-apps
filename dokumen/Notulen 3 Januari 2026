@@ -20,9 +20,9 @@ OK
 - Jika dikirim ulang (kepala gudang akan action ke program) OK
 - Retur Tetap diaktifkan untuk driver OK
 - Invoice pengambilannya untuk driver harus berdasarkan PL bukan outstanding  OK
-- return bad stock diajukan oleh sales diotorisasi oleh superadmin 
+- return bad stock diajukan oleh sales diotorisasi oleh superadmin OK
 
-Modul Pickup Retur (ngambil dari peganjuan sales pickup dan not pickup)
+Modul Pickup Retur (ngambil dari peganjuan sales pickup dan not pickup) on progress mobile/ web done
 
 
 
