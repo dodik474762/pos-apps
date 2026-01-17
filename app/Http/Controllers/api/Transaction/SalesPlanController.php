@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Currency;
 use App\Models\Transaction\SalesPlanDetail;
+use App\Models\Transaction\SalesPlanDetailRoute;
 use App\Models\Transaction\SalesPlanHeader;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -183,7 +184,7 @@ class SalesPlanController extends Controller
                 // Skip baris yang ditandai untuk dihapus
                 if (! empty($item['remove']) && $item['remove'] == 1) {
                     if (! empty($item['id'])) {
-                        $exist = SalesPlanDetail::find($item['id']);
+                        $exist = SalesPlanDetailRoute::find($item['id']);
                         if ($exist && $exist->status !== 'DRAFT') {
                             DB::rollBack();
 
@@ -204,25 +205,22 @@ class SalesPlanController extends Controller
 
                 // Item baru atau update
                 $detail = empty($item['id'])
-                    ? new SalesPlanDetail
-                    : SalesPlanDetail::find($item['id']);
+                    ? new SalesPlanDetailRoute
+                    : SalesPlanDetailRoute::find($item['id']);
 
                 [$cust_id, $cust_name] = explode('//', $item['customer_name']);
                 $detail->header_id = $hdrId;
                 $detail->customer_id = $cust_id;
-                if ($item['product_name'] != '') {
-                    [$prod_id, $prod_name] = explode('//', $item['product_name']);
-                    $detail->product_id = $prod_id;
-                } else {
-                    $detail->product_id = 0;
-                }
-                $detail->week_number = $item['week_number'];
-                $detail->week_type = $item['week_type'];
-                $detail->day_of_week = $item['day_of_week'];
-                $detail->target_qty = $item['target_qty'] == '' ? 0 : $item['target_qty'];
-                $detail->target_value = $item['target_value'] == '' ? 0 : $item['target_value'];
+                $detail->visit_circle = $item['visit_type'];
+                $detail->visit_mon = $item['visit_mon'];
+                $detail->visit_tue = $item['visit_tue'];
+                $detail->visit_wed = $item['visit_wed'];
+                $detail->visit_thu = $item['visit_thu'];
+                $detail->visit_fri = $item['visit_fri'];
+                $detail->visit_sat = $item['visit_sat'];
+                $detail->visit_sun = $item['visit_sun'];
                 $detail->note = $item['note'];
-                $detail->type = $item['type'];
+                $detail->pjp_status = $item['type'];
                 $detail->save();
             }
 

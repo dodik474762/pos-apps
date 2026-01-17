@@ -37,31 +37,38 @@ let SalesPlan = {
 
        // Ambil data dari tabel detail (Plan Details)
     getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
-        let result = [];
+    const table = $("table#table-items tbody tr.input");
+    let result = [];
 
-        table.each((index, elm) => {
-            const $row = $(elm);
+    table.each((index, elm) => {
+        const $row = $(elm);
 
-            result.push({
-                id: $row.attr("data_id") || null,
-                customer_id: $row.find("#customer_id").attr("data_id") || null,
-                customer_name: $row.find("#customer_id").val() || "",
-                product_id: $row.find("#product").attr("data_id") || null,
-                product_name: $row.find("#product").val() || "",
-                week_number: parseInt($row.find("#week_number").val()) || 0,
-                week_type: $row.find("#week_type").val() || "",
-                day_of_week: $row.find("#day_of_week").val() || "",
-                target_qty: parseFloat($row.find("#target_qty").val()) || 0,
-                target_value: parseFloat($row.find("#target_value").val()) || 0,
-                note: $row.find("#note").val() || "",
-                type: $row.find("#type").val() || "PERMANEN",
-                remove: $row.hasClass("remove") ? 1 : 0
-            });
+        result.push({
+            id: $row.attr("data_id") || null,
+
+            customer_id: $row.find("#customer_id").attr("data_id") || null,
+            customer_name: $row.find("#customer_id").val() || "",
+
+            visit_type: $row.find("#visit_type").val() || "",
+
+            visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
+            visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
+            visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
+            visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
+            visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
+            visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
+            visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
+
+            note: $row.find("#note").val() || "",
+            type: $row.find("#type").val() || "PERMANEN",
+
+            remove: $row.hasClass("remove") ? 1 : 0
         });
+    });
 
-        return result;
-    },
+    return result;
+},
+
 
     // Ambil data utama dari header form
     getPostInput: () => {

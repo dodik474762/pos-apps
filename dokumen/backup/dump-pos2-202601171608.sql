@@ -574,7 +574,7 @@ CREATE TABLE `dictionary` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `file` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -583,7 +583,7 @@ CREATE TABLE `dictionary` (
 
 LOCK TABLES `dictionary` WRITE;
 /*!40000 ALTER TABLE `dictionary` DISABLE KEYS */;
-INSERT INTO `dictionary` VALUES (1,'GROUP_25OCT0001','SALESMAN','GROUP',NULL,'2025-10-30 03:01:49','2025-10-30 03:01:49',NULL),(2,'ROUTE_MODULE','Routing Approval Module',NULL,NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(3,'RT_ACCESS_ACC_1','Routing Approval 1','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(4,'RT_ACCESS_ACC_2','Routing Approval 2','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(5,'RT_ACCESS_ACC_3','Routing Approval 3','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(6,'RT_ACCESS_ACC_4','Routing Approval 4','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(7,'RT_ACCESS_ACC_5','Routing Approval 5','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(8,'RT_ACCESS_ACC_6','Routing Approval 6','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(9,'RT_ACCESS_ACC_7','Routing Approval 7','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(10,'RT_ACCESS_ACC_8','Routing Approval 8','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL);
+INSERT INTO `dictionary` VALUES (1,'GROUP_25OCT0001','SALESMAN','GROUP',NULL,'2025-10-30 03:01:49','2025-10-30 03:01:49',NULL),(2,'ROUTE_MODULE','Routing Approval Module',NULL,NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(3,'RT_ACCESS_ACC_1','Routing Approval 1','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(4,'RT_ACCESS_ACC_2','Routing Approval 2','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(5,'RT_ACCESS_ACC_3','Routing Approval 3','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(6,'RT_ACCESS_ACC_4','Routing Approval 4','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(7,'RT_ACCESS_ACC_5','Routing Approval 5','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(8,'RT_ACCESS_ACC_6','Routing Approval 6','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(9,'RT_ACCESS_ACC_7','Routing Approval 7','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(10,'RT_ACCESS_ACC_8','Routing Approval 8','ROUTE_MODULE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(11,'VISIT_TYPE','Tipe Kunjungan',NULL,NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(12,'F4','WEEKLY','VISIT_TYPE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(13,'F2-1','BE WEEKLY GANJIL','VISIT_TYPE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(14,'F2-2','BE WEEKLY GENAP','VISIT_TYPE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(15,'F3','3 WEEK CYCLE','VISIT_TYPE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL),(16,'F1','MONTHLY','VISIT_TYPE',NULL,'2024-11-25 04:34:51','2024-11-25 04:34:51',NULL);
 /*!40000 ALTER TABLE `dictionary` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2436,6 +2436,48 @@ LOCK TABLES `sales_plan_detail_customer` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sales_plan_detail_route`
+--
+
+DROP TABLE IF EXISTS `sales_plan_detail_route`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sales_plan_detail_route` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `header_id` bigint unsigned NOT NULL,
+  `customer_id` bigint unsigned NOT NULL,
+  `outlet_status` enum('REGULER','KANDIDAT') COLLATE utf8mb4_unicode_ci DEFAULT 'REGULER',
+  `visit_circle` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `visit_pattern` enum('WEEKLY','BIWEEKLY_ODD','BIWEEKLY_EVEN','MONTHLY','THREE_WEEK_CYCLE') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pjp_status` enum('PERMANEN','TEMPORARY','EXTRA CALL') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'PERMANEN',
+  `visit_mon` tinyint(1) DEFAULT '0',
+  `visit_tue` tinyint(1) DEFAULT '0',
+  `visit_wed` tinyint(1) DEFAULT '0',
+  `visit_thu` tinyint(1) DEFAULT '0',
+  `visit_fri` tinyint(1) DEFAULT '0',
+  `visit_sat` tinyint(1) DEFAULT '0',
+  `visit_sun` tinyint(1) DEFAULT '0',
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_header` (`header_id`),
+  KEY `idx_customer` (`customer_id`),
+  CONSTRAINT `fk_sales_plan_header` FOREIGN KEY (`header_id`) REFERENCES `sales_plan_header` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sales_plan_detail_route`
+--
+
+LOCK TABLES `sales_plan_detail_route` WRITE;
+/*!40000 ALTER TABLE `sales_plan_detail_route` DISABLE KEYS */;
+INSERT INTO `sales_plan_detail_route` VALUES (1,6,1,'REGULER','12','WEEKLY','PERMANEN',1,1,1,1,1,1,1,NULL,'2026-01-17 08:53:28','2026-01-17 08:53:28'),(2,6,2,'REGULER','13','WEEKLY','PERMANEN',1,1,1,1,1,1,1,NULL,'2026-01-17 08:53:28','2026-01-17 08:53:28'),(3,6,3,'REGULER','14','WEEKLY','PERMANEN',1,1,1,1,1,1,1,NULL,'2026-01-17 08:53:28','2026-01-17 08:53:28');
+/*!40000 ALTER TABLE `sales_plan_detail_route` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sales_plan_header`
 --
 
@@ -2460,7 +2502,7 @@ CREATE TABLE `sales_plan_header` (
   KEY `idx_period` (`period_year`,`period_month`),
   KEY `sales_plan_header_deleted_IDX` (`deleted`) USING BTREE,
   KEY `sales_plan_header_salesman_IDX` (`salesman`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2469,7 +2511,7 @@ CREATE TABLE `sales_plan_header` (
 
 LOCK TABLES `sales_plan_header` WRITE;
 /*!40000 ALTER TABLE `sales_plan_header` DISABLE KEYS */;
-INSERT INTO `sales_plan_header` VALUES (5,'RP11250001',2025,12,1,NULL,'1','DRAFT','2025-11-13 14:11:25',NULL,NULL,'2025-11-13 14:11:25');
+INSERT INTO `sales_plan_header` VALUES (5,'RP11250001',2025,12,1,NULL,'1','DRAFT','2025-11-13 14:11:25',NULL,NULL,'2025-11-13 14:11:25'),(6,'RP01260001',2026,1,1,NULL,'1','DRAFT','2026-01-17 08:53:27',NULL,NULL,'2026-01-17 08:53:27');
 /*!40000 ALTER TABLE `sales_plan_header` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3012,4 +3054,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-17 14:55:51
+-- Dump completed on 2026-01-17 16:08:58

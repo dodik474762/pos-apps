@@ -6,8 +6,10 @@ use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSales
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Customer;
+use App\Models\Master\Dictionary;
 use App\Models\Master\Product;
 use App\Models\Transaction\SalesPlanDetail;
+use App\Models\Transaction\SalesPlanDetailRoute;
 use App\Models\Transaction\SalesPlanHeader;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -65,6 +67,11 @@ class SalesPlanController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getListVisitType(){
+        $datadb = Dictionary::where('context', 'VISIT_TYPE')->get()->toArray();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = []; // Data header kosong untuk form
@@ -76,8 +83,9 @@ class SalesPlanController extends Controller
         $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
 
         $data['data_item'] = []; // Data detail kosong
+        $data['visit_types'] = $this->getListVisitType();
 
-        $view = view('web.sales_plan.formadd', $data);
+        $view = view('web.sales_plan.formaddnew', $data);
 
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -94,20 +102,18 @@ class SalesPlanController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
-        $data['sales_plan_details'] = SalesPlanDetail::where('sales_plan_detail.header_id', $data['id'])
+        $data['sales_plan_details'] = SalesPlanDetailRoute::where('sales_plan_detail_route.header_id', $data['id'])
             ->select([
-                'sales_plan_detail.*',
-                'p.id as product_id',
-                'p.name as product_name',
+                'sales_plan_detail_route.*',
                 'c.nama_customer',
             ])
-            ->join('customer as c', 'c.id', 'sales_plan_detail.customer_id')
-            ->leftJoin('product as p', 'p.id', 'sales_plan_detail.product_id')
+            ->join('customer as c', 'c.id', 'sales_plan_detail_route.customer_id')
             ->get();
 
+        $data['visit_types'] = $this->getListVisitType();
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $view = view('web.sales_plan.formadd', $data);
+        $view = view('web.sales_plan.formaddnew', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
