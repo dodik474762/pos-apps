@@ -517,6 +517,14 @@ class SalesPlanController extends Controller
         $weekOfMonth = $this->weekOfMonth($date);
         $dayColumn = 'visit_' . strtolower($date->format('D')); // mon,tue,...
 
+        // ISO Week (ISO-8601)
+
+        // Minggu selalu mulai Senin
+
+        // Week number berjalan terus lintas bulan & tahun
+
+        // Tidak pernah “reset” di awal bulan
+
         return DB::table('sales_plan_detail_route as spd')
             ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
             ->where('sph.salesman', $salesmanId)
