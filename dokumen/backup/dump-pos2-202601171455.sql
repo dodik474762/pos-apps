@@ -1033,7 +1033,7 @@ CREATE TABLE `mobile_session` (
   `deleted_by` int DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1042,7 +1042,7 @@ CREATE TABLE `mobile_session` (
 
 LOCK TABLES `mobile_session` WRITE;
 /*!40000 ALTER TABLE `mobile_session` DISABLE KEYS */;
-INSERT INTO `mobile_session` VALUES (1,1,'2025-12-25',6,1,1,'CLOSE','2025-12-25 11:22:34','2025-12-25 11:46:28',NULL,NULL,NULL);
+INSERT INTO `mobile_session` VALUES (1,1,'2025-12-25',6,1,1,'CLOSE','2025-12-25 11:22:34','2025-12-25 11:46:28',NULL,NULL,NULL),(2,1,'2026-01-17',NULL,NULL,NULL,'OPEN','2026-01-17 14:20:22','2026-01-17 14:20:22',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `mobile_session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1068,6 +1068,7 @@ CREATE TABLE `packing_list` (
   `created_by` int DEFAULT NULL,
   `status` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `type_transaction` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `driver` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `packing_list_no` (`packing_list_no`),
   KEY `packing_list_type_transaction_IDX` (`type_transaction`) USING BTREE
@@ -1080,7 +1081,7 @@ CREATE TABLE `packing_list` (
 
 LOCK TABLES `packing_list` WRITE;
 /*!40000 ALTER TABLE `packing_list` DISABLE KEYS */;
-INSERT INTO `packing_list` VALUES (1,'PL12250001','2025-12-10','TES','TES','TES','TES','2025-12-09 20:34:12','2026-01-15 04:09:04',NULL,NULL,1,'CONFIRMED','PL'),(2,'PL01260001','2026-01-03','AG 99010','bejo',NULL,NULL,'2026-01-02 22:36:12','2026-01-15 04:09:05',NULL,NULL,1,NULL,'PL'),(3,'PL01260002','2026-01-06','AG21314','TEJO',NULL,NULL,'2026-01-03 01:01:05','2026-01-15 04:09:05',NULL,NULL,1,NULL,'PL'),(5,'PL01260003','2026-01-16','te','asad','tts','tes','2026-01-16 04:20:43','2026-01-16 04:20:43',NULL,NULL,1,NULL,'SR');
+INSERT INTO `packing_list` VALUES (1,'PL12250001','2025-12-10','TES','TES','TES','TES','2025-12-09 20:34:12','2026-01-15 04:09:04',NULL,NULL,1,'CONFIRMED','PL',NULL),(2,'PL01260001','2026-01-03','AG 99010','bejo',NULL,NULL,'2026-01-02 22:36:12','2026-01-15 04:09:05',NULL,NULL,1,NULL,'PL',NULL),(3,'PL01260002','2026-01-06','AG21314','TEJO',NULL,NULL,'2026-01-03 01:01:05','2026-01-15 04:09:05',NULL,NULL,1,NULL,'PL',NULL),(5,'PL01260003','2026-01-16','te','asad','tts','tes','2026-01-16 04:20:43','2026-01-17 07:38:13',NULL,NULL,1,'CONFIRMED','SR',NULL);
 /*!40000 ALTER TABLE `packing_list` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1192,7 +1193,7 @@ CREATE TABLE `packing_list_sales_return` (
 
 LOCK TABLES `packing_list_sales_return` WRITE;
 /*!40000 ALTER TABLE `packing_list_sales_return` DISABLE KEYS */;
-INSERT INTO `packing_list_sales_return` VALUES (2,5,6,'2026-01-16 04:20:43','2026-01-16 04:20:43',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `packing_list_sales_return` VALUES (2,5,6,'2026-01-16 04:20:43','2026-01-17 07:38:13','2026-01-17 14:37:30','-7.3440724','112.5974216',1,'mobile','CONFIRMED','pickup');
 /*!40000 ALTER TABLE `packing_list_sales_return` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3011,4 +3012,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-16 12:30:00
+-- Dump completed on 2026-01-17 14:55:51

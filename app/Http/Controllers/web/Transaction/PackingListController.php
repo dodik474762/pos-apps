@@ -12,6 +12,7 @@ use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\PackingListDtl;
 use App\Models\Transaction\PackingListReturn;
 use App\Models\Transaction\PackingListReturnDtl;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,7 @@ class PackingListController extends Controller
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
+        $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $data['general_ledgers'] = [];
@@ -127,7 +129,7 @@ class PackingListController extends Controller
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['details'] = [];
         $data['general_ledgers'] = [];
         $view = view('web.packing_list.formaddsr', $data);
@@ -163,6 +165,7 @@ class PackingListController extends Controller
                 fn($item) => $item->product->product_code,
                 fn($item) => $item->deliveryDetail->units->name ?? '',
             ]);
+        $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
         // echo '<pre>';
         // print_r($data['details']);die;
 
@@ -205,6 +208,7 @@ class PackingListController extends Controller
             ]);
         // echo '<pre>';
         // print_r($data['details']);die;
+        $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

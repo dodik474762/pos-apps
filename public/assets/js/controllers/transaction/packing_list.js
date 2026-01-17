@@ -106,6 +106,7 @@ let PackingList = {
             packing_list_no: $("#packing_list_no").val() || null,
             packing_date: $("#packing_date").val() || null,
             vehicle_no: $("#vehicle_no").val() || null,
+            driver: $("#driver").val() || null,
             driver_name: $("#driver_name").val() || null,
             expedition_name: $("#expedition_name").val() || null,
             remarks: $("#remarks").val() || null,

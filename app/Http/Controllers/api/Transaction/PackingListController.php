@@ -13,6 +13,7 @@ use App\Models\Transaction\PackingListReturn;
 use App\Models\Transaction\PackingListReturnDtl;
 use App\Models\Transaction\SalesReturnDtl;
 use App\Models\Transaction\SalesReturnHdr;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -340,9 +341,12 @@ class PackingListController extends Controller
                 $header->created_by = $userId;
             }
 
+            $users = User::where('id', $data['driver'])->first();
+
             $header->packing_date = $data['packing_date'];
             $header->vehicle_no = $data['vehicle_no'];
-            $header->driver_name = $data['driver_name'];
+            $header->driver = $users->id;
+            $header->driver_name = $users->name;
             $header->expedition_name = $data['expedition_name'];
             $header->remarks = $data['remarks'];
             $header->type_transaction = 'PL';
@@ -451,9 +455,12 @@ class PackingListController extends Controller
                 $header->created_by = $userId;
             }
 
+            $users = User::where('id', $data['driver'])->first();
+
             $header->packing_date = $data['packing_date'];
             $header->vehicle_no = $data['vehicle_no'];
-            $header->driver_name = $data['driver_name'];
+            $header->driver = $users->id;
+            $header->driver_name = $users->name;
             $header->expedition_name = $data['expedition_name'];
             $header->remarks = $data['remarks'];
             $header->type_transaction = 'SR';

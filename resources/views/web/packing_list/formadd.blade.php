@@ -58,8 +58,15 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Driver Name</label>
-                                <input type="text" id="driver_name" class="form-control"
-                                       value="{{ $data->driver_name ?? '' }}">
+                                <select name="driver" id="driver" class="form-control required select2" error="Driver Harus Diisi">
+                                    <option value="">Pilih Driver</option>
+                                    @foreach ($list_users as $driver)
+                                        <option value="{{ $driver->id }}"
+                                            {{ isset($data->driver) && $data->driver == $driver->id ? 'selected' : '' }}>
+                                            {{ $driver->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                         </div>
