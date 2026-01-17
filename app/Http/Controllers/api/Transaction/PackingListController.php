@@ -815,6 +815,55 @@ class PackingListController extends Controller
         return response()->json($result);
     }
 
+    public function getDataPackingListPickup(Request $request){
+        $data = $request->all();
+        date_default_timezone_set('Asia/Jakarta');
+
+        $packing_date = date('Y-m-d');
+        $result['is_valid'] = true;
+
+        try {
+            $datadb = DB::table($this->getTableName().' as m')
+                ->select([
+                    'psr.id',
+                    'm.packing_list_no',
+                    'u.name as created_by_name',
+                    'sr.return_number as do_number',
+                    'sr.return_date as do_date',
+                    'c.code as customer_code',
+                    'c.id as customer_id',
+                    'c.nama_customer',
+                    DB::raw('1 as total_item'),
+                    'psr.confirm_date'
+                ])
+                ->join('packing_list_sales_return as psr', 'psr.packing_list_id', 'm.id')
+                ->join('sales_return as sr', 'sr.id', 'psr.sales_return_id')
+                ->join('customer as c', 'c.id', 'sr.customer_id')
+                ->join('users as u', 'u.id', 'm.created_by')
+                // ->where('m.packing_date', $packing_date)
+                ->whereNull('m.deleted')
+                ->where(function($q){
+                    return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
+                })
+                ->where(function($q){
+                    return $q->whereNull('psr.status')->orWhere('psr.status', 'NOT DELIVERED');
+                })
+                ->orderBy('c.nama_customer')
+                ->orderBy('sr.id', 'asc');
+            $datadb = $datadb->get()->toArray();
+            $result['message'] = 'Data berhasil diambil';
+        } catch (\Throwable $th) {
+            $result['is_valid'] = false;
+            //throw $th;
+            $result['message'] = $th->getMessage();
+        }
+
+        $result['data'] = $datadb;
+        $result['date'] = $packing_date;
+
+        return response()->json($result);
+    }
+
     public function confirmDeliver(Request $request){
         $data = json_decode($request->input('data'), true);
         $users_id = $data['user_id'];
@@ -842,6 +891,66 @@ class PackingListController extends Controller
             $roles->save();
 
             $allDetailDo = PackingListDo::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
+            $delivered = 0;
+            foreach ($allDetailDo as $key => $value) {
+                if($value['status'] == 'CONFIRMED'){
+                    $delivered++;
+                }
+            }
+            if($delivered == 0){
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'NOT DELIVERED';
+                $plHeader->save();
+            }
+
+            if($delivered == count($allDetailDo)){
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'CONFIRMED';
+                $plHeader->save();
+            }else{
+                $plHeader = PackingList::find($roles->packing_list_id);
+                $plHeader->status = 'PARTIAL';
+                $plHeader->save();
+            }
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function confirmDeliverPickup(Request $request){
+        $data = json_decode($request->input('data'), true);
+        $users_id = $data['user_id'];
+        // echo '<pre>';
+        // print_r($data);die;
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+
+            $roles = PackingListReturn::where('id', $data['id'])->first();
+            if(empty($roles)){
+                $result['message'] = 'Data tidak ditemukan';
+                return response()->json($result);
+            }
+
+            $periode = Carbon::parse($data['confirm_date'])->setTimezone('Asia/Jakarta');
+            $confirm_date = $periode->format('Y-m-d H:i:s');
+            $roles->confirm_date = $confirm_date;
+            $roles->latitude = $data['latitude'];
+            $roles->longitude = $data['longitude'];
+            $roles->platform = 'mobile';
+            $roles->remarks = $data['remarks'];
+            $roles->status = $data['state'] == 'delivered' ? 'CONFIRMED' : 'NOT DELIVERED';
+            $roles->confirm_by = $users_id;
+            $roles->save();
+
+            $allDetailDo = PackingListReturn::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
             $delivered = 0;
             foreach ($allDetailDo as $key => $value) {
                 if($value['status'] == 'CONFIRMED'){
