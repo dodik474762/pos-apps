@@ -508,4 +508,64 @@ class SalesPlanController extends Controller
 
         return response()->json($result);
     }
+
+      public function getDailyVisits($salesmanId, $date = null)
+    {
+        $date = $date ?? Carbon::today();
+
+        $weekNow = $date->isoWeek();           // ISO week number
+        $weekOfMonth = $this->weekOfMonth($date);
+        $dayColumn = 'visit_' . strtolower($date->format('D')); // mon,tue,...
+
+        return DB::table('sales_plan_detail_route as spd')
+            ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
+            ->where('sph.salesman', $salesmanId)
+            ->where('sph.status', 'ACTIVE')
+            ->where($dayColumn, 1)
+            ->where(function ($q) use ($weekNow, $weekOfMonth) {
+
+                // WEEKLY (F4)
+                $q->where('spd.visit_circle', 12);
+
+                // BIWEEKLY GANJIL (F2-1)
+                $q->orWhere(function ($qq) use ($weekNow) {
+                    $qq->where('spd.visit_circle', 13)
+                       ->whereRaw('MOD(?,2)=1', [$weekNow]);
+                });
+
+                // BIWEEKLY GENAP (F2-2)
+                $q->orWhere(function ($qq) use ($weekNow) {
+                    $qq->where('spd.visit_circle', 14)
+                       ->whereRaw('MOD(?,2)=0', [$weekNow]);
+                });
+
+                // 3 WEEK CYCLE (F3)
+                $q->orWhere(function ($qq) use ($weekNow) {
+                    $qq->where('spd.visit_circle', 15)
+                       ->whereRaw('MOD(?,3)=0', [$weekNow]);
+                });
+
+                // MONTHLY (F1)
+                $q->orWhere(function ($qq) use ($weekOfMonth) {
+                    $qq->where('spd.visit_circle', 16)
+                       ->whereRaw('? = 1', [$weekOfMonth]);
+                });
+
+            })
+            ->select([
+                'spd.id',
+                'spd.customer_id',
+                'spd.pjp_status',
+                'spd.note',
+                'spd.visit_circle',
+                'sph.plan_code',
+            ])
+            ->get();
+    }
+
+    private function weekOfMonth(Carbon $date): int
+    {
+        $firstWeek = $date->copy()->startOfMonth()->isoWeek();
+        return $date->isoWeek() - $firstWeek + 1;
+    }
 }
