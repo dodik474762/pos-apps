@@ -424,85 +424,23 @@ class SalesPlanController extends Controller
     public function getSalesRoutePlan(Request $request)
     {
         $today = Carbon::today();
-
-        // Nama hari (Monday, Tuesday, ...)
-        $dayName = $today->format('l');
-
-        // Minggu ke berapa dalam bulan
-        $weekOfMonth = $today->weekOfMonth;
-
-        // Tentukan ganjil / genap
-        $weekType = ($weekOfMonth % 2 === 0) ? 'EVEN' : 'ODD';
-
         $data = $request->all();
-        $month = date('m');
-        $year = date('Y');
+
+        $weekNow = $today->isoWeek();
+        $dayNow = strtolower($today->format('D'));
+        $weekOfMonth = $this->weekOfMonth($today);
+
         $salesman = isset($data['salesman']) ? $data['salesman'] : 1;
+        $route = $this->getDailyVisits($salesman, $today);
+        $datadb = $route;
 
-        // =======================
-        // Subquery invoice
-        // =======================
-        $invoiceSubquery = DB::table('sales_invoice_header as sih')
-            ->select(
-                'sih.customer_id',
-                DB::raw('SUM(sih.total_amount - sih.amount_paid) AS total_outstanding')
-            )
-            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])
-            ->whereNull('sih.deleted')
-            ->groupBy('sih.customer_id');
-
-        // =======================
-        // Query utama
-        // =======================
-        $datadb = DB::table('sales_plan_header as h')
-            ->join('sales_plan_detail as d', 'd.header_id', '=', 'h.id')
-            ->join('customer as c', 'c.id', '=', 'd.customer_id')
-            ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
-            ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
-            ->leftJoin('region as kt', 'kt.id', '=', 'c.kota')
-            ->leftJoin('region as kc', 'kc.id', '=', 'c.kecamatan')
-            ->leftJoin('region as kl', 'kl.id', '=', 'c.kelurahan')
-            ->leftJoin('product as p', 'p.id', '=', 'd.product_id')
-            ->leftJoinSub($invoiceSubquery, 'inv', function ($join) {
-                $join->on('inv.customer_id', '=', 'c.id');
-            })
-            ->select(
-                'h.*',
-                'd.*',
-                'c.code as customer_code',
-                'c.nama_customer',
-                'pr.name as nama_provinsi',
-                'kt.name as nama_kota',
-                'kc.name as nama_kecamatan',
-                'kl.name as nama_kelurahan',
-                'c.address',
-                'p.name as product_name',
-                'p.code as product_code',
-                'cc.category',
-                DB::raw('COALESCE(inv.total_outstanding, 0) as total_outstanding')
-            )
-            ->whereNull('h.deleted')
-            ->where('h.period_year', $year)
-            ->where('h.period_month', $month)
-            ->where('h.salesman', $salesman)
-
-            // =======================
-            // FILTER HARI & MINGGU
-            // =======================
-            ->where('d.week_number', $weekOfMonth)
-            ->where('d.week_type', $weekType)
-            ->where('d.day_of_week', $dayName)
-
-            ->orderBy('h.id')
-            ->orderBy('d.week_number')
-            ->get();
 
         $result['is_valid'] = empty($datadb) ? false : true;
         $result['data'] = $datadb;
         $result['week'] = [
             'week_number' => $weekOfMonth,
-            'week_type' => $weekType,
-            'day_of_week' => $dayName,
+            'day_of_week' => $dayNow,
+            'iso_week' => $weekNow,
             'date' => $today->format('Y-m-d'),
         ];
 
@@ -515,7 +453,7 @@ class SalesPlanController extends Controller
 
         $weekNow = $date->isoWeek();           // ISO week number
         $weekOfMonth = $this->weekOfMonth($date);
-        $dayColumn = 'visit_' . strtolower($date->format('D')); // mon,tue,...
+        $dayColumn = 'spd.visit_' . strtolower($date->format('D')); // mon,tue,...
 
         // ISO Week (ISO-8601)
 
@@ -525,10 +463,29 @@ class SalesPlanController extends Controller
 
         // Tidak pernah “reset” di awal bulan
 
-        return DB::table('sales_plan_detail_route as spd')
+        DB::enableQueryLog();
+        $invoiceSubquery = DB::table('sales_invoice_header as sih')
+            ->select(
+                'sih.customer_id',
+                DB::raw('SUM(sih.total_amount - sih.amount_paid) AS total_outstanding')
+            )
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])
+            ->whereNull('sih.deleted')
+            ->groupBy('sih.customer_id');
+
+        $datadb =  DB::table('sales_plan_detail_route as spd')
             ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
+            ->join('customer as c', 'c.id', '=', 'spd.customer_id')
+            ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
+            ->join('dictionary as vc', 'vc.id', '=', 'spd.visit_circle')
+            ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
+            ->leftJoin('region as kt', 'kt.id', '=', 'c.kota')
+            ->leftJoin('region as kc', 'kc.id', '=', 'c.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'c.kelurahan')
+            ->leftJoinSub($invoiceSubquery, 'inv', function ($join) {
+                $join->on('inv.customer_id', '=', 'c.id');
+            })
             ->where('sph.salesman', $salesmanId)
-            ->where('sph.status', 'ACTIVE')
             ->where($dayColumn, 1)
             ->where(function ($q) use ($weekNow, $weekOfMonth) {
 
@@ -560,15 +517,25 @@ class SalesPlanController extends Controller
                 });
 
             })
-            ->select([
-                'spd.id',
-                'spd.customer_id',
-                'spd.pjp_status',
-                'spd.note',
-                'spd.visit_circle',
-                'sph.plan_code',
-            ])
-            ->get();
+            ->select(
+                'sph.*',
+                'spd.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'pr.name as nama_provinsi',
+                'kt.name as nama_kota',
+                'kc.name as nama_kecamatan',
+                'kl.name as nama_kelurahan',
+                'c.address',
+                'cc.category',
+                DB::raw('COALESCE(inv.total_outstanding, 0) as total_outstanding'),
+                'vc.keterangan as visit_circle_name',
+                'vc.term_id as visit_circle_code'
+            );
+        $datadb = $datadb->get();
+        // echo '<pre>';
+        // print_r(DB::getQueryLog());die;
+        return $datadb;
     }
 
     private function weekOfMonth(Carbon $date): int
