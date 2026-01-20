@@ -394,6 +394,19 @@ class SalesOrderController extends Controller
         $periode = Carbon::parse($data['so_date'])->setTimezone('Asia/Jakarta');
         $so_date = $periode->format('Y-m-d H:i:s');
 
+        $check_in_time = null;
+        if(isset($data['check_in_time'])){
+            if(!empty($data['check_in_time'])){
+                $check_in_time = Carbon::parse($data['check_in_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
+            }
+        }
+        $check_out_time = null;
+        if(isset($data['check_out_time'])){
+            if(!empty($data['check_out_time'])){
+                $check_out_time = Carbon::parse($data['check_out_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
+            }
+        }
+
         list($customer_code, $customer_name) = explode('/', $data['customer_id']);
         $customers = Customer::where('code', trim($customer_code))->first();
         $customersId = $customers->id;
@@ -464,6 +477,8 @@ class SalesOrderController extends Controller
             $header->signature_path = $dbpathlampSignature.$fileTtdName;
             $header->latitude = $data['latitude'];
             $header->longitude = $data['longitude'];
+            $header->check_in_time = $check_in_time;
+            $header->check_out_time = $check_out_time;
             $header->save();
 
             $hdrId = $header->id;
