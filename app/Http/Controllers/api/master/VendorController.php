@@ -115,8 +115,8 @@ class VendorController extends Controller
             'r.name as region_name',
             'c.name as city_name'
         ])
-        ->join('region as r', 'r.id', 'm.region')
-        ->join('region as c', 'c.id', 'm.city')
+        ->leftJoin('region as r', 'r.id', 'm.region')
+        ->leftJoin('region as c', 'c.id', 'm.city')
         ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
