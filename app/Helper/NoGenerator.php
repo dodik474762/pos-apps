@@ -991,7 +991,7 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
             'product' => $value['product'],
             'unit' => $baseUnit,
             'warehouse' => $warehouseId,
-            'qty' => $convertedQty,
+            'qty' => $type == 'add' ? $convertedQty : $convertedQty * -1,
             'avg_cost' => $value['price'] ?? 0,
             'created_at' => now(),
         ]);
