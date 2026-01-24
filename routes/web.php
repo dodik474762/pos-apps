@@ -114,6 +114,7 @@ Route::get('master/unit/ubah', [UnitController::class, 'ubah']);
 Route::get('master/product', [ProductController::class, 'index']);
 Route::get('master/product/add', [ProductController::class, 'add']);
 Route::get('master/product/ubah', [ProductController::class, 'ubah']);
+Route::get('master/product/import', [ProductController::class, 'import']);
 
 Route::get('master/product_type', [ProductTypeController::class, 'index']);
 Route::get('master/product_type/add', [ProductTypeController::class, 'add']);
@@ -313,6 +314,7 @@ Route::post('api/master/unit/confirmDelete', [MasterUnitController::class, 'conf
 
 Route::post('api/master/product/getData', [MasterProductController::class, 'getData']);
 Route::post('api/master/product/submit', [MasterProductController::class, 'submit']);
+Route::post('api/master/product/submit_import', [MasterProductController::class, 'submit_import']);
 Route::post('api/master/product/delete', [MasterProductController::class, 'delete']);
 Route::post('api/master/product/confirmDelete', [MasterProductController::class, 'confirmDelete']);
 Route::post('api/master/product/addItemLevel', [MasterProductController::class, 'addItemLevel']);
