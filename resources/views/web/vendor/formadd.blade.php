@@ -108,6 +108,23 @@
                                     @endif
                                 </select>
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Type</label>
+                                <select class="form-control" error="Type" id="product_type">
+                                    @foreach ($product_type as $item)
+                                        <option value="{{ $item->id }}" {{ isset($data->product_type) ? ($data->product_type == $item->id ? 'selected' : '') : '' }}>{{ $item->type }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Channel</label>
+                                <select class="form-control" error="Channel" id="channel">
+                                    <option value=""></option>
+                                    @foreach ($list_channel as $item)
+                                        <option value="{{ $item }}" {{ isset($data->channel) ? ($data->channel == $item ? 'selected' : '') : '' }}>{{ $item }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </form>

@@ -46,6 +46,8 @@ let Vendor = {
             city: $("#city").val(),
             region: $("#region").val(),
             category: $("#category").val(),
+            product_type: $("#product_type").val(),
+            channel: $("#channel").val(),
         };
 
         return data;
