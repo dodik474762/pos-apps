@@ -75,6 +75,13 @@
                                         value="{{ isset($data->group_name) ? $data->group_name : '' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Latitude</label>
+                                <div>
+                                    <input tabindex="11" type="text" id="latitude" class="form-control" error="Latitude"
+                                        placeholder="Latitude Ex : -6.200000" value="{{ isset($data->latitude) ? $data->latitude : '' }}">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-lg-6">
@@ -114,6 +121,13 @@
                                     <input type="number" min="0" id="max_retur" class="form-control required"
                                         error="Max Retur" placeholder="Max Retur"
                                         value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Longitude</label>
+                                <div>
+                                    <input tabindex="12" type="text" id="longitude" class="form-control" error="Longitude"
+                                        placeholder="Longitude Ex : 106.816666" value="{{ isset($data->longitude) ? $data->longitude : '' }}">
                                 </div>
                             </div>
                         </div>

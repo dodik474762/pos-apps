@@ -91,6 +91,8 @@ class KaryawanController extends Controller
             $roles->bank_number = $data['bank_number'];
             $roles->bank_complete_name = $data['bank_complete_name'];
             $roles->max_retur = $data['max_retur'];
+            $roles->latitude = $data['latitude'];
+            $roles->longitude = $data['longitude'];
             // $roles->group = $data['group'];
             $roles->save();
             $kryId = $roles->id;

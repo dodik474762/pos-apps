@@ -44,6 +44,8 @@ let Karyawan = {
             bank_complete_name: $("#bank_name").find("option:selected").text(),
             group: $("#group").val(),
             max_retur: $("#max_retur").val(),
+            latitude: $("#latitude").val(),
+            longitude: $("#longitude").val(),
             items: Karyawan.getPostItem(),
         };
 
