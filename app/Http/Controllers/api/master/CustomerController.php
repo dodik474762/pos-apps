@@ -138,6 +138,7 @@ class CustomerController extends Controller
         $data = $request->all();
         // echo '<pre>';
         // print_r($data);die;
+        $files_outlet = $request->file('photo_path');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -147,6 +148,20 @@ class CustomerController extends Controller
                 $roles->code = generateCodeCustomer();
                 $roles->users = session('user_id');
             }
+
+            $dir = 'berkas/document/outlet/';
+            $dir .= date('Y').'/'.date('m');
+            $pathlamp = public_path().'/'.$dir.'/';
+            // Create the directory if it doesn't exist
+            if (! File::isDirectory($pathlamp)) {
+                File::makeDirectory($pathlamp, 0777, true, true);
+            }
+
+            $fileOutletName = 'outlet_noo'.time().'.jpg';
+
+            $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            $dbpathlampOutlet = '/'.$dir.'/';
+            $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
             // $roles->branch = $data['branch'];
             $roles->pic = $data['pic'];
             $roles->no_ktp = $data['no_ktp'];

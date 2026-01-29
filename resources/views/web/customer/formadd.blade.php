@@ -198,6 +198,22 @@
                                         placeholder="Latitude Ex : -6.200000" value="{{ isset($data->latitude) ? $data->latitude : '' }}">
                                 </div>
                             </div>
+
+                            <div class="mb-3">
+                            <label class="form-label">Foto Customer</label>
+                                <input
+                                    type="file"
+                                    id="photo_path"
+                                    class="form-control required"
+                                    error="Foto Customer"
+                                    accept="image/*">
+                                @if (isset($data->photo_path))
+                                    @if ($data->photo_path != '')
+                                        <br/>
+                                        <a href="{{ $data->photo_path }}">Check File Uploaded</a>
+                                    @endif
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </form>

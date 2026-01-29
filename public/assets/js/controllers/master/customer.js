@@ -46,34 +46,70 @@ let Customer = {
         window.location.href = url.base_url(Customer.module()) + "add";
     },
 
-    getPostInput: () => {
-        let data = {
-            id: $("input#id").val(),
-            nama_customer: $("#nama_customer").val(),
-            pic: $("#pic").val(),
-            phone: $("#phone").val(),
-            office_contact: $("#office_contact").val(),
-            email: $("#email").val(),
-            address: $("#address").val(),
-            kota: $("#kota").val(),
-            provinsi: $("#provinsi").val(),
-            npwp: $("#npwp").val(),
-            currency: $("#currency").val(),
-            price_list: $("#price_list").val(),
-            payment_terms: $("#payment_terms").val(),
-            credit_limit: $("#credit_limit").val(),
-            customer_category: $("#customer_category").val(),
-            no_ktp: $("#no_ktp").val(),
-            kecamatan: $("#kecamatan").val(),
-            kelurahan: $("#kelurahan").val(),
-            reference_number: $("#reference_number").val(),
-            max_retur: $("#max_retur").val(),
-            latitude: $("#latitude").val(),
-            longitude: $("#longitude").val(),
-        };
+    // getPostInput: () => {
+    //     let data = {
+    //         id: $("input#id").val(),
+    //         nama_customer: $("#nama_customer").val(),
+    //         pic: $("#pic").val(),
+    //         phone: $("#phone").val(),
+    //         office_contact: $("#office_contact").val(),
+    //         email: $("#email").val(),
+    //         address: $("#address").val(),
+    //         kota: $("#kota").val(),
+    //         provinsi: $("#provinsi").val(),
+    //         npwp: $("#npwp").val(),
+    //         currency: $("#currency").val(),
+    //         price_list: $("#price_list").val(),
+    //         payment_terms: $("#payment_terms").val(),
+    //         credit_limit: $("#credit_limit").val(),
+    //         customer_category: $("#customer_category").val(),
+    //         no_ktp: $("#no_ktp").val(),
+    //         kecamatan: $("#kecamatan").val(),
+    //         kelurahan: $("#kelurahan").val(),
+    //         reference_number: $("#reference_number").val(),
+    //         max_retur: $("#max_retur").val(),
+    //         latitude: $("#latitude").val(),
+    //         longitude: $("#longitude").val(),
+    //     };
 
-        return data;
+    //     return data;
+    // },
+
+    getPostInput: () => {
+        let formData = new FormData();
+
+        formData.append("id", $("input#id").val());
+        formData.append("nama_customer", $("#nama_customer").val());
+        formData.append("pic", $("#pic").val());
+        formData.append("phone", $("#phone").val());
+        formData.append("office_contact", $("#office_contact").val());
+        formData.append("email", $("#email").val());
+        formData.append("address", $("#address").val());
+        formData.append("kota", $("#kota").val());
+        formData.append("provinsi", $("#provinsi").val());
+        formData.append("npwp", $("#npwp").val());
+        formData.append("currency", $("#currency").val());
+        formData.append("price_list", $("#price_list").val());
+        formData.append("payment_terms", $("#payment_terms").val());
+        formData.append("credit_limit", $("#credit_limit").val());
+        formData.append("customer_category", $("#customer_category").val());
+        formData.append("no_ktp", $("#no_ktp").val());
+        formData.append("kecamatan", $("#kecamatan").val());
+        formData.append("kelurahan", $("#kelurahan").val());
+        formData.append("reference_number", $("#reference_number").val());
+        formData.append("max_retur", $("#max_retur").val());
+        formData.append("latitude", $("#latitude").val());
+        formData.append("longitude", $("#longitude").val());
+
+        // FOTO (single upload)
+        let photo = $("#photo_path")[0].files[0];
+        if (photo) {
+            formData.append("photo_path", photo);
+        }
+
+        return formData;
     },
+
 
     submit: (elm, e) => {
         e.preventDefault();
@@ -85,6 +121,8 @@ let Customer = {
                 dataType: "json",
                 data: params,
                 url: url.base_url(Customer.moduleApi()) + "submit",
+                processData: false, // 🔥 WAJIB
+                contentType: false, // 🔥 WAJIB
                 headers: {
                     "X-CSRF-TOKEN": Customer.csrf_token(),
                 },
