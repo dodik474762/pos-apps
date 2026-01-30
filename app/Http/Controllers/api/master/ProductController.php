@@ -821,8 +821,8 @@ class ProductController extends Controller
                         $product_disc_strata = isset($data['disc_strata_id'][$i]) ? ProductDisc::find($data['disc_strata_id'][$i]) : new ProductDisc();
                         $product_disc_strata->product = $data['id'];
                         $product_disc_strata->unit = $data['uom_disc_id'][$i];
-                        $product_disc_strata->min_qty = $data['min_qty'][$i];
-                        $product_disc_strata->max_qty = $data['max_qty'][$i];
+                        $product_disc_strata->min_qty = $data['min_disc_qty'][$i];
+                        $product_disc_strata->max_qty = $data['max_disc_qty'][$i];
                         $product_disc_strata->discount_type = $data['disc_type'][$i];
                         $product_disc_strata->discount_value = $data['disc_value'][$i];
                         $product_disc_strata->date_start = $data['date_start_disc'][$i];

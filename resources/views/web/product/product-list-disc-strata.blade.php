@@ -53,11 +53,11 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" id="min_qty" name="min_qty[]" class="form-control required"
+                                <input type="number" id="min_qty" name="min_disc_qty[]" class="form-control required"
                                     error="Min Qty" min="1" value="{{ $v->min_qty }}">
                             </td>
                             <td>
-                                <input type="number" id="max_qty" name="max_qty[]" class="form-control required"
+                                <input type="number" id="max_qty" name="max_disc_qty[]" class="form-control required"
                                     error="Max Qty" min="1" value="{{ $v->max_qty }}">
                             </td>
                             <td>
