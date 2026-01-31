@@ -17,17 +17,12 @@
                               <th>Kode Produk</th>
                               <th>Produk</th>
                               <th>Satuan</th>
-                              <th>Min Qty</th>
-                              <th>Max Qty</th>
-                              <th>Customer</th>
-                              <th>Harga</th>
-                              <th>Tanggal Berlaku</th>
                               <th>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="10">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="5">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>

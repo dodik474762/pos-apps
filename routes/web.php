@@ -5,6 +5,7 @@ use App\Http\Controllers\api\master\CoaController as MasterCoaController;
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\PasarController as MasterPasarController;
 use App\Http\Controllers\api\master\DayoffController as MasterDayoffController;
 use App\Http\Controllers\api\master\GroupController as MasterGroupController;
 use App\Http\Controllers\api\master\ItemController as MasterItemController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\web\master\CoaController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\PasarController;
 use App\Http\Controllers\web\master\DayoffController;
 use App\Http\Controllers\web\master\GroupController;
 use App\Http\Controllers\web\master\ItemController;
@@ -104,6 +106,10 @@ Route::get('master/customer', [CustomerController::class, 'index']);
 Route::get('master/customer/add', [CustomerController::class, 'add']);
 Route::get('master/customer/detail', [CustomerController::class, 'detail']);
 Route::get('master/customer/ubah', [CustomerController::class, 'ubah']);
+
+Route::get('master/pasar', [PasarController::class, 'index']);
+Route::get('master/pasar/add', [PasarController::class, 'add']);
+Route::get('master/pasar/ubah', [PasarController::class, 'ubah']);
 
 Route::get('approval/customer', [CustomerController::class, 'index_acc']);
 
@@ -306,6 +312,15 @@ Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
 Route::post('api_mobile/master/customer/getProvinsi', [MasterCustomerController::class, 'getProvinsi']);
 Route::post('api_mobile/master/customer/submitNoo', [MasterCustomerController::class, 'submitNoo']);
+
+Route::post('api/master/pasar/getData', [MasterPasarController::class, 'getData']);
+Route::post('api/master/pasar/getDataAcc', [MasterPasarController::class, 'getDataAcc']);
+Route::post('api/master/pasar/submit', [MasterPasarController::class, 'submit']);
+Route::post('api/master/pasar/approve', [MasterPasarController::class, 'approve']);
+Route::post('api/master/pasar/delete', [MasterPasarController::class, 'delete']);
+Route::post('api/master/pasar/confirmDelete', [MasterPasarController::class, 'confirmDelete']);
+Route::post('api/master/pasar/getCity', [MasterPasarController::class, 'getCity']);
+Route::post('api/master/pasar/getKecamatan', [MasterPasarController::class, 'getKecamatan']);
 
 Route::post('api/master/unit/getData', [MasterUnitController::class, 'getData']);
 Route::post('api/master/unit/submit', [MasterUnitController::class, 'submit']);

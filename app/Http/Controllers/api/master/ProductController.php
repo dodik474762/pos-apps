@@ -1163,6 +1163,6 @@ class ProductController extends Controller
     public function showDataProduct(Request $request)
     {
         $data = $request->all();
-        return view('web.product.modal.dataproduct', $data);
+        return view('web.product.modal.dataproductchooce', $data);
     }
 }
