@@ -100,6 +100,7 @@ let Customer = {
         formData.append("max_retur", $("#max_retur").val());
         formData.append("latitude", $("#latitude").val());
         formData.append("longitude", $("#longitude").val());
+        formData.append("pasar", $("#pasar").val());
 
         // FOTO (single upload)
         let photo = $("#photo_path")[0].files[0];

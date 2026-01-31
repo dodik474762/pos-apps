@@ -123,6 +123,17 @@
                                         placeholder="Longitude Ex : 106.816666" value="{{ isset($data->longitude) ? $data->longitude : '' }}">
                                 </div>
                             </div>
+                              <div class="mb-3">
+                                <label class="form-label">Pasar</label>
+                                <select class="form-control select2" error="Pasar" id="pasar">
+                                    <option value=""></option>
+                                    @foreach ($pasars as $item)
+                                        <option value="{{ $item->id }}"
+                                            {{ isset($data->pasar) ? ($data->pasar == $item->id ? 'selected' : '') : '' }}>
+                                            {{ $item->nama_pasar }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">

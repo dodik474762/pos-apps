@@ -83,6 +83,13 @@ class CustomerController extends Controller
         return $datadb;
     }
 
+    public function getPasar(){
+        $datadb = DB::table('pasar')->whereNull('deleted')
+        ->get();
+
+        return $datadb;
+    }
+
     public function add(){
         $data['data'] = [];
         $data['title'] = 'Form '.$this->getTitle();
@@ -93,6 +100,7 @@ class CustomerController extends Controller
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
         $data['tops'] = $this->getTerms();
+        $data['pasars'] = $this->getPasar();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -109,6 +117,7 @@ class CustomerController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
+        $data['pasars'] = $this->getPasar();
 
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -131,6 +140,7 @@ class CustomerController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
+        $data['pasars'] = $this->getPasar();
 
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

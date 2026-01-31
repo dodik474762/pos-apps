@@ -185,6 +185,7 @@ class CustomerController extends Controller
             $roles->max_retur = $data['max_retur'];
             $roles->latitude = $data['latitude'];
             $roles->longitude = $data['longitude'];
+            $roles->pasar = $data['pasar'];
             $roles->save();
 
             // $nik_upt = new KaryawanHasUpt();
