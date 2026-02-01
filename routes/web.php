@@ -16,6 +16,7 @@ use App\Http\Controllers\api\master\MenuController as MasterMenuController;
 use App\Http\Controllers\api\master\PermissionsController as MasterPermissionsController;
 use App\Http\Controllers\api\master\ProductController as MasterProductController;
 use App\Http\Controllers\api\master\ProductTypeController as MasterProductTypeController;
+use App\Http\Controllers\api\master\PromoItemController as MasterPromoItemController;
 use App\Http\Controllers\api\master\ProvinceController as MasterProvinceController;
 use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
@@ -59,6 +60,7 @@ use App\Http\Controllers\web\master\MenuController;
 use App\Http\Controllers\web\master\PermissionsController;
 use App\Http\Controllers\web\master\ProductController;
 use App\Http\Controllers\web\master\ProductTypeController;
+use App\Http\Controllers\web\master\PromoItemController;
 use App\Http\Controllers\web\master\ProvinceController;
 use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\RoutingApprovalController;
@@ -161,6 +163,10 @@ Route::get('master/group/ubah', [GroupController::class, 'ubah']);
 Route::get('master/routing', [RoutingApprovalController::class, 'index']);
 Route::get('master/routing/add', [RoutingApprovalController::class, 'add']);
 Route::get('master/routing/ubah', [RoutingApprovalController::class, 'ubah']);
+
+Route::get('master/promo_item', [PromoItemController::class, 'index']);
+Route::get('master/promo_item/add', [PromoItemController::class, 'add']);
+Route::get('master/promo_item/ubah', [PromoItemController::class, 'ubah']);
 
 Route::get('master/dayoff', [DayoffController::class, 'index']);
 Route::get('master/dayoff/add', [DayoffController::class, 'add']);
@@ -397,6 +403,12 @@ Route::post('api/master/routing/submit', [MasterRoutingApprovalController::class
 Route::post('api/master/routing/delete', [MasterRoutingApprovalController::class, 'delete']);
 Route::post('api/master/routing/confirmDelete', [MasterRoutingApprovalController::class, 'confirmDelete']);
 Route::post('api/master/routing/showDataUsers', [MasterRoutingApprovalController::class, 'showDataUsers']);
+
+Route::post('api/master/promo_item/getData', [MasterPromoItemController::class, 'getData']);
+Route::post('api/master/promo_item/submit', [MasterPromoItemController::class, 'submit']);
+Route::post('api/master/promo_item/delete', [MasterPromoItemController::class, 'delete']);
+Route::post('api/master/promo_item/confirmDelete', [MasterPromoItemController::class, 'confirmDelete']);
+Route::post('api/master/promo_item/showDataUsers', [MasterPromoItemController::class, 'showDataUsers']);
 
 Route::post('api/master/dayoff/getData', [MasterDayoffController::class, 'getData']);
 Route::post('api/master/dayoff/submit', [MasterDayoffController::class, 'submit']);

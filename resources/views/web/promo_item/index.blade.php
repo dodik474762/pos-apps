@@ -1,8 +1,8 @@
 
-@if (isset($akses->routing_approval))
-    @if ($akses->routing_approval->view == 1)
-        <input type="hidden" id="update" value="{{ $akses->routing_approval->update }}">
-        <input type="hidden" id="delete" value="{{ $akses->routing_approval->delete }}">
+@if (isset($akses->promo_item))
+    @if ($akses->promo_item->view == 1)
+        <input type="hidden" id="update" value="{{ $akses->promo_item->update }}">
+        <input type="hidden" id="delete" value="{{ $akses->promo_item->delete }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
@@ -31,10 +31,10 @@
                                 <h5 class="card-title mb-0">{{ $title }} History</h5>
                             </div>
                             <div class="col-sm-auto">
-                                @if ($akses->routing_approval->insert == 1)
+                                @if ($akses->promo_item->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
-                                            id="create-btn" href="javascript:void(0);" onclick="RoutingApproval.add(this, event)"><i
+                                            id="create-btn" href="javascript:void(0);" onclick="PromoItem.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
                                     </div>
                                 @endif
@@ -83,9 +83,7 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th class="sort" data-sort="id">No</th>
-                                                    <th class="sort">Nama Module</th>
-                                                    <th class="sort">Group</th>
-                                                    <th class="sort">Remarks</th>
+                                                    <th class="sort">Nama Promo</th>
                                                     <th class="sort" data-sort="action">Action</th>
                                                 </tr>
                                             </thead>

@@ -25,86 +25,89 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form onsubmit="RoutingApproval.submit(this, event)">
+                <form onsubmit="PromoItem.submit(this, event)">
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label class="form-label">Module</label>
-                                <select class="form-control select2 required" error="Module" id="menu">
-                                    <option value="">Daftar Menu</option>
-                                    @foreach ($list_module as $item)
-                                        <option value="{{ $item['id'] }}"
-                                            {{ isset($data->menu) ? ($data->menu == $item['id'] ? 'selected' : '') : '' }}>
-                                            {{ $item['nama'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label>Remarks</label>
+                                <label>Nama Promo</label>
                                 <div>
-                                    <input type="text" id="remarks" class="form-control required" error="Remarks"
-                                        placeholder="Remarks" value="{{ isset($data->remarks) ? $data->remarks : '' }}">
+                                    <input type="text" id="promo_name" class="form-control required" error="Nama Promo"
+                                        placeholder="Nama Promo" value="{{ isset($data->promo_name) ? $data->promo_name : '' }}">
+                                </div>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Max Qty</label>
+                                <div>
+                                    <input type="number" id="max_qty" name="max_qty" class="form-control required"
+                                        error="Max Qty" min="1" value="{{ isset($data->max_qty) ? $data->max_qty : '' }}">
+                                </div>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Discount Nilai</label>
+                                <div>
+                                     <input type="number" id="disc_value" name="disc_value" class="form-control required"
+                                    error="Disc Nilai" min="1" value="{{ isset($data->discount_value) ? $data->discount_value : '' }}">
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label class="form-label">Group</label>
-                                <select class="form-control select2" id="group">
-                                    <option value=""></option>
-                                    @foreach ($groups as $item)
-                                        <option value="{{ $item['term_id'] }}"
-                                            {{ isset($data->group) ? ($data->group == $item['term_id'] ? 'selected' : '') : '' }}>
-                                            {{ $item['keterangan'] }}</option>
+                                <label class="form-label">Min Qty</label>
+                                <div>
+                                    <input type="number" id="min_qty" name="min_qty" class="form-control required"
+                                        error="Min Qty" min="1" value="{{ isset($data->min_qty) ? $data->min_qty : '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Discount Type</label>
+                                <select id="disc_type" name="disc_type" class="form-control required" error="Disc Tipe">
+                                    @foreach ($data_disc_tipe as $item)
+                                        <option value="{{ $item }}" {{ isset($data->discount_type) ? ($data->discount_type == $item ? 'selected' : '') : '' }}>
+                                            {{ strtoupper($item) }}</option>
                                     @endforeach
                                 </select>
                             </div>
+                             <div class="mb-3">
+                                <label class="form-label">Tanggal Berlaku Mulai</label>
+                                <div>
+                                    <input type="date" id="date_start" name="date_start" class="form-control required"
+                                        error="Tanggal Berlaku Mulai" value="{{ isset($data->date_start) ? $data->date_start : date('Y-m-d') }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <hr>
 
                     <div class="row">
                         <div class="col-md-12">
+                            <h5>Daftar Product Diskon</h5>
                             <div class="table-responsive">
                                 <table class="table align-middle mb-0 table-sm table-nowrap" id="table-routing">
                                     <thead class="table-light">
                                         <tr>
                                             <th>#</th>
-                                            <th>Routing Level</th>
-                                            <th>Users Approval</th>
+                                            <th>Product</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @if (isset($data->id))
-                                            @foreach ($routing_item as $item)
-                                                <tr class="input" data_id="{{ $item['id'] }}">
+                                            @foreach ($promo_item as $v)
+                                                <tr class="input" data_id="{{ $v->id }}">
                                                     <td>&nbsp;</td>
                                                     <td>
-                                                        <select name="routing" id="routing" class="form-control">
-                                                            @foreach ($list_approval as $items)
-                                                                <option value="{{ $items['term_id'] }}"
-                                                                    {{ $items['term_id'] == $item['state'] ? 'selected' : '' }}>
-                                                                    {{ $items['keterangan'] }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </td>
-                                                    <td>
                                                         <div class="input-group">
-                                                            <button class="btn btn-outline-primary" type="button"
-                                                                id="button-addon1"
-                                                                onclick="RoutingApproval.showDataUsers(this)">Pilih</button>
-                                                            <input readonly id="users" type="text"
-                                                                class="form-control required" error="Users"
-                                                                placeholder="Pilih Data Users"
-                                                                aria-label="Pilih Data Users"
+                                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                                onclick="PromoItem.showDataProduct(this)">Pilih</button>
+                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
                                                                 aria-describedby="button-addon1"
-                                                                value="{{ $item['users'] . '//' . $item['name_user'] }}">
+                                                                value="{{ $v->product_uom . '//' . $v->product . '//' . $v->product_name.'//'.$v->unit_name }}">
                                                         </div>
                                                     </td>
                                                     <td class="text-center" id="action">
                                                         <button type="button"
-                                                            onclick="RoutingApproval.deleteItem(this, event)"
+                                                            onclick="PromoItem.deleteItem(this, event)"
                                                             class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i
                                                                 class="bx bx-trash-alt"></i></button>
                                                     </td>
@@ -115,24 +118,14 @@
                                             <tr class="input" data_id="">
                                                 <td>&nbsp;</td>
                                                 <td>
-                                                    <select name="routing" id="routing" class="form-control">
-                                                        @foreach ($list_approval as $item)
-                                                            <option value="{{ $item['term_id'] }}">
-                                                                {{ $item['keterangan'] }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
-                                                <td>
                                                     <div class="input-group">
-                                                        <button class="btn btn-outline-primary" type="button"
-                                                            id="button-addon1"
-                                                            onclick="RoutingApproval.showDataUsers(this)">Pilih</button>
-                                                        <input readonly id="users" type="text"
-                                                            class="form-control required" error="Users"
-                                                            placeholder="Pilih Data Users" aria-label="Pilih Data Users"
-                                                            aria-describedby="button-addon1" value="">
-                                                    </div>
+                                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                                onclick="PromoItem.showDataProduct(this)">Pilih</button>
+                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                                aria-describedby="button-addon1"
+                                                                value="">
+                                                        </div>
                                                 </td>
                                                 <td class="text-center" id="action">
                                                     &nbsp;
@@ -142,8 +135,8 @@
                                         <tr class="" data_id="">
                                             <td colspan="3">
                                                 <a href="javascript:;" class="btn btn-primary btn-sm"
-                                                    onclick="RoutingApproval.addItem(this, event)">Add
-                                                    Routing</a>
+                                                    onclick="PromoItem.addItem(this, event)">Add
+                                                    Item</a>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -155,58 +148,62 @@
                     <br>
                     <div class="row">
                         <div class="col-md-12">
-                            <h5>Users Only Reminder (Full Approved)</h5>
+                            <h5>Daftar Free Product</h5>
                             <div class="table-responsive">
                                 <table class="table align-middle mb-0 table-sm table-nowrap"
                                     id="table-routing-reminder">
                                     <thead class="table-light">
                                         <tr>
                                             <th>#</th>
-                                            <th>Users</th>
+                                            <th>Product</th>
+                                            <th>Qty</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @if (isset($data->id))
-                                            @foreach ($routing_reminder_item as $item)
-                                                <tr class="input" data_id="{{ $item['id'] }}">
+                                            @foreach ($product_free as $v)
+                                                <tr class="input" data_id="{{ $v->id }}">
                                                     <td>&nbsp;</td>
                                                     <td>
-                                                        <div class="input-group">
-                                                            <button class="btn btn-outline-primary" type="button"
-                                                                id="button-addon1"
-                                                                onclick="RoutingApproval.showDataUsers(this)">Pilih</button>
-                                                            <input readonly id="users" type="text"
-                                                                class="form-control" error="Users"
-                                                                placeholder="Pilih Data Users"
-                                                                aria-label="Pilih Data Users"
+                                                         <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                                onclick="PromoItem.showDataProduct(this)">Pilih</button>
+                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
                                                                 aria-describedby="button-addon1"
-                                                                value="{{ $item['users'] . '//' . $item['name_user'] }}">
+                                                                value="{{ $v->product_uom . '//' . $v->free_product . '//' . $v->product_name.'//'.$v->unit_name }}">
                                                         </div>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" id="qty" name="qty" class="form-control"
+                                                        error="Qty" min="1" value="{{ $v->free_qty }}">
                                                     </td>
                                                     <td class="text-center" id="action">
                                                         <button type="button"
-                                                            onclick="RoutingApproval.deleteItem(this, event)"
+                                                            onclick="PromoItem.deleteItem(this, event)"
                                                             class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i
                                                                 class="bx bx-trash-alt"></i></button>
                                                     </td>
                                                 </tr>
                                             @endforeach
 
-                                            @if (empty($routing_reminder_item))
+                                            @if (empty($product_free))
                                                 <tr class="input" data_id="">
                                                     <td>&nbsp;</td>
                                                     <td>
                                                         <div class="input-group">
-                                                            <button class="btn btn-outline-primary" type="button"
-                                                                id="button-addon1"
-                                                                onclick="RoutingApproval.showDataUsers(this)">Pilih</button>
-                                                            <input readonly id="users" type="text"
-                                                                class="form-control" error="Users"
-                                                                placeholder="Pilih Data Users"
-                                                                aria-label="Pilih Data Users"
-                                                                aria-describedby="button-addon1" value="">
+                                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                                onclick="PromoItem.showDataProduct(this)">Pilih</button>
+                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                                aria-describedby="button-addon1"
+                                                                value="">
                                                         </div>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" id="qty" name="qty" class="form-control"
+                                                        error="Qty" min="1" value="">
                                                     </td>
                                                     <td class="text-center" id="action">
                                                         &nbsp;
@@ -218,16 +215,18 @@
                                             <tr class="input" data_id="">
                                                 <td>&nbsp;</td>
                                                 <td>
-                                                    <div class="input-group">
-                                                        <button class="btn btn-outline-primary" type="button"
-                                                            id="button-addon1"
-                                                            onclick="RoutingApproval.showDataUsers(this)">Pilih</button>
-                                                        <input readonly id="users" type="text"
-                                                            class="form-control" error="Users"
-                                                            placeholder="Pilih Data Users"
-                                                            aria-label="Pilih Data Users"
-                                                            aria-describedby="button-addon1" value="">
-                                                    </div>
+                                                     <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                                                                onclick="PromoItem.showDataProduct(this)">Pilih</button>
+                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                                error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                                aria-describedby="button-addon1"
+                                                                value="">
+                                                        </div>
+                                                </td>
+                                                <td>
+                                                     <input type="number" id="qty" name="qty" class="form-control"
+                                                        error="Qty" min="1" value="">
                                                 </td>
                                                 <td class="text-center" id="action">
                                                     &nbsp;
@@ -237,7 +236,7 @@
                                         <tr class="" data_id="">
                                             <td colspan="3">
                                                 <a href="javascript:;" class="btn btn-primary btn-sm"
-                                                    onclick="RoutingApproval.addReminderItem(this, event)">Add
+                                                    onclick="PromoItem.addReminderItem(this, event)">Add
                                                     Item</a>
                                             </td>
                                         </tr>
@@ -251,11 +250,11 @@
         </div>
         <div class="text-end">
             <div>
-                <button type="submit" onclick="RoutingApproval.submit(this, event)"
+                <button type="submit" onclick="PromoItem.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
-                <button type="reset" onclick="RoutingApproval.cancel(this, event)" class="btn waves-effect">
+                <button type="reset" onclick="PromoItem.cancel(this, event)" class="btn waves-effect">
                     Cancel
                 </button>
             </div>
