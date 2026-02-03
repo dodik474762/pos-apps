@@ -1,5 +1,5 @@
  <!-- First modal dialog -->
- <div class="modal bs-example-modal-lg fade" id="data-modal-karyawan" aria-hidden="true" aria-labelledby="..."
+ <div class="modal bs-example-modal-lg fade" id="data-modal-product" aria-hidden="true" aria-labelledby="..."
      tabindex="-1">
      <div class="modal-dialog modal-xl">
          <div class="modal-content">
