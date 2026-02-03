@@ -63,6 +63,10 @@ class PromoItemController extends Controller
         try {
             //code...
 
+            list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $data['promo_item'][0]['product']);
+            $units = DB::table('unit')->where('name', $unit_name)->first();
+            $unitsId = $units->id;
+
             $roles = $data['id'] == '' ? new PromoItem() : PromoItem::find($data['id']);
             $roles->promo_name = $data['promo_name'];
             $roles->min_qty = $data['min_qty'];
@@ -70,6 +74,7 @@ class PromoItemController extends Controller
             $roles->discount_type = $data['disc_type'];
             $roles->discount_value = $data['disc_value'];
             $roles->date_start = $data['date_start'];
+            $roles->unit = $unitsId;
             $roles->save();
             $headerId = $roles->id;
 

@@ -247,6 +247,12 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-promo-item" data-bs-toggle="tab" data-bs-target="#tab-pane-promo"
+                                type="button" role="tab" aria-controls="tab-pane-promo" aria-selected="true">
+                                Program Promo Item
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="tab-uom" data-bs-toggle="tab" data-bs-target="#tab-pane-uom"
                                 type="button" role="tab" aria-controls="tab-pane-uom" aria-selected="false">
                                 Unit of Measurement
@@ -307,6 +313,10 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-pane-promo" role="tabpanel" aria-labelledby="tab-diskon-promo">
+                            @include('web.sales_order.promo-item')
                         </div>
 
                         <div class="tab-pane fade" id="tab-pane-uom" role="tabpanel" aria-labelledby="tab-uom">

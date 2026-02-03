@@ -1,5 +1,6 @@
 let elmChoose;
 let discProduct = [];
+let productCheckPromo = [];
 let SalesOrder = {
     module: () => {
         return "transaksi/sales_order";
@@ -460,6 +461,7 @@ let SalesOrder = {
 
         SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
         SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
+        SalesOrder.showPromoItem(produk_id, produk_name, unit);
         SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
     },
 
@@ -493,6 +495,44 @@ let SalesOrder = {
                 message.closeLoading();
                 const table_items = $("#table-data-diskon");
                 table_items.find("tbody").append(resp);
+            },
+        });
+    },
+
+    showPromoItem: (produk_id, produk_name, unit) => {
+        productCheckPromo.push({
+            produk_id: produk_id,
+            produk_name: produk_name,
+            unit: unit,
+        });
+
+        let params = {
+            customer: $("#customer_id").val(),
+            items: productCheckPromo,
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "showPromoItem",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("div#tab-pane-promo").html(resp);
+                // table_items.find("tbody").append(resp);
             },
         });
     },

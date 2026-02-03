@@ -32,7 +32,7 @@ class SalesOrderController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -49,10 +49,10 @@ class SalesOrderController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -82,7 +82,7 @@ class SalesOrderController extends Controller
         $data = $request->all();
 
         $exceptPoDetailId = [];
-        if (! empty($data['itemsChoose'])) {
+        if (!empty($data['itemsChoose'])) {
             $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
         }
         $data['data'] = [];
@@ -111,7 +111,7 @@ class SalesOrderController extends Controller
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 
-        if (! empty($exceptPoDetailId)) {
+        if (!empty($exceptPoDetailId)) {
             $datadb->whereNotIn('m.id', $exceptPoDetailId);
         }
         if (isset($_POST)) {
@@ -119,14 +119,14 @@ class SalesOrderController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -160,7 +160,7 @@ class SalesOrderController extends Controller
         try {
             // Pastikan currency default ada
             $currency = Currency::where('code', 'IDR')->first();
-            if (! $currency) {
+            if (!$currency) {
                 DB::rollBack();
 
                 return response()->json([
@@ -196,8 +196,8 @@ class SalesOrderController extends Controller
             // === DETAIL ===
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
-                if (! empty($item['remove']) && $item['remove'] == 1) {
-                    if (! empty($item['id'])) {
+                if (!empty($item['remove']) && $item['remove'] == 1) {
+                    if (!empty($item['id'])) {
                         $exist = SalesOrderDetail::find($item['id']);
                         if ($exist && $exist->status !== 'draft') {
                             DB::rollBack();
@@ -303,7 +303,7 @@ class SalesOrderController extends Controller
             // HITUNG DISKON
             // =========================
             $discPercent = 0;
-            $discAmount  = 0;
+            $discAmount = 0;
             $discountType = null;
 
             if ($applicableDiscount) {
@@ -357,29 +357,29 @@ class SalesOrderController extends Controller
             // RESPONSE
             // =========================
             return [
-                'is_valid'=> true,
-                'qty_base_unit'   => $qtySmallest,
-                'discount'        => $applicableDiscount,
-                'discount_type'   => $discountType,
-                'disc_percent'    => $discPercent,
-                'disc_amount'     => $discAmount,
-                'subtotal'        => round($subtotal, 2),
-                'discount_free'   => $applicableFree,
-                'free_qty'        => $applicableFree->free_qty ?? 0,
-                'message'         => 'Success'
+                'is_valid' => true,
+                'qty_base_unit' => $qtySmallest,
+                'discount' => $applicableDiscount,
+                'discount_type' => $discountType,
+                'disc_percent' => $discPercent,
+                'disc_amount' => $discAmount,
+                'subtotal' => round($subtotal, 2),
+                'discount_free' => $applicableFree,
+                'free_qty' => $applicableFree->free_qty ?? 0,
+                'message' => 'Success'
             ];
         } catch (\Throwable $th) {
-             return [
-                'is_valid'=> false,
-                'qty_base_unit'   => 0,
-                'discount'        => 0,
-                'discount_type'   => $discountType,
-                'disc_percent'    => 0,
-                'disc_amount'     => 0,
-                'subtotal'        => 0,
-                'discount_free'   => 0,
-                'free_qty'        => 0,
-                'message'         => $th->getMessage()
+            return [
+                'is_valid' => false,
+                'qty_base_unit' => 0,
+                'discount' => 0,
+                'discount_type' => $discountType,
+                'disc_percent' => 0,
+                'disc_amount' => 0,
+                'subtotal' => 0,
+                'discount_free' => 0,
+                'free_qty' => 0,
+                'message' => $th->getMessage()
             ];
         }
     }
@@ -395,14 +395,14 @@ class SalesOrderController extends Controller
         $so_date = $periode->format('Y-m-d H:i:s');
 
         $check_in_time = null;
-        if(isset($data['check_in_time'])){
-            if(!empty($data['check_in_time'])){
+        if (isset($data['check_in_time'])) {
+            if (!empty($data['check_in_time'])) {
                 $check_in_time = Carbon::parse($data['check_in_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
             }
         }
         $check_out_time = null;
-        if(isset($data['check_out_time'])){
-            if(!empty($data['check_out_time'])){
+        if (isset($data['check_out_time'])) {
+            if (!empty($data['check_out_time'])) {
                 $check_out_time = Carbon::parse($data['check_out_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
             }
         }
@@ -421,24 +421,24 @@ class SalesOrderController extends Controller
         DB::beginTransaction();
         try {
             $dir = 'berkas/document/sales_order/';
-            $dir .= date('Y').'/'.date('m');
-            $pathlamp = public_path().'/'.$dir.'/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
             // Create the directory if it doesn't exist
-            if (! File::isDirectory($pathlamp)) {
+            if (!File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_'.time().'.jpg';
-            $fileTtdName = 'signature_'.time().'.jpg';
+            $fileOutletName = 'outlet_' . time() . '.jpg';
+            $fileTtdName = 'signature_' . time() . '.jpg';
 
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/'.$dir.'/';
+            $dbpathlampOutlet = '/' . $dir . '/';
 
             $path = $files_ttd->move(public_path($dir), $fileTtdName);
-            $dbpathlampSignature = '/'.$dir.'/';
+            $dbpathlampSignature = '/' . $dir . '/';
 
             $currency = Currency::where('code', 'IDR')->first();
-            if (! $currency) {
+            if (!$currency) {
                 DB::rollBack();
 
                 return response()->json([
@@ -449,10 +449,10 @@ class SalesOrderController extends Controller
             $currencyId = $currency->id;
 
             /*update koordinat customer */
-            if($customers){
+            if ($customers) {
                 $customers->latitude = $data['latitude'];
                 $customers->longitude = $data['longitude'];
-                if($customers->customer_category == '2'){
+                if ($customers->customer_category == '2') {
                     $customers->customer_category = '1';
                 }
                 $customers->save();
@@ -473,8 +473,8 @@ class SalesOrderController extends Controller
             $header->remarks = $data['remarks'];
             $header->total_amount = 0; // akan dihitung ulang di bawah
             $header->platform = 'mobile'; // akan dihitung ulang di bawah
-            $header->photo_path = $dbpathlampOutlet.$fileOutletName;
-            $header->signature_path = $dbpathlampSignature.$fileTtdName;
+            $header->photo_path = $dbpathlampOutlet . $fileOutletName;
+            $header->signature_path = $dbpathlampSignature . $fileTtdName;
             $header->latitude = $data['latitude'];
             $header->longitude = $data['longitude'];
             $header->check_in_time = $check_in_time;
@@ -539,7 +539,7 @@ class SalesOrderController extends Controller
                 $detail->save();
 
                 //cek jika ada free good
-                if($calculateDisc['free_qty'] > 0){
+                if ($calculateDisc['free_qty'] > 0) {
                     $detail = new SalesOrderDetail();
 
                     $detail->sales_order_id = $hdrId;
@@ -547,7 +547,8 @@ class SalesOrderController extends Controller
                     $detail->qty = $calculateDisc['free_qty'];
                     $detail->unit = $calculateDisc['discount_free']->free_unit;
                     $detail->unit_price = 0;
-                    $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';;
+                    $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
+                    ;
                     $detail->discount_percent = 0;
                     $detail->discount_amount = 0;
                     $detail->subtotal = 0;
@@ -566,7 +567,7 @@ class SalesOrderController extends Controller
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['path'] = $dbpathlampOutlet.$fileOutletName;
+            $result['path'] = $dbpathlampOutlet . $fileOutletName;
             $result['message'] = 'Success';
             $result['sales_order_id'] = $hdrId;
         } catch (\Throwable $th) {
@@ -613,7 +614,7 @@ class SalesOrderController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
             ])->where('m.id', $id);
@@ -648,6 +649,74 @@ class SalesOrderController extends Controller
         }
 
         return view('web.product.datainfoprogramdisk', $data);
+    }
+
+    public function showPromoItem(Request $request)
+    {
+        $data = $request->all();
+        $produkIds = collect($data['items'])
+            ->pluck('produk_id')
+            ->unique()
+            ->values();
+
+
+        $dataPromo = DB::table('product_promo_item_detail as ppid')
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->whereIn('ppid.product', $produkIds)
+            ->whereDate('ppi.date_start', '<=', now())
+            ->select('ppid.product_promo_item', 'ppid.product')
+            ->orderBy('ppid.product_promo_item')
+            ->get();
+        if(count($dataPromo) == 0){
+            return view('web.sales_order.promo-item', $data);
+        }
+
+
+        $groupPromo = $dataPromo->groupBy('product_promo_item');
+
+        $matchedPromo = null;
+
+        foreach ($groupPromo as $promoId => $promoItems) {
+
+            // Produk yang disyaratkan oleh promo
+            $promoProducts = $promoItems->pluck('product')->unique();
+
+            // Cek: semua produk promo ada di produk yang dibeli?
+            if ($promoProducts->diff($produkIds)->isEmpty()) {
+                $matchedPromo = $promoId;
+                break;
+            }
+        }
+
+        if ($matchedPromo) {
+            $data['has_promo'] = true;
+            $data['promo_id'] = $matchedPromo;
+        } else {
+            $data['has_promo'] = false;
+        }
+
+        $data['promo_item'] = $data['has_promo'] ? DB::table('product_promo_item_detail as ppid')
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
+            'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
+            'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix')
+            ->join('product as p', 'p.id', '=', 'ppid.product')
+            ->join('unit as u', 'u.id', '=', 'ppi.unit')
+            ->where('ppi.id', $data['promo_id'])
+            ->orderBy('ppid.product_promo_item')
+            ->get() : [];
+
+        $data['product_free'] = $data['has_promo'] ? DB::table('product_promo_item_detail_free as ppid')
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->select('ppid.*', 'p.code as product_code')
+            ->join('product as p', 'p.id', '=', 'ppid.free_product')
+            ->where('ppi.id', $data['promo_id'])
+            ->orderBy('ppid.product_promo_item')
+            ->get() : [];
+
+
+
+        return view('web.sales_order.promo-item', $data);
     }
 
     public function showDiscountFreeProduct(Request $request)
@@ -884,7 +953,7 @@ class SalesOrderController extends Controller
         $data['recordsTotal'] = $datadb->count();
 
         // --- Pencarian ---
-        if (! empty($_POST['search']['value'])) {
+        if (!empty($_POST['search']['value'])) {
             $keyword = $_POST['search']['value'];
             $datadb->where(function ($query) use ($keyword) {
                 $query->where('m.name', 'like', "%{$keyword}%")
@@ -897,7 +966,7 @@ class SalesOrderController extends Controller
         }
 
         // --- Urutan (Sorting) ---
-        if (! empty($_POST['order'][0]['dir'])) {
+        if (!empty($_POST['order'][0]['dir'])) {
             $dir = $_POST['order'][0]['dir'];
             $datadb->orderBy('m.id', $dir);
         } else {
@@ -929,7 +998,7 @@ class SalesOrderController extends Controller
     {
         $data = $request->all();
         $month = intval(date('m'));   // Januari
-        $year  = date('Y');
+        $year = date('Y');
         $customer = $data['customer_id'] ?? null;
 
         $data = DB::table('sales_order_headers as soh')
@@ -952,9 +1021,9 @@ class SalesOrderController extends Controller
 
         $data = $data->first();
 
-        if(empty($data)){
+        if (empty($data)) {
             $data = [
-                'is_valid'=> true,
+                'is_valid' => true,
                 'data' => [
                     'customer_id' => $customer,
                     // 'customer_name' => $customer_name,
@@ -971,7 +1040,8 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-    public function closingOrder(Request $request){
+    public function closingOrder(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $users_id = $data['user_id'];
         $now = $data['close_date'];
@@ -984,10 +1054,10 @@ class SalesOrderController extends Controller
         try {
 
             $mobile_session = MobileSession::where('users', $users_id)
-            ->where('date_process', date('Y-m-d'))
-            ->first();
+                ->where('date_process', date('Y-m-d'))
+                ->first();
 
-            if(empty($mobile_session)){
+            if (empty($mobile_session)) {
                 DB::rollBack();
                 $result['message'] = 'Session Tidak Ditemukan';
                 return response()->json($result);

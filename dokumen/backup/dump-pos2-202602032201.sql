@@ -1533,6 +1533,8 @@ CREATE TABLE `product_promo_item` (
   `updated_at` datetime DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `deleted` datetime DEFAULT NULL,
+  `unit` int DEFAULT NULL,
+  `min_mix` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `product_promo_item_customer_IDX` (`customer`) USING BTREE,
   KEY `product_promo_item_deleted_IDX` (`deleted`) USING BTREE
@@ -1545,7 +1547,7 @@ CREATE TABLE `product_promo_item` (
 
 LOCK TABLES `product_promo_item` WRITE;
 /*!40000 ALTER TABLE `product_promo_item` DISABLE KEYS */;
-INSERT INTO `product_promo_item` VALUES (1,'TEST',NULL,NULL,12,12,'nominal',5723,'2026-02-01',NULL,1,NULL,'2026-02-01 13:53:06','2026-02-01 13:53:06',NULL,NULL);
+INSERT INTO `product_promo_item` VALUES (1,'TEST',NULL,NULL,12,12,'nominal',5723,'2026-02-01',NULL,1,NULL,'2026-02-01 13:53:06','2026-02-01 13:53:06',NULL,NULL,1,1);
 /*!40000 ALTER TABLE `product_promo_item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3206,4 +3208,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-03  5:08:42
+-- Dump completed on 2026-02-03 22:01:28
