@@ -124,6 +124,7 @@ let PromoItem = {
             min_qty: $("#min_qty").val(),
             disc_type: $("#disc_type").val(),
             date_start: $("#date_start").val(),
+            min_mix: $("#min_mix").val(),
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
         };

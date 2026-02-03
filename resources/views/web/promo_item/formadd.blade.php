@@ -49,6 +49,13 @@
                                     error="Disc Nilai" min="1" value="{{ isset($data->discount_value) ? $data->discount_value : '' }}">
                                 </div>
                             </div>
+                             <div class="mb-3">
+                                <label class="form-label">Min Mix</label>
+                                <div>
+                                     <input type="number" id="min_mix" name="min_mix" class="form-control required"
+                                    error="Min Mix" min="1" value="{{ isset($data->min_mix) ? $data->min_mix : '' }}">
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
