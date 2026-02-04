@@ -156,7 +156,7 @@ let SalesOrder = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -203,13 +203,13 @@ let SalesOrder = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            SalesOrder.module()
+                            SalesOrder.module(),
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                SalesOrder.module()
+                                SalesOrder.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -225,12 +225,12 @@ let SalesOrder = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -244,10 +244,10 @@ let SalesOrder = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -371,7 +371,7 @@ let SalesOrder = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -721,7 +721,7 @@ let SalesOrder = {
                 const id = $(elm).attr("data_id");
                 const discount_type = $(elm).attr("discount_type");
                 const discount_value = isNaN(
-                    parseFloat($(elm).attr("discount_value"))
+                    parseFloat($(elm).attr("discount_value")),
                 )
                     ? 0
                     : parseFloat($(elm).attr("discount_value"));
@@ -822,8 +822,10 @@ let SalesOrder = {
             UOM_CONVERSION,
             productId,
             satuanId,
-            qty
+            qty,
         );
+
+        console.log("qtySmallest", qtySmallest);
 
         // Cari data diskon yang cocok
         const applicable = DATA_DISKON.find((d) => {
@@ -832,13 +834,13 @@ let SalesOrder = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = SalesOrder.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             return (
@@ -858,7 +860,7 @@ let SalesOrder = {
             if (applicable.discount_type === "percent") {
                 discPercentInput.val(applicable.discount_value);
                 discAmountInput.val(
-                    (price * qty * applicable.discount_value) / 100
+                    (price * qty * applicable.discount_value) / 100,
                 );
             } else {
                 discPercentInput.val(0);
@@ -869,11 +871,6 @@ let SalesOrder = {
             discAmountInput.val(0);
         }
 
-        // Hitung subtotal
-        const discAmount = parseFloat(discAmountInput.val()) || 0;
-        const subtotal = price * qty - discAmount;
-        subtotalInput.val(subtotal.toFixed(2));
-
         // ========================
         // CARI DISKON FREE GOOD
         // ========================
@@ -882,13 +879,13 @@ let SalesOrder = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = SalesOrder.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             const isApplicable =
@@ -941,13 +938,208 @@ let SalesOrder = {
             tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
         }
 
+        const promoHeader = SalesOrder.getPromoHeader();
+        const promoProducts = SalesOrder.getPromoProducts();
+        const promoFree = SalesOrder.getPromoFreeProducts();
+
+        let promoApplicable = false;
+
+        if (promoHeader) {
+            const today = new Date().toISOString().slice(0, 10);
+
+            // semua product_id yang ada di SO
+            const soProductIds = SalesOrder.getAllProductIdsInTable();
+
+            // const productMatch = promoProducts.some(
+            //     (p) => p.product == tr.find("#product").attr("data_id"),
+            // );
+
+            console.log("soProductIds", soProductIds);
+            // product promo yang benar-benar ada di SO
+            const matchedPromoProducts = promoProducts.filter((p) =>
+                soProductIds.includes(String(p.product))
+            );
+
+            const mixCount = matchedPromoProducts.length;
+
+            // cek min_mix
+            const mixOk =
+                !promoHeader.min_mix || mixCount >= promoHeader.min_mix;
+
+             if (mixOk && today >= promoHeader.date_start) {
+                // cek qty untuk ROW INI
+                const promoMinSmall = SalesOrder.convertToSmallest(
+                    UOM_CONVERSION,
+                    productId,
+                    promoHeader.unit_id,
+                    promoHeader.min_qty,
+                );
+
+                const promoMaxSmall = promoHeader.max_qty
+                    ? SalesOrder.convertToSmallest(
+                        UOM_CONVERSION,
+                        productId,
+                        promoHeader.unit_id,
+                        promoHeader.max_qty,
+                    )
+                    : Infinity;
+
+                if (
+                    qtySmallest >= promoMinSmall &&
+                    qtySmallest <= promoMaxSmall
+                ) {
+                    promoApplicable = true;
+                }
+            }
+        }
+
+        if (promoApplicable && promoHeader) {
+            if (promoHeader.discount_type === "percent") {
+                discPercentInput.val(promoHeader.discount_value);
+                discAmountInput.val(
+                    (price * qty * promoHeader.discount_value) / 100,
+                );
+            } else {
+                discPercentInput.val(0);
+                discAmountInput.val(promoHeader.discount_value);
+            }
+        }
+
+        // ========================
+        // PROMO FREE GOOD
+        // ========================
+        if (promoApplicable && promoFree.length) {
+            promoFree.forEach((free) => {
+                const freeQty = free.qty || 0;
+
+                // cek apakah free good sudah ada
+                const exists =
+                    tr.next('tr.freegood[data-free-for="' + productId + '"]')
+                        .length > 0;
+
+                if (!exists) {
+                    const freeRow = `
+                <tr class="input freegood" data-free-for="${productId}">
+                    <td>
+                        <div class="input-group">
+                            <button class="btn btn-outline-secondary" type="button" disabled
+                                onclick="SalesOrder.showDataProduct(this)">Free</button>
+                            <input disabled type="text" id="product" class="form-control"
+                                data_id="${free.product}"
+                                value="${free.name || "Free Product"}">
+                        </div>
+                    </td>
+                    <td id="unit" data_id="${free.unit_id}">
+                        ${free.unit || ""}
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" id="qty"
+                            value="${freeQty}" disabled>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" id="unit_price"
+                            value="0" disabled>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" id="disc_percent"
+                            value="0" disabled>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" id="disc_amount"
+                            value="0" disabled>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" id="subtotal"
+                            value="0" disabled>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger" disabled
+                            onclick="SalesOrder.removeRow(this)">
+                            <i class="bx bx-gift"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+                    tr.after(freeRow);
+                }
+            });
+        } else {
+            // hapus free good promo jika sudah tidak memenuhi syarat
+            tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
+        }
+
+        // Hitung subtotal
+        const discAmount = parseFloat(discAmountInput.val()) || 0;
+        const subtotal = price * qty - discAmount;
+        subtotalInput.val(subtotal.toFixed(2));
+
         // Update total keseluruhans
         SalesOrder.hitungSummaryAll();
     },
 
+    getAllProductIdsInTable:()=>{
+        const ids = new Set();
+
+        // ⛔ skip baris freegood
+        $("#table-items tbody tr").not(".freegood").each(function () {
+            const pid = $(this).find("#product").attr("data_id");
+            console.log("pid", pid);
+            if (pid) ids.add(String(pid));
+        });
+
+        return Array.from(ids);
+    },
+
+    getPromoHeader: () => {
+        const row = $("#table-data-promo-header tbody tr");
+        if (!row.length) return null;
+
+        return {
+            promo_name: row.find("#promo-name").text().trim(),
+            min_qty: parseFloat(row.find("#promo-min-qty").text()) || 0,
+            max_qty: parseFloat(row.find("#promo-max-qty").text()) || 0,
+            unit_name: row.find("#promo-unit").text().trim(),
+            unit_id: row.find("#promo-unit").attr("unit_id"),
+            min_mix: parseInt(row.find("#promo-min-mix").text()) || 0,
+            discount_type: row.find("#promo-discount-type").text().trim(),
+            discount_value:
+                parseFloat(row.find("#promo-discount-value").text()) || 0,
+            date_start: row.find("#promo-date-start").text().trim(),
+        };
+    },
+
+    getPromoProducts: () => {
+        const products = [];
+        $("#table-data-promo-product tbody tr").each(function () {
+            products.push({
+                product: $(this).find("#promo-product-code").attr("product_id"),
+                code: $(this).find("#promo-product-code").text().trim(),
+                name: $(this).find("#promo-product-name").text().trim(),
+                unit: $(this).find("#promo-unit-name").text().trim(),
+            });
+        });
+        return products;
+    },
+
+    getPromoFreeProducts: () => {
+        const free = [];
+        $("#table-data-promo-product-free tbody tr").each(function () {
+            free.push({
+                product: $(this).find("#promo-free-product-code").attr('product_id'),
+                code: $(this).find("#promo-free-product-code").text().trim(),
+                name: $(this).find("#promo-free-product-name").text().trim(),
+                unit: $(this).find("#promo-free-unit-name").text().trim(),
+                unit_id: $(this).find("#promo-free-unit-name").attr('unit_id'),
+                qty: parseFloat($(this).find("#promo-free-qty").text()) || 0,
+            });
+        });
+        return free;
+    },
+
     convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
         const uom = UOM_CONVERSIONS.find(
-            (u) => u.product_id == productId && u.unit_id == satuanId
+            (u) => u.product_id == productId && u.unit_id == satuanId,
         );
         if (!uom) return qty; // fallback jika tidak ditemukan
         return qty * uom.conversion;
@@ -969,7 +1161,7 @@ let SalesOrder = {
         });
 
         const top = $(elm).find("option:selected").attr("top");
-        $('#payment_term').val(top);
+        $("#payment_term").val(top);
     },
 
     getCustomer: (elm) => {
@@ -1007,7 +1199,7 @@ let SalesOrder = {
             resultProduct = resultProduct.filter(
                 (value, index, self) =>
                     index ===
-                    self.findIndex((t) => t.product_id === value.product_id)
+                    self.findIndex((t) => t.product_id === value.product_id),
             );
 
             // 3️⃣ Loop per product_id
@@ -1018,17 +1210,17 @@ let SalesOrder = {
                 SalesOrder.showDiscountProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 SalesOrder.showDiscountFreeProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 SalesOrder.showQtySmallestProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
             });
         }

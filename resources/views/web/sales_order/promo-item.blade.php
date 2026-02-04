@@ -19,7 +19,7 @@
                     <td id="promo-name">{{ $promo_item[0]->promo_name }}</td>
                     <td id="promo-min-qty">{{ $promo_item[0]->min_qty }}</td>
                     <td id="promo-max-qty">{{ $promo_item[0]->max_qty }}</td>
-                    <td id="promo-unit">{{ $promo_item[0]->unit_name }}</td>
+                    <td id="promo-unit" unit_id="{{ $promo_item[0]->unit }}">{{ $promo_item[0]->unit_name }}</td>
                     <td id="promo-min-mix">{{ $promo_item[0]->min_mix }}</td>
                     <td id="promo-discount-type">{{ $promo_item[0]->discount_type }}</td>
                     <td id="promo-discount-value">{{ $promo_item[0]->discount_value }}</td>
@@ -44,7 +44,7 @@
             @if (isset($promo_item))
                 @foreach ($promo_item as $item)
                     <tr>
-                        <td id="promo-product-code">{{ $item->product_code }}</td>
+                        <td id="promo-product-code" product_id="{{ $item->product }}">{{ $item->product_code }}</td>
                         <td id="promo-product-name">{{ $item->product_name }}</td>
                         <td id="promo-unit-name">{{ $item->unit_name }}</td>
                     </tr>
@@ -69,9 +69,9 @@
             @if (isset($product_free))
                 @foreach ($product_free as $item)
                     <tr>
-                        <td id="promo-free-product-code">{{ $item->product_code }}</td>
+                        <td id="promo-free-product-code" product_id="{{ $item->free_product }}">{{ $item->product_code }}</td>
                         <td id="promo-free-product-name">{{ $item->product_name }}</td>
-                        <td id="promo-free-unit-name">{{ $item->unit_name }}</td>
+                        <td id="promo-free-unit-name" unit_id="{{ $item->free_unit }}">{{ $item->unit_name }}</td>
                         <td id="promo-free-qty">{{ $item->free_qty }}</td>
                     </tr>
                 @endforeach
