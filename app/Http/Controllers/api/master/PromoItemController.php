@@ -87,7 +87,7 @@ class PromoItemController extends Controller
                     $units = DB::table('unit')->where('name', $unit_name)->first();
                     $unitsId = $units->id;
 
-                    $items = $value['id'] == '' ? new PromoItemProduct() : PromoItemProduct::find($value['id']);
+                    $items = new PromoItemProduct();
                     $items->product_promo_item = $headerId;
                     $items->product = $product_id;
                     $items->unit = $unitsId;
@@ -108,7 +108,7 @@ class PromoItemController extends Controller
                         $units = DB::table('unit')->where('name', $unit_name)->first();
                         $unitsId = $units->id;
 
-                        $items = $value['id'] == '' ? new PromoItemProductFree() : PromoItemProductFree::find($value['id']);
+                        $items = new PromoItemProductFree();
                         $items->product_promo_item = $headerId;
                         $items->free_product = $product_id;
                         $items->free_unit = $unitsId;
