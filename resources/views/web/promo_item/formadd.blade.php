@@ -81,6 +81,11 @@
                                         error="Tanggal Berlaku Mulai" value="{{ isset($data->date_start) ? $data->date_start : date('Y-m-d') }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <br/>
+                                <br/>
+                                <input type="checkbox" id="kelipatan" {{ isset($data->kelipatan) ? ($data->kelipatan == '1' ? 'checked' : '') : '' }}> Kelipatan
+                            </div>
                         </div>
                     </div>
                     <hr>

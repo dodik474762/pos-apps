@@ -75,6 +75,7 @@ class PromoItemController extends Controller
             $roles->discount_value = $data['disc_value'];
             $roles->date_start = $data['date_start'];
             $roles->min_mix = $data['min_mix'];
+            $roles->kelipatan = $data['kelipatan'];
             $roles->unit = $unitsId;
             $roles->save();
             $headerId = $roles->id;
