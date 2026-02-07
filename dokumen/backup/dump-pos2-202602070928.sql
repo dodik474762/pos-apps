@@ -1535,10 +1535,11 @@ CREATE TABLE `product_promo_item` (
   `deleted` datetime DEFAULT NULL,
   `unit` int DEFAULT NULL,
   `min_mix` int DEFAULT NULL,
+  `kelipatan` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `product_promo_item_customer_IDX` (`customer`) USING BTREE,
   KEY `product_promo_item_deleted_IDX` (`deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1547,7 +1548,7 @@ CREATE TABLE `product_promo_item` (
 
 LOCK TABLES `product_promo_item` WRITE;
 /*!40000 ALTER TABLE `product_promo_item` DISABLE KEYS */;
-INSERT INTO `product_promo_item` VALUES (1,'TEST',NULL,NULL,12,12,'nominal',5723,'2026-02-01',NULL,1,NULL,'2026-02-01 13:53:06','2026-02-01 13:53:06',NULL,NULL,1,1);
+INSERT INTO `product_promo_item` VALUES (1,'TEST',NULL,NULL,12,12,'nominal',5723,'2026-02-01',NULL,1,NULL,'2026-02-01 13:53:06','2026-02-06 22:56:29',NULL,NULL,1,2,0),(2,'PROMO KELIPATAN',NULL,NULL,2,2,'percent',1,'2026-02-06',NULL,1,NULL,'2026-02-06 22:17:36','2026-02-06 22:23:52',NULL,NULL,1,1,1);
 /*!40000 ALTER TABLE `product_promo_item` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1570,7 +1571,7 @@ CREATE TABLE `product_promo_item_detail` (
   PRIMARY KEY (`id`),
   KEY `product_promo_item_detail_product_promo_item_IDX` (`product_promo_item`) USING BTREE,
   KEY `product_promo_item_detail_product_IDX` (`product`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1579,7 +1580,7 @@ CREATE TABLE `product_promo_item_detail` (
 
 LOCK TABLES `product_promo_item_detail` WRITE;
 /*!40000 ALTER TABLE `product_promo_item_detail` DISABLE KEYS */;
-INSERT INTO `product_promo_item_detail` VALUES (1,1,167,1,'2026-02-01 13:53:06','2026-02-01 13:53:06',NULL,1267);
+INSERT INTO `product_promo_item_detail` VALUES (3,2,167,1,'2026-02-06 22:23:52','2026-02-06 22:23:52',NULL,1267),(4,1,167,1,'2026-02-06 22:56:29','2026-02-06 22:56:29',NULL,1267),(5,1,165,1,'2026-02-06 22:56:29','2026-02-06 22:56:29',NULL,1261);
 /*!40000 ALTER TABLE `product_promo_item_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1606,7 +1607,7 @@ CREATE TABLE `product_promo_item_detail_free` (
   KEY `product_promo_item_detail_free_free_product_IDX` (`free_product`,`free_unit`) USING BTREE,
   KEY `product_promo_item_detail_free_product_promo_item_IDX` (`product_promo_item`) USING BTREE,
   KEY `product_promo_item_detail_free_product_uom_IDX` (`product_uom`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1615,7 +1616,7 @@ CREATE TABLE `product_promo_item_detail_free` (
 
 LOCK TABLES `product_promo_item_detail_free` WRITE;
 /*!40000 ALTER TABLE `product_promo_item_detail_free` DISABLE KEYS */;
-INSERT INTO `product_promo_item_detail_free` VALUES (1,1,166,9,1,1262,'SEASONED LAVER ORIGINAL FLV BOX 1 GR- P','PCS',NULL,'2026-02-01 13:53:06','2026-02-01 13:53:06');
+INSERT INTO `product_promo_item_detail_free` VALUES (3,2,165,9,1,1259,'BIG SHEET CHILI GARLIC MAYO 3.2 G','PCS',NULL,'2026-02-06 22:23:52','2026-02-06 22:23:52'),(4,1,166,9,1,1262,'SEASONED LAVER ORIGINAL FLV BOX 1 GR- P','PCS',NULL,'2026-02-06 22:56:29','2026-02-06 22:56:29');
 /*!40000 ALTER TABLE `product_promo_item_detail_free` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3208,4 +3209,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-03 22:01:28
+-- Dump completed on 2026-02-07  9:28:12

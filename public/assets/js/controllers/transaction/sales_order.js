@@ -461,7 +461,7 @@ let SalesOrder = {
 
         SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
         SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
-        SalesOrder.showPromoItem(produk_id, produk_name, unit);
+        SalesOrder.showPromoItem(produk_id, produk_name, unit, 0);
         SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
     },
 
@@ -499,11 +499,12 @@ let SalesOrder = {
         });
     },
 
-    showPromoItem: (produk_id, produk_name, unit) => {
+    showPromoItem: (produk_id, produk_name, unit, qty) => {
         productCheckPromo.push({
             produk_id: produk_id,
             produk_name: produk_name,
             unit: unit,
+            qty: qty,
         });
 
         let params = {
@@ -938,36 +939,54 @@ let SalesOrder = {
             tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
         }
 
-        const promoHeader = SalesOrder.getPromoHeader();
-        const promoProducts = SalesOrder.getPromoProducts();
-        const promoFree = SalesOrder.getPromoFreeProducts();
-
-        let promoApplicable = false;
-
-        if (promoHeader) {
-            const today = new Date().toISOString().slice(0, 10);
-
+        const promoHeaders = SalesOrder.getPromoHeader();
+        if (promoHeaders.length > 0) {
             // semua product_id yang ada di SO
             const soProductIds = SalesOrder.getAllProductIdsInTable();
+            const products = SalesOrder.getAllProductsInTable(); //promo item ini bisa digunakan jika satuan konversi produknya sama
+            let qtySmallestAllProduct = 0;
+            products.forEach((p) => {
+                qtySmallestAllProduct += SalesOrder.convertToSmallest(
+                    UOM_CONVERSION,
+                    p.product_id,
+                    p.unit_id,
+                    p.qty,
+                );
+            });
+            for (let index = 0; index < promoHeaders.length; index++) {
+                const promoHeader = promoHeaders[index];
+                const parent_id = promoHeader.id;
+                const kelipatan = promoHeader.kelipatan;
 
-            // const productMatch = promoProducts.some(
-            //     (p) => p.product == tr.find("#product").attr("data_id"),
-            // );
+                const class_promo_item = "promo-item-" + parent_id;
+                const class_promo_free = "promo-free-" + parent_id;
 
-            console.log("soProductIds", soProductIds);
-            // product promo yang benar-benar ada di SO
-            const matchedPromoProducts = promoProducts.filter((p) =>
-                soProductIds.includes(String(p.product))
-            );
+                const promoProducts =
+                    SalesOrder.getPromoProducts(class_promo_item);
+                const promoFree =
+                    SalesOrder.getPromoFreeProducts(class_promo_free);
+                console.log("promoFree", promoFree);
+                console.log("promoProducts", promoProducts);
 
-            const mixCount = matchedPromoProducts.length;
+                let promoApplicable = false;
+                let pengaliKelipatanFreegood = 1;
 
-            // cek min_mix
-            const mixOk =
-                !promoHeader.min_mix || mixCount >= promoHeader.min_mix;
+                const today = new Date().toISOString().slice(0, 10);
 
-             if (mixOk && today >= promoHeader.date_start) {
-                // cek qty untuk ROW INI
+                // const productMatch = promoProducts.some(
+                //     (p) => p.product == tr.find("#product").attr("data_id"),
+                // );
+
+                // product promo yang benar-benar ada di SO
+                const matchedPromoProducts = promoProducts.filter((p) =>
+                    soProductIds.includes(String(p.product)),
+                );
+
+                const mixCount = matchedPromoProducts.length;
+
+                // cek min_mix
+                const mixOk =
+                    !promoHeader.min_mix || mixCount >= promoHeader.min_mix;
                 const promoMinSmall = SalesOrder.convertToSmallest(
                     UOM_CONVERSION,
                     productId,
@@ -975,165 +994,290 @@ let SalesOrder = {
                     promoHeader.min_qty,
                 );
 
-                const promoMaxSmall = promoHeader.max_qty
-                    ? SalesOrder.convertToSmallest(
-                        UOM_CONVERSION,
-                        productId,
-                        promoHeader.unit_id,
-                        promoHeader.max_qty,
-                    )
-                    : Infinity;
-
-                if (
-                    qtySmallest >= promoMinSmall &&
-                    qtySmallest <= promoMaxSmall
-                ) {
-                    promoApplicable = true;
-                }
-            }
-        }
-
-        if (promoApplicable && promoHeader) {
-            if (promoHeader.discount_type === "percent") {
-                discPercentInput.val(promoHeader.discount_value);
-                discAmountInput.val(
-                    (price * qty * promoHeader.discount_value) / 100,
+                const kelipatanSmall = SalesOrder.convertToSmallest(
+                    UOM_CONVERSION,
+                    productId,
+                    promoHeader.unit_id,
+                    kelipatan,
                 );
-            } else {
-                discPercentInput.val(0);
-                discAmountInput.val(promoHeader.discount_value);
+
+                if (mixOk && today >= promoHeader.date_start) {
+                    // cek qty untuk ROW INI
+
+                    if (qtySmallestAllProduct < promoMinSmall) {
+                        promoApplicable = false;
+                    }
+
+                    //  console.log('promoHeader.kelipatan', kelipatan);
+                    // const kelipatanSmall = kelipatan == '1'
+                    //     ? SalesOrder.convertToSmallest(
+                    //         UOM_CONVERSION,
+                    //         productId,
+                    //         promoHeader.unit_id,
+                    //         kelipatan
+                    //     )
+                    //     : promoMinSmall;
+                    // minimum qty
+                    // kelipatan SELALU dihitung dari field kelipatan
+
+                    // console.log('kelipatanSmall',kelipatanSmall);
+
+                    if (kelipatan == "1") {
+                        // hitung berapa kali kelipatan terpenuhi
+                        pengaliKelipatanFreegood = Math.floor(
+                            qtySmallestAllProduct / kelipatanSmall,
+                        );
+                        console.log({
+                            qtySmallestAllProduct,
+                            promoMinSmall,
+                            kelipatanSmall,
+                            hasilBagi: qtySmallestAllProduct / kelipatanSmall,
+                        });
+                        // cek promo applicable
+                        if (
+                            qtySmallestAllProduct >= promoMinSmall &&
+                            pengaliKelipatanFreegood > 0
+                        ) {
+                            promoApplicable = true;
+                        }
+                    } else {
+                        const promoMaxSmall = promoHeader.max_qty
+                            ? SalesOrder.convertToSmallest(
+                                  UOM_CONVERSION,
+                                  productId,
+                                  promoHeader.unit_id,
+                                  promoHeader.max_qty,
+                              )
+                            : Infinity;
+
+                        if (
+                            qtySmallestAllProduct >= promoMinSmall &&
+                            qtySmallestAllProduct <= promoMaxSmall
+                        ) {
+                            promoApplicable = true;
+                        }
+                    }
+                }
+
+                if (promoApplicable && promoHeader) {
+                    if (promoHeader.discount_type === "percent") {
+                        discPercentInput.val(promoHeader.discount_value);
+                        discAmountInput.val(
+                            (price * qty * promoHeader.discount_value) / 100,
+                        );
+                    } else {
+                        discPercentInput.val(0);
+                        discAmountInput.val(promoHeader.discount_value);
+                    }
+                }
+
+                // ========================
+                // PROMO FREE GOOD
+                // ========================
+                if (promoApplicable && promoFree.length) {
+                    promoFree.forEach((free) => {
+                        console.log(
+                            "free",
+                            free,
+                            "pengaliKelipatanFreegood",
+                            pengaliKelipatanFreegood,
+                        );
+                        // const freeQty = (free.qty || 0) * pengaliKelipatanFreegood;
+                        // free.qty dianggap maksimum / default
+                        const pengali = kelipatanSmall == 0 ? 1 : Math.floor(
+                            qtySmallestAllProduct / kelipatanSmall,
+                        );
+                        let pengaliFix = pengali == 1 ? 1 : Math.floor(
+                            pengali / promoHeader.min_qty,
+                        );
+                        const freeQty = free.qty * pengaliFix;
+
+                        // cek apakah free good sudah ada
+                        const exists =
+                            tr.next(
+                                'tr.freegood[data-free-for="' +
+                                    productId +
+                                    '"]',
+                            ).length > 0;
+
+                        if (!exists) {
+                            const freeRow = `
+                        <tr class="input freegood" data-free-for="${productId}">
+                            <td>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" disabled
+                                        onclick="SalesOrder.showDataProduct(this)">Free</button>
+                                    <input disabled type="text" id="product" class="form-control"
+                                        data_id="${free.product}"
+                                        value="${free.name || "Free Product"}">
+                                </div>
+                            </td>
+                            <td id="unit" data_id="${free.unit_id}">
+                                ${free.unit || ""}
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" id="qty"
+                                    value="${freeQty}" disabled>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" id="unit_price"
+                                    value="0" disabled>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" id="disc_percent"
+                                    value="0" disabled>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" id="disc_amount"
+                                    value="0" disabled>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" id="subtotal"
+                                    value="0" disabled>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger" disabled
+                                    onclick="SalesOrder.removeRow(this)">
+                                    <i class="bx bx-gift"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
+                            tr.after(freeRow);
+                        }
+                    });
+                } else {
+                    // hapus free good promo jika sudah tidak memenuhi syarat
+                    tr.next(
+                        'tr.freegood[data-free-for="' + productId + '"]',
+                    ).remove();
+                }
+
+                // Hitung subtotal
+                const discAmount = parseFloat(discAmountInput.val()) || 0;
+                const subtotal = price * qty - discAmount;
+                subtotalInput.val(subtotal.toFixed(2));
+
+                if (promoApplicable) {
+                    break;
+                }
             }
         }
-
-        // ========================
-        // PROMO FREE GOOD
-        // ========================
-        if (promoApplicable && promoFree.length) {
-            promoFree.forEach((free) => {
-                const freeQty = free.qty || 0;
-
-                // cek apakah free good sudah ada
-                const exists =
-                    tr.next('tr.freegood[data-free-for="' + productId + '"]')
-                        .length > 0;
-
-                if (!exists) {
-                    const freeRow = `
-                <tr class="input freegood" data-free-for="${productId}">
-                    <td>
-                        <div class="input-group">
-                            <button class="btn btn-outline-secondary" type="button" disabled
-                                onclick="SalesOrder.showDataProduct(this)">Free</button>
-                            <input disabled type="text" id="product" class="form-control"
-                                data_id="${free.product}"
-                                value="${free.name || "Free Product"}">
-                        </div>
-                    </td>
-                    <td id="unit" data_id="${free.unit_id}">
-                        ${free.unit || ""}
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" id="qty"
-                            value="${freeQty}" disabled>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" id="unit_price"
-                            value="0" disabled>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" id="disc_percent"
-                            value="0" disabled>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control" id="disc_amount"
-                            value="0" disabled>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control" id="subtotal"
-                            value="0" disabled>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-danger" disabled
-                            onclick="SalesOrder.removeRow(this)">
-                            <i class="bx bx-gift"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-
-                    tr.after(freeRow);
-                }
-            });
-        } else {
-            // hapus free good promo jika sudah tidak memenuhi syarat
-            tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
-        }
-
-        // Hitung subtotal
-        const discAmount = parseFloat(discAmountInput.val()) || 0;
-        const subtotal = price * qty - discAmount;
-        subtotalInput.val(subtotal.toFixed(2));
 
         // Update total keseluruhans
         SalesOrder.hitungSummaryAll();
     },
 
-    getAllProductIdsInTable:()=>{
+    getAllProductIdsInTable: () => {
         const ids = new Set();
 
         // ⛔ skip baris freegood
-        $("#table-items tbody tr").not(".freegood").each(function () {
-            const pid = $(this).find("#product").attr("data_id");
-            console.log("pid", pid);
-            if (pid) ids.add(String(pid));
-        });
+        $("#table-items tbody tr")
+            .not(".freegood")
+            .each(function () {
+                const pid = $(this).find("#product").attr("data_id");
+                console.log("pid", pid);
+                if (pid) ids.add(String(pid));
+            });
 
         return Array.from(ids);
     },
 
-    getPromoHeader: () => {
-        const row = $("#table-data-promo-header tbody tr");
-        if (!row.length) return null;
+    getAllProductsInTable: () => {
+        let result = [];
+        $("#table-items tbody tr")
+            .not(".freegood")
+            .each(function () {
+                const pid = $(this).find("#product").attr("data_id");
+                const qty = parseFloat($(this).find("#qty").val()) || 0;
+                const productId = $(this).find("#product").attr("data_id");
+                const satuanId = $(this).find("td#unit").attr("data_id");
 
-        return {
-            promo_name: row.find("#promo-name").text().trim(),
-            min_qty: parseFloat(row.find("#promo-min-qty").text()) || 0,
-            max_qty: parseFloat(row.find("#promo-max-qty").text()) || 0,
-            unit_name: row.find("#promo-unit").text().trim(),
-            unit_id: row.find("#promo-unit").attr("unit_id"),
-            min_mix: parseInt(row.find("#promo-min-mix").text()) || 0,
-            discount_type: row.find("#promo-discount-type").text().trim(),
-            discount_value:
-                parseFloat(row.find("#promo-discount-value").text()) || 0,
-            date_start: row.find("#promo-date-start").text().trim(),
-        };
+                if (pid) {
+                    result.push({
+                        product_id: productId,
+                        product_name: $(this).find("#product").val(),
+                        qty: qty,
+                        unit_id: satuanId,
+                    });
+                }
+            });
+
+        return result;
     },
 
-    getPromoProducts: () => {
+    getPromoHeader: () => {
+        const row = $("#table-data-promo-header tbody tr");
+        if (!row.length) return [];
+
+        const result = [];
+        $.each(row, function () {
+            const data = {
+                promo_name: $(this).find("#promo-name").text().trim(),
+                min_qty: parseFloat($(this).find("#promo-min-qty").text()) || 0,
+                max_qty: parseFloat($(this).find("#promo-max-qty").text()) || 0,
+                unit_name: $(this).find("#promo-unit").text().trim(),
+                unit_id: $(this).find("#promo-unit").attr("unit_id"),
+                min_mix: parseInt($(this).find("#promo-min-mix").text()) || 0,
+                discount_type: $(this)
+                    .find("#promo-discount-type")
+                    .text()
+                    .trim(),
+                discount_value:
+                    parseFloat($(this).find("#promo-discount-value").text()) ||
+                    0,
+                date_start: $(this).find("#promo-date-start").text().trim(),
+                kelipatan: $(this).attr("kelipatan"),
+                id: $(this).attr("data_id"),
+            };
+
+            result.push(data);
+        });
+
+        return result;
+    },
+
+    getPromoProducts: (className) => {
         const products = [];
-        $("#table-data-promo-product tbody tr").each(function () {
+        $("#table-data-promo-product tbody tr." + className).each(function () {
             products.push({
                 product: $(this).find("#promo-product-code").attr("product_id"),
                 code: $(this).find("#promo-product-code").text().trim(),
                 name: $(this).find("#promo-product-name").text().trim(),
                 unit: $(this).find("#promo-unit-name").text().trim(),
+                parent_id: $(this).attr("parent_id"),
             });
         });
         return products;
     },
 
-    getPromoFreeProducts: () => {
+    getPromoFreeProducts: (className) => {
         const free = [];
-        $("#table-data-promo-product-free tbody tr").each(function () {
-            free.push({
-                product: $(this).find("#promo-free-product-code").attr('product_id'),
-                code: $(this).find("#promo-free-product-code").text().trim(),
-                name: $(this).find("#promo-free-product-name").text().trim(),
-                unit: $(this).find("#promo-free-unit-name").text().trim(),
-                unit_id: $(this).find("#promo-free-unit-name").attr('unit_id'),
-                qty: parseFloat($(this).find("#promo-free-qty").text()) || 0,
-            });
-        });
+        $("#table-data-promo-product-free tbody tr." + className).each(
+            function () {
+                free.push({
+                    product: $(this)
+                        .find("#promo-free-product-code")
+                        .attr("product_id"),
+                    code: $(this)
+                        .find("#promo-free-product-code")
+                        .text()
+                        .trim(),
+                    name: $(this)
+                        .find("#promo-free-product-name")
+                        .text()
+                        .trim(),
+                    unit: $(this).find("#promo-free-unit-name").text().trim(),
+                    unit_id: $(this)
+                        .find("#promo-free-unit-name")
+                        .attr("unit_id"),
+                    qty:
+                        parseFloat($(this).find("#promo-free-qty").text()) || 0,
+                    parent_id: $(this).attr("parent_id"),
+                });
+            },
+        );
         return free;
     },
 

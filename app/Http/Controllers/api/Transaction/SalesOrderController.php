@@ -660,60 +660,66 @@ class SalesOrderController extends Controller
             ->values();
 
 
-        $dataPromo = DB::table('product_promo_item_detail as ppid')
-            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-            ->whereIn('ppid.product', $produkIds)
-            ->whereDate('ppi.date_start', '<=', now())
-            ->select('ppid.product_promo_item', 'ppid.product')
-            ->orderBy('ppid.product_promo_item')
-            ->get();
-        if(count($dataPromo) == 0){
-            return view('web.sales_order.promo-item', $data);
-        }
-
-
-        $groupPromo = $dataPromo->groupBy('product_promo_item');
-
-        $matchedPromo = null;
-
-        foreach ($groupPromo as $promoId => $promoItems) {
-
-            // Produk yang disyaratkan oleh promo
-            $promoProducts = $promoItems->pluck('product')->unique();
-
-            // Cek: semua produk promo ada di produk yang dibeli?
-            if ($promoProducts->diff($produkIds)->isEmpty()) {
-                $matchedPromo = $promoId;
-                break;
+            $dataPromo = DB::table('product_promo_item_detail as ppid')
+                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+                ->whereIn('ppid.product', $produkIds)
+                ->whereDate('ppi.date_start', '<=', now())
+                ->select('ppid.product_promo_item', 'ppid.product')
+                ->orderBy('ppid.product_promo_item')
+                ->get();
+            if(count($dataPromo) == 0){
+                return view('web.sales_order.promo-item', $data);
             }
-        }
 
-        if ($matchedPromo) {
-            $data['has_promo'] = true;
-            $data['promo_id'] = $matchedPromo;
-        } else {
-            $data['has_promo'] = false;
-        }
 
-        $data['promo_item'] = $data['has_promo'] ? DB::table('product_promo_item_detail as ppid')
-            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-            ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
-            'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
-            'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix', 'ppi.unit')
-            ->join('product as p', 'p.id', '=', 'ppid.product')
-            ->join('unit as u', 'u.id', '=', 'ppi.unit')
-            ->where('ppi.id', $data['promo_id'])
-            ->orderBy('ppid.product_promo_item')
-            ->get() : [];
+            $groupPromo = $dataPromo->groupBy('product_promo_item');
+            $promoIds = $groupPromo->keys()->toArray();
+            $data['promoIds'] = $promoIds;
 
-        $data['product_free'] = $data['has_promo'] ? DB::table('product_promo_item_detail_free as ppid')
-            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-            ->select('ppid.*', 'p.code as product_code')
-            ->join('product as p', 'p.id', '=', 'ppid.free_product')
-            ->where('ppi.id', $data['promo_id'])
-            ->orderBy('ppid.product_promo_item')
-            ->get() : [];
+            // $matchedPromo = null;
 
+            // foreach ($groupPromo as $promoId => $promoItems) {
+
+            //     // Produk yang disyaratkan oleh promo
+            //     $promoProducts = $promoItems->pluck('product')->unique();
+
+            //     // Cek: semua produk promo ada di produk yang dibeli?
+            //     if ($promoProducts->diff($produkIds)->isEmpty()) {
+            //         $matchedPromo = $promoId;
+            //         break;
+            //     }
+            // }
+
+            // if ($matchedPromo) {
+            //     $data['has_promo'] = true;
+            //     $data['promo_id'] = $matchedPromo;
+            // } else {
+            //     $data['has_promo'] = false;
+            // }
+
+            $data['promo_item'] = DB::table('product_promo_item_detail as ppid')
+                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+                ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
+                'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
+                'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix', 'ppi.unit', 'ppi.kelipatan')
+                ->join('product as p', 'p.id', '=', 'ppid.product')
+                ->join('unit as u', 'u.id', '=', 'ppi.unit')
+                ->whereIn('ppi.id', $promoIds)
+                ->orderBy('ppid.product_promo_item')
+                ->get();
+            // echo '<pre>';
+            // print_r($data['promo_item']);die;
+
+            $data['product_free'] = DB::table('product_promo_item_detail_free as ppid')
+                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+                ->select('ppid.*', 'p.code as product_code', 'ppi.promo_name')
+                ->join('product as p', 'p.id', '=', 'ppid.free_product')
+                ->whereIn('ppi.id', $promoIds)
+                ->orderBy('ppid.product_promo_item')
+                ->get();
+
+            // echo '<pre>';
+            // print_r($data['promo_item']);die;
 
 
         return view('web.sales_order.promo-item', $data);
