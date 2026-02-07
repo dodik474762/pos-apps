@@ -181,7 +181,7 @@
                                                          <div class="input-group">
                                                             <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                                                 onclick="PromoItem.showDataProduct(this)">Pilih</button>
-                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                            <input id="product" name="product" type="text" class="form-control"
                                                                 error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
                                                                 aria-describedby="button-addon1"
                                                                 value="{{ $v->product_uom . '//' . $v->free_product . '//' . $v->product_name.'//'.$v->unit_name }}">
@@ -207,7 +207,7 @@
                                                         <div class="input-group">
                                                             <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                                                 onclick="PromoItem.showDataProduct(this)">Pilih</button>
-                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                            <input id="product" name="product" type="text" class="form-control"
                                                                 error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
                                                                 aria-describedby="button-addon1"
                                                                 value="">
@@ -230,7 +230,7 @@
                                                      <div class="input-group">
                                                             <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                                                 onclick="PromoItem.showDataProduct(this)">Pilih</button>
-                                                            <input id="product" name="product" type="text" class="form-control required"
+                                                            <input id="product" name="product" type="text" class="form-control"
                                                                 error="Product" placeholder="Pilih Data Product" aria-label="Pilih Data Product"
                                                                 aria-describedby="button-addon1"
                                                                 value="">

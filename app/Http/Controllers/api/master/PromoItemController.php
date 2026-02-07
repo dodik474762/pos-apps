@@ -101,26 +101,28 @@ class PromoItemController extends Controller
             }
 
             PromoItemProductFree::where('product_promo_item', $headerId)->delete();
-            foreach ($data['free_product'] as $key => $value) {
-                if ($value['remove'] != '1') {
-                    if($value['product'] != ''){
-                        list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
-                        $units = DB::table('unit')->where('name', $unit_name)->first();
-                        $unitsId = $units->id;
+            if(isset($data['free_product'])){
+                foreach ($data['free_product'] as $key => $value) {
+                    if ($value['remove'] != '1') {
+                        if($value['product'] != ''){
+                            list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
+                            $units = DB::table('unit')->where('name', $unit_name)->first();
+                            $unitsId = $units->id;
 
-                        $items = new PromoItemProductFree();
-                        $items->product_promo_item = $headerId;
-                        $items->free_product = $product_id;
-                        $items->free_unit = $unitsId;
-                        $items->free_qty = $value['qty'];
-                        $items->product_uom = $product_uom;
-                        $items->product_name = $product_name;
-                        $items->unit_name = $unit_name;
-                        $items->save();
-                    }
-                } else {
-                    if ($value['id'] != '') {
-                        PromoItemProductFree::where('id', $value['id'])->delete();
+                            $items = new PromoItemProductFree();
+                            $items->product_promo_item = $headerId;
+                            $items->free_product = $product_id;
+                            $items->free_unit = $unitsId;
+                            $items->free_qty = $value['qty'];
+                            $items->product_uom = $product_uom;
+                            $items->product_name = $product_name;
+                            $items->unit_name = $unit_name;
+                            $items->save();
+                        }
+                    } else {
+                        if ($value['id'] != '') {
+                            PromoItemProductFree::where('id', $value['id'])->delete();
+                        }
                     }
                 }
             }

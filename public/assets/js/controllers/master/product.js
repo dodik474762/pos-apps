@@ -755,7 +755,7 @@ let Product = {
         });
     },
 
-    removeItemDiscFree: (id) => {
+    removeDiscFree: (id) => {
         let params = {
             id: id,
             product: $("input#id").val(),
