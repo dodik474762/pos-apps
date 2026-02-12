@@ -79,6 +79,19 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label>Principal</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Principal' id="vendor" name="vendor">
+                                        <option value="">-- Principal --</option>
+                                        @foreach ($vendors as $item)
+                                            <option value="{{ $item->id }}"
+                                                {{ isset($data->vendor) ? ($data->vendor == $item->id ? 'selected' : '') : '' }}>
+                                                {{ $item->nama_vendor }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label>Tax Tipe</label>
                                 <div>
                                     <select class="form-control select2 required" error='Tax Tipe' id="type_tax" name="type_tax">

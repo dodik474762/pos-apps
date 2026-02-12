@@ -97,6 +97,11 @@ class ProductController extends Controller
         return $datadb;
     }
 
+    public function getListVendor(){
+        $datadb = DB::table('vendor')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -107,6 +112,7 @@ class ProductController extends Controller
         $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
         $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
+        $data['vendors'] = $this->getListVendor();
         $data['product_logs'] = [];
         $data['product_stocks'] = [];
         $view = view('web.product.formadd', $data);
@@ -211,6 +217,7 @@ class ProductController extends Controller
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
         $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
+        $data['vendors'] = $this->getListVendor();
         $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

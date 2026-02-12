@@ -42,8 +42,10 @@ class ProductController extends Controller
                 'm.*',
                 'pt.type',
                 'u.name as unit_name',
+                'v.nama_vendor'
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
+            ->leftJoin('vendor as v', 'v.id', 'm.vendor')
             ->leftJoin('unit as u', 'u.id', 'm.unit')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
@@ -56,6 +58,7 @@ class ProductController extends Controller
                     $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
                 });
             }
@@ -735,6 +738,7 @@ class ProductController extends Controller
             $roles->model_number = $data['model_number'];
             $roles->product_type = $data['product_type'];
             $roles->remarks = $data['remarks'];
+            $roles->vendor = $data['vendor'];
             $roles->tax_sale = $data['tax_id'];
             $roles->type_tax = $data['type_tax'];
             $roles->type_retur = $data['type_retur'];

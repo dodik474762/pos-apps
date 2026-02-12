@@ -127,6 +127,9 @@ let Product = {
                     data: "model_number",
                 },
                 {
+                    data: "nama_vendor",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
