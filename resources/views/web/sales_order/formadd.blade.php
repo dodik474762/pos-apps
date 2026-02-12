@@ -1,6 +1,8 @@
 <button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
 <div id="content-modal-form"></div>
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
+<input type="hidden" id="platform" value="{{ isset($data->platform) ? $data->platform : 'web' }}">
+<input type="hidden" id="status" value="{{ isset($data->status) ? $data->status : 'draft' }}">
 <input type="hidden" id="url" value="{{ isset($id) ? route('sales-order-edit') : route('sales-order-add') }}">
 
 <!-- start page title -->
@@ -344,9 +346,15 @@
         <div class="text-end">
             @if (isset($id))
                 @if ($data->status == 'draft')
-                    <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
-                        Submit
-                    </button>
+                    @if ($data->platform == 'mobile')
+                        <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                            Confirm
+                        </button>
+                    @else
+                        <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                            Submit
+                        </button>
+                    @endif
                 @endif
             @else
                 <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">

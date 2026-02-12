@@ -382,7 +382,7 @@ let SalesOrder = {
                 headers: {
                     "X-CSRF-TOKEN": SalesOrder.csrf_token(),
                 },
-                 data: function (d) {
+                data: function (d) {
                     d.principal = $("#principal").val(); // ambil nilai status dari elemen input/select
                     d.customer = $("#customer_id").val();
                 },
@@ -1092,12 +1092,16 @@ let SalesOrder = {
                         );
                         // const freeQty = (free.qty || 0) * pengaliKelipatanFreegood;
                         // free.qty dianggap maksimum / default
-                        const pengali = kelipatanSmall == 0 ? 1 : Math.floor(
-                            qtySmallestAllProduct / kelipatanSmall,
-                        );
-                        let pengaliFix = pengali == 1 ? 1 : Math.floor(
-                            pengali / promoHeader.min_qty,
-                        );
+                        const pengali =
+                            kelipatanSmall == 0
+                                ? 1
+                                : Math.floor(
+                                      qtySmallestAllProduct / kelipatanSmall,
+                                  );
+                        let pengaliFix =
+                            pengali == 1
+                                ? 1
+                                : Math.floor(pengali / promoHeader.min_qty);
                         const freeQty = free.qty * pengaliFix;
 
                         // cek apakah free good sudah ada
@@ -1329,6 +1333,8 @@ let SalesOrder = {
 
     editReload: () => {
         const id = $("#id").val();
+        const platform = $('#platform').val();
+        const status = $('#status').val();
         if (id != "") {
             const table = $("table#table-items tbody tr.input");
             let resultProduct = [];
@@ -1374,11 +1380,34 @@ let SalesOrder = {
                     [product_name],
                     [unit_id],
                 );
+
+                SalesOrder.showPromoItem(
+                    [product_id],
+                    [product_name],
+                    [unit_id],
+                    0,
+                );
             });
+
+            // Jalankan ulang kalkulasi setelah semua promo & diskon di-load
+
+            if(platform == 'mobile' && status == 'draft'){
+                setTimeout(() => {
+                    SalesOrder.recalculateAllRows();
+                }, 1000);
+            }
         }
     },
 
-    filterPrincipal:(elm)=>{
+    recalculateAllRows: () => {
+        $("table#table-items tbody tr.input")
+            .not(".freegood")
+            .each(function () {
+                SalesOrder.calcDiscRow(this);
+            });
+    },
+
+    filterPrincipal: (elm) => {
         const principal = $("#principal").val();
         $("#principal").val(principal);
         $("#table-data-modal").DataTable().ajax.reload();

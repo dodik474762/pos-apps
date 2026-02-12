@@ -170,6 +170,7 @@ class SalesOrderController extends Controller
             }
 
             // === HEADER ===
+            $platform = 'web';
             $header = empty($data['id'])
                 ? new SalesOrderHeader
                 : SalesOrderHeader::find($data['id']);
@@ -178,7 +179,10 @@ class SalesOrderController extends Controller
                 $header->so_number = generateNoSO(); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'draft';
+            }else{
+                $platform = $header->platform;
             }
+
 
             $header->so_date = $data['so_date'];
             $header->customer_id = $data['customer_id'];
@@ -187,7 +191,7 @@ class SalesOrderController extends Controller
             $header->currency = $data['currency'];
             $header->remarks = $data['remarks'] ?? null;
             $header->total_amount = 0; // akan dihitung ulang di bawah
-            $header->platform = 'web'; // akan dihitung ulang di bawah
+            $header->platform = $platform; // akan dihitung ulang di bawah
             $header->save();
 
             $hdrId = $header->id;
@@ -244,6 +248,11 @@ class SalesOrderController extends Controller
 
             // Update total header
             $header->total_amount = $grandTotal;
+            if($data['id'] != ''){
+                if($platform == 'mobile'){
+                    $header->status = 'confirmed';
+                }
+            }
             $header->save();
 
             DB::commit();
