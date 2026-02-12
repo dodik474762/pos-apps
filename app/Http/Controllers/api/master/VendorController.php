@@ -78,6 +78,7 @@ class VendorController extends Controller
             $roles->category = $data['category'];
             $roles->product_type = $data['product_type'];
             $roles->channel = $data['channel'];
+            $roles->parent = $data['parent'];
             $roles->save();
             DB::commit();
             $result['is_valid'] = true;

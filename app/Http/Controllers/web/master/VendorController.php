@@ -57,6 +57,11 @@ class VendorController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getListVendor(){
+        $datadb = DB::table('vendor')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function getCategory(){
         $datadb = DB::table('vendor_category')->whereNull('deleted')->get();
         return $datadb;
@@ -84,6 +89,7 @@ class VendorController extends Controller
         $data['categorys'] = $this->getCategory();
         $data['product_type'] = $this->getProductType();
         $data['list_channel'] = $this->listChannel();
+        $data['vendors'] = $this->getListVendor();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -106,6 +112,7 @@ class VendorController extends Controller
         $data['categorys'] = $this->getCategory();
         $data['product_type'] = $this->getProductType();
         $data['list_channel'] = $this->listChannel();
+        $data['vendors'] = $this->getListVendor();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();

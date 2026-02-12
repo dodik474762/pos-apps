@@ -48,6 +48,7 @@ let Vendor = {
             category: $("#category").val(),
             product_type: $("#product_type").val(),
             channel: $("#channel").val(),
+            parent: $("#parent").val(),
         };
 
         return data;

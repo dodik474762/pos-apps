@@ -77,6 +77,19 @@
                                         placeholder="Remarks" value="{{ isset($data->remarks) ? $data->remarks : '' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Principal</label>
+                                <div>
+                                    <select class="form-control select2" error='Principal' id="parent" name="parent">
+                                        <option value="">-- Principal --</option>
+                                        @foreach ($vendors as $item)
+                                            <option value="{{ $item->id }}"
+                                                {{ isset($data->parent) ? ($data->parent == $item->id ? 'selected' : '') : '' }}>
+                                                {{ $item->nama_vendor }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
