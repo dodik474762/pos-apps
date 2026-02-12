@@ -631,11 +631,17 @@ class SalesOrderController extends Controller
         return view('web.sales_order.modal.confirmdelete', $data);
     }
 
+    public function getListVendor(){
+        $datadb = DB::table('vendor')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function showDataProduct(Request $request)
     {
         $data = $request->all();
+        $data['vendors'] = $this->getListVendor();
 
-        return view('web.product.modal.dataproduct', $data);
+        return view('web.product.modal.dataproductorder', $data);
     }
 
     public function showDiscountProduct(Request $request)
@@ -933,11 +939,13 @@ class SalesOrderController extends Controller
                 'pup.date_end',
                 'pup.customer_name',
                 'pup.id as price_id',
+                'v.nama_vendor'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->join('product_uom as pu', 'pu.product', '=', 'm.id')
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
+            ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
             ->leftJoin('product_uom_price as pup', function ($join) {
                 $join->on('pup.product', '=', 'm.id')
                     ->on('pup.unit', '=', 'pu.unit_tujuan')
@@ -950,11 +958,20 @@ class SalesOrderController extends Controller
             })
             ->whereNull('m.deleted');
 
-        if (isset($data['customer'])) {
-            if ($data['customer'] != '') {
-                $datadb->where('pup.customer', $data['customer']);
+        // if (isset($data['customer'])) {
+        //     if ($data['customer'] != '') {
+        //         $datadb->where('pup.customer', $data['customer']);
+        //     }
+        // }
+
+        if (isset($request->principal)) {
+            if ($request->principal != '') {
+                $datadb->where('m.vendor', $request->principal);
             }
         }
+
+        // echo '<pre>';
+        // print_r($data);die;
         // --- Total tanpa filter ---
         $data['recordsTotal'] = $datadb->count();
 
@@ -967,6 +984,7 @@ class SalesOrderController extends Controller
                     ->orWhere('m.model_number', 'like', "%{$keyword}%")
                     ->orWhere('pt.type', 'like', "%{$keyword}%")
                     ->orWhere('uo.name', 'like', "%{$keyword}%")
+                    ->orWhere('v.nama_vendor', 'like', "%{$keyword}%")
                     ->orWhere('pup.customer_name', 'like', "%{$keyword}%");
             });
         }

@@ -351,7 +351,9 @@ let SalesOrder = {
         let tableData = $("table#table-data-modal");
         const params = {
             customer: $("#customer_id").val(),
+            principal: $("#principal").val(),
         };
+
         var data = tableData.DataTable({
             processing: true,
             serverSide: true,
@@ -380,7 +382,10 @@ let SalesOrder = {
                 headers: {
                     "X-CSRF-TOKEN": SalesOrder.csrf_token(),
                 },
-                data: params,
+                 data: function (d) {
+                    d.principal = $("#principal").val(); // ambil nilai status dari elemen input/select
+                    d.customer = $("#customer_id").val();
+                },
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -393,6 +398,9 @@ let SalesOrder = {
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     },
+                },
+                {
+                    data: "nama_vendor",
                 },
                 {
                     data: "code",
@@ -1368,6 +1376,12 @@ let SalesOrder = {
                 );
             });
         }
+    },
+
+    filterPrincipal:(elm)=>{
+        const principal = $("#principal").val();
+        $("#principal").val(principal);
+        $("#table-data-modal").DataTable().ajax.reload();
     },
 };
 
