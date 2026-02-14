@@ -520,6 +520,8 @@ let SalesOrder = {
             items: productCheckPromo,
         };
 
+        console.log('params promo', params);
+
         $.ajax({
             type: "POST",
             dataType: "html",
@@ -675,6 +677,8 @@ let SalesOrder = {
         const splitProductId = product_id.split("//");
         const programDiskon = $(`.diskon-` + splitProductId[1]);
         programDiskon.remove();
+
+        SalesOrder.hitungSummaryAll();
     },
 
     addRow: () => {
@@ -834,7 +838,7 @@ let SalesOrder = {
             qty,
         );
 
-        console.log("qtySmallest", qtySmallest);
+        // console.log("qtySmallest", qtySmallest);
 
         // Cari data diskon yang cocok
         const applicable = DATA_DISKON.find((d) => {
@@ -931,7 +935,7 @@ let SalesOrder = {
                         <td id="unit" data_id="${applicableFree.free_unit}">
                             ${applicableFree.free_unit_name || ""}
                         </td>
-                        <td><input type="number" class="form-control" id="qty" value="${freeQty}" disabled></td>
+                        <td><input type="number" class="form-control" id="qty" value="${freeQty}" onkeyup="SalesOrder.calcDiscRow(this)" disabled></td>
                         <td><input type="number" class="form-control" id="unit_price" value="0" disabled></td>
                         <td><input type="number" class="form-control" id="disc_percent" value="0" disabled></td>
                         <td><input type="number" class="form-control" id="disc_amount" value="0" disabled></td>
@@ -948,7 +952,7 @@ let SalesOrder = {
         }
 
         const promoHeaders = SalesOrder.getPromoHeader();
-        if (promoHeaders.length > 0) {
+        if (promoHeaders.length > 0) {            
             // semua product_id yang ada di SO
             const soProductIds = SalesOrder.getAllProductIdsInTable();
             const products = SalesOrder.getAllProductsInTable(); //promo item ini bisa digunakan jika satuan konversi produknya sama
@@ -962,7 +966,7 @@ let SalesOrder = {
                 );
             });
             for (let index = 0; index < promoHeaders.length; index++) {
-                const promoHeader = promoHeaders[index];
+                const promoHeader = promoHeaders[index];                
                 const parent_id = promoHeader.id;
                 const kelipatan = promoHeader.kelipatan;
 
@@ -971,19 +975,27 @@ let SalesOrder = {
 
                 const promoProducts =
                     SalesOrder.getPromoProducts(class_promo_item);
+                console.log('promoProducts', promoProducts);
                 const promoFree =
                     SalesOrder.getPromoFreeProducts(class_promo_free);
-                console.log("promoFree", promoFree);
-                console.log("promoProducts", promoProducts);
+                // console.log("promoFree", promoFree);
+                // console.log("promoProducts", promoProducts);
 
                 let promoApplicable = false;
                 let pengaliKelipatanFreegood = 1;
 
                 const today = new Date().toISOString().slice(0, 10);
 
-                // const productMatch = promoProducts.some(
-                //     (p) => p.product == tr.find("#product").attr("data_id"),
-                // );
+                const productMatch = promoProducts.some(
+                    (p) => p.product == tr.find("#product").attr("data_id"),
+                );
+                if(!productMatch){
+                    // Hitung subtotal
+                    const discAmount = parseFloat(discAmountInput.val()) || 0;
+                    const subtotal = price * qty - discAmount;
+                    subtotalInput.val(subtotal.toFixed(2));
+                    break;
+                }
 
                 // product promo yang benar-benar ada di SO
                 const matchedPromoProducts = promoProducts.filter((p) =>
@@ -1129,7 +1141,7 @@ let SalesOrder = {
                             </td>
                             <td>
                                 <input type="number" class="form-control" id="qty"
-                                    value="${freeQty}" disabled>
+                                    value="${freeQty}" onkeyup="SalesOrder.calcDiscRow(this)" disabled>
                             </td>
                             <td>
                                 <input type="number" class="form-control" id="unit_price"
@@ -1175,6 +1187,11 @@ let SalesOrder = {
                     break;
                 }
             }
+        }else{
+            // Hitung subtotal jika tidak ada promo item
+            const discAmount = parseFloat(discAmountInput.val()) || 0;
+            const subtotal = price * qty - discAmount;
+            subtotalInput.val(subtotal.toFixed(2));
         }
 
         // Update total keseluruhans
@@ -1323,7 +1340,8 @@ let SalesOrder = {
     getCustomer: (elm) => {
         const url = $("input#url").val();
         const id = $("input#id").val();
-        const salesman = $(elm).val();
+        const salesman = $(elm).val() == '1' ? '' : $(elm).val();
+
         if (id == "") {
             window.location.href = url + "?salesman=" + salesman;
         } else {

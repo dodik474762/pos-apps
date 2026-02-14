@@ -250,7 +250,7 @@ class SalesOrderController extends Controller
             $header->total_amount = $grandTotal;
             if($data['id'] != ''){
                 if($platform == 'mobile'){
-                    $header->status = 'confirmed';
+                    $header->status = 'draft';
                 }
             }
             $header->save();
@@ -472,7 +472,7 @@ class SalesOrderController extends Controller
             $header = new SalesOrderHeader;
             $header->so_number = generateNoSO(); // misal helper
             $header->created_by = $users_id;
-            $header->status = 'draft';
+            $header->status = 'submited';
 
             $header->so_date = $so_date;
             $header->customer_id = $customersId;

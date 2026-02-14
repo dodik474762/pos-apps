@@ -345,7 +345,7 @@
 
         <div class="text-end">
             @if (isset($id))
-                @if ($data->status == 'draft')
+                @if ($data->status == 'draft' || $data->status == 'submited')
                     @if ($data->platform == 'mobile')
                         <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
                             Confirm
