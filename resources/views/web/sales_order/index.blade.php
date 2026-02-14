@@ -37,6 +37,11 @@
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesOrder.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
+                                            &nbsp;
+                                        <a type="button" class="btn btn-primary add-btn" data-bs-toggle="modal"
+                                            id="create-btn" href="javascript:void(0);"
+                                            onclick="SalesOrder.confirmAlHandheld(this, event)"><i
+                                                class="ri-add-line align-bottom me-1"></i> Confirm All Handheld</a>
                                     </div>
                                 @endif
                             </div>

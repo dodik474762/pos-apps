@@ -11,6 +11,7 @@ use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\TermOfPayment;
 use App\Models\Master\Unit;
+use App\Models\Transaction\ProductPromoItem;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
 use Carbon\Carbon;
@@ -156,6 +157,9 @@ class SalesOrderController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
+        // echo '<pre>';
+        // print_r($promoItem);die;
+
         DB::beginTransaction();
         try {
             // Pastikan currency default ada
@@ -168,6 +172,16 @@ class SalesOrderController extends Controller
                     'message' => 'Currency IDR tidak ditemukan',
                 ]);
             }
+
+
+            /*CALCULATE PROMO ITEM */
+            $items = collect($data['items'])->filter(function ($item) {
+                return empty($item['free_for']);
+            });
+            $productIds = $items->pluck('product_id')->toArray();        
+            $promoItem = $this->getPromoItemAll($productIds);
+            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds);
+            /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
             $platform = 'web';
@@ -225,6 +239,19 @@ class SalesOrderController extends Controller
                 $detail = empty($item['id'])
                     ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
+
+                $promoItem = null;                
+                if(!empty($calculatePromo)){
+                    foreach($calculatePromo as $promo){
+                        $items = $promo['items'];
+                        $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
+                        if(!empty($promoItem)){
+                            $item['disc_percent'] = $promo['discount_percent'];
+                            $item['disc_amount'] = $promo['discount_amount'];
+                            $item['subtotal'] = $promoItem['subtotal'];
+                        }
+                    }
+                }
 
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = $item['product_id'];
@@ -666,53 +693,28 @@ class SalesOrderController extends Controller
         return view('web.product.datainfoprogramdisk', $data);
     }
 
-    public function showPromoItem(Request $request)
-    {
-        $data = $request->all();
-        $produkIds = collect($data['items'])
-            ->pluck('produk_id')
-            ->unique()
-            ->values();
-
-
-            $dataPromo = DB::table('product_promo_item_detail as ppid')
+    public function getPromoItem($produkIds = []){
+        $datadb = DB::table('product_promo_item_detail as ppid')
                 ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
                 ->whereIn('ppid.product', $produkIds)
                 ->whereDate('ppi.date_start', '<=', now())
                 ->select('ppid.product_promo_item', 'ppid.product')
                 ->orderBy('ppid.product_promo_item')
                 ->get();
-            if(count($dataPromo) == 0){
-                return view('web.sales_order.promo-item', $data);
-            }
 
+        return $datadb;
+    }
 
-            $groupPromo = $dataPromo->groupBy('product_promo_item');
-            $promoIds = $groupPromo->keys()->toArray();
-            $data['promoIds'] = $promoIds;
+    public function getPromoHeader($promoIds = []){
+        $datadb = ProductPromoItem::select('product_promo_item.*')
+        ->with(['promoProducts', 'promoFree'])
+                ->whereIn('product_promo_item.id', $promoIds)
+                ->get();
+        return $datadb;
+    }
 
-            // $matchedPromo = null;
-
-            // foreach ($groupPromo as $promoId => $promoItems) {
-
-            //     // Produk yang disyaratkan oleh promo
-            //     $promoProducts = $promoItems->pluck('product')->unique();
-
-            //     // Cek: semua produk promo ada di produk yang dibeli?
-            //     if ($promoProducts->diff($produkIds)->isEmpty()) {
-            //         $matchedPromo = $promoId;
-            //         break;
-            //     }
-            // }
-
-            // if ($matchedPromo) {
-            //     $data['has_promo'] = true;
-            //     $data['promo_id'] = $matchedPromo;
-            // } else {
-            //     $data['has_promo'] = false;
-            // }
-
-            $data['promo_item'] = DB::table('product_promo_item_detail as ppid')
+    public function getPromoItemDtl($promoIds = []){
+        $datadb = DB::table('product_promo_item_detail as ppid')
                 ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
                 ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
                 'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
@@ -722,10 +724,12 @@ class SalesOrderController extends Controller
                 ->whereIn('ppi.id', $promoIds)
                 ->orderBy('ppid.product_promo_item')
                 ->get();
-            // echo '<pre>';
-            // print_r($data['promo_item']);die;
 
-            $data['product_free'] = DB::table('product_promo_item_detail_free as ppid')
+        return $datadb;
+    }
+    
+    public function getPromoItemFreeDtl($promoIds = []){
+        $datadb = DB::table('product_promo_item_detail_free as ppid')
                 ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
                 ->select('ppid.*', 'p.code as product_code', 'ppi.promo_name')
                 ->join('product as p', 'p.id', '=', 'ppid.free_product')
@@ -733,11 +737,188 @@ class SalesOrderController extends Controller
                 ->orderBy('ppid.product_promo_item')
                 ->get();
 
-            // echo '<pre>';
-            // print_r($data['promo_item']);die;
+        return $datadb;
+    }
 
+    public function showPromoItem(Request $request)
+    {
+        $data = $request->all();
+        $produkIds = collect($data['items'])
+            ->pluck('produk_id')
+            ->unique()
+            ->values();
+
+        $dataPromo = $this->getPromoItem($produkIds);
+        if(count($dataPromo) == 0){
+            return view('web.sales_order.promo-item', $data);
+        }
+
+        $groupPromo = $dataPromo->groupBy('product_promo_item');
+        $promoIds = $groupPromo->keys()->toArray();
+        $data['promoIds'] = $promoIds;
+
+        $data['promo_item'] = $this->getPromoItemDtl($promoIds);
+        $data['product_free'] = $this->getPromoItemFreeDtl($promoIds);
 
         return view('web.sales_order.promo-item', $data);
+    }
+
+    public function getPromoItemAll($produkIds = []){
+        $dataPromo = $this->getPromoItem($produkIds);
+        if(count($dataPromo) == 0){
+            return [
+                'promoIds' => [],
+                'promo_item' => [],
+                'product_free'=> []
+            ];
+        }
+        $groupPromo = $dataPromo->groupBy('product_promo_item');
+        $promoIds = $groupPromo->keys()->toArray();
+        $data['promoIds'] = $promoIds;
+        $data['promo_header'] = $this->getPromoHeader($promoIds);
+        $data['promo_item'] = $this->getPromoItemDtl($promoIds);
+        $data['product_free'] = $this->getPromoItemFreeDtl($promoIds);
+
+        return $data;
+    }
+
+    public function calculateTotalSmallestQty($items = []){
+        $qtySmallestAll = 0;
+        foreach ($items as $key => $value) {
+            $qtyBaseUnit = getSmallestUnitV2($value['product_id'], $value['unit_id'], $value['qty']);
+            $qtySmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $value['qty'] : 0;
+            $qtySmallestAll += $qtySmallest;
+        }
+
+        return $qtySmallestAll;
+    }
+
+    private function productMatch($promo, $productIds)
+    {
+        $promoProduc = $promo->promoProducts
+            ->pluck('product')->toArray();
+        return in_array($productIds, $promoProduc);
+    }
+
+    private function isPromoApplicable($promo, $totalQty, $product_id)
+    {
+        $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
+        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+        return $totalQty >= $minQtyPromoSmallest;
+    }
+
+    private function calculateFreeGoods($promo, $totalQty, $product_id)
+    {
+        $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
+        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty: 0;
+
+        $kelipatan = $promo->kelipatan ?: 1;
+        $multiplier = $promo->kelipatan == 0 ? 1 : floor($totalQty / $minQtyPromoSmallest);
+
+        return $promo->promoFree->map(function ($free) use ($multiplier) {
+            return [
+                'product_id' => $free->free_product,
+                'unit'=> $free->free_unit,
+                'qty' => $free->free_qty * $multiplier,
+            ];
+        })->toArray();
+    }
+
+    public function calculatePromo($items = [], $promoAll = [], $productIds = []){
+        $resultItems = [];
+        $freeGoods = [];
+        $grandTotal = 0;      
+
+        
+        $promoHeaders = $promoAll['promo_header'];
+        
+        
+        foreach ($promoHeaders as $promo) {
+            $promoProduc = $promo->promoProducts
+            ->pluck('product')->toArray();
+
+            //match kan dulu total promo bundle itemnya;
+            $mixTotalPromo = 0;
+            $itemsHasDiscount = [];
+            foreach ($promoProduc as $v) {
+                foreach ($productIds as $k) {
+                    if($k == $v){
+                        $mixTotalPromo += 1;
+                        $itemsHasDiscount[] = $v;
+                    }
+                }
+            }
+                    
+            $mix_min_promo = $promo->min_mix;
+            if($mix_min_promo != $mixTotalPromo){
+                continue;
+            }
+
+            $itemsValue = [];
+            foreach($itemsHasDiscount as $h){
+                $valItem = collect($items)->where('product_id', $h)->first();
+                $itemsValue[] = $valItem;
+            }
+
+            $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);
+
+            $totalPromoAplicable = 0;
+
+            foreach($itemsValue as $v){
+                if (!$this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
+                    continue;
+                }
+                $totalPromoAplicable +=1;
+            }
+
+            if($totalPromoAplicable != $mix_min_promo){
+                continue;
+            }
+
+            $discountPercent = 0;
+            $discountAmounts = 0;
+            $grandTotal = 0;
+
+            // Hitung diskon
+            foreach($itemsValue as $v){
+                if ($promo->discount_type === 'percent') {
+                    $discountPercent = $promo->discount_value;
+                    $discountAmount = ($v['price'] * $v['qty']) 
+                        * ($discountPercent / 100);
+                    $discountAmounts += $discountAmount;
+                } else {
+                    $discountAmount = $promo->discount_value;
+                    $discountAmounts += $discountAmount;
+                }
+
+                $subtotal = ($v['price'] * $v['qty']) - $discountAmount;
+                $v['subtotal'] = $subtotal;
+                $v['discountAmount'] = $discountAmount;
+                $v['discountPercent'] = $discountPercent;
+
+                $grandTotal += $subtotal;
+            }
+            
+            // Hitung free good
+            $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
+            $freeGoods = array_merge(
+                $freeGoods,
+                $discountFree            
+            );            
+
+
+            $resultItems[] = [
+                'items'=> $itemsValue,
+                'discount_percent' => $discountPercent,
+                'discount_amount' => $discountAmount,
+                'grand_total' => $grandTotal,
+                'discount_free'=> $discountFree
+            ];
+
+            break;
+        }
+
+        return $resultItems;
     }
 
     public function showDiscountFreeProduct(Request $request)

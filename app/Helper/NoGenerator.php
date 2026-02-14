@@ -918,6 +918,21 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
+
+function getSmallestUnitV2($productId, $fromUnitId, $qty = 1)
+{
+    // Ambil konversi dari unit saat ini
+    $conversion = DB::table('product_uom')
+        ->where('product', $productId)
+        ->where('unit_tujuan', $fromUnitId)
+        ->whereNull('deleted')
+        ->first();
+
+    return $conversion;
+}
+
+
+
 function getLargestUnit($productId, $fromUnitId, $qty = 1)
 {
     // Ambil semua konversi unit untuk produk terkait
