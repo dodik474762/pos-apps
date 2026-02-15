@@ -55,6 +55,31 @@ let DeliveryOrder = {
 
         return result;
     },
+    
+    getPostItemChecked: () => {
+        const checkboxs = $("input.checkbox-so");
+        let result = [];
+
+        checkboxs.each((index, elm) => {
+            const $check = $(elm);
+            if($check.is(':checked')){
+                const td = $(elm).closest('td');
+                const $row = td.closest('tr');
+    
+                result.push({
+                    id: td.find('a').attr('data_id') || null,
+                    so_detail_id: null,
+                    product_id: null,
+                    qty:  0,
+                    uom: null,
+                    note: "",
+                    remove: 0,
+                });
+            }
+        });
+
+        return result;
+    },
 
     getPostInput: () => {
         let data = {
@@ -65,6 +90,7 @@ let DeliveryOrder = {
             customer_id: $("#customer_id").val() || null,
             warehouse_id: $("#warehouse_id").val() || null,
             items: DeliveryOrder.getPostItem(),
+            items_checked: DeliveryOrder.getPostItemChecked()
         };
 
         return data;
@@ -107,6 +133,39 @@ let DeliveryOrder = {
         } else {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }
+    },
+    
+    generate: (elm) => {
+        let params = DeliveryOrder.getPostInput();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(DeliveryOrder.moduleApi()) + "generate",
+            headers: {
+                "X-CSRF-TOKEN": DeliveryOrder.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        // window.location.reload();
+                        DeliveryOrder.back();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
     },
 
     back: (elm) => {
@@ -386,7 +445,8 @@ let DeliveryOrder = {
                         html += `<a href='' so_number="${row.so_number}" nama_customer="${row.nama_customer}"
                         customer="${row.customer_id}"
                         onclick="DeliveryOrder.pilihDataSo(this, event)"
-                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;
+                        <input type="checkbox" class="checkbox-so" id="check-so"/>`;
                         return html;
                     },
                 },

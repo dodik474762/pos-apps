@@ -96,6 +96,9 @@
     {{-- INFORMASI PO --}}
     <table class="no-border" style="width:100%;">
         <tr>
+            <td colspan="2"><strong><u>Surat Jalan</u></strong></td>
+        </tr>
+        <tr>
             <td><strong>Kode DO:</strong> {{ $data->do_number }}</td>
             <td style="padding-left:40px;"><strong>Tanggal DO:</strong> {{ date('d/m/Y', strtotime($data->do_date)) }}</td>
         </tr>

@@ -203,7 +203,9 @@ class DeliveryOrderController extends Controller
         $data = $request->all();
         $userId = session('user_id');
         $result = ['is_valid' => false];
-
+        
+        // echo '<pre>';
+        // print_r($data);die;
         DB::beginTransaction();
         try {
 
@@ -267,9 +269,10 @@ class DeliveryOrderController extends Controller
                 $detail->line_no = $line_no++;
                 $detail->save();
 
-                $qtyBaseUnit = getSmallestUnit($item['product_id'], $item['uom'], $item['qty']);
-                $productUomLevel1 = ProductUom::where('product', $item['product_id'])->where('level', '1')->first();
-                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty']);
+                $productUomLevel1 =  $qtyBaseUnit;
+                // $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+                $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item['qty'] : 0;
 
                 $item['product'] = $item['product_id'];
                 stockUpdate($hdrId,
@@ -308,6 +311,114 @@ class DeliveryOrderController extends Controller
             DB::rollBack();
             $result['is_valid'] = false;
             $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    public function generate(Request $request){
+        $data = $request->all();
+        $result['is_valid'] = false;
+        $userId = session('user_id');
+
+        DB::beginTransaction();
+        try {
+            if(empty($data['items_checked'])){
+                DB::rollBack();
+                $result['message'] = 'Tidak ada item SO dipilih';
+                return response()->json($result);
+            }
+
+            $soIds = collect($data['items_checked'])->pluck('id')->toArray();
+            
+            $so = SalesOrderHeader::whereIn('sales_order_headers.id', $soIds)
+            ->select(['sales_order_headers.*'])
+            ->with(['items'])
+            ->get();
+
+            if(empty($so)){
+                DB::rollBack();
+                $result['message'] = 'SO Tidak Ditemukan';
+                return response()->json($result);
+            }
+
+            foreach ($so as $key => $value) {                
+                // === HEADER ===
+                $header = new DeliveryOrderHeader();
+                $header->do_number = generateNoDO(); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'DRAFT';
+
+                $cust_id = $value->customer_id;
+                $header->do_date = $data['do_date'];
+                $header->so_id = $value->id;
+                $header->customer_id = $cust_id;
+                $header->warehouse_id = $data['warehouse_id'];
+                $header->total_item = 0; // akan dihitung ulang di bawah
+                $header->total_qty = 0; // akan dihitung ulang di bawah
+                $header->save();
+
+                $hdrId = $header->id;
+
+                // === DETAIL ===
+                $line_no = 1;
+                $totalQty = 0;
+                foreach ($value->items as $item) {
+
+                    // Item baru atau update
+                    $detail = new DeliveryOrderDtl();
+
+                    $detail->do_id = $hdrId;
+                    $detail->so_detail_id = $item->id;
+                    $detail->product_id = $item->product_id;
+                    $detail->qty = $item->qty;
+                    $detail->uom = $item->unit;
+                    $detail->note = $item->is_free_good == 1 ? 'FREE GOOD' : null;
+                    $detail->line_no = $line_no++;
+                    $detail->save();
+
+                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty);
+                    $productUomLevel1 =  $qtyBaseUnit;
+                    $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item->qty : 0;
+
+                    $pushItem['product'] = $item->product_id;
+                    stockUpdate($hdrId,
+                    $data['warehouse_id'],
+                    $item->product_id,
+                    $productUomLevel1->unit_tujuan, $qtyBaseUnit, $pushItem, 'min', 'delivery_order');
+                    $totalQty += $item->qty;
+                }
+
+                $total_item = count($value->items);
+                $total_qty = $totalQty;
+
+                // Update total header
+                $header->total_item = $total_item;
+                $header->total_qty = $total_qty;
+                $header->save();
+
+                $so = SalesOrderHeader::find($value->id);
+                $so->status = 'confirmed';
+                $so->save();
+
+                $dev_status_log = DeliveryOrderStatusLog::where('do_id', $hdrId)->first();
+                if (empty($dev_status_log)) {
+                    $dev_status_log = new DeliveryOrderStatusLog();
+                    $dev_status_log->do_id = $hdrId;
+                    $dev_status_log->status_from = 'DRAFT';
+                    $dev_status_log->status_to = 'DRAFT';
+                    $dev_status_log->changed_by = $userId;
+                    $dev_status_log->changed_at = now();
+                    $dev_status_log->save();
+                }
+            }
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['is_valid'] = $th->getMessage();
         }
 
         return response()->json($result);

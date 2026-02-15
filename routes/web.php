@@ -520,6 +520,7 @@ Route::post('api_mobile/transaksi/sales_plan/getSalesRoutePlan', [TransactionSal
 
 Route::post('api/transaksi/delivery_order/getData', [TransactionDeliveryOrderController::class, 'getData']);
 Route::post('api/transaksi/delivery_order/submit', [TransactionDeliveryOrderController::class, 'submit']);
+Route::post('api/transaksi/delivery_order/generate', [TransactionDeliveryOrderController::class, 'generate']);
 Route::post('api/transaksi/delivery_order/delete', [TransactionDeliveryOrderController::class, 'delete']);
 Route::post('api/transaksi/delivery_order/confirmDelete', [TransactionDeliveryOrderController::class, 'confirmDelete']);
 Route::post('api/transaksi/delivery_order/showModalSO', [TransactionDeliveryOrderController::class, 'showModalSO']);

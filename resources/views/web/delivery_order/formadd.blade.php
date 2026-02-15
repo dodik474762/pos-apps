@@ -78,7 +78,6 @@
                             <div class="mb-3">
                                 <label class="form-label">Warehouse</label>
                                 <select class="form-control select2 required" id="warehouse_id" error="Warehouse">
-                                    <option value=""></option>
                                     @foreach ($warehouses as $w)
                                         <option value="{{ $w->id }}"
                                             {{ isset($data->warehouse_id) && $data->warehouse_id == $w->id ? 'selected' : '' }}>

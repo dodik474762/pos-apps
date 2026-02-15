@@ -4,10 +4,16 @@
      <div class="modal-dialog modal-xl">
          <div class="modal-content">
              <div class="modal-header">
-                 <h5 class="modal-title">Data</h5>
+                 <h5 class="modal-title">Data So Belum Dikirim</h5>
                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
              </div>
              <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" onclick="DeliveryOrder.generate(this)" class="btn btn-success">Generate</button>
+                    </div>
+                </div>
+                <br/>
                  <div class="table-responsive">
                      <table id="table-data-modal" class="table table-striped table-bordered dt-responsive nowrap"
                          style="border-collapse: collapse; border-spacing: 0; width: 100%;">
