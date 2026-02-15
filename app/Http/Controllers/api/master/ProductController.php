@@ -42,10 +42,12 @@ class ProductController extends Controller
                 'm.*',
                 'pt.type',
                 'u.name as unit_name',
-                'v.nama_vendor'
+                'v.nama_vendor',
+                'ps.qty as stock'
             ])
             ->join('product_type as pt', 'pt.id', 'm.product_type')
             ->leftJoin('vendor as v', 'v.id', 'm.vendor')
+            ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
             ->leftJoin('unit as u', 'u.id', 'm.unit')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');

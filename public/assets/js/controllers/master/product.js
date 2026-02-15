@@ -130,6 +130,12 @@ let Product = {
                     data: "nama_vendor",
                 },
                 {
+                    data: "stock",
+                },
+                {
+                    data: "unit_name",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";

@@ -100,6 +100,8 @@
                                                     <th>Type</th>
                                                     <th>Model Number</th>
                                                     <th>Principal</th>
+                                                    <th>Stock</th>
+                                                    <th>Unit</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
