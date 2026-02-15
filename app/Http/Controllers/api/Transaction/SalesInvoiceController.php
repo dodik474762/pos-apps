@@ -374,8 +374,10 @@ class SalesInvoiceController extends Controller
                 /*mapping coa */
             }
 
-            $do->status = 'CONFIRMED';
-            $do->save();
+            if($data['is_packing'] == '1'){
+                $do->status = 'CONFIRMED';
+                $do->save();
+            }
 
             $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
             if (empty($dev_status_log)) {
