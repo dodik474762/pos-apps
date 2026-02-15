@@ -154,7 +154,7 @@ class PackingListController extends Controller
         $api = new TransactionPackingListController;
         $data = $request->all();
         $data['list_kendaraan'] = $this->getKendaraan();
-        
+
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -274,31 +274,83 @@ class PackingListController extends Controller
                 'packing_list_detail.*',
                 'doh.do_number',
             ])
-            ->with(['product'])
+            ->with(['product', 'deliveryDetail'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
             ->where('packing_list_detail.packing_list_id', $data->id)
             ->get();
 
-        $grouped = $details
-            ->pluck('detail')
-            ->flatten()
-            ->groupBy([
-                fn($item) => $item->product->product_code,
-                fn($item) => $item->deliveryDetail->units->name,
-            ]);
+        // $grouped = $details
+        //     ->pluck('detail')
+        //     ->flatten()
+        //     ->groupBy([
+        //         fn($item) => $item->product->product_code,
+        //         fn($item) => $item->deliveryDetail->units->name,
+        //     ]);
 
-        $productLargest = [];
+        $grouped = collect($packingListDetail)->groupBy('product_id')->toArray();
+        $groupedItem = [];
         foreach ($grouped as $key => $value) {
-            foreach ($value as $items) {
-                foreach ($items as $item) {
-                    if (strtolower($item->deliveryDetail->units->name) != 'karton' && strtolower($item->deliveryDetail->units->name) != 'box') {
-                        $largestUnit = getLargestUnit($item->product->id, $item->deliveryDetail->id, $item->qty_packed);
-                        $qtyLarge = $largestUnit['qty_in_largest_unit'];
-                        $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
-                    }
-                }
+            $items = $value;            
+            $totalInSmallQty = 0;
+            $remark = '';
+            $groupByItemUom = collect($items)->groupBy('delivery_detail.uom');
+            $uomIds = $groupByItemUom->keys()->toArray();
+            $units = DB::table('unit')->whereIn('id', $uomIds)->get();
+            
+            foreach ($items as $v) {
+                $remark .= $v['remark'].' / ';
+                $delivery_detail = $v['delivery_detail'];
+                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed']);
+                $qtyProductInSmall = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $v['qty_packed'] : 0;
+                $totalInSmallQty += $qtyProductInSmall;
             }
+
+            $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
+            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
+            
+            $qtyOriginal = $largestUnit['qty_in_largest_unit'];
+            $qtyLarges = ceil($qtyOriginal);
+
+            $isAssembly = ($qtyOriginal != floor($qtyOriginal));
+
+            $groupedUom = [];
+            $assemblysItem = [];
+            foreach ($groupByItemUom->toArray() as $key_uom => $u) {
+                $items = $u;
+                $qty = collect($items)->sum('qty_packed');
+                $unit_name = collect($units)->where('id', $key_uom)->first();
+                $groupedUom[] = [
+                    'unit'=> $key_uom,
+                    'units'=> $unit_name,
+                    'qty'=> $qty,
+                ];
+                $assemblysItem[] = $qty.' '.$unit_name->name;
+            }
+
+
+            $groupedItem[] = [
+                'product_id'=> $key,
+                'product_code'=> $items[0]['product']['code'],
+                'product_name'=> $items[0]['product']['name'],
+                'remarks'=> $remark,
+                'conversion'=> $largestUnit,
+                'assembly' => $isAssembly,
+                'groupedUom'=> $groupedUom,
+                'assembly_name'=> implode('/', $assemblysItem)
+            ];
         }
+        // $productLargest = [];
+        // foreach ($grouped as $key => $value) {
+        //     foreach ($value as $items) {
+        //         foreach ($items as $item) {
+        //             if (strtolower($item->deliveryDetail->units->name) != 'karton' && strtolower($item->deliveryDetail->units->name) != 'box') {
+        //                 $largestUnit = getLargestUnit($item->product->id, $item->deliveryDetail->id, $item->qty_packed);
+        //                 $qtyLarge = $largestUnit['qty_in_largest_unit'];
+        //                 $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
+        //             }
+        //         }
+        //     }
+        // }
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
 
@@ -308,7 +360,7 @@ class PackingListController extends Controller
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
-        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped'))
+        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-' . $data->payment_code . '.pdf');

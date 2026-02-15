@@ -176,7 +176,7 @@
                 <th>No</th>
                 <th>Kode Produk</th>
                 <th>Nama Produk</th>
-                <th>Qty DO</th>
+                <!-- <th>Qty DO</th> -->
                 <th>Qty Pack</th>
                 <th>Satuan</th>
                 <th>Remark</th>
@@ -185,8 +185,24 @@
 
         <tbody>
             @php $p = 1; @endphp
+            @foreach ($groupedItem as $d)
+                <tr>
+                    <td>{{ $p++ }}</td>
 
-            @foreach ($grouped as $item)
+                    <td>{{ $d['product_code'] ?? '-' }}</td>
+                    <td>{{ $d['product_name'] ?? '-' }}</td>
+
+                    <td class="text-right">{{ number_format($d['conversion']['qty_in_largest_unit'], 2, ',', '.') }}</td>
+
+                    <td>{{ $d['conversion']['largest_unit_name'] ?? '-' }}</td>
+                    <td>{{ $d['remarks'] ?? '-' }} {!! $d['assembly'] == 1 ? '<strong>Assembly</strong>' : '' !!}
+                        <br/>
+                        {{ $d['assembly_name'] }}
+                    </td>
+                </tr>
+            @endforeach
+
+            {{-- @foreach ($grouped as $item)
                 @foreach ($item as $items)
                     @foreach ($items as $d)
                         @php
@@ -211,7 +227,7 @@
                         </tr>
                     @endforeach
                 @endforeach
-            @endforeach
+            @endforeach --}}
 
             {{-- @foreach ($packingListDetail as $d)
                     <tr>
