@@ -70,7 +70,7 @@
                                                     <th>Dibuat Oleh</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
-                                                    <th>Status</th>
+                                                    <th>Status Invoice</th>
                                                     <th style="width: 40px;">
                                                         <input type="checkbox" id="check-all" onchange="SalesInvoice.checkAll(this)">
                                                     </th>

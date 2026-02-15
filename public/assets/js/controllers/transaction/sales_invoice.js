@@ -75,6 +75,7 @@ let SalesInvoice = {
             subtotal: parseFloat($("#subtotal").val()) || 0,
             discount_amount: parseFloat($("#discount_amount").val()) || 0,
             tax: $("#tax").val() || 0,
+            is_packing: $("#is_packing").is(':checked') ? 1 : 0,
             tax_base: parseFloat($("#tax option:selected").attr("rate")) || 0,
             total_amount: parseFloat($("#grand-total").text()) || 0,
 
@@ -481,7 +482,9 @@ let SalesInvoice = {
                         customer="${row.customer_id}"
                         do_number="${row.do_number}"
                         onclick="SalesInvoice.pilihDataDo(this, event)"
-                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;
+                        <!-- <input type="checkbox" class="checkbox-do" id="check-do"/> -->
+                        `;
                         return html;
                     },
                 },
@@ -967,14 +970,14 @@ let SalesInvoice = {
         }
     },
 
-    search: (elm) => {
+    search: (elm, state = '') => {
         const url = $(elm).attr("url");
         const date = $("#filterDate").val();
         if (date == "") {
             message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date;
+        window.location.href = url + "?tanggal=" + date+"&state="+state;
     },
 
     checkAll: (elm) => {
@@ -1001,6 +1004,18 @@ let SalesInvoice = {
         const url = $(elm).attr("url");
         window.open(url + "?ids=" + ids.join(","), "_blank");
     },
+
+    generate:(elm)=>{
+        const checkDo = $('input.checkbox-do');
+        $("button.btn-close").trigger("click");
+
+        $.each(checkDo, function(elm){
+            if($(this).is(':checked')){
+                const data_id = $(this).closest('td').find('a').attr('data_id');
+                SalesInvoice.getDoDetail(data_id);
+            }
+        });
+    }
 };
 
 $(function () {

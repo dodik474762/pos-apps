@@ -88,6 +88,12 @@
                                 </select>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Packing List</label>
+                                <input type="checkbox" id="is_packing" class=""
+                                       {{ isset($data->is_packing) ? ($data->is_packing == 1 ? 'checked' : '') : 'checked' }}>
+                            </div>
+
                         </div>
                     </div>
 

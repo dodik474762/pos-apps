@@ -67,7 +67,7 @@ class SalesInvoiceController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getAllInvoiceCetak($date = '')
+    public function getAllInvoiceCetak($date = '', $state = '')
     {
         $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
         $datadb = DB::table('sales_invoice_header as m')
@@ -83,13 +83,15 @@ class SalesInvoiceController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('delivery_order_header as do', 'do.id', 'm.do_id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
-            // ->where('m.invoice_date', $date)
-            ->whereNull('m.deleted')
-            ->where(function ($q) {
+            ->where('m.invoice_date', $date)
+            ->whereNull('m.deleted')            
+            ->orderBy('m.id', 'desc');
+        if($state == ''){
+            $datadb->where(function ($q) {
                 return $q->where('m.reprint', 1)
                     ->orWhereNull('m.print_date');
-            })
-            ->orderBy('m.id', 'desc');
+            });
+        }
 
         $datadb = $datadb->get();
 
@@ -103,7 +105,7 @@ class SalesInvoiceController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        $data['invoices'] = $this->getAllInvoiceCetak($data['tanggal']);
+        $data['invoices'] = $this->getAllInvoiceCetak($data['tanggal'], $data['state']);
         // echo '<pre>';
         // print_r($data);die;
         $view = view('web.sales_invoice.cetakall', $data);

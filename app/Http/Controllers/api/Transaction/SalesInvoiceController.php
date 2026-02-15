@@ -319,6 +319,7 @@ class SalesInvoiceController extends Controller
             $header->discount_amount = $disc_total;
             $header->tax_base = $tax->rate;
             $header->tax_id = $data['tax'];
+            $header->is_packing = $data['is_packing'];
             $header->tax_amount = $tax_amount;
             $header->total_amount = $data['total_amount'];
             if($data['id'] != ''){

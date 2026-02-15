@@ -48,6 +48,7 @@
                                 <!--end col-->
                                 <div class="col-xxl-3 col-sm-4">
                                     <div>
+                                        <label for="">Date Invoice</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
                                             data-date-format="d M, Y" data-range-date="true" id="filterDate"
                                             placeholder="Select date">
@@ -55,9 +56,19 @@
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this);"> <i
+                                        <label for="">&nbsp;</label>
+                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this, '');"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Print All Invoice
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">&nbsp;</label>
+                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this, 'reprint');"> <i
+                                                class="ri-equalizer-fill me-1 align-bottom"></i>
+                                            Invoice Reprint
                                         </button>
                                     </div>
                                 </div>
@@ -95,7 +106,7 @@
                                                     <th>Waktu Print</th>
                                                     <th>Status Cetak</th>
                                                     <th>Re Print</th>
-                                                    <th>Status</th>
+                                                    <th>Status Invoice</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
