@@ -50,10 +50,23 @@
                                        value="{{ $data->packing_date ?? date('Y-m-d') }}">
                             </div>
 
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <label class="form-label">Vehicle No</label>
                                 <input type="text" id="vehicle_no" class="form-control"
                                        value="{{ $data->vehicle_no ?? '' }}">
+                            </div> -->
+
+                            <div class="mb-3">
+                                <label class="form-label">Vehicle No</label>
+                                <select name="vehicle_no" id="vehicle_no" class="form-control required select2" error="Vehicle Harus Diisi">
+                                    <option value="">Pilih Kendaraan</option>
+                                    @foreach ($list_kendaraan as $item)
+                                        <option value="{{ $item->nopol }}"
+                                            {{ isset($data->vehicle_no) && $data->vehicle_no == $item->nopol ? 'selected' : '' }}>
+                                            {{ $item->name }} - {{ $item->nopol }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <div class="mb-3">

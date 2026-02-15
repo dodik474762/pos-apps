@@ -91,6 +91,11 @@ class PackingListController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getKendaraan(){
+        $datadb = DB::table('vehicle')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
     public function add(Request $request)
     {
         $data = $request->all();
@@ -104,6 +109,7 @@ class PackingListController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
+        $data['list_kendaraan'] = $this->getKendaraan();
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $data['general_ledgers'] = [];
@@ -129,6 +135,7 @@ class PackingListController extends Controller
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
+        $data['list_kendaraan'] = $this->getKendaraan();
         $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['details'] = [];
         $data['general_ledgers'] = [];
@@ -146,6 +153,8 @@ class PackingListController extends Controller
     {
         $api = new TransactionPackingListController;
         $data = $request->all();
+        $data['list_kendaraan'] = $this->getKendaraan();
+        
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
