@@ -495,6 +495,27 @@ class SalesOrderController extends Controller
             }
             /*update koordinat customer */
 
+
+             /*CALCULATE PROMO ITEM */
+            $items = [];
+            $productIds = [];
+            foreach ($data['details'] as $i) {
+                [$products, $product_unit] = explode(':', $i['product_id']);
+                $products = explode('/', $products);
+                $product_unit = explode('/', $product_unit);
+                $items = [
+                    'product_id'=> $products[0],
+                    'unit_id'=> $product_unit[0],
+                    'qty'=> $i['qty'],
+                    'price'=> doubleval(trim($product_unit[1]))
+                ];
+                $productIds[] = $products[0];
+            }
+            
+            $promoItem = $this->getPromoItemAll($productIds);
+            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds);
+            /*CALCULATE PROMO ITEM */
+
             // === HEADER ===
             $header = new SalesOrderHeader;
             $header->so_number = generateNoSO(); // misal helper
@@ -563,8 +584,25 @@ class SalesOrderController extends Controller
                 $params['customer_id'] = '1';
                 $params['price'] = doubleval(trim($product_unit[1]));
                 $params['today'] = $data['so_date'];
-                $params['qty'] = $item['qty'];
+                $params['qty'] = $item['qty'];                
                 $calculateDisc = $this->calculateDisc($params);
+
+                /*PROMO */
+                $promoItem = null;     
+                $freeGoods = [];           
+                if(!empty($calculatePromo)){
+                    foreach($calculatePromo as $promo){
+                        $items = $promo['items'];
+                        $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
+                        if(!empty($promoItem)){
+                            $calculateDisc['disc_percent'] = $promo['discount_percent'];
+                            $calculateDisc['disc_amount'] = $promo['discount_amount'];
+                            $calculateDisc['subtotal'] = $promoItem['subtotal'];
+                            $freeGoods = $promo['discount_free'];
+                        }
+                    }
+                }
+                /*PROMO */
 
                 $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $calculateDisc['disc_percent'];
@@ -584,7 +622,6 @@ class SalesOrderController extends Controller
                     $detail->unit = $calculateDisc['discount_free']->free_unit;
                     $detail->unit_price = 0;
                     $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
-                    ;
                     $detail->discount_percent = 0;
                     $detail->discount_amount = 0;
                     $detail->subtotal = 0;
@@ -592,7 +629,27 @@ class SalesOrderController extends Controller
                     $detail->free_for = trim($products[0]);
                     $detail->status = 'draft';
                     $detail->save();
-                }
+                }     
+
+                if (!empty($freeGoods)) {
+                    foreach($freeGoods as $free){
+                        $detail = new SalesOrderDetail();
+    
+                        $detail->sales_order_id = $hdrId;
+                        $detail->product_id = $free['product'];
+                        $detail->qty = $free['qty'];
+                        $detail->unit = $free['unit'];
+                        $detail->unit_price = 0;
+                        $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
+                        $detail->discount_percent = 0;
+                        $detail->discount_amount = 0;
+                        $detail->subtotal = 0;
+                        $detail->is_free_good = 1;
+                        $detail->free_for = trim($products[0]);
+                        $detail->status = 'draft';
+                        $detail->save();
+                    }
+                }     
 
                 $grandTotal += $calculateDisc['subtotal'];
             }
