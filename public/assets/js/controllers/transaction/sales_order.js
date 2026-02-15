@@ -310,6 +310,38 @@ let SalesOrder = {
             },
         });
     },
+    
+    confirmAlHandheld: (elm) => {
+        let params = {};
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "confirmAlHandheld",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Diproses");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 
     showDataProduct: (elm) => {
         let params = {};

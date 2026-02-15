@@ -646,6 +646,30 @@ class SalesOrderController extends Controller
 
         return response()->json($result);
     }
+    
+    public function confirmAlHandheld(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            // code...
+            SalesOrderHeader::whereNull('deleted')->where('platform', 'mobile')
+            ->where('status', 'submited')
+            ->update([
+                'status'=> 'draft'
+            ]);
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            // throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
 
     public function getDetailData($id)
     {
