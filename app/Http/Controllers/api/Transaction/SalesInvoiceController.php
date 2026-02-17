@@ -13,6 +13,7 @@ use App\Models\Transaction\DeliveryOrderStatusLog;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesOrderHeader;
+use App\Models\Transaction\SalesOrderDetail;
 use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceController extends Controller
@@ -110,6 +111,58 @@ class SalesInvoiceController extends Controller
                     $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+    
+    public function getDataSo()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table('sales_order_headers as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'c.code as currency_code',
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('currency as c', 'c.id', 'm.currency')
+            ->whereNull('m.deleted')
+            ->whereNotIn('m.status', ['canceled'])
+            ->orderBy('m.id', 'asc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.so_number', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.so_date', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
                     $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
@@ -312,7 +365,7 @@ class SalesInvoiceController extends Controller
 
             $data['total_amount'] = $subtotal;
             $header->invoice_date = $data['invoice_date'];
-            $header->do_id = $data['do_id'];
+            $header->do_id = isset($data['do_id']) ? $data['do_id'] : null;
             $header->warehouse_id = $do->warehouse_id;
             $header->customer_id = $cust_id;
             $header->subtotal = $subtotal - $tax_amount;
@@ -375,8 +428,10 @@ class SalesInvoiceController extends Controller
             }
 
             if($data['is_packing'] == '1'){
-                $do->status = 'CONFIRMED';
-                $do->save();
+                if(!empty($do)){
+                    $do->status = 'CONFIRMED';
+                    $do->save();
+                }
             }
 
             $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
@@ -390,20 +445,21 @@ class SalesInvoiceController extends Controller
                 $dev_status_log->save();
             }
 
-            $so = SalesOrderHeader::find($do->so_id);
-            if($data['id'] == ''){
-                $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
-                if($so->payment_term == '' || $so->payment_term == 0){
-                    $updateInv->due_date = $data['invoice_date'];
-                    $updateInv->save();
-                }else{
-                    $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
-                    $updateInv->due_date = $dueDate;
-                    $updateInv->save();
+            if(!empty($do)){
+                $so = SalesOrderHeader::find($do->so_id);
+                if($data['id'] == ''){
+                    $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
+                    if($so->payment_term == '' || $so->payment_term == 0){
+                        $updateInv->due_date = $data['invoice_date'];
+                        $updateInv->save();
+                    }else{
+                        $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
+                        $updateInv->due_date = $dueDate;
+                        $updateInv->save();
+                    }
                 }
+                $currency = $so->currency;
             }
-
-            $currency = $so->currency;
 
             $reference = $header->invoice_number;
             if($data['id'] != ''){
@@ -559,6 +615,13 @@ class SalesInvoiceController extends Controller
         return view('web.sales_invoice.modal.datado', $data);
     }
 
+    public function showModalSO(Request $request)
+    {
+        $data = $request->all();
+
+        return view('web.sales_invoice.modal.dataso', $data);
+    }
+
     public function getDoDetail(Request $request){
         $data = $request->all();
         $datadb = DeliveryOrderDtl::where('delivery_order_detail.do_id', $data['do_id'])
@@ -604,6 +667,46 @@ class SalesInvoiceController extends Controller
         $data['data'] = $datadb;
 
         return view('web.sales_invoice.datadodetail', $data);
+    }
+    
+    public function getSoDetail(Request $request){
+        $data = $request->all();
+        $datadb = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['so_id'])
+        ->select([
+            'sales_order_details.*',
+            'u.name as unit_name',
+            'p.code as product_code',
+            'p.name as product_name',
+            'p.type_tax',
+            'p.tax_sale',
+            't.rate as tax',
+             // Hitung tax_amount sesuai tipe pajak
+            DB::raw("
+                CASE
+                    WHEN p.type_tax = 'include' THEN (sales_order_details.subtotal - (sales_order_details.subtotal / (1 + t.rate/100)))
+                    WHEN p.type_tax = 'exclude' THEN (sales_order_details.subtotal * (t.rate/100))
+                    ELSE 0
+                END AS tax_amount
+            "),
+                // Hitung line total = subtotal + tax_amount
+            DB::raw("
+                sales_order_details.subtotal +
+                CASE
+                    WHEN p.type_tax = 'include' THEN (sales_order_details.subtotal - (sales_order_details.subtotal / (1 + t.rate/100)))
+                    WHEN p.type_tax = 'exclude' THEN (sales_order_details.subtotal * (t.rate/100))
+                    ELSE 0
+                END AS line_total
+            ")
+        ])
+        ->join('product as p', 'p.id', 'sales_order_details.product_id')
+        ->join('tax as t', 't.id', 'p.tax_sale')
+        ->join('unit as u', 'u.id', 'sales_order_details.unit')
+        ->whereNull('sales_order_details.deleted')
+        ->get();
+
+        $data['data'] = $datadb;
+
+        return view('web.sales_invoice.datasodetail', $data);
     }
 
      public function getOutstandingInvoice(Request $request){
