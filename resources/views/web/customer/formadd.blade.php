@@ -279,6 +279,10 @@
                             </div>
                         </div>
                     </div>
+
+                    @if (isset($id))
+                        @include('web.customer.product-list-item-price')
+                    @endif
                 </form>
 
             </div>

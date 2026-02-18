@@ -314,6 +314,7 @@ Route::post('api/master/customer/confirmDelete', [MasterCustomerController::clas
 Route::post('api/master/customer/getCity', [MasterCustomerController::class, 'getCity']);
 Route::post('api/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
+Route::post('api/master/customer/addItemPrice', [MasterCustomerController::class, 'addItemPrice']);
 Route::post('api_mobile/master/customer/getCity', [MasterCustomerController::class, 'getCity']);
 Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);

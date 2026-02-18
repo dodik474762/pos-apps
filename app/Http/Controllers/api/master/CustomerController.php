@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\master;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Customer;
 use App\Models\Master\Region;
+use App\Models\Master\ProductUom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -404,5 +405,39 @@ class CustomerController extends Controller
         $result['is_valid'] = true;
         $result['data'] = $datadb;
         return response()->json($result);
+    }
+
+    public function getListPriceList()
+    {
+        $datadb = DB::table('price_list as pl')->whereNull('deleted')->get();
+        return $datadb;
+    }
+
+    public function addItemPrice(Request $request)
+    {
+        $data = $request->all();
+        $product_uoms = ProductUom::where('product', $data['id'])
+            ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
+            ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
+            ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->get();
+
+        $data_satuan = [];
+        foreach ($product_uoms as $key => $value) {
+            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
+        }
+        $data_satuan = collect($data_satuan)->unique()->values()->all();
+        $result_satuan = [];
+        foreach ($data_satuan as $key => $value) {
+            list($id, $name) = explode('//', $value);
+            $result_satuan[] = [
+                'id' => trim($id),
+                'name' => trim($name)
+            ];
+        }
+        $data['data_satuan'] = $result_satuan;
+        $data['tipe_price'] = $this->getListPriceList();
+        return view('web.customer.product-item-price', $data);
     }
 }

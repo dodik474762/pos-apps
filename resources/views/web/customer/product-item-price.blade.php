@@ -1,0 +1,40 @@
+<tr data_id="">
+    <td class="text-center">
+        <button class="btn btn-sm btn-danger" onclick="Customer.removeItemPrice(this, event)"><i
+                class="bx bx-trash-alt"></i></button>
+    </td>
+    <td>
+        <div class="input-group">
+            <button class="btn btn-outline-primary" type="button" id="button-addon1"
+                onclick="Customer.showDataProduct(this)">Pilih</button>
+            <input id="product" name="product[]" type="text" class="form-control" error="Product"
+                placeholder="Pilih Data Product" aria-label="Pilih Data Product" aria-describedby="button-addon1"
+                value="">
+        </div>
+    </td>
+    <td id="uom"></td>
+    <td>
+        <select id="type_price" name="type_price[]" class="form-control required" error="Type Price">
+            @foreach ($tipe_price as $item)
+                <option value="{{ $item->id }}">{{ $item->name }}</option>
+            @endforeach
+        </select>
+    </td>
+    <td>
+        <!-- 🔹 input baru: Min Qty -->
+        <input type="number" id="min_qty" name="min_qty[]" class="form-control required" error="Min Qty" min="1"
+            value="1">
+    </td>
+    <td>
+        <!-- 🔹 input baru: Min Qty -->
+        <input type="number" id="max_qty" name="max_qty[]" class="form-control required" error="Max Qty" min="1"
+            value="1">
+    </td>
+    <td>
+        <input type="number" id="price" name="price[]" class="form-control required" error="Harga" value="">
+    </td>
+    <td>
+        <input type="date" id="date_start" name="date_start[]" class="form-control required" error="Tanggal Mulai"
+            value="{{ date('Y-m-d') }}">
+    </td>    
+</tr>

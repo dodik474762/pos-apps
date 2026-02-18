@@ -119,6 +119,7 @@ class CustomerController extends Controller
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
         $data['pasars'] = $this->getPasar();
+        $data['product_prices'] = [];
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
@@ -137,6 +138,7 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
 
+        $data['product_prices'] = [];
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();

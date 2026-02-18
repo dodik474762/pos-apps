@@ -11,6 +11,10 @@ let Customer = {
         return $('meta[name="csrf-token"]').attr("content");
     },
 
+    moduleApiProduct: () => {
+        return "api/master/product";
+    },
+
     moduleApi: () => {
         return "api/" + Customer.module();
     },
@@ -660,7 +664,79 @@ let Customer = {
         }else{
             $('#credit_limit').attr('disabled',false);
         }
-    }
+    },
+
+    addItemPrice: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $("input#id").val();
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Customer.moduleApi()) + "addItemPrice",
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const tablePrice = $("table#table-price").find("tbody");
+                tablePrice.append(resp);
+            },
+        });
+    },
+
+    removeItemPrice: (elm, e) => {
+        e.preventDefault();
+        const data_id = $(elm).closest("tr").attr("data_id");
+        if (data_id == "") {
+            $(elm).closest("tr").remove();
+        } else {
+            Customer.removeUomPrice(data_id);
+        }
+    },
+
+    removeUomPrice: (id) => {
+        let params = {
+            id: id,
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Customer.moduleApiProduct()) + "removeUomPrice",
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {
