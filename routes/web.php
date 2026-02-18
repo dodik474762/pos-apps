@@ -243,6 +243,7 @@ Route::get('transaksi/delivery_order/cetak', [DeliveryOrderController::class, 'c
 
 Route::get('transaksi/sales_invoice', [SalesInvoiceController::class, 'index']);
 Route::get('transaksi/sales_invoice/add', [SalesInvoiceController::class, 'add'])->name('sales-invoice-add');
+Route::get('transaksi/sales_invoice/addFromDo', [SalesInvoiceController::class, 'addFromDo'])->name('sales-invoice-add-do');
 Route::get('transaksi/sales_invoice/ubah', [SalesInvoiceController::class, 'ubah'])->name('sales-invoice-edit');;
 Route::get('transaksi/sales_invoice/cetak', [SalesInvoiceController::class, 'cetak'])->name('sales-invoice-print');;
 Route::get('transaksi/sales_invoice/cetakAll', [SalesInvoiceController::class, 'cetakAll'])->name('sales-invoice-print-all');;

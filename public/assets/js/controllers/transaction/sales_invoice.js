@@ -34,6 +34,11 @@ let SalesInvoice = {
         e.preventDefault();
         window.location.href = url.base_url(SalesInvoice.module()) + "add";
     },
+    
+    addFromDo: (elm, e) => {
+        e.preventDefault();
+        window.location.href = url.base_url(SalesInvoice.module()) + "addFromDo";
+    },
 
     getPostItem: () => {
         const table = $("table#table-items tbody tr.input");
