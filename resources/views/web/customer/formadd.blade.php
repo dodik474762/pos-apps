@@ -134,6 +134,32 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Foto NPWP</label>
+                                <input
+                                    type="file"
+                                    id="foto_npwp_path"
+                                    class="form-control"
+                                    error="Foto Customer"
+                                    accept="image/*">
+                                @if (isset($data->foto_npwp_path))
+                                    @if ($data->foto_npwp_path != '')
+                                        <br/>
+                                        <a href="{{ $data->foto_npwp_path }}">Check File Uploaded</a>
+                                    @endif
+                                @endif
+                            </div>
+                             <div class="mb-3">
+                                <label>Channel Outlet</label>
+                                 <div>
+                                    <select name="" id="channel_outlet" class="form-control required" error="Channel Outlet" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ isset($data->channel_outlet) ? ($data->channel_outlet == $item->term_id ? 'selected' : '') : '' }}>{{ $item->keterangan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -211,7 +237,7 @@
                             </div>
 
                             <div class="mb-3">
-                            <label class="form-label">Foto Customer</label>
+                                <label class="form-label">Foto Customer</label>
                                 <input
                                     type="file"
                                     id="photo_path"
@@ -224,6 +250,32 @@
                                         <a href="{{ $data->photo_path }}">Check File Uploaded</a>
                                     @endif
                                 @endif
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Foto KTP</label>
+                                <input
+                                    type="file"
+                                    id="foto_ktp_path"
+                                    class="form-control"
+                                    error="Foto Customer"
+                                    accept="image/*">
+                                @if (isset($data->foto_ktp_path))
+                                    @if ($data->foto_ktp_path != '')
+                                        <br/>
+                                        <a href="{{ $data->foto_ktp_path }}">Check File Uploaded</a>
+                                    @endif
+                                @endif
+                            </div>
+                             <div class="mb-3">
+                                <label>Sub Channel Outlet</label>
+                                 <div>
+                                    <select name="" id="sub_channel_outlet" class="form-control required" error="Sub Channel Outlet" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($sub_channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ isset($data->sub_channel_outlet) ? ($data->sub_channel_outlet == $item->term_id ? 'selected' : '') : '' }}>{{ $item->keterangan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -101,11 +101,23 @@ let Customer = {
         formData.append("latitude", $("#latitude").val());
         formData.append("longitude", $("#longitude").val());
         formData.append("pasar", $("#pasar").val());
+        formData.append("channel_outlet", $("#channel_outlet").val());
+        formData.append("sub_channel_outlet", $("#sub_channel_outlet").val());
 
         // FOTO (single upload)
         let photo = $("#photo_path")[0].files[0];
         if (photo) {
             formData.append("photo_path", photo);
+        }
+        
+        let photo_ktp = $("#foto_ktp_path")[0].files[0];
+        if (photo_ktp) {
+            formData.append("foto_ktp_path", photo);
+        }
+        
+        let photo_npwp = $("#foto_npwp_path")[0].files[0];
+        if (photo_npwp) {
+            formData.append("foto_npwp_path", photo);
         }
 
         return formData;
@@ -286,9 +298,12 @@ let Customer = {
                 {
                     data: "phone",
                 },
-                // {
-                //     "data": "address",
-                // },
+                {
+                    data: "channel_outlet",
+                },
+                {
+                    data: "sub_channel_outlet",
+                },
                 {
                     data: "id",
                     render: function (data, type, row) {

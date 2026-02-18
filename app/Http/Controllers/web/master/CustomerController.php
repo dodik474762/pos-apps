@@ -82,6 +82,22 @@ class CustomerController extends Controller
 
         return $datadb;
     }
+    
+    public function getChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+    
+    public function getSubChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'SUB_CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
 
     public function getPasar(){
         $datadb = DB::table('pasar')->whereNull('deleted')
@@ -100,6 +116,8 @@ class CustomerController extends Controller
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
         $data['tops'] = $this->getTerms();
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['pasars'] = $this->getPasar();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -123,6 +141,8 @@ class CustomerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['tops'] = $this->getTerms();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();

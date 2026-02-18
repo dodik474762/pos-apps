@@ -90,6 +90,8 @@
                                                     <th>PIC</th>
                                                     <th>Email</th>
                                                     <th>No. HP</th>
+                                                    <th>Channel Outlet</th>
+                                                    <th>Sub Channel Outlet</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

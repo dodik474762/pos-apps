@@ -51,6 +51,8 @@ class CustomerController extends Controller
                     $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.channel_outlet', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.sub_channel_outlet', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
                 });
             }
@@ -139,6 +141,8 @@ class CustomerController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $files_outlet = $request->file('photo_path');
+        $files_ktp = $request->file('foto_ktp_path');
+        $files_npwp = $request->file('foto_npwp_path');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -157,11 +161,29 @@ class CustomerController extends Controller
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_noo'.time().'.jpg';
-
-            $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/'.$dir.'/';
-            $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+            if(isset($files_outlet)){
+                $fileOutletName = 'outlet_noo'.time().'.jpg';
+    
+                $path = $files_outlet->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+            }
+            
+            if(isset($files_ktp)){
+                $fileOutletName = 'files_ktp'.time().'.jpg';
+    
+                $path = $files_ktp->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+            }
+            
+            if(isset($files_npwp)){
+                $fileOutletName = 'files_npwp'.time().'.jpg';
+    
+                $path = $files_npwp->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->foto_npwp_path = $dbpathlampOutlet.$fileOutletName;
+            }
             // $roles->branch = $data['branch'];
             $roles->pic = $data['pic'];
             $roles->no_ktp = $data['no_ktp'];
@@ -186,6 +208,8 @@ class CustomerController extends Controller
             $roles->latitude = $data['latitude'];
             $roles->longitude = $data['longitude'];
             $roles->pasar = $data['pasar'];
+            $roles->channel_outlet = $data['channel_outlet'];
+            $roles->sub_channel_outlet = $data['sub_channel_outlet'];
             $roles->branch = 'YOGYAKARTA';
             $roles->save();
 
