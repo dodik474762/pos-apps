@@ -15,6 +15,10 @@ class SalesInvoiceHeader extends Model
         return $this->hasOne(DeliveryOrderHeader::class, 'id', 'do_id');
     }
 
+    public function so(){
+        return $this->hasOne(SalesOrderHeader::class, 'id', 'sales_order');
+    }
+
     public function customers(){
         return $this->hasOne(Customer::class, 'id', 'customer_id');
     }

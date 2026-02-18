@@ -79,6 +79,63 @@ class SalesInvoiceController extends Controller
         // print_r($query);die;
         return json_encode($data);
     }
+   
+    public function getDataFromSO()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName().' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'so.so_number',
+                'so.so_date',
+                'w.name as warehouse_name'
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('sales_order_headers as so', 'so.id', 'm.sales_order')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->whereNull('m.deleted')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.invoice_number', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('so.so_number', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('so.so_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
 
     public function getDataDo()
     {
@@ -268,6 +325,8 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
         $userId = session('user_id');
         $result = ['is_valid' => false];
+        // echo '<pre>';
+        // print_r($data);die;
 
         DB::beginTransaction();
         try {
@@ -366,7 +425,8 @@ class SalesInvoiceController extends Controller
             $data['total_amount'] = $subtotal;
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = isset($data['do_id']) ? $data['do_id'] : null;
-            $header->warehouse_id = $do->warehouse_id;
+            $header->sales_order = isset($data['so_id']) ? $data['so_id'] : null;
+            $header->warehouse_id = empty($data['do_id']) ? 1 : $do->warehouse_id;
             $header->customer_id = $cust_id;
             $header->subtotal = $subtotal - $tax_amount;
             $header->discount_amount = $disc_total;
@@ -434,32 +494,33 @@ class SalesInvoiceController extends Controller
                 }
             }
 
-            $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
-            if (empty($dev_status_log)) {
-                $dev_status_log = new DeliveryOrderStatusLog();
-                $dev_status_log->do_id = $hdrId;
-                $dev_status_log->status_from = 'DRAFT';
-                $dev_status_log->status_to = 'CONFIRMED';
-                $dev_status_log->changed_by = $userId;
-                $dev_status_log->changed_at = now();
-                $dev_status_log->save();
+            if(!empty($data['do_id'])){
+                $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
+                if (empty($dev_status_log)) {
+                    $dev_status_log = new DeliveryOrderStatusLog();
+                    $dev_status_log->do_id = $hdrId;
+                    $dev_status_log->status_from = 'DRAFT';
+                    $dev_status_log->status_to = 'CONFIRMED';
+                    $dev_status_log->changed_by = $userId;
+                    $dev_status_log->changed_at = now();
+                    $dev_status_log->save();
+                }
             }
 
-            if(!empty($do)){
-                $so = SalesOrderHeader::find($do->so_id);
-                if($data['id'] == ''){
-                    $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
-                    if($so->payment_term == '' || $so->payment_term == 0){
-                        $updateInv->due_date = $data['invoice_date'];
-                        $updateInv->save();
-                    }else{
-                        $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
-                        $updateInv->due_date = $dueDate;
-                        $updateInv->save();
-                    }
+
+            $so = empty($data['so_id']) ? SalesOrderHeader::find($do->so_id) : SalesOrderHeader::find($data['so_id']);
+            if($data['id'] == ''){
+                $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
+                if($so->payment_term == '' || $so->payment_term == 0){
+                    $updateInv->due_date = $data['invoice_date'];
+                    $updateInv->save();
+                }else{
+                    $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
+                    $updateInv->due_date = $dueDate;
+                    $updateInv->save();
                 }
-                $currency = $so->currency;
             }
+            $currency = $so->currency;
 
             $reference = $header->invoice_number;
             if($data['id'] != ''){
@@ -590,9 +651,12 @@ class SalesInvoiceController extends Controller
             ->select([
                 'm.*',
                 'do.do_number',
-                'c.nama_customer'
+                'c.nama_customer',
+                'so.so_number',
+                'so.so_date'
             ])
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->where('m.id', $id);
         $data = $datadb->first();

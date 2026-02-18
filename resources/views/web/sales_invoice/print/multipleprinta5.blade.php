@@ -49,8 +49,8 @@
     @php
         // $qr = base64_encode(QrCode::format('png')->size(70)->generate($data->invoice_number));
         $qr = '';
-        $do = $data->do;
-        $so = $do->so;
+        $do = empty($data->do) ? [] : $data->do;
+        $so = empty($data->do) ? $data->so : $do->so;
         $salesman = $so->salesman;
         $salesman_name = $salesman->nama_lengkap ?? '-';
 

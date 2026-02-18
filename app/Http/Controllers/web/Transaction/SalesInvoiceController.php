@@ -78,10 +78,13 @@ class SalesInvoiceController extends Controller
                 'do.do_number',
                 'do.do_date',
                 'w.name as warehouse_name',
+                'so.so_number',
+                'so.so_date'
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')            
@@ -119,6 +122,31 @@ class SalesInvoiceController extends Controller
     }
 
     public function add(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['code'] = generateNoPO();
+        $data['title'] = 'Form '.$this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['details'] = [];
+        $data['general_ledgers'] = [];
+        $view = view('web.sales_invoice.formaddso', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+    
+    public function addFromDo(Request $request)
     {
         $data = $request->all();
         $data['data'] = [];
@@ -171,7 +199,7 @@ class SalesInvoiceController extends Controller
         $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $view = view('web.sales_invoice.formadd', $data);
+        $view = $data['data']->do_id != '' ? view('web.sales_invoice.formadd', $data) : view('web.sales_invoice.formaddso', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
@@ -204,7 +232,7 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
+        $data = SalesInvoiceHeader::with(['so','do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         $qr = '';
 
@@ -215,8 +243,8 @@ class SalesInvoiceController extends Controller
             'print_date' => now(),
             'reprint' => 0, // tidak reprint
         ]);
-        $do = DeliveryOrderHeader::where('id', $data->do_id)->first();
-        $so = SalesOrderHeader::where('id', $do->so_id)->first();
+        $do = $data['do_id'] != '' ? DeliveryOrderHeader::where('id', $data->do_id)->first() : [];
+        $so = $data['do_id'] != '' ? SalesOrderHeader::where('id', $do->so_id)->first() : SalesOrderHeader::where('id', $data->sales_order)->first();
         $salesman = Karyawan::where('id', $so->salesman)->first();
         $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
@@ -231,6 +259,7 @@ class SalesInvoiceController extends Controller
         $ids = explode(',', $request->ids);
 
         $invoices = SalesInvoiceHeader::with([
+            'so',
             'do.so',
             'do.so.salesman',
             'customers',
@@ -242,6 +271,8 @@ class SalesInvoiceController extends Controller
             ->whereIn('id', $ids)
             ->get();
 
+            // echo '<pre>';
+            // print_r($invoices);die;
         $company = CompanyModel::where('id', session('id_company'))->first();
 
         // Update print count per invoice

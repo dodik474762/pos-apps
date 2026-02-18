@@ -81,9 +81,15 @@
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
+                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="AllSO"
                                         href="#list-data" role="tab" aria-selected="true">
-                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from SO
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="AllDO"
+                                        href="#list-data-do" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from DO
                                     </a>
                                 </li>
                             </ul>
@@ -92,6 +98,41 @@
                                 <div class="tab-pane active" id="list-data">
                                     <div class="table-responsive table-card mb-1">
                                         <table class="table table-nowrap align-middle" id="table-data">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Invoice Number</th>
+                                                    <th>Tanggal Invoice</th>
+                                                    <th>SO Number</th>
+                                                    <th>Tanggal SO</th>
+                                                    <th>Customer</th>
+                                                    <th>Warehouse</th>
+                                                    <th>Dibuat Oleh</th>
+                                                    <th>Tanggal Jatuh Tempo</th>
+                                                    <th>Waktu Print</th>
+                                                    <th>Status Cetak</th>
+                                                    <th>Re Print</th>
+                                                    <th>Status Invoice</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane" id="list-data-do">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-do">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>

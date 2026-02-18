@@ -71,6 +71,7 @@ let SalesInvoice = {
             invoice_number: $("#invoice_number").val() || null,
             invoice_date: $("#invoice_date").val() || null,
             do_id: $("#do_number").attr("data_id") || null,
+            so_id: $("#so_number").attr("data_id") || null,
             customer_id: $("#customer_id").val() || null,
             subtotal: parseFloat($("#subtotal").val()) || 0,
             discount_amount: parseFloat($("#discount_amount").val()) || 0,
@@ -169,6 +170,155 @@ let SalesInvoice = {
 
     getData: async () => {
         let tableData = $("table#table-data");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesInvoice.moduleApi()) + `getDataFromSO`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "so_number",
+                },
+                {
+                    data: "so_date",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "warehouse_name",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
+                    data: "due_date",
+                },
+                {
+                    data: "print_date",
+                },
+                {
+                    data: "print_date",
+                    render: function (data, type, row) {
+                        if (data) {
+                            if (row.reprint == 1) {
+                                return "Belum Cetak";
+                            }
+                            return "Sudah Cetak";
+                        }
+                        return "Belum Cetak";
+                    },
+                },
+                {
+                    data: "reprint",
+                    render: function (data, type, row) {
+                        if (data == 1) {
+                            return "Ya";
+                        }
+                        return "Tidak";
+                    },
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = `<a href='${url.base_url(
+                            SalesInvoice.module()
+                        )}cetak?id=${data}' data_id="${
+                            row.id
+                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        if (updateAction == 1) {
+                            html += `<a href='${url.base_url(
+                                SalesInvoice.module()
+                            )}ubah?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        }
+                        if (deleteAction == 1) {
+                            if (row.status == "DRAFT") {
+                                html += `<button type="button" data_id="${row.id}" onclick="SalesInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            }
+                        }
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+    
+    getDataFromDO: async () => {
+        let tableData = $("table#table-data-do");
 
         let updateAction = $("#update").val();
         let deleteAction = $("#delete").val();
@@ -412,7 +562,115 @@ let SalesInvoice = {
             },
         });
     },
+    
+    showModalSO: (elm) => {
+        let params = {};
+        // const tax = $("#tax").val();
+        // if (tax == "") {
+        //     message.sweetError("Informasi", "Pilih Tax Terlebih Dahulu");
+        //     return;
+        // }
 
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesInvoice.moduleApi()) + "showModalSO",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                SalesInvoice.getDataSo();
+            },
+        });
+    },
+
+    getDataSo: () => {
+        let tableData = $("table#table-data-modal");
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesInvoice.moduleApi()) + `getDataSo`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "so_number",
+                },
+                {
+                    data: "so_date",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' so_number="${row.so_number}" nama_customer="${row.nama_customer}"
+                        customer="${row.customer_id}"
+                        onclick="SalesInvoice.pilihDataSo(this, event)"
+                        data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;
+                        <!-- <input type="checkbox" class="checkbox-do" id="check-do"/> -->
+                        `;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+   
     getDataDo: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
@@ -508,7 +766,56 @@ let SalesInvoice = {
 
         SalesInvoice.getDoDetail(data_id);
     },
+   
+    pilihDataSo: (elm, e) => {
+        e.preventDefault();
+        let nama_customer = $(elm).attr("nama_customer");
+        let customer = $(elm).attr("customer");
+        let so_number = $(elm).attr("so_number");
+        let do_number = $(elm).attr("do_number");
+        let data_id = $(elm).attr("data_id");
 
+        $("#customer_id").val(customer + "//" + nama_customer);
+        $("#so_number").val(so_number);
+        $("#so_number").attr("data_id", data_id);
+
+        $("button.btn-close").trigger("click");
+
+        SalesInvoice.getSoDetail(data_id);
+    },
+
+    getSoDetail: (so_id) => {
+        let params = {
+            so_id: so_id,
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesInvoice.moduleApi()) + "getSoDetail",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                const table_items = $("#table-items");
+                table_items.find("tbody").html(resp);
+                SalesInvoice.hitungSummaryAll();
+            },
+        });
+    },
+    
     getDoDetail: (do_id) => {
         let params = {
             do_id: do_id,
@@ -1021,5 +1328,6 @@ let SalesInvoice = {
 $(function () {
     SalesInvoice.setSelect2();
     SalesInvoice.getData();
+    SalesInvoice.getDataFromDO();
     SalesInvoice.editReload();
 });

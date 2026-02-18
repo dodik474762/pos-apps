@@ -82,8 +82,8 @@
     {{-- INFO PO --}}
     <table class="no-border">
         <tr>
-            <td><strong>Kode Pesanan:</strong> {{ $data->do->so->so_number }}</td>
-            <td style="padding-left:20px;"><strong>Tanggal Pesanan:</strong> {{ date('d/m/Y', strtotime($data->do->so->so_date)) }}</td>
+            <td><strong>Kode Pesanan:</strong> {{ isset($data->do->so->so_number) ? $data->do->so->so_number : $data->so->so_number }}</td>
+            <td style="padding-left:20px;"><strong>Tanggal Pesanan:</strong> {{ isset($data->do->so->so_date) ? date('d/m/Y', strtotime($data->do->so->so_date)) : date('d/m/Y', strtotime($data->so->so_date)) }}</td>
         </tr>
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
@@ -95,7 +95,7 @@
         </tr>
         <tr>
             <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
-            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
+            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>
         </tr>
     </table>
 
