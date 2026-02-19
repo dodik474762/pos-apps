@@ -149,32 +149,42 @@ class ProductController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName() . ' as m')
-            ->select([
-                'm.id as product_id',
-                'm.code as product_code',
-                'm.name as product_name',
-                'u.name as product_unit',
-                'pup.price as product_price',
-                'u.id as product_unit_id',
-                'ps.qty as stock_product',
-                'pup.id as product_uom_price_id'
-            ])
-            ->join('product_type as pt', 'pt.id', 'm.product_type')
-            ->join('product_uom_price as pup',function($q){
-                return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
-            })
-            ->join('product_stock as ps', 'ps.product', 'm.id')
-            ->join('unit as u', 'u.id', 'pup.unit')
-            ->whereNull('m.deleted')
-            ->orderBy('m.id', 'desc')
-            ->orderBy('pup.id', 'asc');
-        $data = $datadb->get()->toArray();
-        // echo '<pre>';
-        // print_r($query);die;
-        $result['is_valid'] = empty($data) ? false : true;
-        $result['data'] = $data;
-        return response()->json($result);
+        try {
+            //code...
+            $datadb = DB::table($this->getTableName() . ' as m')
+                ->select([
+                    'm.id as product_id',
+                    'm.code as product_code',
+                    // 'm.name as product_name',
+                    DB::raw("CONCAT(COALESCE(v.nama_vendor, ''), m.name) AS product_name"),
+                    'u.name as product_unit',
+                    'pup.price as product_price',
+                    'u.id as product_unit_id',
+                    'ps.qty as stock_product',
+                    'pup.id as product_uom_price_id',
+                ])
+                ->leftJoin('vendor as v', 'v.id', 'm.vendor')
+                ->join('product_type as pt', 'pt.id', 'm.product_type')
+                ->join('product_uom_price as pup',function($q){
+                    return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
+                })
+                ->join('product_stock as ps', 'ps.product', 'm.id')
+                ->join('unit as u', 'u.id', 'pup.unit')
+                ->whereNull('m.deleted')
+                ->orderBy('m.id', 'desc')
+                ->orderBy('pup.id', 'asc');
+            $data = $datadb->get()->toArray();
+            // echo '<pre>';
+            // print_r($query);die;
+            $result['is_valid'] = empty($data) ? false : true;
+            $result['data'] = $data;
+            return response()->json($result);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'is_valid'=> false,
+                'message'=> $th->getMessage()
+            ]);
+        }
     }
 
     public function getProductCatalog(Request $request)
