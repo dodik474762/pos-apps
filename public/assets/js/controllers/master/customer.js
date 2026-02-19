@@ -79,8 +79,39 @@ let Customer = {
     //     return data;
     // },
 
+    getPostItemPrice:()=>{
+        const table = $('table#table-price').find('tbody').find('tr.input');
+        const result = [];
+        $.each(table, function(){
+            const id = $(this).attr('data_id');
+            const product = $(this).find('#product').val();
+            const uom = $(this).find('td#uom').text();
+            const min_qty = $(this).find('#min_qty').val();
+            const type_price = $(this).find('#type_price').val();
+            const max_qty = $(this).find('#max_qty').val();
+            const price = $(this).find('#price').val();
+            const date_start = $(this).find('#date_start').val();
+            const params = {
+                id: id,
+                product: product,
+                uom: uom,
+                type_price: type_price,
+                min_qty: min_qty,
+                max_qty: max_qty,
+                price: price,
+                date_start: date_start
+            };
+
+            result.push(params);
+        });
+
+        return result;
+    },
+
     getPostInput: () => {
         let formData = new FormData();
+
+        const items_price = Customer.getPostItemPrice();
 
         formData.append("id", $("input#id").val());
         formData.append("nama_customer", $("#nama_customer").val());
@@ -107,6 +138,7 @@ let Customer = {
         formData.append("pasar", $("#pasar").val());
         formData.append("channel_outlet", $("#channel_outlet").val());
         formData.append("sub_channel_outlet", $("#sub_channel_outlet").val());
+        formData.append("items_price", JSON.stringify(items_price));
 
         // FOTO (single upload)
         let photo = $("#photo_path")[0].files[0];
@@ -190,6 +222,118 @@ let Customer = {
                 return false;
             }
         })
+    },
+
+    showDataProduct: (elm) => {
+        let params = {};
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(Customer.moduleApi()) + "showDataProduct",
+            headers: {
+                "X-CSRF-TOKEN": Customer.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+                elmChoose = elm;
+                Customer.getDataProduct();
+            },
+        });
+    },
+
+    getDataProduct: () => {
+        let tableData = $("table#table-data-modal");
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            // lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(Customer.moduleApi()) + `getDataProduct`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": Customer.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "code",
+                },
+                {
+                    data: "name",
+                },
+                {
+                    data: "unit_tujuan_name",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        html += `<a href='' produk_id="${row.id}" unit="${row.unit_tujuan_id}" unit_name="${row.unit_tujuan_name}" code="${row.code}" produk_name="${row.name}"
+                        onclick="Customer.pilihDataProduct(this, event)"
+                        data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        return html;
+                    },
+                },
+            ],
+        });
+    },
+
+     pilihDataProduct: (elm, e) => {
+        e.preventDefault();
+        let produk_name = $(elm).attr("produk_name");
+        let produk_id = $(elm).attr("produk_id");
+        let unit = $(elm).attr("unit");
+        let unit_name = $(elm).attr("unit_name");
+        let product_uom_id = $(elm).attr("data_id");
+        $(elmChoose)
+            .closest("div")
+            .find("input")
+            .val(produk_id+ "//" + produk_name);
+        $(elmChoose).closest('tr').find('td#uom').html(unit+"-"+unit_name);
+        $("button.btn-close").trigger("click");
     },
 
     approve: (elm, e, status = 'acc', remarks = '') => {

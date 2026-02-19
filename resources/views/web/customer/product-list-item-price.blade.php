@@ -26,8 +26,7 @@
                     </tr>
 
                     @foreach ($product_prices as $v)
-                        <input type="hidden" id="price_uom" name="price_uom[]" value="{{ $v->id }}">
-                        <tr data_id="{{ $v->id }}">
+                        <tr class="input" data_id="{{ $v->id }}">
                             <td class="text-center">
                                 <button class="btn btn-sm btn-danger" onclick="Customer.removeItemPrice(this, event)">
                                     <i class="bx bx-trash-alt"></i>
@@ -43,10 +42,10 @@
                                         value="{{ $v->product == '' ? '' : $v->product . '//' . $v->product_name }}">
                                 </div>
                             </td>
-                            <td id="uom"></td>
+                            <td id="uom">{{ $v->unit }}-{{ $v->unit_name }}</td>
                             <td>
                                 <select id="type_price" name="type_price[]" class="form-control required" error="Type Price">
-                                    @foreach ($tipe_price as $item)
+                                    @foreach ($data_price_list as $item)
                                         <option value="{{ $item->id }}" {{ $v->price_list == $item->id ? 'selected' : '' }}>
                                             {{ $item->name }}
                                         </option>

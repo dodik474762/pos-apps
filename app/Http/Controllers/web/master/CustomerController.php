@@ -6,6 +6,7 @@ use App\Http\Controllers\api\master\CustomerController as MasterCustomerControll
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\CustomerCategory;
+use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,18 @@ class CustomerController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function getListProductUomPrice($customer)
+    {
+        $data = ProductUomPrice::where('product_uom_price.customer', $customer)
+        ->select(['product_uom_price.*', 'p.name as product_name', 'u.name as unit_name'])
+        ->join('product as p', 'p.id', 'product_uom_price.product')
+        ->join('unit as u', 'u.id', 'product_uom_price.unit')
+            ->orderBy('product_uom_price.id')
+            ->get();
+
+        return $data;
+    }
+
     public function ubah(Request $request){
         $api = new MasterCustomerController();
         $data = $request->all();
@@ -138,7 +151,7 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
 
-        $data['product_prices'] = [];
+        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();

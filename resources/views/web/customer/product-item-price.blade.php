@@ -1,4 +1,4 @@
-<tr data_id="">
+<tr class="input" data_id="">
     <td class="text-center">
         <button class="btn btn-sm btn-danger" onclick="Customer.removeItemPrice(this, event)"><i
                 class="bx bx-trash-alt"></i></button>

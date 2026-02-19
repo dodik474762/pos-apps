@@ -315,6 +315,8 @@ Route::post('api/master/customer/getCity', [MasterCustomerController::class, 'ge
 Route::post('api/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
 Route::post('api/master/customer/addItemPrice', [MasterCustomerController::class, 'addItemPrice']);
+Route::post('api/master/customer/showDataProduct', [MasterCustomerController::class, 'showDataProduct']);
+Route::post('api/master/customer/getDataProduct', [MasterCustomerController::class, 'getDataProduct']);
 Route::post('api_mobile/master/customer/getCity', [MasterCustomerController::class, 'getCity']);
 Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);

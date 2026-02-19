@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\Customer;
 use App\Models\Master\Region;
 use App\Models\Master\ProductUom;
+use App\Models\Master\ProductUomPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -139,8 +140,8 @@ class CustomerController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
-        // echo '<pre>';
-        // print_r($data);die;
+        $items_price = isset($data['items_price']) ? json_decode($data['items_price']) : [];
+
         $files_outlet = $request->file('photo_path');
         $files_ktp = $request->file('foto_ktp_path');
         $files_npwp = $request->file('foto_npwp_path');
@@ -213,12 +214,25 @@ class CustomerController extends Controller
             $roles->sub_channel_outlet = $data['sub_channel_outlet'];
             $roles->branch = 'YOGYAKARTA';
             $roles->save();
+            $id_cust = $roles->id;
+            $name_cust = $data['nama_customer'];
 
-            // $nik_upt = new KaryawanHasUpt();
-            // $nik_upt->nik = $data['nik'];
-            // $nik_upt->nama = $data['nama'];
-            // $nik_upt->upt = $data['upt'];
-            // $nik_upt->save();
+
+            foreach ($items_price as $key => $value) {
+                list($product, $product_name) = explode('//', $value->product);
+                list($unit, $unit_name) = explode('-', $value->uom);
+                $product_uom_price = $value->id != '' ? ProductUomPrice::find($value->id) : new ProductUomPrice();
+                $product_uom_price->product = $product;
+                $product_uom_price->unit = $unit;
+                $product_uom_price->price_list = $value->type_price;
+                $product_uom_price->price = $value->price;
+                $product_uom_price->date_start = $value->date_start;
+                $product_uom_price->min_qty = $value->min_qty;
+                $product_uom_price->max_qty = $value->max_qty;
+                $product_uom_price->customer = $id_cust;
+                $product_uom_price->customer_name = $name_cust;
+                $product_uom_price->save();
+            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -228,7 +242,7 @@ class CustomerController extends Controller
             DB::rollBack();
         }
         return response()->json($result);
-    }
+    }   
 
     public function approve(Request $request)
     {
@@ -439,5 +453,70 @@ class CustomerController extends Controller
         $data['data_satuan'] = $result_satuan;
         $data['tipe_price'] = $this->getListPriceList();
         return view('web.customer.product-item-price', $data);
+    }
+
+    public function showDataProduct(Request $request)
+    {
+        $data = $request->all();
+        return view('web.product.modal.dataproductchooce', $data);
+    }
+
+    public function getDataProduct()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table('product as m')
+            ->select([
+                'm.*',
+                'pt.type',
+                'u.name as unit_name',
+                'uo.name as unit_tujuan_name',
+                'uo.id as unit_tujuan_id',
+                'pu.id as id_uom',
+                'puc.cost as product_cost',
+                'puc.date_start as product_cost_date_start',
+            ])
+            ->join('product_type as pt', 'pt.id', 'm.product_type')
+            ->join('product_uom as pu', 'pu.product', 'm.id')
+            ->join('unit as uo', 'uo.id', 'pu.unit_tujuan')
+            ->join('unit as u', 'u.id', 'm.unit')
+            ->leftJoin('product_uom_cost  as puc', function($q){
+                return $q->on('puc.product_uom', 'pu.id')
+                ->where('puc.is_active', '1');
+            })
+            ->whereNull('m.deleted')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uo.name', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
     }
 }
