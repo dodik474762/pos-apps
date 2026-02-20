@@ -799,7 +799,8 @@ class SalesOrderController extends Controller
                 ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
                 ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
                 'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
-                'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix', 'ppi.unit', 'ppi.kelipatan')
+                'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix', 'ppi.unit', 'ppi.kelipatan', 
+                'ppi.channel_outlet', 'ppi.sub_channel_outlet')
                 ->join('product as p', 'p.id', '=', 'ppid.product')
                 ->join('unit as u', 'u.id', '=', 'ppi.unit')
                 ->whereIn('ppi.id', $promoIds)
