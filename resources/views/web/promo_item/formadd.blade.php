@@ -56,6 +56,17 @@
                                     error="Min Mix" min="1" value="{{ isset($data->min_mix) ? $data->min_mix : '' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Sub Channel Outlet</label>
+                                 <div>
+                                    <select name="" id="sub_channel_outlet" class="form-control" error="Sub Channel Outlet" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($sub_channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ isset($data->sub_channel_outlet) ? ($data->sub_channel_outlet == $item->term_id ? 'selected' : '') : '' }}>{{ $item->keterangan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -81,6 +92,17 @@
                                         error="Tanggal Berlaku Mulai" value="{{ isset($data->date_start) ? $data->date_start : date('Y-m-d') }}">
                                 </div>
                             </div>
+                             <div class="mb-3">
+                                <label>Channel Outlet</label>
+                                 <div>
+                                    <select name="" id="channel_outlet" class="form-control" error="Channel Outlet" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ isset($data->channel_outlet) ? ($data->channel_outlet == $item->term_id ? 'selected' : '') : '' }}>{{ $item->keterangan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>                             
                             <div class="mb-3">
                                 <br/>
                                 <br/>

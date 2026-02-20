@@ -58,6 +58,22 @@ class PromoItemController extends Controller
         return view('web.template.main', $put);
     }
 
+     public function getChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+    
+    public function getSubChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'SUB_CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -70,6 +86,8 @@ class PromoItemController extends Controller
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['routing_item'] = [];
         $data['routing_reminder_item'] = [];
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $view = view('web.promo_item.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -88,6 +106,8 @@ class PromoItemController extends Controller
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
