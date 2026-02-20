@@ -130,7 +130,7 @@ class LoginController extends Controller
             if (count($dataRoles) == 1) {
                 return redirect('dashboard');
             }
-            return redirect('roles');
+            return redirect('dashboard');
         } else {
             return redirect()->action([LoginController::class, 'index'], ['error' => 'Pengguna Tidak Ditemukan']);
         }
