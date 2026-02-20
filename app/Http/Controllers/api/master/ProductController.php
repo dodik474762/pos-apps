@@ -160,7 +160,8 @@ class ProductController extends Controller
                     'u.name as product_unit',
                     'pup.price as product_price',
                     'u.id as product_unit_id',
-                    'ps.qty as stock_product',
+                    // 'ps.qty as stock_product',
+                    DB::raw("COALESCE(ps.qty, 0) as stock_product"),
                     'pup.id as product_uom_price_id',
                 ])
                 ->leftJoin('vendor as v', 'v.id', 'm.vendor')
@@ -168,7 +169,7 @@ class ProductController extends Controller
                 ->join('product_uom_price as pup',function($q){
                     return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
                 })
-                ->join('product_stock as ps', 'ps.product', 'm.id')
+                ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
                 ->join('unit as u', 'u.id', 'pup.unit')
                 ->whereNull('m.deleted')
                 ->orderBy('m.id', 'desc')
