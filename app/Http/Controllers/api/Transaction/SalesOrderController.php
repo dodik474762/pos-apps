@@ -180,7 +180,7 @@ class SalesOrderController extends Controller
             });
             $productIds = $items->pluck('product_id')->toArray();        
             $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds);
+            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -513,7 +513,7 @@ class SalesOrderController extends Controller
             }
             
             $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds);
+            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -906,16 +906,41 @@ class SalesOrderController extends Controller
         })->toArray();
     }
 
-    public function calculatePromo($items = [], $promoAll = [], $productIds = []){
+    public function calculatePromo($items = [], $promoAll = [], $productIds = [], $customer_id = ''){
         $resultItems = [];
         $freeGoods = [];
         $grandTotal = 0;      
 
+        $customers = [];
+        $channel_outlet = '';
+        $sub_channel_outlet = '';
+        if($customer_id != ''){
+            $customers = Customer::where('id', $customer_id)->first();
+            $channel_outlet = $customers->channel_outlet;
+            $sub_channel_outlet = $customers->sub_channel_outlet;
+        }
         
-        $promoHeaders = $promoAll['promo_header'];
-        
+        $promoHeaders = $promoAll['promo_header'];        
         
         foreach ($promoHeaders as $promo) {
+            // =============================
+            // FILTER CHANNEL OUTLET
+            // =============================
+            if ($customer_id != '') {
+
+                $channelMatch = 
+                    empty($promo->channel_outlet) ||
+                    $promo->channel_outlet == $channel_outlet;
+
+                $subChannelMatch = 
+                    empty($promo->sub_channel_outlet) ||
+                    $promo->sub_channel_outlet == $sub_channel_outlet;
+
+                if (!$channelMatch || !$subChannelMatch) {
+                    continue; // skip promo ini
+                }
+            }
+
             $promoProduc = $promo->promoProducts
             ->pluck('product')->toArray();
 
@@ -1077,10 +1102,10 @@ class SalesOrderController extends Controller
     {
         $data = $params;
         $product_id = $data['produk_id'];
-        $unit_id = $data['unit'];
-        $customer_id = $data['customer'];
-        $customerdb = Customer::find($customer_id);
-        $customer_category_id = $customerdb->customer_category;
+        // $unit_id = $data['unit'];
+        // $customer_id = $data['customer'];
+        // $customerdb = Customer::find($customer_id);
+        // $customer_category_id = $customerdb->customer_category;
 
         $datadb = ProductFreeGood::where('product_free_good.product', $product_id)
             // ->where('unit', $unit_id)
@@ -1143,11 +1168,11 @@ class SalesOrderController extends Controller
     {
         $data = $params;
         $product_id = $data['produk_id'];
-        $unit_id = $data['unit'];
-        $customer_id = $data['customer'];
-        $customerdb = Customer::find($customer_id);
-        $customer_category_id = $customerdb->customer_category;
-
+        // $unit_id = $data['unit'];
+        // $customer_id = $data['customer'];
+        // $customerdb = Customer::find($customer_id);
+        // $customer_category_id = empty($customer_db) ? 0 : $customerdb->customer_category;
+        
         $datadb = ProductDisc::where('product_discount.product', $product_id)
             // ->where(function ($q) use ($customer_id) {
             //     $q->where('customer', $customer_id)->orWhereNull('customer');

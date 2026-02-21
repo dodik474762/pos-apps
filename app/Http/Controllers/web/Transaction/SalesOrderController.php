@@ -150,7 +150,7 @@ class SalesOrderController extends Controller
             // ->where('h.period_year', $periodYear)
             // ->where('h.period_month', $periodMonth)
             ->whereNull('h.deleted')
-            ->select('d.customer_id as id', 'c.nama_customer', 'top.nilai as top_value')
+            ->select('d.customer_id as id', 'c.nama_customer', 'top.nilai as top_value', 'c.channel_outlet', 'c.sub_channel_outlet')
             ->distinct()
             ->get();
 
