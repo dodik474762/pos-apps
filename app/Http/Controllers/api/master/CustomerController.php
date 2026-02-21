@@ -297,8 +297,8 @@ class CustomerController extends Controller
 
             $fileOutletName = 'outlet_noo'.time().'.jpg';
 
-            $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/'.$dir.'/';          
+            // $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            // $dbpathlampOutlet = '/'.$dir.'/';          
 
             $roles = new Customer();
             $roles->code = generateCodeCustomer();
@@ -308,7 +308,7 @@ class CustomerController extends Controller
     
                 $path = $files_outlet->move(public_path($dir), $fileOutletName);
                 $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+                $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
             }
            
             if(isset($files_ktp)){

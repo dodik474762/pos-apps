@@ -168,9 +168,23 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-4">
                             <h4>Foto Customer</h4>
-                            <img src="{{ asset($data->photo_path) }}" alt="Foto">
+                            @if($data->photo_path != '')
+                                <img src="{{ asset($data->photo_path) }}" alt="Foto">
+                            @endif
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Foto KTP</h4>
+                            @if($data->foto_ktp_path != '')
+                                <img src="{{ asset($data->foto_ktp_path) }}" alt="Foto">
+                            @endif
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Foto NPWP</h4>
+                            @if($data->foto_npwp_path != '')
+                                <img src="{{ asset($data->foto_npwp_path) }}" alt="Foto">
+                            @endif
                         </div>
                     </div>
                 </form>
