@@ -80,7 +80,7 @@ class SalesPlanController extends Controller
         $data['title_parent'] = $this->getTitleParent();
 
         // Dropdown
-        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
 
         $data['data_item'] = []; // Data detail kosong
         $data['visit_types'] = $this->getListVisitType();
@@ -101,7 +101,7 @@ class SalesPlanController extends Controller
         $api = new TransactionSalesPlanController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['salesmen'] = User::where('user_group', '1')->whereNull('deleted')->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['sales_plan_details'] = SalesPlanDetailRoute::where('sales_plan_detail_route.header_id', $data['id'])
             ->select([
                 'sales_plan_detail_route.*',
