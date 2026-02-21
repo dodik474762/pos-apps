@@ -278,6 +278,8 @@ class CustomerController extends Controller
     {
         $data = json_decode($request->input('data'), true);
         $files_outlet = $request->file('files_outlet');
+        $files_npwp = $request->file('files_npwp');
+        $files_ktp = $request->file('files_ktp');
         $users_id = $data['user_id'];
         // echo '<pre>';
         // print_r($data);die;
@@ -296,10 +298,34 @@ class CustomerController extends Controller
             $fileOutletName = 'outlet_noo'.time().'.jpg';
 
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/'.$dir.'/';
+            $dbpathlampOutlet = '/'.$dir.'/';          
 
             $roles = new Customer();
             $roles->code = generateCodeCustomer();
+
+            if(isset($files_outlet)){
+                $fileOutletName = 'outlet_noo'.time().'.jpg';
+    
+                $path = $files_outlet->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+            }
+           
+            if(isset($files_ktp)){
+                $fileOutletName = 'files_ktp'.time().'.jpg';
+    
+                $path = $files_ktp->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+            }
+            
+            if(isset($files_npwp)){
+                $fileOutletName = 'files_npwp'.time().'.jpg';
+    
+                $path = $files_npwp->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/'.$dir.'/';
+                $roles->foto_npwp_path = $dbpathlampOutlet.$fileOutletName;
+            }
 
             $roles->pic = $data['pic'];
             $roles->no_ktp = $data['no_ktp'];
@@ -315,7 +341,6 @@ class CustomerController extends Controller
             $roles->longitude = $data['longitude'];
             $roles->platform = 'mobile';
             $roles->users = $users_id;
-            $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
             $roles->save();
 
             DB::commit();
