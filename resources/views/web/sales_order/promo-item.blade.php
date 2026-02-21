@@ -30,8 +30,8 @@
                         <td id="promo-discount-type">{{ $promo->discount_type }}</td>
                         <td id="promo-discount-value">{{ $promo->discount_value }}</td>
                         <td id="promo-date-start">{{ $promo->date_start }}</td>
-                        <td id="promo-date-start">{{ $promo->channel_outlet }}</td>
-                        <td id="promo-date-start">{{ $promo->sub_channel_outlet }}</td>
+                        <td id="promo-channel-outlet">{{ $promo->channel_outlet }}</td>
+                        <td id="promo-sub-channel-outlet">{{ $promo->sub_channel_outlet }}</td>
                     </tr>
                 @endforeach
             @endif

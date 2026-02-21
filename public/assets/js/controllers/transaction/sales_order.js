@@ -1,6 +1,8 @@
 let elmChoose;
 let discProduct = [];
 let productCheckPromo = [];
+let channel_outlet = null;
+let sub_channel_outlet = null;
 let SalesOrder = {
     module: () => {
         return "transaksi/sales_order";
@@ -1002,6 +1004,21 @@ let SalesOrder = {
                 const parent_id = promoHeader.id;
                 const kelipatan = promoHeader.kelipatan;
 
+                // ========================
+                // FILTER CHANNEL OUTLET
+                // ========================
+                const channelMatch =
+                    !promoHeader.channel_outlet ||
+                    promoHeader.channel_outlet == channel_outlet;
+                const subChannelMatch =
+                !promoHeader.sub_channel_outlet ||
+                promoHeader.sub_channel_outlet == sub_channel_outlet;
+
+                if (!channelMatch || !subChannelMatch) {
+                    continue; // skip promo ini, lanjut ke promo berikutnya
+                }
+
+
                 const class_promo_item = "promo-item-" + parent_id;
                 const class_promo_free = "promo-free-" + parent_id;
 
@@ -1060,31 +1077,17 @@ let SalesOrder = {
                         promoApplicable = false;
                     }
 
-                    //  console.log('promoHeader.kelipatan', kelipatan);
-                    // const kelipatanSmall = kelipatan == '1'
-                    //     ? SalesOrder.convertToSmallest(
-                    //         UOM_CONVERSION,
-                    //         productId,
-                    //         promoHeader.unit_id,
-                    //         kelipatan
-                    //     )
-                    //     : promoMinSmall;
-                    // minimum qty
-                    // kelipatan SELALU dihitung dari field kelipatan
-
-                    // console.log('kelipatanSmall',kelipatanSmall);
-
                     if (kelipatan == "1") {
                         // hitung berapa kali kelipatan terpenuhi
                         pengaliKelipatanFreegood = Math.floor(
                             qtySmallestAllProduct / kelipatanSmall,
                         );
-                        console.log({
-                            qtySmallestAllProduct,
-                            promoMinSmall,
-                            kelipatanSmall,
-                            hasilBagi: qtySmallestAllProduct / kelipatanSmall,
-                        });
+                        // console.log({
+                        //     qtySmallestAllProduct,
+                        //     promoMinSmall,
+                        //     kelipatanSmall,
+                        //     hasilBagi: qtySmallestAllProduct / kelipatanSmall,
+                        // });
                         // cek promo applicable
                         if (
                             qtySmallestAllProduct >= promoMinSmall &&
@@ -1289,6 +1292,8 @@ let SalesOrder = {
                     parseFloat($(this).find("#promo-discount-value").text()) ||
                     0,
                 date_start: $(this).find("#promo-date-start").text().trim(),
+                channel_outlet: $(this).find("#promo-channel-outlet").text().trim(),
+                sub_channel_outlet: $(this).find("#promo-sub-channel-outlet").text().trim(),
                 kelipatan: $(this).attr("kelipatan"),
                 id: $(this).attr("data_id"),
             };
@@ -1366,6 +1371,8 @@ let SalesOrder = {
         });
 
         const top = $(elm).find("option:selected").attr("top");
+        channel_outlet = $(elm).find("option:selected").attr("channel_outlet");
+        sub_channel_outlet = $(elm).find("option:selected").attr("sub_channel_outlet");
         $("#payment_term").val(top);
     },
 

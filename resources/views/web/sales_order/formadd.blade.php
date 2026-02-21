@@ -60,7 +60,9 @@
                                 <select class="form-control select2 required" id="customer_id" error="Customer" onchange="SalesOrder.changeCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
-                                        <option top="{{ $customer->top_value }}" value="{{ $customer->id }}"
+                                        <option top="{{ $customer->top_value }}" channel_outlet="{{ $customer->channel_outlet }}" 
+                                        sub_channel_outlet="{{ $customer->channel_outlet }}"
+                                        value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
                                             {{ $customer->nama_customer }}
                                         </option>
