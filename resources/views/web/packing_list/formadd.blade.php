@@ -136,9 +136,18 @@
                                             if($row->status == 'CANCEL'){
                                                 $statusColor = 'text-danger';
                                             }
+                                            
+                                            $photo_path = '';
+                                            if($row->photo_path != ''){
+                                                $photo_path = $row->photo_path;
+                                            }
                                         @endphp
                                         <tr data_id="{{ $row->id }}">
-                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }} {!!  $row->status == '' ? '' : '<label class="'.$statusColor.'" data_id="'.$row->id.'" status="'.$row->status.'" onclick="PackingList.cancelPl(this, event)">(' . $row->status . ') '.$row->remarks.'</label>' !!}</td>
+                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }} {!!  $row->status == '' ? '' : '<label class="'.$statusColor.'" data_id="'.$row->id.'" status="'.$row->status.'" onclick="PackingList.cancelPl(this, event)">(' . $row->status . ') '.$row->remarks.'</label>' !!}
+                                                @if($photo_path != '')
+                                                <a href="{{ $photo_path }}" target="_blank">Foto Pengiriman</a>
+                                                @endif 
+                                            </td>
                                             <td id="do_date">{{ $row->do_date }}</td>
                                             <td id="do_customer" data_id="{{ $row->customer_id }}">{{ $row->customer_code }} - {{ $row->nama_customer }}</td>
                                             <td class="text-center">
