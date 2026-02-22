@@ -24,7 +24,7 @@ class SalesPlanController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -37,11 +37,11 @@ class SalesPlanController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.plan_code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.period_year', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.period_month', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.description', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.plan_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.period_year', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.period_month', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.description', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -71,7 +71,7 @@ class SalesPlanController extends Controller
         $data = $request->all();
 
         $exceptPoDetailId = [];
-        if (! empty($data['itemsChoose'])) {
+        if (!empty($data['itemsChoose'])) {
             $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
         }
         $data['data'] = [];
@@ -100,7 +100,7 @@ class SalesPlanController extends Controller
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 
-        if (! empty($exceptPoDetailId)) {
+        if (!empty($exceptPoDetailId)) {
             $datadb->whereNotIn('m.id', $exceptPoDetailId);
         }
         if (isset($_POST)) {
@@ -108,14 +108,14 @@ class SalesPlanController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -151,7 +151,7 @@ class SalesPlanController extends Controller
         try {
             // Pastikan currency default ada
             $currency = Currency::where('code', 'IDR')->first();
-            if (! $currency) {
+            if (!$currency) {
                 DB::rollBack();
 
                 return response()->json([
@@ -182,8 +182,8 @@ class SalesPlanController extends Controller
             // === DETAIL ===
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
-                if (! empty($item['remove']) && $item['remove'] == 1) {
-                    if (! empty($item['id'])) {
+                if (!empty($item['remove']) && $item['remove'] == 1) {
+                    if (!empty($item['id'])) {
                         $exist = SalesPlanDetailRoute::find($item['id']);
                         if ($exist && $exist->status !== 'DRAFT') {
                             DB::rollBack();
@@ -221,6 +221,11 @@ class SalesPlanController extends Controller
                 $detail->visit_sun = $item['visit_sun'];
                 $detail->note = $item['note'];
                 $detail->pjp_status = $item['type'];
+                if ($item['type'] == 'EXTRA CALL') {
+                    if ($item['id'] == '') {
+                        $detail->date_extra_call = date('Y-m-d');
+                    }
+                }
                 $detail->save();
             }
 
@@ -268,7 +273,7 @@ class SalesPlanController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
             ])->where('m.id', $id);
@@ -323,7 +328,7 @@ class SalesPlanController extends Controller
         $data['recordsTotal'] = $datadb->count();
 
         // --- Pencarian ---
-        if (! empty($_POST['search']['value'])) {
+        if (!empty($_POST['search']['value'])) {
             $keyword = $_POST['search']['value'];
             $datadb->where(function ($query) use ($keyword) {
                 $query->where('m.name', 'like', "%{$keyword}%")
@@ -334,7 +339,7 @@ class SalesPlanController extends Controller
         }
 
         // --- Urutan (Sorting) ---
-        if (! empty($_POST['order'][0]['dir'])) {
+        if (!empty($_POST['order'][0]['dir'])) {
             $dir = $_POST['order'][0]['dir'];
             $datadb->orderBy('m.id', $dir);
         } else {
@@ -390,14 +395,14 @@ class SalesPlanController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.pic', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.address', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.email', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.numbering_code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.kota', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.category', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -447,11 +452,12 @@ class SalesPlanController extends Controller
         return response()->json($result);
     }
 
-      public function getDailyVisits($salesmanId, $date = null)
+    public function getDailyVisits($salesmanId, $date = null)
     {
         $date = $date ?? Carbon::today();
 
         $weekNow = $date->isoWeek();           // ISO week number
+        // echo $date->isoWeekYear(); die;
         $weekOfMonth = $this->weekOfMonth($date);
         $dayColumn = 'spd.visit_' . strtolower($date->format('D')); // mon,tue,...
 
@@ -473,7 +479,7 @@ class SalesPlanController extends Controller
             ->whereNull('sih.deleted')
             ->groupBy('sih.customer_id');
 
-        $datadb =  DB::table('sales_plan_detail_route as spd')
+        $datadb = DB::table('sales_plan_detail_route as spd')
             ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
             ->join('customer as c', 'c.id', '=', 'spd.customer_id')
             ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
@@ -487,33 +493,52 @@ class SalesPlanController extends Controller
             })
             ->where('sph.salesman', $salesmanId)
             ->where($dayColumn, 1)
-            ->where(function ($q) use ($weekNow, $weekOfMonth) {
-
-                // WEEKLY (F4)
-                $q->where('spd.visit_circle', 12);
-
-                // BIWEEKLY GANJIL (F2-1)
-                $q->orWhere(function ($qq) use ($weekNow) {
-                    $qq->where('spd.visit_circle', 13)
-                       ->whereRaw('MOD(?,2)=1', [$weekNow]);
+            ->where(function ($q) use ($weekNow, $weekOfMonth, $date) {
+                // =========================
+                // EXTRA CALL
+                // =========================
+                $q->where(function ($extra) use ($date) {
+                    $extra->where('spd.pjp_status', 'EXTRA CALL')
+                        ->whereDate('spd.date_extra_call', $date);
                 });
 
-                // BIWEEKLY GENAP (F2-2)
-                $q->orWhere(function ($qq) use ($weekNow) {
-                    $qq->where('spd.visit_circle', 14)
-                       ->whereRaw('MOD(?,2)=0', [$weekNow]);
-                });
 
-                // 3 WEEK CYCLE (F3)
-                $q->orWhere(function ($qq) use ($weekNow) {
-                    $qq->where('spd.visit_circle', 15)
-                       ->whereRaw('MOD(?,3)=0', [$weekNow]);
-                });
+                // =========================
+                // PERMANEN (pakai logic lama)
+                // =========================
+                $q->orWhere(function ($permanent) use ($weekNow, $weekOfMonth) {
 
-                // MONTHLY (F1)
-                $q->orWhere(function ($qq) use ($weekOfMonth) {
-                    $qq->where('spd.visit_circle', 16)
-                       ->whereRaw('? = 1', [$weekOfMonth]);
+                    $permanent->where('spd.pjp_status', 'PERMANEN')
+                        ->where(function ($cycle) use ($weekNow, $weekOfMonth) {
+
+                            // WEEKLY
+                            $cycle->where('spd.visit_circle', 12);
+
+                            // BIWEEKLY GANJIL
+                            $cycle->orWhere(function ($qq) use ($weekNow) {
+                                $qq->where('spd.visit_circle', 13)
+                                    ->whereRaw('MOD(?,2)=1', [$weekNow]);
+                            });
+
+                            // BIWEEKLY GENAP
+                            $cycle->orWhere(function ($qq) use ($weekNow) {
+                                $qq->where('spd.visit_circle', 14)
+                                    ->whereRaw('MOD(?,2)=0', [$weekNow]);
+                            });
+
+                            // 3 WEEK
+                            $cycle->orWhere(function ($qq) use ($weekNow) {
+                                $qq->where('spd.visit_circle', 15)
+                                    ->whereRaw('MOD(?,3)=0', [$weekNow]);
+                            });
+
+                            // MONTHLY
+                            $cycle->orWhere(function ($qq) use ($weekOfMonth) {
+                                $qq->where('spd.visit_circle', 16)
+                                    ->whereRaw('? = 1', [$weekOfMonth]);
+                            });
+
+                        });
                 });
 
             })

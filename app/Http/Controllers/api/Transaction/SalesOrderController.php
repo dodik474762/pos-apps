@@ -486,8 +486,12 @@ class SalesOrderController extends Controller
 
             /*update koordinat customer */
             if ($customers) {
-                $customers->latitude = $data['latitude'];
-                $customers->longitude = $data['longitude'];
+                if($customers->latitude == ''){
+                    $customers->latitude = $data['latitude'];
+                }
+                if($customers->longitude == ''){
+                    $customers->longitude = $data['longitude'];
+                }
                 if ($customers->customer_category == '2') {
                     $customers->customer_category = '1';
                 }
@@ -851,7 +855,8 @@ class SalesOrderController extends Controller
             return [
                 'promoIds' => [],
                 'promo_item' => [],
-                'product_free'=> []
+                'product_free'=> [],
+                'promo_header'=> [],
             ];
         }
         $groupPromo = $dataPromo->groupBy('product_promo_item');

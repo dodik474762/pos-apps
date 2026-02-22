@@ -33,7 +33,7 @@
                                     value="{{ isset($data->plan_code) ? $data->plan_code : 'AUTO' }}">
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3 d-none">
                                 <label class="form-label">Period Year</label>
                                 <select id="period_year" class="form-control required" error="Period Year">
                                     @php
@@ -50,7 +50,7 @@
                                 </select>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3 d-none">
                                 <label class="form-label">Period Month</label>
                                 <select class="form-control required" id="period_month" error="Period Month">
                                     @for ($m = 1; $m <= 12; $m++)

@@ -1,0 +1,31 @@
+alasan tidak order
+-> TOKO TUTUP
+-> PEMILIK TIDAK ADA
+-> TIDAK ADA UANG
+-> STOCK CUKUP
+-> BELI DITEMPAT LAIN
+-> BENCANA ALAM
+-> TIDAK DIKUNJUNGI
+-> BARANG TIDAK ADA
+
+alasan extra call
+-> TAGIHAN
+-> ORDER BY TELPON
+-> TOKO TELPON
+-> TURUN BARANG
+-> MENGEJAR OMSET
+
+
+mobile mandatory
+sales order
+- product pilih 
+- satuan baru dipilih pillih 
+-> satuan 
+
+order sync
+- top (harusnya tidak bisa order saat ada invoice tertagih)
+- kalo cash payment harus cash ga bisa credit
+- cash limit faktur tidak terbatas
+- credit/top limit faktur maximal satu/diseting administrator
+- invoice all category baik top maupun cash dibedakan dengan top di handhled driver
+- nvoice non cash muncul di handhled sales
