@@ -555,7 +555,9 @@ class SalesPlanController extends Controller
                 'cc.category',
                 DB::raw('COALESCE(inv.total_outstanding, 0) as total_outstanding'),
                 'vc.keterangan as visit_circle_name',
-                'vc.term_id as visit_circle_code'
+                'vc.term_id as visit_circle_code',
+                'c.latitude',
+                'c.longitude'
             );
         $datadb = $datadb->get();
         // echo '<pre>';
