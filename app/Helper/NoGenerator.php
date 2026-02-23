@@ -186,6 +186,25 @@ function generateNoSO()
     return $no;
 }
 
+function generateNoAdjStock()
+{
+    $no = 'ADJ'.strtoupper(date('m')).date('y');
+    $data = DB::table('product_adjustment_stock_header')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->code);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateNoDO()
 {
     $no = 'DO'.strtoupper(date('m')).date('y');

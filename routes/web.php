@@ -42,6 +42,7 @@ use App\Http\Controllers\api\Transaction\SalesPlanController as TransactionSales
 use App\Http\Controllers\api\Transaction\SalesReturnController as TransactionSalesReturnController;
 use App\Http\Controllers\api\Transaction\SessionsController as TransactionSessionsController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
+use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -87,6 +88,7 @@ use App\Http\Controllers\web\Transaction\SalesPlanController;
 use App\Http\Controllers\web\Transaction\SalesReturnController;
 use App\Http\Controllers\web\Transaction\SessionsController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
+use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -287,6 +289,10 @@ Route::get('transaksi/presensi', [TransactionPresensiController::class, 'index']
 Route::get('transaksi/presensi/add', [TransactionPresensiController::class, 'add'])->name('presensi-add');
 
 Route::get('transaksi/sessions', [SessionsController::class, 'index']);
+
+Route::get('transaksi/adjustment_stock', [ProductAdjustmentStockController::class, 'index']);
+Route::get('transaksi/adjustment_stock/add', [ProductAdjustmentStockController::class, 'add']);
+Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController::class, 'ubah']);
 
 /*API */
 
@@ -618,4 +624,11 @@ Route::post('api/transaksi/presensi/showDataKaryawan ', [PresensiController::cla
 Route::post('api/transaksi/presensi/submit ', [PresensiController::class, 'submit']);
 
 Route::post('api/transaksi/sessions/getData', [TransactionSessionsController::class, 'getData']);
+
+Route::post('api/transaksi/adjustment_stock/getData', [TransactionProductAdjustmentStockController::class, 'getData']);
+Route::post('api/transaksi/adjustment_stock/submit', [TransactionProductAdjustmentStockController::class, 'submit']);
+Route::post('api/transaksi/adjustment_stock/delete', [TransactionProductAdjustmentStockController::class, 'delete']);
+Route::post('api/transaksi/adjustment_stock/confirmDelete', [TransactionProductAdjustmentStockController::class, 'confirmDelete']);
+Route::post('api/transaksi/adjustment_stock/showDataProduct', [TransactionProductAdjustmentStockController::class, 'showDataProduct']);
+Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProductAdjustmentStockController::class, 'getDataProduct']);
 /*API */
