@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceController extends Controller
 {
-     public function getTableName()
+    public function getTableName()
     {
         return 'sales_invoice_header';
     }
@@ -29,7 +29,7 @@ class SalesInvoiceController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -49,14 +49,14 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.invoice_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -79,14 +79,14 @@ class SalesInvoiceController extends Controller
         // print_r($query);die;
         return json_encode($data);
     }
-   
+
     public function getDataFromSO()
     {
         DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -106,14 +106,14 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.invoice_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('so.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('so.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -164,13 +164,13 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('soh.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -193,7 +193,7 @@ class SalesInvoiceController extends Controller
         // print_r($query);die;
         return json_encode($data);
     }
-    
+
     public function getDataSo()
     {
         DB::enableQueryLog();
@@ -218,11 +218,11 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -252,7 +252,7 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
 
         $exceptPoDetailId = [];
-        if (! empty($data['itemsChoose'])) {
+        if (!empty($data['itemsChoose'])) {
             $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
         }
         $data['data'] = [];
@@ -281,7 +281,7 @@ class SalesInvoiceController extends Controller
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 
-        if (! empty($exceptPoDetailId)) {
+        if (!empty($exceptPoDetailId)) {
             $datadb->whereNotIn('m.id', $exceptPoDetailId);
         }
         if (isset($_POST)) {
@@ -289,14 +289,14 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -331,7 +331,7 @@ class SalesInvoiceController extends Controller
         DB::beginTransaction();
         try {
 
-             $piutangAcc = AccountMapping::where('module', 'SALES_INVOICE')
+            $piutangAcc = AccountMapping::where('module', 'SALES_INVOICE')
                 ->where('account_type', 'piutang usaha')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
@@ -346,7 +346,7 @@ class SalesInvoiceController extends Controller
                 ->with('account')
                 ->first();
 
-            if (! $piutangAcc || ! $penjualanAcc || ! $discPenjualanAcc) {
+            if (!$piutangAcc || !$penjualanAcc || !$discPenjualanAcc) {
                 DB::rollBack();
 
                 return response()->json([
@@ -355,7 +355,7 @@ class SalesInvoiceController extends Controller
                 ]);
             }
 
-            if(empty($data['items'])){
+            if (empty($data['items'])) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -364,7 +364,7 @@ class SalesInvoiceController extends Controller
             }
 
             //cek jika ada tipe tax yang berbeda dalam 1 invoice
-            if(count(array_unique(array_column($data['items'], 'type_tax'))) > 1){
+            if (count(array_unique(array_column($data['items'], 'type_tax'))) > 1) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -373,7 +373,7 @@ class SalesInvoiceController extends Controller
             }
 
             //cek jika ada tax yang berbeda dalam 1 invoice
-            if(count(array_unique(array_column($data['items'], 'tax'))) > 1){
+            if (count(array_unique(array_column($data['items'], 'tax'))) > 1) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -386,7 +386,7 @@ class SalesInvoiceController extends Controller
             $data['tax'] = $data['items'][0]['tax'];
             $type_pajak = $data['items'][0]['type_tax'];
             $tax = Tax::find($data['tax']);
-            if(empty($tax)){
+            if (empty($tax)) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -414,7 +414,7 @@ class SalesInvoiceController extends Controller
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
             $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
-            if(!$policyCreateInvoice['status']){
+            if (!$policyCreateInvoice['status']) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -435,7 +435,7 @@ class SalesInvoiceController extends Controller
             $header->is_packing = $data['is_packing'];
             $header->tax_amount = $tax_amount;
             $header->total_amount = $data['total_amount'];
-            if($data['id'] != ''){
+            if ($data['id'] != '') {
                 $header->reprint = 1; //reprint
             }
             $header->save();
@@ -487,14 +487,14 @@ class SalesInvoiceController extends Controller
                 /*mapping coa */
             }
 
-            if($data['is_packing'] == '1'){
-                if(!empty($do)){
+            if ($data['is_packing'] == '1') {
+                if (!empty($do)) {
                     $do->status = 'CONFIRMED';
                     $do->save();
                 }
             }
 
-            if(!empty($data['do_id'])){
+            if (!empty($data['do_id'])) {
                 $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
                 if (empty($dev_status_log)) {
                     $dev_status_log = new DeliveryOrderStatusLog();
@@ -509,13 +509,13 @@ class SalesInvoiceController extends Controller
 
 
             $so = empty($data['so_id']) ? SalesOrderHeader::find($do->so_id) : SalesOrderHeader::find($data['so_id']);
-            if($data['id'] == ''){
+            if ($data['id'] == '') {
                 $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
-                if($so->payment_term == '' || $so->payment_term == 0){
+                if ($so->payment_term == '' || $so->payment_term == 0) {
                     $updateInv->due_date = $data['invoice_date'];
                     $updateInv->save();
-                }else{
-                    $dueDate = date('Y-m-d', strtotime($data['invoice_date']. ' + '.$so->payment_term.' days'));
+                } else {
+                    $dueDate = date('Y-m-d', strtotime($data['invoice_date'] . ' + ' . $so->payment_term . ' days'));
                     $updateInv->due_date = $dueDate;
                     $updateInv->save();
                 }
@@ -523,16 +523,16 @@ class SalesInvoiceController extends Controller
             $currency = $so->currency;
 
             $reference = $header->invoice_number;
-            if($data['id'] != ''){
+            if ($data['id'] != '') {
                 cancelAllGL($reference);
             }
 
             postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $subtotal, $currency);
-            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal+$disc_total - $tax_amount), $currency);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal + $disc_total - $tax_amount), $currency);
             postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($disc_total), $currency);
 
-            if($type_pajak == 'exclude'){
-                if(!empty($ppnAccount)){
+            if ($type_pajak == 'exclude') {
+                if (!empty($ppnAccount)) {
                     $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
                     postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
                 }
@@ -596,8 +596,8 @@ class SalesInvoiceController extends Controller
 
             // Hapus log status DO
             $log = DeliveryOrderStatusLog::where('do_id', $menu->do_id)
-            ->where('status_to', 'CONFIRMED')
-            ->first();
+                ->where('status_to', 'CONFIRMED')
+                ->first();
             if ($log) {
                 $log->delete();
             }
@@ -647,7 +647,7 @@ class SalesInvoiceController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'do.do_number',
@@ -686,23 +686,24 @@ class SalesInvoiceController extends Controller
         return view('web.sales_invoice.modal.dataso', $data);
     }
 
-    public function getDoDetail(Request $request){
+    public function getDoDetail(Request $request)
+    {
         $data = $request->all();
         $datadb = DeliveryOrderDtl::where('delivery_order_detail.do_id', $data['do_id'])
-        ->select([
-            'delivery_order_detail.*',
-            'u.name as unit_name',
-            'p.code as product_code',
-            'p.name as product_name',
-            'sod.discount_percent',
-            'sod.unit_price',
-            'sod.discount_amount',
-            'sod.subtotal', // subtotal sudah net (after discount)
-            'p.type_tax',
-            'p.tax_sale',
-            't.rate as tax',
-             // Hitung tax_amount sesuai tipe pajak
-            DB::raw("
+            ->select([
+                'delivery_order_detail.*',
+                'u.name as unit_name',
+                'p.code as product_code',
+                'p.name as product_name',
+                'sod.discount_percent',
+                'sod.unit_price',
+                'sod.discount_amount',
+                'sod.subtotal', // subtotal sudah net (after discount)
+                'p.type_tax',
+                'p.tax_sale',
+                't.rate as tax',
+                // Hitung tax_amount sesuai tipe pajak
+                DB::raw("
                 CASE
                     WHEN p.type_tax = 'include' THEN (sod.subtotal - (sod.subtotal / (1 + t.rate/100)))
                     WHEN p.type_tax = 'exclude' THEN (sod.subtotal * (t.rate/100))
@@ -710,7 +711,7 @@ class SalesInvoiceController extends Controller
                 END AS tax_amount
             "),
                 // Hitung line total = subtotal + tax_amount
-            DB::raw("
+                DB::raw("
                 sod.subtotal +
                 CASE
                     WHEN p.type_tax = 'include' THEN (sod.subtotal - (sod.subtotal / (1 + t.rate/100)))
@@ -718,34 +719,35 @@ class SalesInvoiceController extends Controller
                     ELSE 0
                 END AS line_total
             ")
-        ])
-        ->join('sales_order_details as sod', 'sod.id', 'delivery_order_detail.so_detail_id')
-        ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
-        ->join('tax as t', 't.id', 'p.tax_sale')
-        ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
-        ->whereNull('delivery_order_detail.deleted')
-        ->whereNull('sod.deleted')
-        // ->whereNull('sod.free_for')
-        ->get();
+            ])
+            ->join('sales_order_details as sod', 'sod.id', 'delivery_order_detail.so_detail_id')
+            ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
+            ->join('tax as t', 't.id', 'p.tax_sale')
+            ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
+            ->whereNull('delivery_order_detail.deleted')
+            ->whereNull('sod.deleted')
+            // ->whereNull('sod.free_for')
+            ->get();
 
         $data['data'] = $datadb;
 
         return view('web.sales_invoice.datadodetail', $data);
     }
-    
-    public function getSoDetail(Request $request){
+
+    public function getSoDetail(Request $request)
+    {
         $data = $request->all();
         $datadb = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['so_id'])
-        ->select([
-            'sales_order_details.*',
-            'u.name as unit_name',
-            'p.code as product_code',
-            'p.name as product_name',
-            'p.type_tax',
-            'p.tax_sale',
-            't.rate as tax',
-             // Hitung tax_amount sesuai tipe pajak
-            DB::raw("
+            ->select([
+                'sales_order_details.*',
+                'u.name as unit_name',
+                'p.code as product_code',
+                'p.name as product_name',
+                'p.type_tax',
+                'p.tax_sale',
+                't.rate as tax',
+                // Hitung tax_amount sesuai tipe pajak
+                DB::raw("
                 CASE
                     WHEN p.type_tax = 'include' THEN (sales_order_details.subtotal - (sales_order_details.subtotal / (1 + t.rate/100)))
                     WHEN p.type_tax = 'exclude' THEN (sales_order_details.subtotal * (t.rate/100))
@@ -753,7 +755,7 @@ class SalesInvoiceController extends Controller
                 END AS tax_amount
             "),
                 // Hitung line total = subtotal + tax_amount
-            DB::raw("
+                DB::raw("
                 sales_order_details.subtotal +
                 CASE
                     WHEN p.type_tax = 'include' THEN (sales_order_details.subtotal - (sales_order_details.subtotal / (1 + t.rate/100)))
@@ -761,19 +763,20 @@ class SalesInvoiceController extends Controller
                     ELSE 0
                 END AS line_total
             ")
-        ])
-        ->join('product as p', 'p.id', 'sales_order_details.product_id')
-        ->join('tax as t', 't.id', 'p.tax_sale')
-        ->join('unit as u', 'u.id', 'sales_order_details.unit')
-        ->whereNull('sales_order_details.deleted')
-        ->get();
+            ])
+            ->join('product as p', 'p.id', 'sales_order_details.product_id')
+            ->join('tax as t', 't.id', 'p.tax_sale')
+            ->join('unit as u', 'u.id', 'sales_order_details.unit')
+            ->whereNull('sales_order_details.deleted')
+            ->get();
 
         $data['data'] = $datadb;
 
         return view('web.sales_invoice.datasodetail', $data);
     }
 
-     public function getOutstandingInvoice(Request $request){
+    public function getOutstandingInvoice(Request $request)
+    {
         $data = $request->all();
         $customerId = isset($data['customer']) ? $data['customer'] : '0';
         try {
@@ -784,11 +787,11 @@ class SalesInvoiceController extends Controller
             $customers = [];
         }
 
-        if($customerId == '0' || empty($customers)){
+        if ($customerId == '0' || empty($customers)) {
             /*driver invoice */
             $pl = new PackingListController();
             $packingListCustomer = $pl->getDataPackingList($request)->original;
-            if(!empty($packingListCustomer['data'])){
+            if (!empty($packingListCustomer['data'])) {
                 foreach ($packingListCustomer['data'] as $key => $value) {
                     $customers[] = $value->customer_id;
                 }
@@ -798,31 +801,39 @@ class SalesInvoiceController extends Controller
             /*driver invoice */
         }
 
+
         $result['message'] = '';
         $result['is_valid'] = true;
         try {
             //code...
             $datadb = DB::table('sales_invoice_header as sih')
-            ->select(
-                'sih.id',
-                'sih.invoice_number',
-                'sih.invoice_date',
-                'sih.customer_id',
-                'sih.total_amount',
-                'sih.discount_amount',
-                'sih.subtotal',
-                'sih.amount_paid',
-                'c.code as customer_code',
-                'c.nama_customer',
-                DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
-                DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
-            )
-            ->join('customer as c', 'c.id', '=', 'sih.customer_id')
-            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
-            ->whereNull('sih.deleted')            // tidak termasuk deleted
-            ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
+                ->select(
+                    'sih.id',
+                    'sih.invoice_number',
+                    'sih.invoice_date',
+                    'sih.customer_id',
+                    'sih.total_amount',
+                    'sih.discount_amount',
+                    'sih.subtotal',
+                    'sih.amount_paid',
+                    'c.code as customer_code',
+                    'c.nama_customer',
+                    DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
+                    DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
+                )
+                ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
+                ->whereNull('sih.deleted')            // tidak termasuk deleted
+                ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
             $datadb->whereIn('sih.customer_id', $customers);
+
+            if (isset($data['akses'])) {
+                if (strtolower($data['akses']) != 'driver' && strtolower($data['akses']) != 'administrator') {
+                    $datadb->where('c.payment_terms', '3');
+                }
+            }
+
             $datadb = $datadb->get();
             $result['message'] = 'Success';
         } catch (\Throwable $th) {
