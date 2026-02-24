@@ -1347,6 +1347,35 @@ class SalesOrderController extends Controller
 
         $data = $data->first();
 
+        $customer = empty($data) ? $customer : $data->customer_id;
+        /*data transaksi terakakhir */    
+        $last_transaction = SalesOrderHeader::where('customer_id', $customer)->orderBy('id', 'desc')->first();
+        $last_product = '';
+        if(!empty($last_transaction)){
+            $data->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date)); 
+
+            $detailProduct = DB::table('sales_order_details as sod')
+                ->select([
+                    DB::raw("
+                        CONCAT(
+                            p.code, '-', 
+                            p.name, '-', 
+                            sod.qty, ' ', 
+                            u.name, '-', 
+                            sod.subtotal
+                        ) as detail_string
+                    ")
+                ])
+                ->join('product as p', 'p.id', 'sod.product_id')
+                ->join('unit as u', 'u.id', 'sod.unit')
+                ->where('sod.sales_order_id', $last_transaction->id)
+                ->get();
+
+            $last_product = $detailProduct->pluck('detail_string')->implode("\n");
+            $data->last_product = $last_product;
+        }
+
+
         if (empty($data)) {
             $data = [
                 'is_valid' => true,
@@ -1356,6 +1385,8 @@ class SalesOrderController extends Controller
                     'total_transaksi' => 0,
                     'total_nilai' => 0,
                     'avg_transaksi' => 0,
+                    'last_transaksi' => '-',
+                    'last_product'=> '-',
                     'periode' => date('Y-m')
                 ]
             ];

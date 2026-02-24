@@ -482,6 +482,7 @@ class SalesPlanController extends Controller
         $datadb = DB::table('sales_plan_detail_route as spd')
             ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
             ->join('customer as c', 'c.id', '=', 'spd.customer_id')
+            ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
             ->join('dictionary as vc', 'vc.id', '=', 'spd.visit_circle')
             ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
@@ -557,8 +558,12 @@ class SalesPlanController extends Controller
                 'vc.keterangan as visit_circle_name',
                 'vc.term_id as visit_circle_code',
                 'c.latitude',
-                'c.longitude'
+                'c.longitude',
+                'c.payment_terms',
+                'top.code as top_code',
+                'top.nilai as top_nilai'
             );
+            
         $datadb = $datadb->get();
         // echo '<pre>';
         // print_r(DB::getQueryLog());die;
