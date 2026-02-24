@@ -156,13 +156,14 @@ class ProductController extends Controller
                     'm.id as product_id',
                     'm.code as product_code',
                     // 'm.name as product_name',
-                    DB::raw("CONCAT(COALESCE(v.nama_vendor, ''), m.name) AS product_name"),
+                    DB::raw("TRIM(CONCAT(COALESCE(v.nama_vendor, ''), ' ', m.name)) AS product_name"),
                     'u.name as product_unit',
                     'pup.price as product_price',
                     'u.id as product_unit_id',
                     // 'ps.qty as stock_product',
                     DB::raw("COALESCE(ps.qty, 0) as stock_product"),
                     'pup.id as product_uom_price_id',
+                    'us.name as stock_unit'
                 ])
                 ->leftJoin('vendor as v', 'v.id', 'm.vendor')
                 ->join('product_type as pt', 'pt.id', 'm.product_type')
@@ -170,6 +171,11 @@ class ProductController extends Controller
                     return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
                 })
                 ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
+                ->leftJoin('product_uom as pu', function($q){
+                    return $q->on('pu.product', 'm.id')
+                    ->where('pu.level', '1');
+                })
+                ->leftJoin('unit as us', 'us.id', 'pu.unit_tujuan')
                 ->join('unit as u', 'u.id', 'pup.unit')
                 ->whereNull('m.deleted')
                 ->orderBy('m.id', 'desc')
