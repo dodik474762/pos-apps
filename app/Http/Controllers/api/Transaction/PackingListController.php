@@ -150,7 +150,7 @@ class PackingListController extends Controller
             ->join('sales_order_headers as soh', 'soh.id', 'm.so_id')
             ->join('currency as c', 'c.id', 'soh.currency')
             ->whereNull('m.deleted')
-            ->whereIn('m.status', ['CONFIRMED'])
+            ->whereIn('m.status', ['CONFIRMED', 'DRAFT'])
             ->orderBy('m.id', 'asc');
         if(!empty($do_choose)){
             $datadb->whereNotIn('m.id', $do_choose);
@@ -803,13 +803,20 @@ class PackingListController extends Controller
                 'c.id as customer_id',
                 'c.nama_customer',
                 'doh.total_item',
-                'pld.confirm_date'
+                'pld.confirm_date',
+                'c.address',
+                'c.latitude',
+                'c.longitude',
+                'top.code as top_code',
+                'top.nilai as top_nilai'
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'm.id')
             ->join('delivery_order_header as doh', 'doh.id', 'pld.delivery_order_id')
             ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('users as u', 'u.id', 'm.created_by')
             // ->where('m.packing_date', $packing_date)
+            ->where('m.driver', $data['users'])
             ->whereNull('m.deleted')
             ->where(function($q){
                 return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
