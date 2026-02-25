@@ -10,6 +10,10 @@ use App\Models\Transaction\SalesPlanHeader;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Imports\SalesPlanImport;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SalesPlanController extends Controller
 {
@@ -563,7 +567,7 @@ class SalesPlanController extends Controller
                 'top.code as top_code',
                 'top.nilai as top_nilai'
             );
-            
+
         $datadb = $datadb->get();
         // echo '<pre>';
         // print_r(DB::getQueryLog());die;
@@ -574,5 +578,144 @@ class SalesPlanController extends Controller
     {
         $firstWeek = $date->copy()->startOfMonth()->isoWeek();
         return $date->isoWeek() - $firstWeek + 1;
+    }
+
+    public function submit_import(Request $request)
+    {
+        $data = $request->all();
+        $userId = session('user_id');
+        // validasi file
+        $validator = Validator::make($request->all(), [
+            'file' => [
+                'required',
+                'file',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['csv', 'xlsx', 'xls'])) {
+                        $fail('File harus berformat CSV, XLSX, atau XLS.');
+                    }
+                }
+            ]
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'File tidak valid',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // ambil file
+        $file = $request->file('file');
+
+        // nama file
+        // $filename = time() . '_' . $file->getClientOriginalName();
+
+        // // simpan ke storage/app/import
+        // $path = $file->storeAs('import', $filename);
+
+
+        $import = new SalesPlanImport();
+
+        Excel::import($import, $file);
+
+        // ambil data excel (BELUM masuk DB)
+        $rows = $import->rows;
+        $rows = collect($rows)->toArray();
+
+        $idCircleKunjungan = collect($rows)
+            ->pluck('id_circle_kunjungan')
+            ->unique()
+            ->values()
+            ->toArray();
+        
+        $idCustomer = collect($rows)
+            ->pluck('customer_code')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $masterCircle = DB::table('dictionary')
+            ->whereIn('term_id', $idCircleKunjungan)
+            ->get()
+            ->keyBy('term_id')
+            ->toArray();
+       
+        $masterCustomer = DB::table('customer')
+            ->whereIn('code', $idCustomer)
+            ->get()
+            ->keyBy('code')
+            ->toArray();
+        // echo '<pre>';
+        // print_r($rows);
+        // die;
+
+        $salesman = !empty($rows) ? $rows[0]['kode_sales'] : '';
+
+
+        $result['is_valid'] = false;
+        $result['message'] = 'Error';
+
+        $users = DB::table('users')->where('username', $salesman)->first();
+        if (empty($users)) {
+            $result['message'] = 'User Tidak Ditemukan ' . $salesman;
+            return response()->json($result);
+        }
+
+        DB::beginTransaction();
+        try {
+            $productRowsImport = 0;
+            $data['salesman'] = $users->id;
+
+            // === HEADER ===
+            $header = new SalesPlanHeader();
+
+            $header->plan_code = generateNoRoutePlan(); // misal helper
+            $header->created_by = $userId;
+            $header->status = 'DRAFT';
+
+            $header->salesman = $data['salesman'];
+            $header->period_year = date('Y');
+            $header->period_month = date('m');
+            $header->save();
+
+            $hdrId = $header->id;
+
+            // Item baru atau update
+            foreach ($rows as $key => $item) {
+                $detail = new SalesPlanDetailRoute();
+                $cust_id = isset($masterCustomer[$item['customer_code']]->id) ? $masterCustomer[$item['customer_code']]->id : 0;
+                $item['visit_type'] = isset($masterCircle[$item['id_circle_kunjungan']]->id) ? $masterCircle[$item['id_circle_kunjungan']]->id : 0;
+
+                $detail->header_id = $hdrId;
+                $detail->customer_id = $cust_id;
+                $detail->visit_circle = $item['visit_type'];
+                $detail->visit_mon = $item['senin'] == 'Y' ? 1 : 0;
+                $detail->visit_tue = $item['selasa'] == 'Y' ? 1 : 0;
+                $detail->visit_wed = $item['rabu'] == 'Y' ? 1 : 0;
+                $detail->visit_thu = $item['kamis'] == 'Y' ? 1 : 0;
+                $detail->visit_fri = $item['jumat'] == 'Y' ? 1 : 0;
+                $detail->visit_sat = $item['sabtu'] == 'Y' ? 1 : 0;
+                $detail->visit_sun = $item['minggu'] == 'Y' ? 1 : 0;
+                $detail->note = 'IMPORT';
+                $detail->pjp_status = $item['status_pjp'];
+                if ($item['status_pjp'] == 'EXTRA CALL') {
+                    $detail->date_extra_call = date('Y-m-d');
+                }
+                $detail->save();
+                $productRowsImport += 1;
+            }
+
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Success ' . $productRowsImport . ' Imported';
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = 'Error ' . $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 }

@@ -85,6 +85,17 @@ let SalesPlan = {
         return data;
     },
 
+
+     submitImport: (elm, e) => {
+            e.preventDefault();
+            let form = $(elm).closest("div.row");
+            if (validation.runWithElement(form)) {
+                $("form#form-product").submit();
+            } else {
+                message.sweetError("Informasi", "Data Belum Lengkap");
+            }
+        },
+
     submit: (elm, e) => {
         e.preventDefault();
         let form = $(elm).closest("div.row");

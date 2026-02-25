@@ -237,6 +237,7 @@ Route::get('transaksi/sales_order/cetak', [SalesOrderController::class, 'cetak']
 Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
 Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);
 Route::get('transaksi/sales_plan/ubah', [SalesPlanController::class, 'ubah']);
+Route::get('transaksi/sales_plan/import', [SalesPlanController::class, 'import']);
 
 Route::get('transaksi/delivery_order', [DeliveryOrderController::class, 'index']);
 Route::get('transaksi/delivery_order/add', [DeliveryOrderController::class, 'add'])->name('delivery-order-add');
@@ -526,6 +527,7 @@ Route::post('api/transaksi/sales_plan/showDataCustomer', [TransactionSalesPlanCo
 Route::post('api/transaksi/sales_plan/getDataCustomer', [TransactionSalesPlanController::class, 'getDataCustomer']);
 Route::post('api/transaksi/sales_plan/showDataProduct', [TransactionSalesPlanController::class, 'showDataProduct']);
 Route::post('api/transaksi/sales_plan/getDataProduct', [TransactionSalesPlanController::class, 'getDataProduct']);
+Route::post('api/transaksi/sales_plan/submit_import', [TransactionSalesPlanController::class, 'submit_import']);
 Route::post('api_mobile/transaksi/sales_plan/getSalesRoutePlan', [TransactionSalesPlanController::class, 'getSalesRoutePlan']);
 
 Route::post('api/transaksi/delivery_order/getData', [TransactionDeliveryOrderController::class, 'getData']);

@@ -142,4 +142,21 @@ class SalesPlanController extends Controller
 
         return $pdf->stream('SALESPLAN-'.$data->code.'.pdf');
     }
+
+    public function import(Request $request)
+    {
+        $api = new TransactionSalesPlanController();
+        $data = $request->all();
+
+        $data['data'] = [];
+        $data['title_parent'] = $this->getTitleParent();
+        $data['title'] = 'Form Import ' . $this->getTitle();
+        $view = view('web.sales_plan.form_import', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
 }

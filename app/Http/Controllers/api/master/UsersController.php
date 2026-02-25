@@ -71,7 +71,7 @@ class UsersController extends Controller
             $roles = $data['id'] == '' ? new Users() : Users::find($data['id']);
             $roles->user_group = $data['roles'];
             $roles->username = $data['username'];
-            $roles->name = strtoupper($data['name']);
+            $roles->name = strtoupper($data['username']);
             $roles->password = Hash::make($request->get('password'));
             $roles->nik = trim($nik);
             $roles->save();
