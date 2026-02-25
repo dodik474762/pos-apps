@@ -64,7 +64,7 @@
                                         sub_channel_outlet="{{ $customer->channel_outlet }}"
                                         value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
-                                            {{ $customer->nama_customer }}
+                                            {{ $customer->code }} - {{ $customer->nama_customer }}
                                         </option>
                                     @endforeach
                                 </select>
