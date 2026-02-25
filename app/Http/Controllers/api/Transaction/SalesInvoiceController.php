@@ -835,7 +835,30 @@ class SalesInvoiceController extends Controller
             }
 
             $datadb = $datadb->get();
+
+            foreach ($datadb as $invoice) {
+                $invoice->detail_item = DB::table('sales_invoice_detail as sid')
+                ->select([
+                    'sid.id',
+                    'p.id as product_id',
+                    'sid.qty',
+                    'sid.price as unit_price',
+                    'sid.subtotal',
+                    'p.code as product_code',
+                    'p.name as product_name',
+                    'u.name as unit_name'
+
+                ])
+                ->join('product as p', 'p.id', 'sid.product_id')
+                ->join('sales_order_details as sod', 'sod.id', 'sid.so_detail_id')
+                ->join('unit as u', 'u.id', 'sod.unit')
+                    ->where('sid.invoice_id', $invoice->id)
+                    ->whereNull('sid.deleted')
+                    ->get();
+            }
+
             $result['message'] = 'Success';
+            $result['customers'] = $customers;
         } catch (\Throwable $th) {
             $result['is_valid'] = false;
             $result['message'] = $th->getMessage();
