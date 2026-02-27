@@ -14,6 +14,7 @@ use App\Models\Master\Unit;
 use App\Models\Transaction\ProductPromoItem;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
+use App\Models\Transaction\StockCustomer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -178,7 +179,7 @@ class SalesOrderController extends Controller
             $items = collect($data['items'])->filter(function ($item) {
                 return empty($item['free_for']);
             });
-            $productIds = $items->pluck('product_id')->toArray();        
+            $productIds = $items->pluck('product_id')->toArray();
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
             /*CALCULATE PROMO ITEM */
@@ -193,7 +194,7 @@ class SalesOrderController extends Controller
                 $header->so_number = generateNoSO(); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'draft';
-            }else{
+            } else {
                 $platform = $header->platform;
             }
 
@@ -240,12 +241,12 @@ class SalesOrderController extends Controller
                     ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
 
-                $promoItem = null;                
-                if(!empty($calculatePromo)){
-                    foreach($calculatePromo as $promo){
+                $promoItem = null;
+                if (!empty($calculatePromo)) {
+                    foreach ($calculatePromo as $promo) {
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
-                        if(!empty($promoItem)){
+                        if (!empty($promoItem)) {
                             $item['disc_percent'] = $promo['discount_percent'];
                             $item['disc_amount'] = $promo['discount_amount'];
                             $item['subtotal'] = $promoItem['subtotal'];
@@ -275,8 +276,8 @@ class SalesOrderController extends Controller
 
             // Update total header
             $header->total_amount = $grandTotal;
-            if($data['id'] != ''){
-                if($platform == 'mobile'){
+            if ($data['id'] != '') {
+                if ($platform == 'mobile') {
                     $header->status = 'draft';
                 }
             }
@@ -486,10 +487,10 @@ class SalesOrderController extends Controller
 
             /*update koordinat customer */
             if ($customers) {
-                if($customers->latitude == ''){
+                if ($customers->latitude == '') {
                     $customers->latitude = $data['latitude'];
                 }
-                if($customers->longitude == ''){
+                if ($customers->longitude == '') {
                     $customers->longitude = $data['longitude'];
                 }
                 if ($customers->customer_category == '2') {
@@ -500,7 +501,7 @@ class SalesOrderController extends Controller
             /*update koordinat customer */
 
 
-             /*CALCULATE PROMO ITEM */
+            /*CALCULATE PROMO ITEM */
             $items = [];
             $productIds = [];
             foreach ($data['details'] as $i) {
@@ -508,14 +509,14 @@ class SalesOrderController extends Controller
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
                 $items = [
-                    'product_id'=> $products[0],
-                    'unit_id'=> $product_unit[0],
-                    'qty'=> $i['qty'],
-                    'price'=> doubleval(trim($product_unit[1]))
+                    'product_id' => $products[0],
+                    'unit_id' => $product_unit[0],
+                    'qty' => $i['qty'],
+                    'price' => doubleval(trim($product_unit[1]))
                 ];
                 $productIds[] = $products[0];
             }
-            
+
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
             /*CALCULATE PROMO ITEM */
@@ -588,17 +589,17 @@ class SalesOrderController extends Controller
                 $params['customer_id'] = '1';
                 $params['price'] = doubleval(trim($product_unit[1]));
                 $params['today'] = $data['so_date'];
-                $params['qty'] = $item['qty'];                
+                $params['qty'] = $item['qty'];
                 $calculateDisc = $this->calculateDisc($params);
 
                 /*PROMO */
-                $promoItem = null;     
-                $freeGoods = [];           
-                if(!empty($calculatePromo)){
-                    foreach($calculatePromo as $promo){
+                $promoItem = null;
+                $freeGoods = [];
+                if (!empty($calculatePromo)) {
+                    foreach ($calculatePromo as $promo) {
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
-                        if(!empty($promoItem)){
+                        if (!empty($promoItem)) {
                             $calculateDisc['disc_percent'] = $promo['discount_percent'];
                             $calculateDisc['disc_amount'] = $promo['discount_amount'];
                             $calculateDisc['subtotal'] = $promoItem['subtotal'];
@@ -633,12 +634,12 @@ class SalesOrderController extends Controller
                     $detail->free_for = trim($products[0]);
                     $detail->status = 'draft';
                     $detail->save();
-                }     
+                }
 
                 if (!empty($freeGoods)) {
-                    foreach($freeGoods as $free){
+                    foreach ($freeGoods as $free) {
                         $detail = new SalesOrderDetail();
-    
+
                         $detail->sales_order_id = $hdrId;
                         $detail->product_id = $free['product'];
                         $detail->qty = $free['qty'];
@@ -653,7 +654,7 @@ class SalesOrderController extends Controller
                         $detail->status = 'draft';
                         $detail->save();
                     }
-                }     
+                }
 
                 $grandTotal += $calculateDisc['subtotal'];
             }
@@ -707,7 +708,7 @@ class SalesOrderController extends Controller
 
         return response()->json($result);
     }
-    
+
     public function confirmAlHandheld(Request $request)
     {
         $data = $request->all();
@@ -716,10 +717,10 @@ class SalesOrderController extends Controller
         try {
             // code...
             SalesOrderHeader::whereNull('deleted')->where('platform', 'mobile')
-            ->where('status', 'submited')
-            ->update([
-                'status'=> 'draft'
-            ]);
+                ->where('status', 'submited')
+                ->update([
+                    'status' => 'draft'
+                ]);
 
             DB::commit();
             $result['is_valid'] = true;
@@ -752,7 +753,8 @@ class SalesOrderController extends Controller
         return view('web.sales_order.modal.confirmdelete', $data);
     }
 
-    public function getListVendor(){
+    public function getListVendor()
+    {
         $datadb = DB::table('vendor')->whereNull('deleted')->get();
         return $datadb;
     }
@@ -778,50 +780,67 @@ class SalesOrderController extends Controller
         return view('web.product.datainfoprogramdisk', $data);
     }
 
-    public function getPromoItem($produkIds = []){
+    public function getPromoItem($produkIds = [])
+    {
         $datadb = DB::table('product_promo_item_detail as ppid')
-                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-                ->whereIn('ppid.product', $produkIds)
-                ->whereDate('ppi.date_start', '<=', now())
-                ->select('ppid.product_promo_item', 'ppid.product')
-                ->orderBy('ppid.product_promo_item')
-                ->get();
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->whereIn('ppid.product', $produkIds)
+            ->whereDate('ppi.date_start', '<=', now())
+            ->select('ppid.product_promo_item', 'ppid.product')
+            ->orderBy('ppid.product_promo_item')
+            ->get();
 
         return $datadb;
     }
 
-    public function getPromoHeader($promoIds = []){
+    public function getPromoHeader($promoIds = [])
+    {
         $datadb = ProductPromoItem::select('product_promo_item.*')
-        ->with(['promoProducts', 'promoFree'])
-                ->whereIn('product_promo_item.id', $promoIds)
-                ->get();
+            ->with(['promoProducts', 'promoFree'])
+            ->whereIn('product_promo_item.id', $promoIds)
+            ->get();
         return $datadb;
     }
 
-    public function getPromoItemDtl($promoIds = []){
+    public function getPromoItemDtl($promoIds = [])
+    {
         $datadb = DB::table('product_promo_item_detail as ppid')
-                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-                ->select('ppid.*', 'ppi.promo_name', 'ppi.date_start', 'ppi.min_qty',
-                'ppi.max_qty', 'ppi.discount_type', 'ppi.discount_value', 'p.code as product_code',
-                'p.name as product_name', 'u.name as unit_name', 'ppi.min_mix', 'ppi.unit', 'ppi.kelipatan', 
-                'ppi.channel_outlet', 'ppi.sub_channel_outlet')
-                ->join('product as p', 'p.id', '=', 'ppid.product')
-                ->join('unit as u', 'u.id', '=', 'ppi.unit')
-                ->whereIn('ppi.id', $promoIds)
-                ->orderBy('ppid.product_promo_item')
-                ->get();
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->select(
+                'ppid.*',
+                'ppi.promo_name',
+                'ppi.date_start',
+                'ppi.min_qty',
+                'ppi.max_qty',
+                'ppi.discount_type',
+                'ppi.discount_value',
+                'p.code as product_code',
+                'p.name as product_name',
+                'u.name as unit_name',
+                'ppi.min_mix',
+                'ppi.unit',
+                'ppi.kelipatan',
+                'ppi.channel_outlet',
+                'ppi.sub_channel_outlet'
+            )
+            ->join('product as p', 'p.id', '=', 'ppid.product')
+            ->join('unit as u', 'u.id', '=', 'ppi.unit')
+            ->whereIn('ppi.id', $promoIds)
+            ->orderBy('ppid.product_promo_item')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getPromoItemFreeDtl($promoIds = []){
+
+    public function getPromoItemFreeDtl($promoIds = [])
+    {
         $datadb = DB::table('product_promo_item_detail_free as ppid')
-                ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
-                ->select('ppid.*', 'p.code as product_code', 'ppi.promo_name')
-                ->join('product as p', 'p.id', '=', 'ppid.free_product')
-                ->whereIn('ppi.id', $promoIds)
-                ->orderBy('ppid.product_promo_item')
-                ->get();
+            ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->select('ppid.*', 'p.code as product_code', 'ppi.promo_name')
+            ->join('product as p', 'p.id', '=', 'ppid.free_product')
+            ->whereIn('ppi.id', $promoIds)
+            ->orderBy('ppid.product_promo_item')
+            ->get();
 
         return $datadb;
     }
@@ -835,7 +854,7 @@ class SalesOrderController extends Controller
             ->values();
 
         $dataPromo = $this->getPromoItem($produkIds);
-        if(count($dataPromo) == 0){
+        if (count($dataPromo) == 0) {
             return view('web.sales_order.promo-item', $data);
         }
 
@@ -849,14 +868,15 @@ class SalesOrderController extends Controller
         return view('web.sales_order.promo-item', $data);
     }
 
-    public function getPromoItemAll($produkIds = []){
+    public function getPromoItemAll($produkIds = [])
+    {
         $dataPromo = $this->getPromoItem($produkIds);
-        if(count($dataPromo) == 0){
+        if (count($dataPromo) == 0) {
             return [
                 'promoIds' => [],
                 'promo_item' => [],
-                'product_free'=> [],
-                'promo_header'=> [],
+                'product_free' => [],
+                'promo_header' => [],
             ];
         }
         $groupPromo = $dataPromo->groupBy('product_promo_item');
@@ -869,7 +889,8 @@ class SalesOrderController extends Controller
         return $data;
     }
 
-    public function calculateTotalSmallestQty($items = []){
+    public function calculateTotalSmallestQty($items = [])
+    {
         $qtySmallestAll = 0;
         foreach ($items as $key => $value) {
             $qtyBaseUnit = getSmallestUnitV2($value['product_id'], $value['unit_id'], $value['qty']);
@@ -897,7 +918,7 @@ class SalesOrderController extends Controller
     private function calculateFreeGoods($promo, $totalQty, $product_id)
     {
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
-        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty: 0;
+        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
 
         $kelipatan = $promo->kelipatan ?: 1;
         $multiplier = $promo->kelipatan == 0 ? 1 : floor($totalQty / $minQtyPromoSmallest);
@@ -905,39 +926,40 @@ class SalesOrderController extends Controller
         return $promo->promoFree->map(function ($free) use ($multiplier) {
             return [
                 'product_id' => $free->free_product,
-                'unit'=> $free->free_unit,
+                'unit' => $free->free_unit,
                 'qty' => $free->free_qty * $multiplier,
             ];
         })->toArray();
     }
 
-    public function calculatePromo($items = [], $promoAll = [], $productIds = [], $customer_id = ''){
+    public function calculatePromo($items = [], $promoAll = [], $productIds = [], $customer_id = '')
+    {
         $resultItems = [];
         $freeGoods = [];
-        $grandTotal = 0;      
+        $grandTotal = 0;
 
         $customers = [];
         $channel_outlet = '';
         $sub_channel_outlet = '';
-        if($customer_id != ''){
+        if ($customer_id != '') {
             $customers = Customer::where('id', $customer_id)->first();
             $channel_outlet = $customers->channel_outlet;
             $sub_channel_outlet = $customers->sub_channel_outlet;
         }
-        
-        $promoHeaders = $promoAll['promo_header'];        
-        
+
+        $promoHeaders = $promoAll['promo_header'];
+
         foreach ($promoHeaders as $promo) {
             // =============================
             // FILTER CHANNEL OUTLET
             // =============================
             if ($customer_id != '') {
 
-                $channelMatch = 
+                $channelMatch =
                     empty($promo->channel_outlet) ||
                     $promo->channel_outlet == $channel_outlet;
 
-                $subChannelMatch = 
+                $subChannelMatch =
                     empty($promo->sub_channel_outlet) ||
                     $promo->sub_channel_outlet == $sub_channel_outlet;
 
@@ -947,27 +969,27 @@ class SalesOrderController extends Controller
             }
 
             $promoProduc = $promo->promoProducts
-            ->pluck('product')->toArray();
+                ->pluck('product')->toArray();
 
             //match kan dulu total promo bundle itemnya;
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
             foreach ($promoProduc as $v) {
                 foreach ($productIds as $k) {
-                    if($k == $v){
+                    if ($k == $v) {
                         $mixTotalPromo += 1;
                         $itemsHasDiscount[] = $v;
                     }
                 }
             }
-                    
+
             $mix_min_promo = $promo->min_mix;
-            if($mix_min_promo != $mixTotalPromo){
+            if ($mix_min_promo != $mixTotalPromo) {
                 continue;
             }
 
             $itemsValue = [];
-            foreach($itemsHasDiscount as $h){
+            foreach ($itemsHasDiscount as $h) {
                 $valItem = collect($items)->where('product_id', $h)->first();
                 $itemsValue[] = $valItem;
             }
@@ -976,14 +998,14 @@ class SalesOrderController extends Controller
 
             $totalPromoAplicable = 0;
 
-            foreach($itemsValue as $v){
+            foreach ($itemsValue as $v) {
                 if (!$this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
                     continue;
                 }
-                $totalPromoAplicable +=1;
+                $totalPromoAplicable += 1;
             }
 
-            if($totalPromoAplicable != $mix_min_promo){
+            if ($totalPromoAplicable != $mix_min_promo) {
                 continue;
             }
 
@@ -992,10 +1014,10 @@ class SalesOrderController extends Controller
             $grandTotal = 0;
 
             // Hitung diskon
-            foreach($itemsValue as $v){
+            foreach ($itemsValue as $v) {
                 if ($promo->discount_type === 'percent') {
                     $discountPercent = $promo->discount_value;
-                    $discountAmount = ($v['price'] * $v['qty']) 
+                    $discountAmount = ($v['price'] * $v['qty'])
                         * ($discountPercent / 100);
                     $discountAmounts += $discountAmount;
                 } else {
@@ -1010,21 +1032,21 @@ class SalesOrderController extends Controller
 
                 $grandTotal += $subtotal;
             }
-            
+
             // Hitung free good
             $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
             $freeGoods = array_merge(
                 $freeGoods,
-                $discountFree            
-            );            
+                $discountFree
+            );
 
 
             $resultItems[] = [
-                'items'=> $itemsValue,
+                'items' => $itemsValue,
                 'discount_percent' => $discountPercent,
                 'discount_amount' => $discountAmount,
                 'grand_total' => $grandTotal,
-                'discount_free'=> $discountFree
+                'discount_free' => $discountFree
             ];
 
             break;
@@ -1177,7 +1199,7 @@ class SalesOrderController extends Controller
         // $customer_id = $data['customer'];
         // $customerdb = Customer::find($customer_id);
         // $customer_category_id = empty($customer_db) ? 0 : $customerdb->customer_category;
-        
+
         $datadb = ProductDisc::where('product_discount.product', $product_id)
             // ->where(function ($q) use ($customer_id) {
             //     $q->where('customer', $customer_id)->orWhereNull('customer');
@@ -1348,11 +1370,11 @@ class SalesOrderController extends Controller
         $data = $data->first();
 
         $customer = empty($data) ? $customer : $data->customer_id;
-        /*data transaksi terakakhir */    
+        /*data transaksi terakakhir */
         $last_transaction = SalesOrderHeader::where('customer_id', $customer)->orderBy('id', 'desc')->first();
         $last_product = '';
-        if(!empty($last_transaction)){
-            $data->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date)); 
+        if (!empty($last_transaction)) {
+            $data->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date));
 
             $detailProduct = DB::table('sales_order_details as sod')
                 ->select([
@@ -1386,7 +1408,7 @@ class SalesOrderController extends Controller
                     'total_nilai' => 0,
                     'avg_transaksi' => 0,
                     'last_transaksi' => '-',
-                    'last_product'=> '-',
+                    'last_product' => '-',
                     'periode' => date('Y-m')
                 ]
             ];
@@ -1426,6 +1448,45 @@ class SalesOrderController extends Controller
             $mobile_session->status = 'CLOSE';
             $mobile_session->updated_at = $closing_date;
             $mobile_session->save();
+
+            DB::commit();
+            $result['message'] = 'Success';
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    public function stockSubmit(Request $request)
+    {
+        $data = json_decode($request->input('data'), true);
+        $users_id = $data['user_id'];
+
+        $result['is_valid'] = false;
+        $result['message'] = '';
+        DB::beginTransaction();
+        try {
+            foreach ($data['details'] as $item) {
+                [$products, $product_unit] = explode(':', $item['product_id']);
+                $products = explode('/', $products);
+                $product_unit = explode('/', $product_unit);
+
+                $detail = new StockCustomer();
+                $detail->customer = $data['customer'];
+                $detail->product_id = trim($products[0]);
+                $detail->qty = $item['qty'];
+                $detail->unit = trim($product_unit[0]);
+                $detail->unit_price = trim($product_unit[1]);
+                $detail->discount_type = null;
+                $detail->is_free_good = 0;
+                $detail->status = 'draft';
+                $detail->created_by = $users_id;
+                $detail->save();
+            }
 
             DB::commit();
             $result['message'] = 'Success';

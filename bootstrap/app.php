@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/sales_order/sync',
             'api_mobile/transaksi/sales_order/getAverageTransaction',
             'api_mobile/transaksi/sales_order/closingOrder',
+            'api_mobile/transaksi/sales_order/stockSubmit',
             'api_mobile/transaksi/sales_payment/sync',
             'api_mobile/transaksi/sales_return/sync',
             'api_mobile/master/customer/getCity',
