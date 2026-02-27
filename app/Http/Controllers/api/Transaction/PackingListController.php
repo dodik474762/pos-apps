@@ -38,7 +38,7 @@ class PackingListController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -52,11 +52,11 @@ class PackingListController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.packing_list_no', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.packing_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.vehicle_no', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.driver_name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.expedition_name', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.packing_list_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.packing_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.vehicle_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.driver_name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.expedition_name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -86,7 +86,7 @@ class PackingListController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -100,11 +100,11 @@ class PackingListController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.packing_list_no', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.packing_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.vehicle_no', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.driver_name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.expedition_name', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.packing_list_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.packing_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.vehicle_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.driver_name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.expedition_name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -153,7 +153,7 @@ class PackingListController extends Controller
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['CONFIRMED', 'DRAFT'])
             ->orderBy('m.id', 'asc');
-        if(!empty($do_choose)){
+        if (!empty($do_choose)) {
             $datadb->whereNotIn('m.id', $do_choose);
         }
         if (isset($_POST)) {
@@ -161,13 +161,13 @@ class PackingListController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('soh.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -213,7 +213,7 @@ class PackingListController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
             ->whereNull('m.deleted');
-         if(!empty($do_choose)){
+        if (!empty($do_choose)) {
             $datadb->whereNotIn('m.id', $do_choose);
         }
 
@@ -221,14 +221,14 @@ class PackingListController extends Controller
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.return_type', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.return_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.return_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('i.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.return_type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('i.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -258,7 +258,7 @@ class PackingListController extends Controller
         $data = $request->all();
 
         $exceptPoDetailId = [];
-        if (! empty($data['itemsChoose'])) {
+        if (!empty($data['itemsChoose'])) {
             $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
         }
         $data['data'] = [];
@@ -287,7 +287,7 @@ class PackingListController extends Controller
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 
-        if (! empty($exceptPoDetailId)) {
+        if (!empty($exceptPoDetailId)) {
             $datadb->whereNotIn('m.id', $exceptPoDetailId);
         }
         if (isset($_POST)) {
@@ -295,14 +295,14 @@ class PackingListController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -362,15 +362,15 @@ class PackingListController extends Controller
             $hdrId = $header->id;
 
             // === DETAIL DO===
-            $details = empty($data['details']) ?  [] : collect($data['details']);
-            if(empty($details)){
+            $details = empty($data['details']) ? [] : collect($data['details']);
+            if (empty($details)) {
                 DB::rollBack();
                 $result['is_valid'] = false;
                 $result['message'] = 'Detail DO tidak boleh kosong';
                 return response()->json($result);
             }
 
-            foreach ($data['do_list'] as $key=>$value) {
+            foreach ($data['do_list'] as $key => $value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
@@ -406,10 +406,10 @@ class PackingListController extends Controller
 
 
                 $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
-                if(empty($details_do)){
+                if (empty($details_do)) {
                     DB::rollBack();
                     $result['is_valid'] = false;
-                    $result['message'] = 'Detail DO '.$value['do_number'].' tidak boleh kosong';
+                    $result['message'] = 'Detail DO ' . $value['do_number'] . ' tidak boleh kosong';
                     return response()->json($result);
                 }
 
@@ -476,15 +476,15 @@ class PackingListController extends Controller
             $hdrId = $header->id;
 
             // === DETAIL DO===
-            $details = empty($data['details']) ?  [] : collect($data['details']);
-            if(empty($details)){
+            $details = empty($data['details']) ? [] : collect($data['details']);
+            if (empty($details)) {
                 DB::rollBack();
                 $result['is_valid'] = false;
                 $result['message'] = 'Detail SR tidak boleh kosong';
                 return response()->json($result);
             }
 
-            foreach ($data['do_list'] as $key=>$value) {
+            foreach ($data['do_list'] as $key => $value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
@@ -520,10 +520,10 @@ class PackingListController extends Controller
 
 
                 $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
-                if(empty($details_do)){
+                if (empty($details_do)) {
                     DB::rollBack();
                     $result['is_valid'] = false;
-                    $result['message'] = 'Detail SR '.$value['do_number'].' tidak boleh kosong';
+                    $result['message'] = 'Detail SR ' . $value['do_number'] . ' tidak boleh kosong';
                     return response()->json($result);
                 }
 
@@ -566,7 +566,7 @@ class PackingListController extends Controller
             // ====== HEADER ======
             $header = PackingList::find($id);
 
-            if (! $header) {
+            if (!$header) {
                 return response()->json([
                     'is_valid' => false,
                     'message' => 'Data tidak ditemukan'
@@ -615,7 +615,7 @@ class PackingListController extends Controller
             // ====== HEADER ======
             $header = PackingListDo::find($id);
 
-            if (! $header) {
+            if (!$header) {
                 return response()->json([
                     'is_valid' => false,
                     'message' => 'Data tidak ditemukan'
@@ -647,7 +647,7 @@ class PackingListController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
             ])
@@ -688,25 +688,27 @@ class PackingListController extends Controller
         return view('web.packing_list.modal.datasr', $data);
     }
 
-    public function getSRConfirmed(Request $request){
+    public function getSRConfirmed(Request $request)
+    {
         $data = $request->all();
         $do_id = isset($data['do_id']) ? $data['do_id'] : '';
         try {
             //code...
             $datadb = SalesReturnHdr::where('sales_return.id', $do_id)
-            ->select([
-                'sales_return.*',
-                'c.code as customer_code',
-                'c.nama_customer',
-                'sales_return.return_number as do_number',
-                'sales_return.return_date as do_date'
-            ])
-            ->join('customer as c', 'c.id', 'sales_return.customer_id');
+                ->select([
+                    'sales_return.*',
+                    'c.code as customer_code',
+                    'c.nama_customer',
+                    'sales_return.return_number as do_number',
+                    'sales_return.return_date as do_date'
+                ])
+                ->join('customer as c', 'c.id', 'sales_return.customer_id');
 
             $datadb->where('sales_return.id', $do_id);
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            die;
         }
 
         $data['data'] = $datadb;
@@ -714,23 +716,25 @@ class PackingListController extends Controller
         return view('web.packing_list.datadooutstanding', $data);
     }
 
-    public function getDOConfirmed(Request $request){
+    public function getDOConfirmed(Request $request)
+    {
         $data = $request->all();
         $do_id = isset($data['do_id']) ? $data['do_id'] : '';
         try {
             //code...
             $datadb = DeliveryOrderHeader::where('delivery_order_header.id', $do_id)
-            ->select([
-                'delivery_order_header.*',
-                'c.code as customer_code',
-                'c.nama_customer'
-            ])
-            ->join('customer as c', 'c.id', 'delivery_order_header.customer_id');
+                ->select([
+                    'delivery_order_header.*',
+                    'c.code as customer_code',
+                    'c.nama_customer'
+                ])
+                ->join('customer as c', 'c.id', 'delivery_order_header.customer_id');
 
             $datadb->where('delivery_order_header.id', $do_id);
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            die;
         }
 
         $data['data'] = $datadb;
@@ -738,22 +742,24 @@ class PackingListController extends Controller
         return view('web.packing_list.datadooutstanding', $data);
     }
 
-    public function getDODetailConfirmed(Request $request){
+    public function getDODetailConfirmed(Request $request)
+    {
         $data = $request->all();
         $do_id = isset($data['do_id']) ? $data['do_id'] : '';
         try {
             //code...
             $datadb = DeliveryOrderDtl::where('delivery_order_detail.do_id', $do_id)
-            ->select([
-                'delivery_order_detail.*',
-                'p.code as product_code',
-                'p.name as product_name',
-            ])
-            ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
-            ->whereNull('delivery_order_detail.deleted');
+                ->select([
+                    'delivery_order_detail.*',
+                    'p.code as product_code',
+                    'p.name as product_name',
+                ])
+                ->join('product as p', 'p.id', 'delivery_order_detail.product_id')
+                ->whereNull('delivery_order_detail.deleted');
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            die;
         }
 
         $data['data'] = $datadb;
@@ -761,24 +767,26 @@ class PackingListController extends Controller
         return view('web.packing_list.datadetaildo', $data);
     }
 
-    public function getSRDetailConfirmed(Request $request){
+    public function getSRDetailConfirmed(Request $request)
+    {
         $data = $request->all();
         $do_id = isset($data['do_id']) ? $data['do_id'] : '';
         try {
             //code...
             $datadb = SalesReturnDtl::where('sales_return_detail.return_id', $do_id)
-            ->select([
-                'sales_return_detail.*',
-                'p.code as product_code',
-                'p.name as product_name',
-                'sales_return_detail.return_id as do_id',
-                'sales_return_detail.qty_return as qty'
-            ])
-            ->join('product as p', 'p.id', 'sales_return_detail.product_id')
-            ->whereNull('sales_return_detail.deleted');
+                ->select([
+                    'sales_return_detail.*',
+                    'p.code as product_code',
+                    'p.name as product_name',
+                    'sales_return_detail.return_id as do_id',
+                    'sales_return_detail.qty_return as qty'
+                ])
+                ->join('product as p', 'p.id', 'sales_return_detail.product_id')
+                ->whereNull('sales_return_detail.deleted');
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            die;
         }
 
         $data['data'] = $datadb;
@@ -786,14 +794,15 @@ class PackingListController extends Controller
         return view('web.packing_list.datadetaildo', $data);
     }
 
-    public function getDataPackingList(Request $request){
+    public function getDataPackingList(Request $request)
+    {
         $data = $request->all();
         date_default_timezone_set('Asia/Jakarta');
 
         $packing_date = date('Y-m-d');
         $result['is_valid'] = true;
 
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'pld.id',
                 'm.packing_list_no',
@@ -819,10 +828,10 @@ class PackingListController extends Controller
             // ->where('m.packing_date', $packing_date)
             ->where('m.driver', $data['users'])
             ->whereNull('m.deleted')
-            ->where(function($q){
+            ->where(function ($q) {
                 return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
             })
-            ->where(function($q){
+            ->where(function ($q) {
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
             })
             ->orderBy('c.nama_customer')
@@ -836,7 +845,8 @@ class PackingListController extends Controller
         return response()->json($result);
     }
 
-    public function getDataPackingListPickup(Request $request){
+    public function getDataPackingListPickup(Request $request)
+    {
         $data = $request->all();
         date_default_timezone_set('Asia/Jakarta');
 
@@ -844,7 +854,7 @@ class PackingListController extends Controller
         $result['is_valid'] = true;
 
         try {
-            $datadb = DB::table($this->getTableName().' as m')
+            $datadb = DB::table($this->getTableName() . ' as m')
                 ->select([
                     'psr.id',
                     'm.packing_list_no',
@@ -863,10 +873,10 @@ class PackingListController extends Controller
                 ->join('users as u', 'u.id', 'm.created_by')
                 // ->where('m.packing_date', $packing_date)
                 ->whereNull('m.deleted')
-                ->where(function($q){
+                ->where(function ($q) {
                     return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
                 })
-                ->where(function($q){
+                ->where(function ($q) {
                     return $q->whereNull('psr.status')->orWhere('psr.status', 'NOT DELIVERED');
                 })
                 ->orderBy('c.nama_customer')
@@ -885,7 +895,8 @@ class PackingListController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDeliver(Request $request){
+    public function confirmDeliver(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $files_outlet = $request->file('files_outlet');
         $users_id = $data['user_id'];
@@ -896,19 +907,19 @@ class PackingListController extends Controller
         try {
 
             $dir = 'berkas/document/delivery/';
-            $dir .= date('Y').'/'.date('m');
-            $pathlamp = public_path().'/'.$dir.'/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
             // Create the directory if it doesn't exist
-            if (! File::isDirectory($pathlamp)) {
+            if (!File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = $users_id.'confirm_delivery_'.time().'.jpg';
+            $fileOutletName = $users_id . 'confirm_delivery_' . time() . '.jpg';
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/'.$dir.'/';
+            $dbpathlampOutlet = '/' . $dir . '/';
 
             $roles = PackingListDo::where('id', $data['id'])->first();
-            if(empty($roles)){
+            if (empty($roles)) {
                 $result['message'] = 'Data tidak ditemukan';
                 return response()->json($result);
             }
@@ -922,82 +933,163 @@ class PackingListController extends Controller
             $roles->remarks = $data['remarks'];
             $roles->status = $data['state'] == 'delivered' ? 'CONFIRMED' : 'NOT DELIVERED';
             $roles->confirm_by = $users_id;
-            $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+            $roles->photo_path = $dbpathlampOutlet . $fileOutletName;
             $roles->save();
 
             $allDetailDo = PackingListDo::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
             $delivered = 0;
             foreach ($allDetailDo as $key => $value) {
-                if($value['status'] == 'CONFIRMED'){
+                if ($value['status'] == 'CONFIRMED') {
                     $delivered++;
                 }
             }
-            if($delivered == 0){
+            if ($delivered == 0) {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'NOT DELIVERED';
                 $plHeader->save();
             }
 
-            if($delivered == count($allDetailDo)){
+            if ($delivered == count($allDetailDo)) {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'CONFIRMED';
                 $plHeader->save();
-            }else{
+            } else {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'PARTIAL';
                 $plHeader->save();
             }
 
             //CORET FAKTUR
-            if($data['state'] == 'delivered'){
-                if($data['customer_id'] != ''){
-                    if(trim($data['invoice_number']) != ''){
-                        if(!empty($data['cancelled_items'])){
-                            foreach($data['cancelled_items'] as $value){
+            if ($data['state'] == 'delivered') {
+                if ($data['customer_id'] != '') {
+                    if (trim($data['invoice_number']) != '') {
+                        $invoice = SalesInvoiceHeader::where('invoice_number', trim($data['invoice_number']))->first();
+                        if (empty($invoice)) {
+                            DB::rollBack();
+                            return response()->json([
+                                'is_valid' => false,
+                                'message' => 'Invoice ' . $data['invoice_number'] . ' Tidak Ditemukan',
+                            ]);
+                        }
+
+                        $invoiceId = $invoice->id;
+
+                        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+
+                        if (!empty($data['cancelled_items'])) {
+                            $piutangUsaha = AccountMapping::where('module', 'SALES_VOID')
+                                ->where('account_type', 'piutang usaha')
+                                ->with('account') // kalau kamu pakai relasi
+                                ->first();
+
+                            $penjualanBrg = AccountMapping::where('module', 'SALES_VOID')
+                                ->where('account_type', 'penjualan barang')
+                                ->with('account')
+                                ->first();
+
+                            $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_VOID')
+                                ->where('account_type', 'ppn keluaran')
+                                ->with('account')
+                                ->first();
+
+                            $discAcc = AccountMapping::where('module', 'SALES_VOID')
+                                ->where('account_type', 'diskon penjualan')
+                                ->with('account')
+                                ->first();                            
+
+
+                            if (!$piutangUsaha || !$ppnKeluaranAcc || !$discAcc || !$penjualanBrg) {
+                                DB::rollBack();
+
+                                return response()->json([
+                                    'is_valid' => false,
+                                    'message' => 'Konfigurasi akun untuk Sales Return belum lengkap.',
+                                ]);
+                            }
+
+                            $totalAmount = 0;
+                            $disc_total = 0;
+                            $net_total = 0;
+                            $tax_total = 0;
+                            foreach ($data['cancelled_items'] as $value) {
                                 $invUpdate = SalesInvoiceDtl::find($value['id']);
                                 $invUpdate->flag_cancel = 1;
                                 $invUpdate->packing_list_id = $roles->packing_list_id;
-                                $invUpdate->save();
+                                $invUpdate->save();                             
+
+                                $disc_total += $invUpdate->discount;
+                                $tax_total += $invUpdate->tax_amount;
+                                $totalAmount += (($invUpdate->price * $invUpdate->qty));
+                                $net_total += (($invUpdate->price * $invUpdate->qty) - $invUpdate->discount + $invUpdate->tax_amount);
+
+                                /*menambah stock gudang */
+                                $so_detail = SalesOrderDetail::find($invUpdate->so_detail_id);
+                                $qtyBaseUnit = getSmallestUnit($invUpdate->product_id, $so_detail->unit, $invUpdate->qty);
+                                $productUomLevel1 = ProductUom::where('product', $invUpdate->product_id)->where('level', '1')->first();
+                                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+
+                                $updateStock['product'] = $invUpdate->product_id;
+                                stockUpdate(
+                                    $invoiceId,
+                                    $invoice->warehouse_id,
+                                    $updateStock['product'],
+                                    $productUomLevel1->unit_tujuan,
+                                    $qtyBaseUnit,
+                                    $value,
+                                    'add',
+                                    'sales_void'
+                                );
+
+                                $totalRefund += $invUpdate->subtotal;
                             }
+
+                            $currency = Currency::where('code', 'IDR')->first();
+                            $currencyId = $currency->id;
+
+                            $reference = trim($data['invoice_number']);
+                            postingGL($reference, $piutangUsaha->account_id, $piutangUsaha->account->account_name, $piutangUsaha->cd, $net_total, $currencyId);
+                            postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
+                            postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
+                            postingGL($reference, $penjualanBrg->account_id, $penjualanBrg->account->account_name, $penjualanBrg->cd, ($totalAmount), $currencyId);
                         }
                     }
                 }
-    
+
                 ///PAYMENT
-                if($data['customer_id'] != '' && $data['total_amount'] != ''){
-                    if($data['total_amount'] > 0){
+                if ($data['customer_id'] != '' && $data['total_amount'] != '') {
+                    if ($data['total_amount'] > 0) {
                         $payment_date = $periode->format('Y-m-d');
                         list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
-            
+
                         $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                             ->where('account_type', 'piutang usaha')
                             ->with('account') // kalau kamu pakai relasi
                             ->first();
-            
+
                         $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                             ->where('account_type', 'diskon bayar')
                             ->with('account')
                             ->first();
-            
-                        if (! $piutangAcc || ! $discBayarAcc) {
+
+                        if (!$piutangAcc || !$discBayarAcc) {
                             DB::rollBack();
-            
+
                             return response()->json([
                                 'is_valid' => false,
                                 'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
                             ]);
                         }
-            
+
                         $data['account_id'] = 3;//kas kecil
-            
+
                         $kasAccount = Coa::find($data['account_id']);
-            
+
                         $header = new SalesPaymentHeader();
-            
+
                         $header->payment_code = generateNoSP(); // misal helper
                         $header->created_by = $users_id;
                         $header->status = 'PENDING';
-            
+
                         $header->payment_date = $payment_date;
                         $header->customer_id = $customer_id;
                         $header->payment_method = 'CASH';
@@ -1010,88 +1102,88 @@ class PackingListController extends Controller
                         $header->bulk = 0;
                         $header->platform = 'mobile';
                         $header->save();
-            
+
                         $hdrId = $header->id;
                         $reference = $header->payment_code;
-            
-            
-                         // === DETAIL ===
+
+
+                        // === DETAIL ===
                         $totalAmount = 0;
                         $disc_total = 0;
                         $net_total = 0;
-            
-                         // Item baru atau update
-                        $invoice = SalesInvoiceHeader::where('invoice_number',trim($invoice_number))->first();
-                        if(empty($invoice)){
+
+                        // Item baru atau update
+                        $invoice = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
+                        if (empty($invoice)) {
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Invoice tidak ditemukan '.$invoice_number,
-                                'invoice'=> $invoice
+                                'message' => 'Invoice tidak ditemukan ' . $invoice_number,
+                                'invoice' => $invoice
                             ]);
                         }
                         $invoiceId = $invoice->id;
                         $discount_amount = $invoice->discount_amount;
-            
+
                         $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $invoiceId)->count();
                         $disc_amount = 0;
-                        if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+                        if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
                             $disc_amount = $discount_amount;
                             $disc_total += $disc_amount;
                         }
-            
-                        if($data['total_amount'] > 0){
+
+                        if ($data['total_amount'] > 0) {
                             $net_total += ($data['total_amount'] - $disc_amount);
                         }
-            
-                        if($data['total_amount'] < $disc_amount){
+
+                        if ($data['total_amount'] < $disc_amount) {
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-1'
+                                'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-1'
                             ]);
-            
+
                         }
-            
+
                         $totalAmount += $data['total_amount'];
-            
+
                         $detail = new SalesPaymentDtl();
-            
+
                         $detail->payment_id = $hdrId;
                         $detail->invoice_id = $invoiceId;
                         $detail->allocated_amount = $data['total_amount'];
                         $detail->outstanding_amount = $outstanding_amount;
                         $detail->line_no = 1;
                         $detail->save();
-            
-                         /*mapping coa */
-            
+
+                        /*mapping coa */
+
                         $total_paid = 0;
-                        $total_paid = $invoice->amount_paid +$data['total_amount'];
+                        $total_paid = $invoice->amount_paid + $data['total_amount'];
                         $invoice->amount_paid = $total_paid;
-            
+
                         $outstanding_amount = $invoice->outstanding_amount - $data['total_amount'];
-                        if($outstanding_amount == 0){
+                        if ($outstanding_amount == 0) {
                             $invoice->status = 'PAID';
-                        }else{
+                        } else {
                             $invoice->status = 'PARTIAL PAID';
                         }
                         $invoice->save();
-            
+
                         $currency = Currency::where('code', 'IDR')->first();
                         $currencyId = $currency->id;
-            
+
                         $update = SalesPaymentHeader::find($hdrId);
                         $update->total_amount = $totalAmount;
                         $update->discount_amount = $disc_total;
                         $update->net_amount = $net_total;
                         $update->save();
-            
-                        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId, '',$users_id);
-            
+
+                        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId, '', $users_id);
+
                         $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
-                        postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId, '',$users_id);
-                        if($disc_total > 0){
+                        postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId, '', $users_id);
+                        if ($disc_total > 0) {
                             postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId, '', $users_id);
                         }
                     }
@@ -1109,7 +1201,8 @@ class PackingListController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDeliverPickup(Request $request){
+    public function confirmDeliverPickup(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $users_id = $data['user_id'];
         // echo '<pre>';
@@ -1119,7 +1212,7 @@ class PackingListController extends Controller
         try {
 
             $roles = PackingListReturn::where('id', $data['id'])->first();
-            if(empty($roles)){
+            if (empty($roles)) {
                 $result['message'] = 'Data tidak ditemukan';
                 return response()->json($result);
             }
@@ -1138,21 +1231,21 @@ class PackingListController extends Controller
             $allDetailDo = PackingListReturn::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
             $delivered = 0;
             foreach ($allDetailDo as $key => $value) {
-                if($value['status'] == 'CONFIRMED'){
+                if ($value['status'] == 'CONFIRMED') {
                     $delivered++;
                 }
             }
-            if($delivered == 0){
+            if ($delivered == 0) {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'NOT DELIVERED';
                 $plHeader->save();
             }
 
-            if($delivered == count($allDetailDo)){
+            if ($delivered == count($allDetailDo)) {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'CONFIRMED';
                 $plHeader->save();
-            }else{
+            } else {
                 $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'PARTIAL';
                 $plHeader->save();
