@@ -1011,6 +1011,8 @@ class PackingListController extends Controller
                             $disc_total = 0;
                             $net_total = 0;
                             $tax_total = 0;
+                            
+                            $idDtlCancel = [];
                             foreach ($data['cancelled_items'] as $value) {
                                 $invUpdate = SalesInvoiceDtl::find($value['id']);
                                 $invUpdate->flag_cancel = 1;
@@ -1041,7 +1043,31 @@ class PackingListController extends Controller
                                 );
 
                                 $totalRefund += $invUpdate->subtotal;
+                                $idDtlCancel[] = $value['id'];
                             }
+
+                            $dataInvoiceDtl = SalesInvoiceDtl::where('invoice_id', $invoiceId)
+                            ->whereNotIn('id', $idDtlCancel)->get();
+
+                            $totalAmountUpdate = 0;
+                            $disc_total_update = 0;
+                            $net_total_update = 0;
+                            $tax_total_update = 0;
+
+                            if(!empty($dataInvoiceDtl)){
+                                foreach ($dataInvoiceDtl as $v) {
+                                    $disc_total_update += $v->discount;
+                                    $tax_total_update += $v->tax_amount;
+                                    $totalAmountUpdate += (($v->price * $v->qty));
+                                    $net_total_update += (($v->price * $invUpdate->qty) - $v->discount + $v->tax_amount);
+                                }
+                            }
+
+                            $invoiceId->subtotal = $totalAmountUpdate - $disc_total_update;
+                            $invoiceId->discount_amount = $disc_total_update;
+                            $invoiceId->tax_amount = $tax_total_update;
+                            $invoiceId->total_amount = $net_total_update;
+                            $invoiceId->save();
 
                             $currency = Currency::where('code', 'IDR')->first();
                             $currencyId = $currency->id;
