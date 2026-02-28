@@ -137,6 +137,18 @@
                                         value="{{ isset($data->id) ? $data->id : '' }}">
                                 </div>
                             </div>
+
+                             @if(count($product_uoms) > 0)
+                                <div class="mb-3">
+                                    <label>Harga Jual Satuan Besar</label>
+                                    <div>
+                                        <input type="text" id="harga_satuan_besar" name="harga_satuan_besar" class="form-control required" error="Harga"
+                                            placeholder="Harga"
+                                            value="{{  count($product_prices) > 0 ? $product_prices[count($product_prices)-1]->price : ''  }}">
+                                    </div>
+                                </div>
+                             @endif
+                            
                         </div>
 
                         @if (isset($id))

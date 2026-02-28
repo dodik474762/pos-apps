@@ -115,6 +115,8 @@ class ProductController extends Controller
         $data['vendors'] = $this->getListVendor();
         $data['product_logs'] = [];
         $data['product_stocks'] = [];
+        $data['product_uoms'] = [];
+        $data['product_prices'] = [];
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

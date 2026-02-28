@@ -105,9 +105,9 @@ class ProductController extends Controller
             ->join('product_uom as pu', 'pu.product', 'm.id')
             ->join('unit as uo', 'uo.id', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', 'm.unit')
-            ->leftJoin('product_uom_cost  as puc', function($q){
+            ->leftJoin('product_uom_cost  as puc', function ($q) {
                 return $q->on('puc.product_uom', 'pu.id')
-                ->where('puc.is_active', '1');
+                    ->where('puc.is_active', '1');
             })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
@@ -170,13 +170,13 @@ class ProductController extends Controller
                 ])
                 ->leftJoin('vendor as v', 'v.id', 'm.vendor')
                 ->join('product_type as pt', 'pt.id', 'm.product_type')
-                ->join('product_uom_price as pup',function($q){
+                ->join('product_uom_price as pup', function ($q) {
                     return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
                 })
                 ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
-                ->leftJoin('product_uom as pu', function($q){
+                ->leftJoin('product_uom as pu', function ($q) {
                     return $q->on('pu.product', 'm.id')
-                    ->where('pu.level', '1');
+                        ->where('pu.level', '1');
                 })
                 ->leftJoin('unit as us', 'us.id', 'pu.unit_tujuan')
                 ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
@@ -192,8 +192,8 @@ class ProductController extends Controller
             return response()->json($result);
         } catch (\Throwable $th) {
             return response()->json([
-                'is_valid'=> false,
-                'message'=> $th->getMessage()
+                'is_valid' => false,
+                'message' => $th->getMessage()
             ]);
         }
     }
@@ -283,9 +283,10 @@ class ProductController extends Controller
         return response()->json($result);
     }
 
-    public function submit_import(Request $request){
+    public function submit_import(Request $request)
+    {
         $data = $request->all();
-          // validasi file
+        // validasi file
         $validator = Validator::make($request->all(), [
             'file' => [
                 'required',
@@ -331,10 +332,10 @@ class ProductController extends Controller
             ->map(function ($items) {
 
                 $totalItem = $items->count(); // panjang array
-
+    
                 return [
                     'total_item' => $totalItem,
-                    'items'      => $items->reverse()->values(),
+                    'items' => $items->reverse()->values(),
                 ];
             })
             ->toArray();
@@ -356,15 +357,15 @@ class ProductController extends Controller
                 $productId = $key;
                 $total_item = $group['total_item'];
                 $items = $group['items'];
-                if($total_item == 4){
+                if ($total_item == 4) {
                     //satuan terkecil, satuan menengah, satuan besar
                     $satuan_terkecil = $items[0];
                     $satuan_renceng = $items[1];
                     $satuan_menengah = $items[2];
                     $satuan_besar = $items[3];
 
-                    $satuan_kecil_ke_renceng = $satuan_terkecil['isi_satuan']/$satuan_renceng['isi_satuan'];
-                    $satuan_tengah_ke_renceng = $satuan_renceng['isi_satuan']/$satuan_menengah['isi_satuan'];
+                    $satuan_kecil_ke_renceng = $satuan_terkecil['isi_satuan'] / $satuan_renceng['isi_satuan'];
+                    $satuan_tengah_ke_renceng = $satuan_renceng['isi_satuan'] / $satuan_menengah['isi_satuan'];
 
                     $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
                     $harga_jual_non_ppn_kecil = ceil(str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']));
@@ -460,11 +461,11 @@ class ProductController extends Controller
 
                     //insert harga beli
                     $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if(empty($existVendor)){
+                    if (empty($existVendor)) {
                         //throw error vendor not found
                         DB::rollBack();
                         $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor '.trim($satuan_terkecil['nama_vendordistributor']).' not found';
+                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
                         return response()->json($result);
                     } else {
                         $vendorId = $existVendor->id;
@@ -480,12 +481,12 @@ class ProductController extends Controller
                     }
                 }
 
-                if($total_item == 3){
+                if ($total_item == 3) {
                     //satuan terkecil, satuan menengah, satuan besar
                     $satuan_terkecil = $items[0];
                     $satuan_menengah = $items[1];
                     $satuan_besar = $items[2];
-                    $satuan_menengah_ke_kecil = $satuan_terkecil['isi_satuan']/$satuan_menengah['isi_satuan'];
+                    $satuan_menengah_ke_kecil = $satuan_terkecil['isi_satuan'] / $satuan_menengah['isi_satuan'];
 
                     $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_beli_non_ppn']);
                     $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']);
@@ -560,11 +561,11 @@ class ProductController extends Controller
 
                     //insert harga beli
                     $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if(empty($existVendor)){
+                    if (empty($existVendor)) {
                         //throw error vendor not found
                         DB::rollBack();
                         $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor '.trim($satuan_terkecil['nama_vendordistributor']).' not found';
+                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
                         return response()->json($result);
                     } else {
                         $vendorId = $existVendor->id;
@@ -580,7 +581,7 @@ class ProductController extends Controller
                     }
                 }
 
-                if($total_item == 2){
+                if ($total_item == 2) {
                     //satuan terkecil, satuan menengah, satuan besar
                     $satuan_terkecil = $items[0];
                     $satuan_besar = $items[1];
@@ -637,11 +638,11 @@ class ProductController extends Controller
 
                     //insert harga beli
                     $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if(empty($existVendor)){
+                    if (empty($existVendor)) {
                         //throw error vendor not found
                         DB::rollBack();
                         $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor '.trim($satuan_terkecil['nama_vendordistributor']).' not found';
+                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
                         return response()->json($result);
                     } else {
                         $vendorId = $existVendor->id;
@@ -657,7 +658,7 @@ class ProductController extends Controller
                     }
                 }
 
-                if($total_item == 1){
+                if ($total_item == 1) {
                     //satuan terkecil, satuan menengah, satuan besar
                     $satuan_besar = $items[0];
                     $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
@@ -689,11 +690,11 @@ class ProductController extends Controller
 
                     //insert harga beli
                     $existVendor = isset($vendorGrouped[trim($satuan_besar['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_besar['nama_vendordistributor'])][0] : null;
-                    if(empty($existVendor)){
+                    if (empty($existVendor)) {
                         //throw error vendor not found
                         DB::rollBack();
                         $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor '.trim($satuan_besar['nama_vendordistributor']).' not found';
+                        $result['message'] = 'Error Vendor ' . trim($satuan_besar['nama_vendordistributor']) . ' not found';
                         return response()->json($result);
                     } else {
                         $vendorId = $existVendor->id;
@@ -713,10 +714,10 @@ class ProductController extends Controller
             }
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Success '.$productRowsImport.' Imported';
+            $result['message'] = 'Success ' . $productRowsImport . ' Imported';
         } catch (\Throwable $th) {
             DB::rollBack();
-            $result['message'] = 'Error '.$th->getMessage();
+            $result['message'] = 'Error ' . $th->getMessage();
         }
 
 
@@ -783,10 +784,11 @@ class ProductController extends Controller
             }
 
             $unit_dasar_id = 0;
+            $pricingApply = [];
             if (isset($data['unit_dasar'])) {
                 if (!empty($data['unit_dasar'])) {
                     for ($i = 0; $i < count($data['unit_dasar']); $i++) {
-                        if($i == 0){
+                        if ($i == 0) {
                             $unit_dasar_id = $data['unit_dasar'][$i];
                         }
                         $product_uom = isset($data['level_id'][$i]) ? ProductUom::find($data['level_id'][$i]) : new ProductUom();
@@ -796,18 +798,27 @@ class ProductController extends Controller
                         $product_uom->nilai_konversi = $data['nilai_konversi'][$i];
                         $product_uom->nilai_konversi_terkecil = $data['nilai_konversi_terkecil'][$i];
                         $product_uom->level = $i + 1;
-                        if($i == 0){
+                        if ($i == 0) {
                             $product_uom->state = 'small';
                         }
-                        if($i == count($data['unit_dasar']) - 1){
+                        if ($i == count($data['unit_dasar']) - 1) {
                             $product_uom->state = 'large';
+                        }
+
+                        if (isset($data['harga_satuan_besar'])) {
+                            $pricingApply[] = [
+                                'price' => $data['harga_satuan_besar'] / $data['nilai_konversi_terkecil'][$i],
+                                'unit_tujuan' => $data['unit_tujuan'][$i]
+                            ];
                         }
                         $product_uom->save();
                     }
                 }
             }
 
-            if($unit_dasar_id != 0){
+            $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
+
+            if ($unit_dasar_id != 0) {
                 $update = Product::find($data['id']);
                 $update->unit = $unit_dasar_id;
                 $update->save();
@@ -820,7 +831,8 @@ class ProductController extends Controller
                         $product_uom_price->product = $data['id'];
                         $product_uom_price->unit = $data['uom_id'][$i];
                         $product_uom_price->price_list = $data['type_price'][$i];
-                        $product_uom_price->price = $data['price'][$i];
+                        // $product_uom_price->price = $data['price'][$i];
+                        $product_uom_price->price = $pricingApply[$i]['price'];
                         $product_uom_price->date_start = $data['date_start'][$i];
                         $product_uom_price->min_qty = $data['min_qty'][$i];
                         $product_uom_price->max_qty = $data['max_qty'][$i];
@@ -831,12 +843,26 @@ class ProductController extends Controller
 
                             /*cek customer sudah setup pricel level */
                             $cust = Customer::find($id_cust);
-                            if($cust->price_list != ''){
+                            if ($cust->price_list != '') {
                                 $result['message'] = 'Customer sudah setup pricelist';
                                 return response()->json($result);
                             }
                             /*cek customer sudah setup pricel level */
                         }
+                        $product_uom_price->save();
+                    }
+                }
+            } else {
+                if (!empty($pricingApply)) {
+                    for ($i = 0; $i < count($data['unit_dasar']); $i++) {
+                        $product_uom_price = new ProductUomPrice();
+                        $product_uom_price->product = $data['id'];
+                        $product_uom_price->unit = $data['unit_tujuan'][$i];
+                        $product_uom_price->price_list = 2;
+                        $product_uom_price->price = $pricingApply[$i]['price'];
+                        $product_uom_price->date_start = date('Y-m-d');
+                        $product_uom_price->min_qty = 1;
+                        $product_uom_price->max_qty = 99999;
                         $product_uom_price->save();
                     }
                 }
