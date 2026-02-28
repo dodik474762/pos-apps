@@ -163,7 +163,10 @@ class ProductController extends Controller
                     // 'ps.qty as stock_product',
                     DB::raw("COALESCE(ps.qty, 0) as stock_product"),
                     'pup.id as product_uom_price_id',
-                    'us.name as stock_unit'
+                    'us.name as stock_unit',
+                    'tx.rate as tax_rate',
+                    'm.tax_sale',
+                    'm.type_tax'
                 ])
                 ->leftJoin('vendor as v', 'v.id', 'm.vendor')
                 ->join('product_type as pt', 'pt.id', 'm.product_type')
@@ -176,6 +179,7 @@ class ProductController extends Controller
                     ->where('pu.level', '1');
                 })
                 ->leftJoin('unit as us', 'us.id', 'pu.unit_tujuan')
+                ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
                 ->join('unit as u', 'u.id', 'pup.unit')
                 ->whereNull('m.deleted')
                 ->orderBy('m.id', 'desc')
