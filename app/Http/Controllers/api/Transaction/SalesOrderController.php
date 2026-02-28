@@ -179,9 +179,14 @@ class SalesOrderController extends Controller
             $items = collect($data['items'])->filter(function ($item) {
                 return empty($item['free_for']);
             });
+
+            // echo '<pre>';
+            // print_r($items);die;
             $productIds = $items->pluck('product_id')->toArray();
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
+            // echo '<pre>';
+            // print_r($calculatePromo);die;
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -253,6 +258,9 @@ class SalesOrderController extends Controller
                         }
                     }
                 }
+
+                // echo '<pre>';
+                // print_r($item);die;
 
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = $item['product_id'];
@@ -784,6 +792,7 @@ class SalesOrderController extends Controller
     {
         $datadb = DB::table('product_promo_item_detail as ppid')
             ->join('product_promo_item as ppi', 'ppi.id', '=', 'ppid.product_promo_item')
+            ->whereNull('ppi.deleted')
             ->whereIn('ppid.product', $produkIds)
             ->whereDate('ppi.date_start', '<=', now())
             ->select('ppid.product_promo_item', 'ppid.product')
@@ -861,6 +870,8 @@ class SalesOrderController extends Controller
         $groupPromo = $dataPromo->groupBy('product_promo_item');
         $promoIds = $groupPromo->keys()->toArray();
         $data['promoIds'] = $promoIds;
+        // echo '<pre>';
+        // print_r($data);die;
 
         $data['promo_item'] = $this->getPromoItemDtl($promoIds);
         $data['product_free'] = $this->getPromoItemFreeDtl($promoIds);
@@ -920,7 +931,7 @@ class SalesOrderController extends Controller
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
         $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
 
-        $kelipatan = $promo->kelipatan ?: 1;
+        // $kelipatan = $promo->kelipatan ?: 1;
         $multiplier = $promo->kelipatan == 0 ? 1 : floor($totalQty / $minQtyPromoSmallest);
 
         return $promo->promoFree->map(function ($free) use ($multiplier) {
@@ -983,6 +994,9 @@ class SalesOrderController extends Controller
                 }
             }
 
+            // echo '<pre>';
+            // print_r($promoHeaders);die;
+
             $mix_min_promo = $promo->min_mix;
             if ($mix_min_promo != $mixTotalPromo) {
                 continue;
@@ -994,7 +1008,9 @@ class SalesOrderController extends Controller
                 $itemsValue[] = $valItem;
             }
 
-            $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);
+            $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);            
+            // echo '<pre>';
+            // print_r($itemsValue);die;
 
             $totalPromoAplicable = 0;
 
@@ -1021,7 +1037,11 @@ class SalesOrderController extends Controller
                         * ($discountPercent / 100);
                     $discountAmounts += $discountAmount;
                 } else {
-                    $discountAmount = $promo->discount_value;
+                    $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
+                    $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                    $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+
+                    $discountAmount = $promo->discount_value * $multiplier;
                     $discountAmounts += $discountAmount;
                 }
 
@@ -1049,8 +1069,11 @@ class SalesOrderController extends Controller
                 'discount_free' => $discountFree
             ];
 
-            break;
+            // break;
         }
+
+        // echo '<pre>';
+        // print_r($resultItems);die;
 
         return $resultItems;
     }
