@@ -957,7 +957,7 @@ let SalesOrder = {
           const subtotal = price * qty - discAmount;
           let taxAmount = 0;
           if (type_tax == "include") {
-            taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+            taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
           } else {
             taxAmount = subtotal * (tax_rate / 100);
           }
@@ -1190,7 +1190,7 @@ let SalesOrder = {
         const subtotal = price * qty - discAmount;
         let taxAmount = 0;
         if (type_tax == "include") {
-          taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+          taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
         } else {
           taxAmount = subtotal * (tax_rate / 100);
         }
@@ -1226,7 +1226,7 @@ let SalesOrder = {
       const subtotal = price * qty - discAmount;
       let taxAmount = 0;
       if (type_tax == "include") {
-        taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+        taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
       } else {
         taxAmount = subtotal * (tax_rate / 100);
       }
