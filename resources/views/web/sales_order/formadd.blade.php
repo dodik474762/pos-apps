@@ -193,9 +193,9 @@
                                                     </td>
                                                     <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
                                                     <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="unit_price" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="number" class="form-control" id="disc_amount" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="unit_price" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="disc_amount" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
                                                     <td class="text-center">
                                                         <button {{ $item->is_free_good ? 'disabled' : '' }} type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
@@ -212,9 +212,9 @@
                                                 </td>
                                                 <td data_id="" id="unit"></td>
                                                 <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
-                                                <td><input type="number" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                <td><input type="number" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                <td><input type="number" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                <td><input type="text" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                <td><input type="text" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                <td><input type="text" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
                                                 <td class="text-center">
                                                     <button type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
@@ -231,7 +231,12 @@
                     <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesOrder.addRow()">+ Tambah Barang</button>
 
                     <div class="text-end mt-4">
-                        <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount : 0 }}</span></h5>
+                        <div class="d-none">
+                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount : 0 }}</span></h5>
+                        </div>
+                        <div>
+                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount, 2, ',', '.') : 0 }}</span></h5>
+                        </div>
                     </div>
 
                    <hr>

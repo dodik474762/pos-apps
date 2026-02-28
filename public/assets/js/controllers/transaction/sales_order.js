@@ -52,16 +52,16 @@ let SalesOrder = {
         product_name: $row.find("#product").val() || "",
         qty: parseFloat($row.find("#qty").val()) || 0,
         unit_id: $row.find("td#unit").attr("data_id") || null,
-        price: isFreeGood ? 0 : parseFloat($row.find("#unit_price").val()) || 0,
+        price: isFreeGood ? 0 : parseFloat($row.find("#unit_price").attr('price')) || 0,
         disc_percent: isFreeGood
           ? 0
           : parseFloat($row.find("#disc_percent").val()) || 0,
         disc_amount: isFreeGood
           ? 0
-          : parseFloat($row.find("#disc_amount").val()) || 0,
+          : parseFloat($row.find("#disc_amount").attr('amount')) || 0,
         subtotal: isFreeGood
           ? 0
-          : parseFloat($row.find("#subtotal").val()) || 0,
+          : parseFloat($row.find("#subtotal").attr('subtotal')) || 0,
         is_freegood: isFreeGood ? 1 : 0,
         free_for: isFreeGood ? $row.data("free-for") || null : null, // referensi produk asal
         remove: $row.hasClass("remove") ? 1 : 0,
@@ -486,7 +486,16 @@ let SalesOrder = {
 
     $(elmChoose).closest("tr").find("td#unit").text(unit_name);
     $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
-    $(elmChoose).closest("tr").find("#unit_price").val(price);
+    $(elmChoose).closest("tr").find("#unit_price").attr("price", price);
+    $(elmChoose)
+      .closest("tr")
+      .find("#unit_price")
+      .val(
+        new Intl.NumberFormat("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(price),
+      );
     $(elmChoose).closest("tr").find("#unit_price").attr("data_id", price_id);
     $("button.btn-close").trigger("click");
 
@@ -644,7 +653,7 @@ let SalesOrder = {
 
     // Ambil value input
     const qty = parseFloat(tr.find("input#qty").val()) || 0;
-    const price = parseFloat(tr.find("input#price").val()) || 0;
+    const price = parseFloat(tr.find("input#price").attr("price")) || 0;
     const disc_persen = parseFloat(tr.find("input#disc_persen").val()) || 0;
     const disc_nominal = parseFloat(tr.find("input#disc_nominal").val()) || 0;
 
@@ -676,10 +685,17 @@ let SalesOrder = {
   hitungSummaryAll: () => {
     let total = 0;
     document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
-      const subtotal = parseFloat(tr.querySelector("#subtotal").value) || 0;
+      const subtotal =
+        parseFloat(tr.querySelector("#subtotal").getAttribute("subtotal")) || 0;
       total += subtotal;
     });
+
     document.getElementById("total-harga").textContent = total.toFixed(2);
+    document.getElementById("total-harga-show").textContent =
+      new Intl.NumberFormat("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(total);
   },
 
   removeRow: (elm) => {
@@ -835,136 +851,20 @@ let SalesOrder = {
     const qty = parseFloat(tr.find("#qty").val()) || 0;
     const productId = tr.find("#product").attr("data_id");
     const satuanId = tr.find("td#unit").attr("data_id");
-    const price = parseFloat(tr.find("#unit_price").val()) || 0;
+    const price = parseFloat(tr.find("#unit_price").attr("price")) || 0;
     const customerId = $("#customer_id").val();
     const today = new Date().toISOString().slice(0, 10);
 
     if (!productId) return;
 
     const UOM_CONVERSION = SalesOrder.getDataUomConversion();
-    // const DATA_DISKON = SalesOrder.getDataDiskon();
-    // const DATA_DISKON_FREE = SalesOrder.getDataDiskonFreeGood();
-
-    // Konversi qty input ke satuan terkecil
-    // const qtySmallest = SalesOrder.convertToSmallest(
-    //   UOM_CONVERSION,
-    //   productId,
-    //   satuanId,
-    //   qty,
-    // );
-
-    // console.log("qtySmallest", qtySmallest);
-
-    // Cari data diskon yang cocok
-    // const applicable = DATA_DISKON.find((d) => {
-    //   // konversi range min/max ke satuan terkecil
-    //   const minSmall = SalesOrder.convertToSmallest(
-    //     UOM_CONVERSION,
-    //     d.product_id,
-    //     d.unit_id,
-    //     d.min_qty,
-    //   );
-    //   const maxSmall = SalesOrder.convertToSmallest(
-    //     UOM_CONVERSION,
-    //     d.product_id,
-    //     d.unit_id,
-    //     d.max_qty,
-    //   );
-
-    //   return (
-    //     d.product_id == productId &&
-    //     qtySmallest >= minSmall &&
-    //     qtySmallest <= maxSmall &&
-    //     (!d.customer || d.customer == customerId) &&
-    //     today >= d.berlaku_from
-    //   );
-    // });
 
     const discPercentInput = tr.find("#disc_percent");
     const discAmountInput = tr.find("#disc_amount");
     const subtotalInput = tr.find("#subtotal");
-    discPercentInput.val('0');
-    discAmountInput.val('0');
-
-    // if (applicable) {
-    //   if (applicable.discount_type === "percent") {
-    //     discPercentInput.val(applicable.discount_value);
-    //     discAmountInput.val((price * qty * applicable.discount_value) / 100);
-    //   } else {
-    //     discPercentInput.val(0);
-    //     discAmountInput.val(applicable.discount_value);
-    //   }
-    // } else {
-    //   discPercentInput.val(0);
-    //   discAmountInput.val(0);
-    // }
-
-    // // ========================
-    // // CARI DISKON FREE GOOD
-    // // ========================
-    // const applicableFree = DATA_DISKON_FREE.find((d) => {
-    //   const minSmall = SalesOrder.convertToSmallest(
-    //     UOM_CONVERSION,
-    //     d.product_id,
-    //     d.unit_id,
-    //     d.min_qty,
-    //   );
-    //   const maxSmall = SalesOrder.convertToSmallest(
-    //     UOM_CONVERSION,
-    //     d.product_id,
-    //     d.unit_id,
-    //     d.max_qty,
-    //   );
-
-    //   const isApplicable =
-    //     d.product_id == productId &&
-    //     qtySmallest >= minSmall &&
-    //     qtySmallest <= maxSmall &&
-    //     (!d.customer_id || d.customer_id == customerId) &&
-    //     today >= d.berlaku_from;
-    //   return isApplicable;
-    // });
-
-    // // Jika ada free good
-    // if (applicableFree) {
-    //   const freeQty = applicableFree.free_qty || 0;
-
-    //   // Cek apakah baris free good sudah pernah ditambahkan
-    //   const exists =
-    //     tr.next('tr[data-free-for="' + productId + '"]').length > 0;
-
-    //   if (!exists) {
-    //     const freeRow = `
-    //                 <tr class="input freegood" data-free-for="${productId}">
-    //                     <td>
-    //                         <div class="input-group">
-    //                             <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesOrder.showDataProduct(this)">Free</button>
-    //                             <input disabled type="text" id="product" class="form-control"
-    //                                 data_id="${applicableFree.free_product}"
-    //                                 value="${
-    //                                   applicableFree.free_product_name ||
-    //                                   "Free Product"
-    //                                 }">
-    //                         </div>
-    //                     </td>
-    //                     <td id="unit" data_id="${applicableFree.free_unit}">
-    //                         ${applicableFree.free_unit_name || ""}
-    //                     </td>
-    //                     <td><input type="number" class="form-control" id="qty" value="${freeQty}" onkeyup="SalesOrder.calcDiscRow(this)" disabled></td>
-    //                     <td><input type="number" class="form-control" id="unit_price" value="0" disabled></td>
-    //                     <td><input type="number" class="form-control" id="disc_percent" value="0" disabled></td>
-    //                     <td><input type="number" class="form-control" id="disc_amount" value="0" disabled></td>
-    //                     <td><input type="text" class="form-control" id="subtotal" value="0" disabled></td>
-    //                     <td class="text-center"><button type="button" class="btn btn-sm btn-danger" disabled onclick="SalesOrder.removeRow(this)"><i class="bx bx-gift"></i></button></td>
-    //                 </tr>
-    //             `;
-
-    //     tr.after(freeRow);
-    //   }
-    // } else {
-    //   // Hapus baris freegood lama jika qty tidak lagi memenuhi
-    //   tr.next('tr.freegood[data-free-for="' + productId + '"]').remove();
-    // }
+    discPercentInput.val("0");
+    discAmountInput.attr("amount", "0");
+    discAmountInput.val("0");
 
     const promoHeaders = SalesOrder.getPromoHeader();
     // console.log("promoHeaders", promoHeaders);
@@ -972,7 +872,7 @@ let SalesOrder = {
       // semua product_id yang ada di SO
       const soProductIds = SalesOrder.getAllProductIdsInTable();
       const products = SalesOrder.getAllProductsInTable(); //promo item ini bisa digunakan jika satuan konversi produknya sama
-    //   console.log("products", products);
+      //   console.log("products", products);
       let qtySmallestAllProduct = 0;
       products.forEach((p) => {
         qtySmallestAllProduct += SalesOrder.convertToSmallest(
@@ -983,13 +883,13 @@ let SalesOrder = {
         );
       });
 
-    //   console.log('promoHeaders.length', promoHeaders.length);
+      //   console.log('promoHeaders.length', promoHeaders.length);
       for (let index = 0; index < promoHeaders.length; index++) {
         const promoHeader = promoHeaders[index];
         const parent_id = promoHeader.id;
         const kelipatan = promoHeader.kelipatan;
 
-        console.log('class_promo_item', parent_id);
+        console.log("class_promo_item", parent_id);
 
         // ========================
         // FILTER CHANNEL OUTLET
@@ -1006,7 +906,7 @@ let SalesOrder = {
         }
 
         const class_promo_item = "promo-item-" + parent_id;
-        const class_promo_free = "promo-free-" + parent_id;        
+        const class_promo_free = "promo-free-" + parent_id;
 
         const promoProducts = SalesOrder.getPromoProducts(class_promo_item);
         // console.log("promoProducts", promoProducts);
@@ -1028,10 +928,15 @@ let SalesOrder = {
         if (!productMatch) {
           // Hitung subtotal
 
-        //   console.log('promo not match', promoProducts);
-          const discAmount = parseFloat(discAmountInput.val()) || 0;
+          //   console.log('promo not match', promoProducts);
+          const discAmount = parseFloat(discAmountInput.attr("amount")) || 0;
           const subtotal = price * qty - discAmount;
-          subtotalInput.val(subtotal.toFixed(2));
+          subtotalInput.val(
+            new Intl.NumberFormat("id-ID", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(subtotal),
+          );
           break;
         }
 
@@ -1056,7 +961,7 @@ let SalesOrder = {
           const productMatch = products.find(
             (p) => p.product_id == tr.find("#product").attr("data_id"),
           );
-        //   console.log('productMatch min mix 1', productMatch);
+          //   console.log('productMatch min mix 1', productMatch);
 
           qtySmallestAllProduct = SalesOrder.convertToSmallest(
             UOM_CONVERSION,
@@ -1137,12 +1042,24 @@ let SalesOrder = {
         if (promoApplicable && promoHeader) {
           if (promoHeader.discount_type === "percent") {
             discPercentInput.val(promoHeader.discount_value);
+            const amountDisc = (price * qty * promoHeader.discount_value) / 100;
+            discAmountInput.attr('amount', amountDisc);
             discAmountInput.val(
-              (price * qty * promoHeader.discount_value) / 100,
+              new Intl.NumberFormat("id-ID", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(amountDisc),
             );
           } else {
             discPercentInput.val(0);
-            discAmountInput.val(promoHeader.discount_value * pengaliFix);
+            const amountDisc = promoHeader.discount_value * pengaliFix;
+            discAmountInput.attr('amount', amountDisc);
+            discAmountInput.val(
+               new Intl.NumberFormat("id-ID", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(amountDisc),
+            );
           }
         }
 
@@ -1192,15 +1109,15 @@ let SalesOrder = {
                                     value="${freeQty}" onkeyup="SalesOrder.calcDiscRow(this)" disabled>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="unit_price"
+                                <input type="text" class="form-control" id="unit_price"
                                     value="0" disabled>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="disc_percent"
+                                <input type="text" class="form-control" id="disc_percent"
                                     value="0" disabled>
                             </td>
                             <td>
-                                <input type="number" class="form-control" id="disc_amount"
+                                <input type="text" class="form-control" id="disc_amount"
                                     value="0" disabled>
                             </td>
                             <td>
@@ -1225,9 +1142,15 @@ let SalesOrder = {
         }
 
         // Hitung subtotal
-        const discAmount = parseFloat(discAmountInput.val()) || 0;
+        const discAmount = parseFloat(discAmountInput.attr('amount')) || 0;
         const subtotal = price * qty - discAmount;
-        subtotalInput.val(subtotal.toFixed(2));
+        subtotalInput.attr("subtotal", subtotal.toFixed(2));
+        subtotalInput.val(
+          new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(subtotal),
+        );
 
         if (promoApplicable) {
           break;
@@ -1241,6 +1164,8 @@ let SalesOrder = {
     }
 
     // Update total keseluruhans
+
+    console.log("Update total keseluruhans");
     SalesOrder.hitungSummaryAll();
   },
 
@@ -1436,11 +1361,11 @@ let SalesOrder = {
 
       // Jalankan ulang kalkulasi setelah semua promo & diskon di-load
 
-      if (platform == "mobile" && status == "draft") {
-        setTimeout(() => {
-          SalesOrder.recalculateAllRows();
-        }, 1000);
-      }
+      // if (platform == "mobile" && status == "draft") {
+      //   setTimeout(() => {
+      //     SalesOrder.recalculateAllRows();
+      //   }, 1000);
+      // }
     }
   },
 
