@@ -883,6 +883,8 @@ let SalesOrder = {
     const discPercentInput = tr.find("#disc_percent");
     const discAmountInput = tr.find("#disc_amount");
     const subtotalInput = tr.find("#subtotal");
+    discPercentInput.val('0');
+    discAmountInput.val('0');
 
     // if (applicable) {
     //   if (applicable.discount_type === "percent") {
@@ -965,12 +967,12 @@ let SalesOrder = {
     // }
 
     const promoHeaders = SalesOrder.getPromoHeader();
-    console.log("promoHeaders", promoHeaders);
+    // console.log("promoHeaders", promoHeaders);
     if (promoHeaders.length > 0) {
       // semua product_id yang ada di SO
       const soProductIds = SalesOrder.getAllProductIdsInTable();
       const products = SalesOrder.getAllProductsInTable(); //promo item ini bisa digunakan jika satuan konversi produknya sama
-      console.log("products", products);
+    //   console.log("products", products);
       let qtySmallestAllProduct = 0;
       products.forEach((p) => {
         qtySmallestAllProduct += SalesOrder.convertToSmallest(
@@ -981,13 +983,13 @@ let SalesOrder = {
         );
       });
 
-      console.log('promoHeaders.length', promoHeaders.length);
+    //   console.log('promoHeaders.length', promoHeaders.length);
       for (let index = 0; index < promoHeaders.length; index++) {
         const promoHeader = promoHeaders[index];
         const parent_id = promoHeader.id;
         const kelipatan = promoHeader.kelipatan;
 
-        console.log('class_promo_item', class_promo_item);
+        console.log('class_promo_item', parent_id);
 
         // ========================
         // FILTER CHANNEL OUTLET
@@ -1007,7 +1009,7 @@ let SalesOrder = {
         const class_promo_free = "promo-free-" + parent_id;        
 
         const promoProducts = SalesOrder.getPromoProducts(class_promo_item);
-        console.log("promoProducts", promoProducts);
+        // console.log("promoProducts", promoProducts);
         const promoFree = SalesOrder.getPromoFreeProducts(class_promo_free);
         // console.log("promoFree", promoFree);
         // console.log("promoProducts", promoProducts);
@@ -1021,10 +1023,12 @@ let SalesOrder = {
           (p) => p.product == tr.find("#product").attr("data_id"),
         );
 
-        console.log('productMatch', productMatch);
-        console.log('product tr', tr.find("#product").attr("data_id"));
+        // console.log('productMatch', productMatch);
+        // console.log('product tr', tr.find("#product").attr("data_id"));
         if (!productMatch) {
           // Hitung subtotal
+
+        //   console.log('promo not match', promoProducts);
           const discAmount = parseFloat(discAmountInput.val()) || 0;
           const subtotal = price * qty - discAmount;
           subtotalInput.val(subtotal.toFixed(2));
@@ -1052,7 +1056,7 @@ let SalesOrder = {
           const productMatch = products.find(
             (p) => p.product_id == tr.find("#product").attr("data_id"),
           );
-          console.log('productMatch min mix 1', productMatch);
+        //   console.log('productMatch min mix 1', productMatch);
 
           qtySmallestAllProduct = SalesOrder.convertToSmallest(
             UOM_CONVERSION,
@@ -1248,7 +1252,7 @@ let SalesOrder = {
       .not(".freegood")
       .each(function () {
         const pid = $(this).find("#product").attr("data_id");
-        console.log("pid", pid);
+        // console.log("pid", pid);
         if (pid) ids.add(String(pid));
       });
 

@@ -159,7 +159,7 @@ class SalesOrderController extends Controller
         $result = ['is_valid' => false];
 
         // echo '<pre>';
-        // print_r($promoItem);die;
+        // print_r($data);die;
 
         DB::beginTransaction();
         try {
@@ -252,9 +252,10 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
                         if (!empty($promoItem)) {
-                            $item['disc_percent'] = $promo['discount_percent'];
-                            $item['disc_amount'] = $promo['discount_amount'];
+                            $item['disc_percent'] = $promoItem['disc_percent'];
+                            $item['disc_amount'] = $promoItem['disc_amount'];
                             $item['subtotal'] = $promoItem['subtotal'];
+                            break;
                         }
                     }
                 }
@@ -608,10 +609,11 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
                         if (!empty($promoItem)) {
-                            $calculateDisc['disc_percent'] = $promo['discount_percent'];
-                            $calculateDisc['disc_amount'] = $promo['discount_amount'];
+                            $calculateDisc['disc_percent'] = $promoItem['disc_percent'];
+                            $calculateDisc['disc_amount'] = $promoItem['disc_amount'];
                             $calculateDisc['subtotal'] = $promoItem['subtotal'];
                             $freeGoods = $promo['discount_free'];
+                            break;
                         }
                     }
                 }
@@ -796,6 +798,7 @@ class SalesOrderController extends Controller
             ->whereIn('ppid.product', $produkIds)
             ->whereDate('ppi.date_start', '<=', now())
             ->select('ppid.product_promo_item', 'ppid.product')
+            ->orderBy('ppi.min_mix', 'desc')
             ->orderBy('ppid.product_promo_item')
             ->get();
 
@@ -807,6 +810,8 @@ class SalesOrderController extends Controller
         $datadb = ProductPromoItem::select('product_promo_item.*')
             ->with(['promoProducts', 'promoFree'])
             ->whereIn('product_promo_item.id', $promoIds)
+            ->orderBy('product_promo_item.min_mix', 'desc')
+            ->orderBy('product_promo_item.id')
             ->get();
         return $datadb;
     }
@@ -959,6 +964,8 @@ class SalesOrderController extends Controller
         }
 
         $promoHeaders = $promoAll['promo_header'];
+        // echo '<pre>';
+        // print_r($promoHeaders->toArray());die;
 
         foreach ($promoHeaders as $promo) {
             // =============================
@@ -1028,6 +1035,9 @@ class SalesOrderController extends Controller
             $discountPercent = 0;
             $discountAmounts = 0;
             $grandTotal = 0;
+
+            // echo '<pre>';
+            // print_r($itemsValue);die;
 
             // Hitung diskon
             foreach ($itemsValue as $v) {
