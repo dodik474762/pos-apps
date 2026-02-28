@@ -567,6 +567,9 @@ class SalesOrderController extends Controller
 
             $hdrId = $header->id;
             $grandTotal = 0;
+            $taxAmount = 0;
+            $taxId = 0;
+            $taxRate = 0;
 
             // === DETAIL ===
             foreach ($data['details'] as $item) {
@@ -636,6 +639,16 @@ class SalesOrderController extends Controller
                 $detail->discount_percent = $calculateDisc['disc_percent'];
                 $detail->discount_amount = $calculateDisc['disc_amount'];
                 $detail->subtotal = $calculateDisc['subtotal']; // ini sudah dikurangi diskon
+                if(isset($item['tax_amount'])){
+                    $detail->tax_amount = $item['tax_amount'];
+                    $detail->tax_rate = $item['tax_rate'];
+                    $detail->tax_type = $item['tax_type'];
+                    $detail->tax = $item['tax_sale'];
+
+                    $taxAmount += $item['tax_amount'];
+                    $taxId = $item['tax_sale'];
+                    $taxRate = $item['tax_rate'];
+                }
                 $detail->is_free_good = 0;
                 $detail->status = 'draft';
                 $detail->save();
@@ -684,6 +697,9 @@ class SalesOrderController extends Controller
 
             // Update total header
             $header->total_amount = $grandTotal;
+            $header->tax_id = $taxId;
+            $header->tax_amount = $taxAmount;
+            $header->tax_base = $taxRate;
             $header->save();
 
             DB::commit();
