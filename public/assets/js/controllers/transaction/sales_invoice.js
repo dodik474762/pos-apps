@@ -786,7 +786,7 @@ let SalesInvoice = {
 
         $("button.btn-close").trigger("click");
 
-        SalesInvoice.getSoDetail(data_id);
+        SalesInvoice.getSoDetgetSoDetail(data_id);
     },
 
     getSoDetail: (so_id) => {
