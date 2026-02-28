@@ -202,6 +202,9 @@ let SalesPlan = {
                     data: "created_by_name",
                 },
                 {
+                    data: "salesname",
+                },
+                {
                     data: "status",
                 },
                 {

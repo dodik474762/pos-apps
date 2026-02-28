@@ -89,6 +89,7 @@
                                                     <th>Periode Month</th>
                                                     <th>Description</th>
                                                     <th>Dibuat Oleh</th>
+                                                    <th>Salesman</th>
                                                     <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>
