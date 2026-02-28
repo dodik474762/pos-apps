@@ -49,19 +49,27 @@ let SalesOrder = {
       result.push({
         id: $row.attr("data_id") || null,
         product_id: $row.find("#product").attr("data_id") || null,
+        tax: $row.find("#product").attr("tax") || null,
+        tax_type: $row.find("#product").attr("tax_type") || null,
+        tax_rate: $row.find("#product").attr("tax_rate") || null,
         product_name: $row.find("#product").val() || "",
         qty: parseFloat($row.find("#qty").val()) || 0,
         unit_id: $row.find("td#unit").attr("data_id") || null,
-        price: isFreeGood ? 0 : parseFloat($row.find("#unit_price").attr('price')) || 0,
+        price: isFreeGood
+          ? 0
+          : parseFloat($row.find("#unit_price").attr("price")) || 0,
         disc_percent: isFreeGood
           ? 0
           : parseFloat($row.find("#disc_percent").val()) || 0,
         disc_amount: isFreeGood
           ? 0
-          : parseFloat($row.find("#disc_amount").attr('amount')) || 0,
+          : parseFloat($row.find("#disc_amount").attr("amount")) || 0,
         subtotal: isFreeGood
           ? 0
-          : parseFloat($row.find("#subtotal").attr('subtotal')) || 0,
+          : parseFloat($row.find("#subtotal").attr("subtotal")) || 0,
+        tax_amount: isFreeGood
+          ? 0
+          : parseFloat($row.find("#tax_amount").attr("amount")) || 0,
         is_freegood: isFreeGood ? 1 : 0,
         free_for: isFreeGood ? $row.data("free-for") || null : null, // referensi produk asal
         remove: $row.hasClass("remove") ? 1 : 0,
@@ -460,6 +468,9 @@ let SalesOrder = {
                         code="${row.code}" produk_name="${row.name}"
                         price="${row.harga}"
                         price_id="${row.price_id}"
+                        tax="${row.tax_sale}"
+                        tax_rate="${row.tax_rate}"
+                        type_tax="${row.type_tax}"
                         onclick="SalesOrder.pilihDataProduct(this, event)"
                         data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
             return html;
@@ -478,11 +489,17 @@ let SalesOrder = {
     let product_uom_id = $(elm).attr("data_id");
     let price = $(elm).attr("price");
     let price_id = $(elm).attr("price_id");
+    let tax = $(elm).attr("tax");
+    let tax_rate = $(elm).attr("tax_rate");
+    let tax_type = $(elm).attr("type_tax");
     $(elmChoose)
       .closest("div")
       .find("input")
       .val(product_uom_id + "//" + produk_id + "//" + produk_name);
     $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
+    $(elmChoose).closest("div").find("input").attr("tax", tax);
+    $(elmChoose).closest("div").find("input").attr("tax_type", tax_type);
+    $(elmChoose).closest("div").find("input").attr("tax_rate", tax_rate);
 
     $(elmChoose).closest("tr").find("td#unit").text(unit_name);
     $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
@@ -687,7 +704,9 @@ let SalesOrder = {
     document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
       const subtotal =
         parseFloat(tr.querySelector("#subtotal").getAttribute("subtotal")) || 0;
-      total += subtotal;
+      console.log('subtotal', subtotal);
+      const taxAmount = parseFloat(tr.querySelector("#tax_amount").getAttribute("amount")) || 0;
+      total += subtotal + taxAmount;
     });
 
     document.getElementById("total-harga").textContent = total.toFixed(2);
@@ -852,6 +871,8 @@ let SalesOrder = {
     const productId = tr.find("#product").attr("data_id");
     const satuanId = tr.find("td#unit").attr("data_id");
     const price = parseFloat(tr.find("#unit_price").attr("price")) || 0;
+    const type_tax = tr.find("#product").attr("type_tax");
+    const tax_rate = tr.find("#product").attr("tax_rate");
     const customerId = $("#customer_id").val();
     const today = new Date().toISOString().slice(0, 10);
 
@@ -862,6 +883,9 @@ let SalesOrder = {
     const discPercentInput = tr.find("#disc_percent");
     const discAmountInput = tr.find("#disc_amount");
     const subtotalInput = tr.find("#subtotal");
+    const taxAmountInpute = tr.find("#tax_amount");
+    taxAmountInpute.val("0");
+    taxAmountInpute.attr("amount", "0");
     discPercentInput.val("0");
     discAmountInput.attr("amount", "0");
     discAmountInput.val("0");
@@ -931,6 +955,19 @@ let SalesOrder = {
           //   console.log('promo not match', promoProducts);
           const discAmount = parseFloat(discAmountInput.attr("amount")) || 0;
           const subtotal = price * qty - discAmount;
+          let taxAmount = 0;
+          if (type_tax == "include") {
+            taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+          } else {
+            taxAmount = subtotal * (tax_rate / 100);
+          }
+          taxAmountInpute.attr("amount", taxAmount);
+          taxAmountInpute.val(
+            new Intl.NumberFormat("id-ID", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(taxAmount),
+          );
           subtotalInput.val(
             new Intl.NumberFormat("id-ID", {
               minimumFractionDigits: 2,
@@ -1043,7 +1080,7 @@ let SalesOrder = {
           if (promoHeader.discount_type === "percent") {
             discPercentInput.val(promoHeader.discount_value);
             const amountDisc = (price * qty * promoHeader.discount_value) / 100;
-            discAmountInput.attr('amount', amountDisc);
+            discAmountInput.attr("amount", amountDisc);
             discAmountInput.val(
               new Intl.NumberFormat("id-ID", {
                 minimumFractionDigits: 2,
@@ -1053,9 +1090,9 @@ let SalesOrder = {
           } else {
             discPercentInput.val(0);
             const amountDisc = promoHeader.discount_value * pengaliFix;
-            discAmountInput.attr('amount', amountDisc);
+            discAmountInput.attr("amount", amountDisc);
             discAmountInput.val(
-               new Intl.NumberFormat("id-ID", {
+              new Intl.NumberFormat("id-ID", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }).format(amountDisc),
@@ -1097,6 +1134,9 @@ let SalesOrder = {
                                     <button class="btn btn-outline-secondary" type="button" disabled
                                         onclick="SalesOrder.showDataProduct(this)">Free</button>
                                     <input disabled type="text" id="product" class="form-control"
+                                        tax="0"
+                                        tax_amount="0"
+                                        tax_type=""
                                         data_id="${free.product}"
                                         value="${free.name || "Free Product"}">
                                 </div>
@@ -1109,7 +1149,7 @@ let SalesOrder = {
                                     value="${freeQty}" onkeyup="SalesOrder.calcDiscRow(this)" disabled>
                             </td>
                             <td>
-                                <input type="text" class="form-control" id="unit_price"
+                                <input type="text" class="form-control" price="0" id="unit_price"
                                     value="0" disabled>
                             </td>
                             <td>
@@ -1117,11 +1157,15 @@ let SalesOrder = {
                                     value="0" disabled>
                             </td>
                             <td>
-                                <input type="text" class="form-control" id="disc_amount"
+                                <input type="text" class="form-control" amount="0" id="disc_amount"
                                     value="0" disabled>
                             </td>
                             <td>
-                                <input type="text" class="form-control" id="subtotal"
+                                <input type="text" class="form-control" subtotal="0" id="subtotal"
+                                    value="0" disabled>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" amount="0" id="tax_amount"
                                     value="0" disabled>
                             </td>
                             <td class="text-center">
@@ -1142,8 +1186,21 @@ let SalesOrder = {
         }
 
         // Hitung subtotal
-        const discAmount = parseFloat(discAmountInput.attr('amount')) || 0;
+        const discAmount = parseFloat(discAmountInput.attr("amount")) || 0;
         const subtotal = price * qty - discAmount;
+        let taxAmount = 0;
+        if (type_tax == "include") {
+          taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+        } else {
+          taxAmount = subtotal * (tax_rate / 100);
+        }
+        taxAmountInpute.attr("amount", taxAmount);
+        taxAmountInpute.val(
+          new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(taxAmount),
+        );
         subtotalInput.attr("subtotal", subtotal.toFixed(2));
         subtotalInput.val(
           new Intl.NumberFormat("id-ID", {
@@ -1159,8 +1216,34 @@ let SalesOrder = {
     } else {
       // Hitung subtotal jika tidak ada promo item
       const discAmount = parseFloat(discAmountInput.val()) || 0;
+      discAmountInput.attr("amount", discAmount);
+      discAmountInput.val(
+        new Intl.NumberFormat("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(discAmount),
+      );
       const subtotal = price * qty - discAmount;
-      subtotalInput.val(subtotal.toFixed(2));
+      let taxAmount = 0;
+      if (type_tax == "include") {
+        taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+      } else {
+        taxAmount = subtotal * (tax_rate / 100);
+      }
+      taxAmountInpute.attr("amount", taxAmount);
+      taxAmountInpute.val(
+        new Intl.NumberFormat("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(taxAmount),
+      );
+      subtotalInput.attr('subtotal', subtotal);
+      subtotalInput.val(
+        new Intl.NumberFormat("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(subtotal),
+      );
     }
 
     // Update total keseluruhans

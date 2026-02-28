@@ -216,6 +216,9 @@ class SalesOrderController extends Controller
 
             $hdrId = $header->id;
             $grandTotal = 0;
+            $totalTaxAmount = 0;
+            $taxId = 0;
+            $taxRate = 0;
 
             // === DETAIL ===
             foreach ($data['items'] as $item) {
@@ -271,6 +274,10 @@ class SalesOrderController extends Controller
                 $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $item['disc_percent'];
                 $detail->discount_amount = $item['disc_amount'];
+                $detail->tax = $item['tax_amount'];
+                $detail->tax_rate = $item['tax_rate'];
+                $detail->tax_type = $item['tax_type'];
+                $detail->tax_amount = $item['tax_amount'];
                 $detail->subtotal = $item['subtotal'];
                 $detail->is_free_good = $item['is_freegood'] ?? 0;
                 $detail->free_for = $item['free_for'] ?? null;
@@ -280,11 +287,17 @@ class SalesOrderController extends Controller
                 // Hanya tambahkan ke total jika bukan free good
                 if (empty($item['is_freegood'])) {
                     $grandTotal += $item['subtotal'];
+                    $totalTaxAmount += $item['tax_amount'];
+                    $taxId = $item['tax'];
+                    $taxRate = $item['tax_rate'];
                 }
             }
 
             // Update total header
             $header->total_amount = $grandTotal;
+            $header->tax_amount = $totalTaxAmount;
+            $header->tax_base = $taxRate;
+            $header->tax_id = $taxId;
             if ($data['id'] != '') {
                 if ($platform == 'mobile') {
                     $header->status = 'draft';
@@ -1296,12 +1309,14 @@ class SalesOrderController extends Controller
                 'pup.date_end',
                 'pup.customer_name',
                 'pup.id as price_id',
-                'v.nama_vendor'
+                'v.nama_vendor',
+                'tx.rate as tax_rate'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->join('product_uom as pu', 'pu.product', '=', 'm.id')
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
+            ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
             ->leftJoin('product_uom_price as pup', function ($join) {
                 $join->on('pup.product', '=', 'm.id')

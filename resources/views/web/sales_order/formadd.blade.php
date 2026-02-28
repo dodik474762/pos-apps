@@ -175,7 +175,8 @@
                                             <th style="width: 12%">Unit Price</th>
                                             <th style="width: 8%">Disc (%)</th>
                                             <th style="width: 8%">Disc (Rp)</th>
-                                            <th style="width: 22%">Subtotal</th>
+                                            <th style="width: 11%">Subtotal</th>
+                                            <th style="width: 11%">Tax Amount</th>
                                             <th style="width: 7%"></th>
                                         </tr>
                                     </thead>
@@ -188,15 +189,20 @@
                                                             <button {{ $item->is_free_good ? 'disabled' : '' }} class="btn btn-outline-primary" type="button"
                                                                 onclick="SalesOrder.showDataProduct(this)">{{ $item->is_free_good ? 'Free' : 'Pilih' }}</button>
                                                             <input disabled type="text" id="product" class="form-control required" error="Product"
+                                                                tax="{{ $item->tax }}"
+                                                                tax_rate="{{ $item->tax_rate }}"
+                                                                tax_amount="{{ $item->tax_amount }}"
+                                                                tax_type="{{ $item->tax_type }}"
                                                                 value="{{ $item->product_name }}" data_id="{{ $item->product_id }}">
                                                         </div>
                                                     </td>
                                                     <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
                                                     <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
-                                                    <td><input type="text" class="form-control" id="unit_price" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="unit_price" price="{{ $item->unit_price }}" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input type="text" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="text" class="form-control" id="disc_amount" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
+                                                    <td><input type="text" class="form-control" id="disc_amount" amount="{{ $item->discount_amount }}" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input disabled type="text" class="form-control" id="subtotal" subtotal="{{ $item->subtotal }}" value="{{ $item->subtotal }}"></td>
+                                                    <td><input disabled type="text" class="form-control" id="tax_amount" amount="{{ $item->tax_amount }}" value="{{ $item->tax_amount }}"></td>
                                                     <td class="text-center">
                                                         <button {{ $item->is_free_good ? 'disabled' : '' }} type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
                                                     </td>
@@ -216,6 +222,7 @@
                                                 <td><input type="text" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="text" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
+                                                <td><input disabled type="text" class="form-control" id="tax_amount" value=""></td>
                                                 <td class="text-center">
                                                     <button type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
                                                 </td>
@@ -232,10 +239,10 @@
 
                     <div class="text-end mt-4">
                         <div class="d-none">
-                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount : 0 }}</span></h5>
+                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount + $data->tax_amount : 0 }}</span></h5>
                         </div>
                         <div>
-                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount, 2, ',', '.') : 0 }}</span></h5>
+                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount + $data->tax_amount, 2, ',', '.') : 0 }}</span></h5>
                         </div>
                     </div>
 

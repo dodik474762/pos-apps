@@ -122,6 +122,8 @@ class SalesOrderController extends Controller
             ->whereNull('sales_order_details.deleted')
             ->orderBy('sales_order_details.id')
             ->get();
+        // echo '<pre>';
+        // print_r($data['data_item']);die;
 
         $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
