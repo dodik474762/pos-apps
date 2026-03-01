@@ -127,10 +127,14 @@
                                             <td id="subtotal">{{ $item->subtotal }}</td>
 
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="SalesInvoice.removeRow(this)">
-                                                    <i class="bx bx-trash-alt"></i>
-                                                </button>
+                                                @if($item->flag_cancel == '1')
+                                                    <i>Dibatalkan oleh Driver, Saat Kirim</i>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="SalesInvoice.removeRow(this)">
+                                                        <i class="bx bx-trash-alt"></i>
+                                                    </button>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
