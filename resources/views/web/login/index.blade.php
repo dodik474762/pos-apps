@@ -43,7 +43,7 @@
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-4" style="background-color: white;width: 80px;border-radius: 8px;padding: 8px;box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);">
                                                 <a href="{{ url('/') }}" class="d-block">
-                                                    <img src="{{ asset('assets/images/logo-app-v2.png') }}"
+                                                    <img src="{{ asset('assets/images/logo-SAL.jpeg') }}"
                                                         alt="" height="70   " width="70">
                                                 </a>
                                             </div>
