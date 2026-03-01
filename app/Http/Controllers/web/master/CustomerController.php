@@ -114,6 +114,7 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
+        $data['stock_customer'] = [];
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
         $data['tops'] = $this->getTerms();
@@ -142,6 +143,19 @@ class CustomerController extends Controller
         return $data;
     }
 
+    public function getListProductStockKunjungan($customer)
+    {
+        $data = DB::table('stock_customer as sc')->where('sc.customer', $customer)
+        ->select(['sc.*', 'p.name as product_name', 'u.name as unit_name', 'p.code as product_code'])
+        ->join('product as p', 'p.id', 'sc.product_id')
+        ->join('unit as u', 'u.id', 'sc.unit')
+            ->orderBy('sc.id', 'desc')
+            ->limit(100)
+            ->get();
+
+        return $data;
+    }
+
     public function ubah(Request $request){
         $api = new MasterCustomerController();
         $data = $request->all();
@@ -151,6 +165,7 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
 
+        $data['stock_customer'] = $this->getListProductStockKunjungan($data['id']);
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

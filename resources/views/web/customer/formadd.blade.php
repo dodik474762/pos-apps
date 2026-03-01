@@ -285,6 +285,7 @@
 
                     @if (isset($id))
                         @include('web.customer.product-list-item-price')
+                        @include('web.customer.list_stock_customer')
                     @endif
                 </form>
 
