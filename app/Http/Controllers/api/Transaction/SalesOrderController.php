@@ -639,13 +639,13 @@ class SalesOrderController extends Controller
                 $detail->discount_percent = $calculateDisc['disc_percent'];
                 $detail->discount_amount = $calculateDisc['disc_amount'];
                 $detail->subtotal = $calculateDisc['subtotal']; // ini sudah dikurangi diskon
-                if(isset($item['tax_amount'])){
-                    $detail->tax_amount = $item['tax_amount'];
+                if(isset($item['taxAmount'])){
+                    $detail->tax_amount = $item['taxAmount'];
                     $detail->tax_rate = $item['tax_rate'];
-                    $detail->tax_type = $item['tax_type'];
+                    $detail->tax_type = $item['type_tax'];
                     $detail->tax = $item['tax_sale'];
 
-                    $taxAmount += $item['tax_amount'];
+                    $taxAmount += $item['taxAmount'];
                     $taxId = $item['tax_sale'];
                     $taxRate = $item['tax_rate'];
                 }
