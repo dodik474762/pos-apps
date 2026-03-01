@@ -87,19 +87,19 @@
         </tr>
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:20px;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>
+            <td style="padding-left:20px;"><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
         </tr>
         <tr>
-            <td><strong>Syarat Pembarayan:</strong> {{ $data->customers->top->code ?? '-' }}</td>
-            <td style="padding-left:20px;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>
+            <td><strong>Syarat Pembarayan:</strong> {{ $data->customers->top->remarks ?? '-' }}</td>            
+            <td style="padding-left:20px;"><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
         </tr>
-        <tr>
-            <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
-            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
+        <tr>            
+            <td><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>            
             <td style="padding-left:20px;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
+        </tr>
+        <tr>
+            <td><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>        
+            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>                
         </tr>
     </table>
 
