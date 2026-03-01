@@ -44,7 +44,7 @@
                 <img src="{{ asset('main_template/assets/images/logo-sm.png') }}" alt="" height="22">
             </span>
             <span class="logo-lg" style="margin-right:120px;">
-                <img src="{{ asset('assets/images/logo-app-v2.png') }}" alt="" height="70" width="70">
+                <img src="{{ asset('assets/images/logo-SAL.jpeg') }}" alt="" height="70" width="70">
             </span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
