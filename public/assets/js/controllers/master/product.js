@@ -115,6 +115,18 @@ let Product = {
                     },
                 },
                 {
+                    data: "nama_vendor",
+                },
+                {
+                    data: "category",
+                },
+                {
+                    data: "sku_name",
+                },
+                {
+                    data: "model_number",
+                },
+                {
                     data: "code",
                 },
                 {
@@ -122,19 +134,13 @@ let Product = {
                 },
                 {
                     data: "type",
-                },
-                {
-                    data: "model_number",
-                },
-                {
-                    data: "nama_vendor",
-                },
+                },                
                 {
                     data: "stock",
                 },
                 {
                     data: "unit_name",
-                },
+                },                
                 {
                     data: "id",
                     render: function (data, type, row) {

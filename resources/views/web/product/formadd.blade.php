@@ -50,10 +50,10 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label>Model Number</label>
+                                <label>Kode Princpal</label>
                                 <div>
                                     <input type="text" id="model_number" name="model_number" class="form-control required"
-                                        error="Model Number" placeholder="Model Number"
+                                        error="Kode Princpal" placeholder="Kode Princpal"
                                         value="{{ isset($data->model_number) ? $data->model_number : '' }}">
                                 </div>
                             </div>

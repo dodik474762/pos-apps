@@ -95,11 +95,13 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>Principal</th>
+                                                    <th>Kategori</th>
+                                                    <th>SKU Name</th>
+                                                    <th>Kode Principal</th>
                                                     <th>Kode</th>
                                                     <th>Product</th>
                                                     <th>Type</th>
-                                                    <th>Model Number</th>
-                                                    <th>Principal</th>
                                                     <th>Stock</th>
                                                     <th>Unit</th>
                                                     <th>Action</th>

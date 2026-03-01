@@ -60,6 +60,8 @@ class ProductController extends Controller
                     $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.model_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.sku_name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.category', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
                 });
