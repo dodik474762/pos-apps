@@ -111,6 +111,10 @@
             <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
             <td style="padding-left:40px;"><strong>No. Kiriman:</strong> {{ $data->do->do_number }}</td>
         </tr>
+        <tr>
+            <td><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
+            <td style="padding-left:40px;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
+        </tr>
     </table>
 
     <h4>Detail Barang</h4>

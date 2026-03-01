@@ -97,6 +97,10 @@
             <td><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
             <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>
         </tr>
+        <tr>
+            <td><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
+            <td style="padding-left:20px;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
+        </tr>
     </table>
 
     <h4 style="margin-top:6px;">Detail Barang</h4>
@@ -122,7 +126,7 @@
                     <td class="text-center">{{ $item->qty }}</td>
                     <td class="text-center">{{ $item->discount }}</td>
                     <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
-                    <td class="text-center">{{ $item->subtotal }}</td>
+                    <td class="text-center">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -150,6 +154,10 @@
 
     <table class="no-border">
         <tr>
+            <td class="text-center">
+                <strong>Diterima Oleh</strong><br><br><br>
+                (__________________)
+            </td>
             <td class="text-center">
                 <strong>Disetujui Oleh</strong><br><br><br>
                 (__________________)

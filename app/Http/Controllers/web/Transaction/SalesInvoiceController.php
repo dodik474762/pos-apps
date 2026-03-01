@@ -236,6 +236,9 @@ class SalesInvoiceController extends Controller
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         $qr = '';
 
+        // echo '<pre>';
+        // print_r($data);die;
+
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
         SalesInvoiceHeader::where('id', $data->id)->update([
             'print_total' => $total_print + 1,
