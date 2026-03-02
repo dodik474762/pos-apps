@@ -488,7 +488,7 @@ class SalesPlanController extends Controller
         $datadb = DB::table('sales_plan_detail_route as spd')
             ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
             ->join('customer as c', 'c.id', '=', 'spd.customer_id')
-            ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
+            ->leftJoin('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
             ->join('dictionary as vc', 'vc.id', '=', 'spd.visit_circle')
             ->leftJoin('region as pr', 'pr.id', '=', 'c.provinsi')
@@ -671,18 +671,20 @@ class SalesPlanController extends Controller
             $data['salesman'] = $users->id;
 
             // === HEADER ===
-            $header = new SalesPlanHeader();
+            // $header = new SalesPlanHeader();
 
-            $header->plan_code = generateNoRoutePlan(); // misal helper
-            $header->created_by = $userId;
-            $header->status = 'DRAFT';
+            // $header->plan_code = generateNoRoutePlan(); // misal helper
+            // $header->created_by = $userId;
+            // $header->status = 'DRAFT';
 
-            $header->salesman = $data['salesman'];
-            $header->period_year = date('Y');
-            $header->period_month = date('m');
-            $header->save();
+            // $header->salesman = $data['salesman'];
+            // $header->period_year = date('Y');
+            // $header->period_month = date('m');
+            // $header->save();
 
-            $hdrId = $header->id;
+            // $hdrId = $header->id;
+
+            $hdrId = 11;
 
             // Item baru atau update
             foreach ($rows as $key => $item) {
