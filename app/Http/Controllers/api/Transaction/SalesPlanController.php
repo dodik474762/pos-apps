@@ -671,20 +671,20 @@ class SalesPlanController extends Controller
             $data['salesman'] = $users->id;
 
             // === HEADER ===
-            // $header = new SalesPlanHeader();
+            $header = new SalesPlanHeader();
 
-            // $header->plan_code = generateNoRoutePlan(); // misal helper
-            // $header->created_by = $userId;
-            // $header->status = 'DRAFT';
+            $header->plan_code = generateNoRoutePlan(); // misal helper
+            $header->created_by = $userId;
+            $header->status = 'DRAFT';
 
-            // $header->salesman = $data['salesman'];
-            // $header->period_year = date('Y');
-            // $header->period_month = date('m');
-            // $header->save();
+            $header->salesman = $data['salesman'];
+            $header->period_year = date('Y');
+            $header->period_month = date('m');
+            $header->save();
 
-            // $hdrId = $header->id;
+            $hdrId = $header->id;
 
-            $hdrId = 11;
+            // $hdrId = 15;
 
             // Item baru atau update
             foreach ($rows as $key => $item) {
