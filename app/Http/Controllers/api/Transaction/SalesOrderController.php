@@ -1528,12 +1528,27 @@ class SalesOrderController extends Controller
     public function stockSubmit(Request $request)
     {
         $data = json_decode($request->input('data'), true);
+        $files_outlet = $request->file('files_outlet');
         $users_id = $data['user_id'];
 
         $result['is_valid'] = false;
         $result['message'] = '';
         DB::beginTransaction();
         try {
+
+            $dir = 'berkas/document/stock_customer/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
+            // Create the directory if it doesn't exist
+            if (!File::isDirectory($pathlamp)) {
+                File::makeDirectory($pathlamp, 0777, true, true);
+            }
+
+            $fileOutletName = 'outlet_' . time() . '.jpg';
+
+            $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            $dbpathlampOutlet = '/' . $dir . '/';
+
             foreach ($data['details'] as $item) {
                 [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
@@ -1549,6 +1564,7 @@ class SalesOrderController extends Controller
                 $detail->is_free_good = 0;
                 $detail->status = 'draft';
                 $detail->created_by = $users_id;
+                $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
                 $detail->save();
             }
 

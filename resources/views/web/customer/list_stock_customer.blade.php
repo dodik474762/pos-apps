@@ -8,7 +8,8 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width: 5%;">#</th>
-                        <th style="width: 50%;">Product</th>
+                        <th style="width: 35%;">Product</th>
+                        <th style="width: 15%;">Foto Outlet</th>
                         <th style="width: 30%;">Satuan</th>
                         <th style="width: 15%;">Qty</th>
                     </tr>
@@ -22,6 +23,11 @@
                             <td class="text-center">
                                 {{ $no++ }}
                             </td>
+                            <td>
+                               @if($v->foto_path != '')
+                                <a href="{{ $v->foto_path }}" target="_blank" rel="foto outlet">{{ $v->foto_path }}</a>
+                               @endif 
+                            </td>  
                             <td>{{$v->product_code}} - {{ $v->product_name }}</td>
                             <td >{{ $v->unit_name }}</td>  
                             <td >{{ $v->qty }}</td>  
