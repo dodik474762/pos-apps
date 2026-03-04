@@ -8,6 +8,7 @@
                 <th>Max Qty</th>
                 <th>Unit</th>
                 <th>Min Mix</th>
+                <th>Max Mix</th>
                 <th>Discount Type</th>
                 <th>Discount Value</th>
                 <th>Tanggal Berlaku</th>
@@ -27,6 +28,7 @@
                         <td id="promo-max-qty">{{ $promo->max_qty }}</td>
                         <td id="promo-unit" unit_id="{{ $promo->unit }}">{{ $promo->unit_name }}</td>
                         <td id="promo-min-mix">{{ $promo->min_mix }}</td>
+                        <td id="promo-max-mix">{{ $promo->max_mix }}</td>
                         <td id="promo-discount-type">{{ $promo->discount_type }}</td>
                         <td id="promo-discount-value">{{ $promo->discount_value }}</td>
                         <td id="promo-date-start">{{ $promo->date_start }}</td>

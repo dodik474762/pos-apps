@@ -861,6 +861,7 @@ class SalesOrderController extends Controller
                 'p.name as product_name',
                 'u.name as unit_name',
                 'ppi.min_mix',
+                'ppi.max_mix',
                 'ppi.unit',
                 'ppi.kelipatan',
                 'ppi.channel_outlet',
@@ -1034,7 +1035,9 @@ class SalesOrderController extends Controller
             // print_r($promoHeaders);die;
 
             $mix_min_promo = $promo->min_mix;
-            if ($mix_min_promo != $mixTotalPromo) {
+            $mix_max_promo = $promo->max_mix;
+            // if ($mix_min_promo != $mixTotalPromo) {
+            if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo)) {
                 continue;
             }
 

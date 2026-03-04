@@ -983,9 +983,11 @@ let SalesOrder = {
         );
 
         const mixCount = matchedPromoProducts.length;
+        console.log('mixCount', mixCount);
 
-        // cek min_mix
-        const mixOk = !promoHeader.min_mix || mixCount >= promoHeader.min_mix;
+        // cek min_mix dan max mix
+        const mixOk = !promoHeader.min_mix || (mixCount >= promoHeader.min_mix && mixCount <= promoHeader.max_mix);
+        console.log('mixOk', mixOk);
         const promoMinSmall = SalesOrder.convertToSmallest(
           UOM_CONVERSION,
           productId,
@@ -994,7 +996,7 @@ let SalesOrder = {
         );
 
         //jika tidak ada diskon campuran mix
-        if (promoHeader.min_mix == 1) {
+        if (promoHeader.min_mix == 1 && promoHeader.max_mix == 1) {
           const productMatch = products.find(
             (p) => p.product_id == tr.find("#product").attr("data_id"),
           );
@@ -1303,6 +1305,7 @@ let SalesOrder = {
         unit_name: $(this).find("#promo-unit").text().trim(),
         unit_id: $(this).find("#promo-unit").attr("unit_id"),
         min_mix: parseInt($(this).find("#promo-min-mix").text()) || 0,
+        max_mix: parseInt($(this).find("#promo-max-mix").text()) || 0,
         discount_type: $(this).find("#promo-discount-type").text().trim(),
         discount_value:
           parseFloat($(this).find("#promo-discount-value").text()) || 0,
