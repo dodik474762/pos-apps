@@ -211,6 +211,7 @@ class SalesInvoiceController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->where('m.total_amount', '>', 0)
             ->whereNotIn('m.status', ['canceled'])
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
