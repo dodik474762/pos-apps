@@ -125,6 +125,7 @@ let PromoItem = {
             disc_type: $("#disc_type").val(),
             date_start: $("#date_start").val(),
             min_mix: $("#min_mix").val(),
+            max_mix: $("#max_mix").val(),
             sub_channel_outlet: $("#sub_channel_outlet").val(),
             channel_outlet: $("#channel_outlet").val(),
             kelipatan: $("#kelipatan").is(':checked') ? 1 : 0,

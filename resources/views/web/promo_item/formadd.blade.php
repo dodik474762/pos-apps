@@ -93,6 +93,13 @@
                                 </div>
                             </div>
                              <div class="mb-3">
+                                <label class="form-label">Max Mix</label>
+                                <div>
+                                     <input type="number" id="max_mix" name="max_mix" class="form-control required"
+                                    error="Max" min="1" value="{{ isset($data->max_mix) ? $data->max_mix : '' }}">
+                                </div>
+                            </div>
+                             <div class="mb-3">
                                 <label>Channel Outlet</label>
                                  <div>
                                     <select name="" id="channel_outlet" class="form-control" error="Channel Outlet" onchange="Customer.changeCreditLimit(this)">

@@ -83,7 +83,7 @@ class PromoItemController extends Controller
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
 
-        $data['data_disc_tipe'] = ['percent', 'nominal'];
+        $data['data_disc_tipe'] = ['percent', 'nominal', 'price'];
         $data['routing_item'] = [];
         $data['routing_reminder_item'] = [];
         $data['channels'] = $this->getChannel();
@@ -103,7 +103,7 @@ class PromoItemController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
 
-        $data['data_disc_tipe'] = ['percent', 'nominal'];
+        $data['data_disc_tipe'] = ['percent', 'nominal', 'price'];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['channels'] = $this->getChannel();
