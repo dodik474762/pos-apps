@@ -466,8 +466,7 @@ class SalesOrderController extends Controller
             }
         }
 
-        list($customer_code, $customer_name) = explode('/', $data['customer_id']);
-        $customers = Customer::where('code', trim($customer_code))->first();
+        $customers = Customer::where('id', trim($data['customer_id']))->first();
         $customersId = $customers->id;
         $top = TermOfPayment::where('id', $customers->payment_terms)->first();
         $payment_term = $top->nilai;
