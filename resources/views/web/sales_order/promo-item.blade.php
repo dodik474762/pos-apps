@@ -10,6 +10,7 @@
                 <th>Min Mix</th>
                 <th>Max Mix</th>
                 <th>Discount Type</th>
+                <th>Discount Kategori</th>
                 <th>Discount Value</th>
                 <th>Tanggal Berlaku</th>
                 <th>Channel Outlet</th>
@@ -30,6 +31,7 @@
                         <td id="promo-min-mix">{{ $promo->min_mix }}</td>
                         <td id="promo-max-mix">{{ $promo->max_mix }}</td>
                         <td id="promo-discount-type">{{ $promo->discount_type }}</td>
+                        <td id="promo-discount-kategori">{{ $promo->kategori }}</td>
                         <td id="promo-discount-value">{{ $promo->discount_value }}</td>
                         <td id="promo-date-start">{{ $promo->date_start }}</td>
                         <td id="promo-channel-outlet">{{ $promo->channel_outlet }}</td>

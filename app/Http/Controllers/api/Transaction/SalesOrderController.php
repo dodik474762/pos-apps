@@ -255,7 +255,7 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
                         if (!empty($promoItem)) {
-                            if($promo['discount_type'] == 'price'){
+                            if ($promo['discount_type'] == 'price') {
                                 $item['price'] = $promoItem['price'];
                             }
                             $item['disc_percent'] = $promoItem['disc_percent'];
@@ -605,7 +605,7 @@ class SalesOrderController extends Controller
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = trim($products[0]);
                 $detail->qty = $item['qty'];
-                $detail->unit = trim($product_unit[0]);                
+                $detail->unit = trim($product_unit[0]);
 
                 // perhitungan diskon dan free good
                 $params['product_id'] = trim($products[0]);
@@ -626,7 +626,7 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
                         if (!empty($promoItem)) {
-                            if($promo['discount_type'] == 'price'){
+                            if ($promo['discount_type'] == 'price') {
                                 $product_unit[1] = $promoItem['price'];
                             }
                             $calculateDisc['disc_percent'] = $promoItem['disc_percent'];
@@ -645,7 +645,7 @@ class SalesOrderController extends Controller
                 $detail->discount_percent = $calculateDisc['disc_percent'];
                 $detail->discount_amount = $calculateDisc['disc_amount'];
                 $detail->subtotal = $calculateDisc['subtotal']; // ini sudah dikurangi diskon
-                if(isset($item['taxAmount'])){
+                if (isset($item['taxAmount'])) {
                     $detail->tax_amount = $item['taxAmount'];
                     $detail->tax_rate = $item['tax_rate'];
                     $detail->tax_type = $item['type_tax'];
@@ -871,7 +871,8 @@ class SalesOrderController extends Controller
                 'ppi.unit',
                 'ppi.kelipatan',
                 'ppi.channel_outlet',
-                'ppi.sub_channel_outlet'
+                'ppi.sub_channel_outlet',
+                'ppi.kategori'
             )
             ->join('product as p', 'p.id', '=', 'ppid.product')
             ->join('unit as u', 'u.id', '=', 'ppi.unit')
@@ -962,9 +963,20 @@ class SalesOrderController extends Controller
 
     private function isPromoApplicable($promo, $totalQty, $product_id)
     {
+        if ($promo->kategori === 'nominal') {
+            // totalQty di sini sudah berupa rawSubtotal
+            // min_qty & max_qty langsung sebagai nilai nominal (rupiah)
+            $minValue = $promo->min_qty ?: 0;
+            $maxValue = $promo->max_qty ?: PHP_INT_MAX;
+            return $totalQty >= $minValue && $totalQty <= $maxValue;
+        }
+
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
         $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
-        return $totalQty >= $minQtyPromoSmallest;
+
+        $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->max_qty);
+        $maxQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->max_qty : 0;
+        return $totalQty >= $minQtyPromoSmallest && $totalQty <= $maxQtyPromoSmallest;
     }
 
     private function calculateFreeGoods($promo, $totalQty, $product_id)
@@ -1053,12 +1065,29 @@ class SalesOrderController extends Controller
                 $itemsValue[] = $valItem;
             }
 
-            $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);            
-            // echo '<pre>';
-            // print_r($itemsValue);die;
+            // =============================
+            // HITUNG SUBTOTAL MENTAH (sebelum diskon)
+            // untuk keperluan promo kategori nominal
+            // =============================
+            $rawSubtotal = 0;
+            foreach ($itemsValue as $v) {
+                $rawSubtotal += $v['price'] * $v['qty'];
+            }
+
+            // =============================
+            // TENTUKAN BASIS PENGECEKAN PROMO
+            // qty  → pakai qtySmallestAllProduct
+            // nominal → pakai rawSubtotal
+            // =============================
+            $isNominalCategory = $promo->kategori === 'nominal';
+
+            if ($isNominalCategory) {
+                $qtySmallestAllProduct = $rawSubtotal;
+            } else {
+                $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);
+            }
 
             $totalPromoAplicable = 0;
-
             foreach ($itemsValue as $v) {
                 if (!$this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
                     continue;
@@ -1074,9 +1103,6 @@ class SalesOrderController extends Controller
             $discountAmounts = 0;
             $grandTotal = 0;
 
-            // echo '<pre>';
-            // print_r($itemsValue);die;
-
             // Hitung diskon
             foreach ($itemsValue as $v) {
                 $discountAmount = 0;
@@ -1086,7 +1112,7 @@ class SalesOrderController extends Controller
                         * ($discountPercent / 100);
                     $discountAmounts += $discountAmount;
                 }
-                if($promo->discount_type === 'nominal') {
+                if ($promo->discount_type === 'nominal') {
                     $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
                     $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
                     $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
@@ -1094,7 +1120,7 @@ class SalesOrderController extends Controller
                     $discountAmount = $promo->discount_value * $multiplier;
                     $discountAmounts += $discountAmount;
                 }
-                if($promo->discount_type == 'price'){
+                if ($promo->discount_type == 'price') {
                     $v['price'] = $promo->discount_value;
                 }
 
@@ -1116,7 +1142,7 @@ class SalesOrderController extends Controller
 
             $resultItems[] = [
                 'items' => $itemsValue,
-                'discount_type'=> $promo->discount_type,
+                'discount_type' => $promo->discount_type,
                 'discount_percent' => $discountPercent,
                 'discount_amount' => $discountAmount,
                 'grand_total' => $grandTotal,

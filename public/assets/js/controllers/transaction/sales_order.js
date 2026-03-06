@@ -704,8 +704,9 @@ let SalesOrder = {
     document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
       const subtotal =
         parseFloat(tr.querySelector("#subtotal").getAttribute("subtotal")) || 0;
-      console.log('subtotal', subtotal);
-      const taxAmount = parseFloat(tr.querySelector("#tax_amount").getAttribute("amount")) || 0;
+      console.log("subtotal", subtotal);
+      const taxAmount =
+        parseFloat(tr.querySelector("#tax_amount").getAttribute("amount")) || 0;
       total += subtotal + taxAmount;
     });
 
@@ -913,9 +914,10 @@ let SalesOrder = {
         const promoHeader = promoHeaders[index];
         const parent_id = promoHeader.id;
         const kelipatan = promoHeader.kelipatan;
-        const discount_type = promoHeader.discount_type        
+        const discount_type = promoHeader.discount_type;
+        const discount_kategori = promoHeader.discount_kategori;
 
-        console.log("class_promo_item", parent_id);
+        // console.log("class_promo_item", parent_id);
 
         // ========================
         // FILTER CHANNEL OUTLET
@@ -959,7 +961,7 @@ let SalesOrder = {
           const subtotal = price * qty - discAmount;
           let taxAmount = 0;
           if (type_tax == "include") {
-            taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
+            taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
           } else {
             taxAmount = subtotal * (tax_rate / 100);
           }
@@ -988,7 +990,9 @@ let SalesOrder = {
         // console.log('mixCount', mixCount);
 
         // cek min_mix dan max mix
-        const mixOk = !promoHeader.min_mix || (mixCount >= promoHeader.min_mix && mixCount <= promoHeader.max_mix);
+        const mixOk =
+          !promoHeader.min_mix ||
+          (mixCount >= promoHeader.min_mix && mixCount <= promoHeader.max_mix);
         // console.log('mixOk', mixOk);
         const promoMinSmall = SalesOrder.convertToSmallest(
           UOM_CONVERSION,
@@ -1020,59 +1024,93 @@ let SalesOrder = {
           kelipatan,
         );
 
+        const rawSubtotal = price * qty;
+
         // console.log("promoMinSmall", promoMinSmall);
         if (mixOk && today >= promoHeader.date_start) {
           // cek qty untuk ROW INI
 
-          if (qtySmallestAllProduct < promoMinSmall) {
-            promoApplicable = false;
-          }
+          if (discount_kategori == "nominal") {
+            // ========================
+            // KATEGORI NOMINAL: min/max qty = subtotal
+            // ========================
+            const minNominal = promoHeader.min_qty || 0;
+            const maxNominal = promoHeader.max_qty || Infinity;
+            console.log('diskon kategori nominal',rawSubtotal, minNominal, maxNominal);
 
-          // console.log("kelipatan", kelipatan);
-          if (kelipatan == "1") {
-            // hitung berapa kali kelipatan terpenuhi
-            pengaliKelipatanFreegood = Math.floor(
-              qtySmallestAllProduct / kelipatanSmall,
-            );
-            // cek promo applicable
-            if (
-              qtySmallestAllProduct >= promoMinSmall &&
-              pengaliKelipatanFreegood > 0
-            ) {
-              promoApplicable = true;
+            if (kelipatan == "1") {
+              const kelipatanNominal = kelipatan; // kelipatan dalam rupiah
+              pengaliKelipatanFreegood = Math.floor(
+                rawSubtotal / kelipatanNominal,
+              );
+              if (rawSubtotal >= minNominal && pengaliKelipatanFreegood > 0) {
+                promoApplicable = true;
+              }
+            } else {
+              if (rawSubtotal >= minNominal && rawSubtotal <= maxNominal) {
+                promoApplicable = true;
+              }
             }
-          } else {
-            const promoMaxSmall = promoHeader.max_qty
-              ? SalesOrder.convertToSmallest(
-                  UOM_CONVERSION,
-                  productId,
-                  promoHeader.unit_id,
-                  promoHeader.max_qty,
-                )
-              : Infinity;
-
-            if (
-              qtySmallestAllProduct >= promoMinSmall &&
-              qtySmallestAllProduct <= promoMaxSmall
-            ) {
-              promoApplicable = true;
+          }else{
+            // ========================
+            // KATEGORI QTY (existing logic)
+            // ========================
+            if (qtySmallestAllProduct < promoMinSmall) {
+              promoApplicable = false;
+            }
+  
+            // console.log("kelipatan", kelipatan);
+            if (kelipatan == "1") {
+              // hitung berapa kali kelipatan terpenuhi
+              pengaliKelipatanFreegood = Math.floor(
+                qtySmallestAllProduct / kelipatanSmall,
+              );
+              // cek promo applicable
+              if (
+                qtySmallestAllProduct >= promoMinSmall &&
+                pengaliKelipatanFreegood > 0
+              ) {
+                promoApplicable = true;
+              }
+            } else {
+              const promoMaxSmall = promoHeader.max_qty
+                ? SalesOrder.convertToSmallest(
+                    UOM_CONVERSION,
+                    productId,
+                    promoHeader.unit_id,
+                    promoHeader.max_qty,
+                  )
+                : Infinity;
+  
+              if (
+                qtySmallestAllProduct >= promoMinSmall &&
+                qtySmallestAllProduct <= promoMaxSmall
+              ) {
+                promoApplicable = true;
+              }
             }
           }
         }
 
-        // console.log("promoApplicable", promoApplicable);
-        // console.log("pengaliKelipatanFreegood", pengaliKelipatanFreegood);
-        // console.log("qtySmallestAllProduct", qtySmallestAllProduct);
-        // console.log("kelipatanSmall", kelipatanSmall);
+        // const pengali =
+        //   kelipatanSmall == 0
+        //     ? 1
+        //     : Math.floor(qtySmallestAllProduct / kelipatanSmall);
+        // let pengaliFix =
+        //   pengali == 1 ? 1 : Math.floor(pengali / promoHeader.min_qty);
 
-        const pengali =
-          kelipatanSmall == 0
-            ? 1
-            : Math.floor(qtySmallestAllProduct / kelipatanSmall);
-        let pengaliFix =
-          pengali == 1 ? 1 : Math.floor(pengali / promoHeader.min_qty);
-        // console.log("pengali", pengali);
-        // console.log("pengaliFix", pengaliFix);
+        let pengali, pengaliFix;
+
+        if (discount_kategori === "nominal") {
+          // pengali berdasarkan subtotal
+          const kelipatanNominal = parseFloat(kelipatan) || 1;
+          pengali = kelipatanNominal == 0 ? 1 : Math.floor(rawSubtotal / kelipatanNominal);
+          pengaliFix = pengali == 1 ? 1 : Math.floor(pengali / promoHeader.min_qty);
+        } else {
+          // pengali berdasarkan qty terkecil (existing)
+          pengali = kelipatanSmall == 0 ? 1 : Math.floor(qtySmallestAllProduct / kelipatanSmall);
+          pengaliFix = pengali == 1 ? 1 : Math.floor(pengali / promoHeader.min_qty);
+        }
 
         if (promoApplicable && promoHeader) {
           if (promoHeader.discount_type === "percent") {
@@ -1085,8 +1123,8 @@ let SalesOrder = {
                 maximumFractionDigits: 2,
               }).format(amountDisc),
             );
-          } 
-          if(promoHeader.discount_type === "nominal") {
+          }
+          if (promoHeader.discount_type === "nominal") {
             discPercentInput.val(0);
             const amountDisc = promoHeader.discount_value * pengaliFix;
             discAmountInput.attr("amount", amountDisc);
@@ -1097,7 +1135,7 @@ let SalesOrder = {
               }).format(amountDisc),
             );
           }
-          if(promoHeader.discount_type === "price") {
+          if (promoHeader.discount_type === "price") {
             discPercentInput.val(0);
             const amountDisc = 0;
             discAmountInput.attr("amount", amountDisc);
@@ -1203,7 +1241,7 @@ let SalesOrder = {
         const subtotal = price * qty - discAmount;
         let taxAmount = 0;
         if (type_tax == "include") {
-          taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
+          taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
         } else {
           taxAmount = subtotal * (tax_rate / 100);
         }
@@ -1239,7 +1277,7 @@ let SalesOrder = {
       const subtotal = price * qty - discAmount;
       let taxAmount = 0;
       if (type_tax == "include") {
-        taxAmount = subtotal - subtotal / (1 + (tax_rate / 100));
+        taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
       } else {
         taxAmount = subtotal * (tax_rate / 100);
       }
@@ -1250,7 +1288,7 @@ let SalesOrder = {
           maximumFractionDigits: 2,
         }).format(taxAmount),
       );
-      subtotalInput.attr('subtotal', subtotal);
+      subtotalInput.attr("subtotal", subtotal);
       subtotalInput.val(
         new Intl.NumberFormat("id-ID", {
           minimumFractionDigits: 2,
@@ -1318,6 +1356,10 @@ let SalesOrder = {
         min_mix: parseInt($(this).find("#promo-min-mix").text()) || 0,
         max_mix: parseInt($(this).find("#promo-max-mix").text()) || 0,
         discount_type: $(this).find("#promo-discount-type").text().trim(),
+        discount_kategori: $(this)
+          .find("#promo-discount-kategori")
+          .text()
+          .trim(),
         discount_value:
           parseFloat($(this).find("#promo-discount-value").text()) || 0,
         date_start: $(this).find("#promo-date-start").text().trim(),
