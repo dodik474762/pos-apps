@@ -255,6 +255,9 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
                         if (!empty($promoItem)) {
+                            if($promo['discount_type'] == 'price'){
+                                $item['price'] = $promoItem['price'];
+                            }
                             $item['disc_percent'] = $promoItem['disc_percent'];
                             $item['disc_amount'] = $promoItem['disc_amount'];
                             $item['subtotal'] = $promoItem['subtotal'];
@@ -602,8 +605,7 @@ class SalesOrderController extends Controller
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = trim($products[0]);
                 $detail->qty = $item['qty'];
-                $detail->unit = trim($product_unit[0]);
-                $detail->unit_price = trim($product_unit[1]);
+                $detail->unit = trim($product_unit[0]);                
 
                 // perhitungan diskon dan free good
                 $params['product_id'] = trim($products[0]);
@@ -624,6 +626,9 @@ class SalesOrderController extends Controller
                         $items = $promo['items'];
                         $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
                         if (!empty($promoItem)) {
+                            if($promo['discount_type'] == 'price'){
+                                $product_unit[1] = $promoItem['price'];
+                            }
                             $calculateDisc['disc_percent'] = $promoItem['disc_percent'];
                             $calculateDisc['disc_amount'] = $promoItem['disc_amount'];
                             $calculateDisc['subtotal'] = $promoItem['subtotal'];
@@ -633,6 +638,8 @@ class SalesOrderController extends Controller
                     }
                 }
                 /*PROMO */
+
+                $detail->unit_price = trim($product_unit[1]);
 
                 $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $calculateDisc['disc_percent'];
@@ -1072,18 +1079,23 @@ class SalesOrderController extends Controller
 
             // Hitung diskon
             foreach ($itemsValue as $v) {
+                $discountAmount = 0;
                 if ($promo->discount_type === 'percent') {
                     $discountPercent = $promo->discount_value;
                     $discountAmount = ($v['price'] * $v['qty'])
                         * ($discountPercent / 100);
                     $discountAmounts += $discountAmount;
-                } else {
+                }
+                if($promo->discount_type === 'nominal') {
                     $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
                     $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
                     $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
 
                     $discountAmount = $promo->discount_value * $multiplier;
                     $discountAmounts += $discountAmount;
+                }
+                if($promo->discount_type == 'price'){
+                    $v['price'] = $promo->discount_value;
                 }
 
                 $subtotal = ($v['price'] * $v['qty']) - $discountAmount;
@@ -1104,6 +1116,7 @@ class SalesOrderController extends Controller
 
             $resultItems[] = [
                 'items' => $itemsValue,
+                'discount_type'=> $promo->discount_type,
                 'discount_percent' => $discountPercent,
                 'discount_amount' => $discountAmount,
                 'grand_total' => $grandTotal,

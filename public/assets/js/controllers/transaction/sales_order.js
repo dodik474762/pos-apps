@@ -870,7 +870,7 @@ let SalesOrder = {
     const qty = parseFloat(tr.find("#qty").val()) || 0;
     const productId = tr.find("#product").attr("data_id");
     const satuanId = tr.find("td#unit").attr("data_id");
-    const price = parseFloat(tr.find("#unit_price").attr("price")) || 0;
+    let price = parseFloat(tr.find("#unit_price").attr("price")) || 0;
     const type_tax = tr.find("#product").attr("type_tax");
     const tax_rate = tr.find("#product").attr("tax_rate");
     const customerId = $("#customer_id").val();
@@ -884,6 +884,7 @@ let SalesOrder = {
     const discAmountInput = tr.find("#disc_amount");
     const subtotalInput = tr.find("#subtotal");
     const taxAmountInpute = tr.find("#tax_amount");
+    const unitPriceInput = tr.find("#unit_price");
     taxAmountInpute.val("0");
     taxAmountInpute.attr("amount", "0");
     discPercentInput.val("0");
@@ -912,6 +913,7 @@ let SalesOrder = {
         const promoHeader = promoHeaders[index];
         const parent_id = promoHeader.id;
         const kelipatan = promoHeader.kelipatan;
+        const discount_type = promoHeader.discount_type        
 
         console.log("class_promo_item", parent_id);
 
@@ -983,11 +985,11 @@ let SalesOrder = {
         );
 
         const mixCount = matchedPromoProducts.length;
-        console.log('mixCount', mixCount);
+        // console.log('mixCount', mixCount);
 
         // cek min_mix dan max mix
         const mixOk = !promoHeader.min_mix || (mixCount >= promoHeader.min_mix && mixCount <= promoHeader.max_mix);
-        console.log('mixOk', mixOk);
+        // console.log('mixOk', mixOk);
         const promoMinSmall = SalesOrder.convertToSmallest(
           UOM_CONVERSION,
           productId,
@@ -1018,7 +1020,7 @@ let SalesOrder = {
           kelipatan,
         );
 
-        console.log("promoMinSmall", promoMinSmall);
+        // console.log("promoMinSmall", promoMinSmall);
         if (mixOk && today >= promoHeader.date_start) {
           // cek qty untuk ROW INI
 
@@ -1026,18 +1028,12 @@ let SalesOrder = {
             promoApplicable = false;
           }
 
-          console.log("kelipatan", kelipatan);
+          // console.log("kelipatan", kelipatan);
           if (kelipatan == "1") {
             // hitung berapa kali kelipatan terpenuhi
             pengaliKelipatanFreegood = Math.floor(
               qtySmallestAllProduct / kelipatanSmall,
             );
-            // console.log({
-            //     qtySmallestAllProduct,
-            //     promoMinSmall,
-            //     kelipatanSmall,
-            //     hasilBagi: qtySmallestAllProduct / kelipatanSmall,
-            // });
             // cek promo applicable
             if (
               qtySmallestAllProduct >= promoMinSmall &&
@@ -1064,10 +1060,10 @@ let SalesOrder = {
           }
         }
 
-        console.log("promoApplicable", promoApplicable);
-        console.log("pengaliKelipatanFreegood", pengaliKelipatanFreegood);
-        console.log("qtySmallestAllProduct", qtySmallestAllProduct);
-        console.log("kelipatanSmall", kelipatanSmall);
+        // console.log("promoApplicable", promoApplicable);
+        // console.log("pengaliKelipatanFreegood", pengaliKelipatanFreegood);
+        // console.log("qtySmallestAllProduct", qtySmallestAllProduct);
+        // console.log("kelipatanSmall", kelipatanSmall);
 
         const pengali =
           kelipatanSmall == 0
@@ -1075,8 +1071,8 @@ let SalesOrder = {
             : Math.floor(qtySmallestAllProduct / kelipatanSmall);
         let pengaliFix =
           pengali == 1 ? 1 : Math.floor(pengali / promoHeader.min_qty);
-        console.log("pengali", pengali);
-        console.log("pengaliFix", pengaliFix);
+        // console.log("pengali", pengali);
+        // console.log("pengaliFix", pengaliFix);
 
         if (promoApplicable && promoHeader) {
           if (promoHeader.discount_type === "percent") {
@@ -1089,7 +1085,8 @@ let SalesOrder = {
                 maximumFractionDigits: 2,
               }).format(amountDisc),
             );
-          } else {
+          } 
+          if(promoHeader.discount_type === "nominal") {
             discPercentInput.val(0);
             const amountDisc = promoHeader.discount_value * pengaliFix;
             discAmountInput.attr("amount", amountDisc);
@@ -1099,6 +1096,20 @@ let SalesOrder = {
                 maximumFractionDigits: 2,
               }).format(amountDisc),
             );
+          }
+          if(promoHeader.discount_type === "price") {
+            discPercentInput.val(0);
+            const amountDisc = 0;
+            discAmountInput.attr("amount", amountDisc);
+            discAmountInput.val(
+              new Intl.NumberFormat("id-ID", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(amountDisc),
+            );
+            unitPriceInput.val(promoHeader.discount_value);
+            price = promoHeader.discount_value;
+            tr.find("#unit_price").attr("price", price);
           }
         }
 
