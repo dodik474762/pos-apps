@@ -73,6 +73,7 @@ class PromoItemController extends Controller
             $roles->max_qty = $data['max_qty'];
             $roles->discount_type = $data['disc_type'];
             $roles->discount_value = $data['disc_value'];
+            $roles->kategori = $data['kategori'];
             $roles->date_start = $data['date_start'];
             $roles->min_mix = $data['min_mix'];
             $roles->max_mix = $data['max_mix'];

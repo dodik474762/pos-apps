@@ -121,6 +121,7 @@ let PromoItem = {
             promo_name: $("#promo_name").val(),
             max_qty: $("#max_qty").val(),
             disc_value: $("#disc_value").val(),
+            kategori: $("#kategori").val(),
             min_qty: $("#min_qty").val(),
             disc_type: $("#disc_type").val(),
             date_start: $("#date_start").val(),

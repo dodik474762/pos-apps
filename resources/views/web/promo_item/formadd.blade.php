@@ -43,6 +43,15 @@
                                 </div>
                             </div>
                              <div class="mb-3">
+                                <label class="form-label">Discount Kategori</label>
+                                <select id="kategori" name="kategori" class="form-control required" error="Disc Tipe">
+                                    @foreach ($kategori as $item)
+                                        <option value="{{ $item }}" {{ isset($data->kategori) ? ($data->kategori == $item ? 'selected' : '') : '' }}>
+                                            {{ strtoupper($item) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                             <div class="mb-3">
                                 <label class="form-label">Discount Nilai</label>
                                 <div>
                                      <input type="number" id="disc_value" name="disc_value" class="form-control required"
