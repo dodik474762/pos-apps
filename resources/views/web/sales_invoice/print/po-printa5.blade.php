@@ -108,13 +108,14 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Produk</th>
-                <th>Satuan</th>
-                <th>Qty</th>
-                <th>Diskon</th>
-                <th>Note</th>
-                <th>Sub Total</th>
+                <th class="text-center">No</th>
+                <th class="text-center">Produk</th>
+                <th class="text-center">Satuan</th>
+                <th class="text-center">Qty</th>
+                <th class="text-center">Harga</th>
+                <th class="text-center">Diskon</th>
+                <th class="text-center">Note</th>
+                <th class="text-center">Total Harga</th>
             </tr>
         </thead>
         <tbody>
@@ -124,30 +125,31 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $item->products->name ?? '-' }}</td>
-                    <td>{{ $item->so_detail->units->name ?? '-' }}</td>
+                    <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
                     <td class="text-center">{{ $item->qty }}</td>
-                    <td class="text-center">{{ $item->discount }}</td>
-                    <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
-                    <td class="text-center">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($item->price, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
+                    <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
-                <td colspan="6" class="text-right"><strong>Discount {{($data->so->discount_percent == '0' ? '' : $data->so->discount_percent .' %')}}</strong></td>
+                <td colspan="7" class="text-right"><strong>Discount {{($data->so->discount_percent == '0' ? '' : $data->so->discount_percent .' %')}}</strong></td>
                 <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
-                <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
+                <td colspan="7" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
                 <!-- <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td> -->
                 <td class="text-right"><strong>0</strong></td>
             </tr>
             <tr>
-                <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
+                <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
