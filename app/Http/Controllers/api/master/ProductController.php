@@ -37,20 +37,26 @@ class ProductController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        $stock = DB::table('product_stock')
+            ->select('product', DB::raw('SUM(qty) as stock'))
+            ->groupBy('product');
+
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'pt.type',
                 'u.name as unit_name',
                 'v.nama_vendor',
-                'ps.qty as stock'
+                DB::raw('COALESCE(ps.stock,0) as stock')
             ])
-            ->join('product_type as pt', 'pt.id', 'm.product_type')
-            ->leftJoin('vendor as v', 'v.id', 'm.vendor')
-            ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
-            ->leftJoin('unit as u', 'u.id', 'm.unit')
-            ->whereNull('m.deleted')
-            ->orderBy('m.id', 'desc');
+            ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
+            ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
+            ->leftJoinSub($stock, 'ps', function ($join) {
+                $join->on('ps.product', '=', 'm.id');
+            })
+            ->leftJoin('unit as u', 'u.id', '=', 'm.unit')
+            ->whereNull('m.deleted');
+
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
