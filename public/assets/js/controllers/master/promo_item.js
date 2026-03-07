@@ -130,6 +130,7 @@ let PromoItem = {
             sub_channel_outlet: $("#sub_channel_outlet").val(),
             channel_outlet: $("#channel_outlet").val(),
             kelipatan: $("#kelipatan").is(':checked') ? 1 : 0,
+            potong_grand_total: $("#potong_grand_total").is(':checked') ? 1 : 0,
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
         };

@@ -124,6 +124,7 @@
                                 <br/>
                                 <br/>
                                 <input type="checkbox" id="kelipatan" {{ isset($data->kelipatan) ? ($data->kelipatan == '1' ? 'checked' : '') : '' }}> Kelipatan
+                                <input type="checkbox" id="potong_grand_total" {{ isset($data->potong_grand_total) ? ($data->potong_grand_total == '1' ? 'checked' : '') : '' }}> Potong Grand Total
                             </div>
                         </div>
                     </div>
