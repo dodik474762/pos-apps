@@ -186,7 +186,8 @@ class SalesOrderController extends Controller
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
             // echo '<pre>';
-            // print_r($calculatePromo);die;
+            // print_r($calculatePromo);
+            // die;
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -964,8 +965,6 @@ class SalesOrderController extends Controller
     private function isPromoApplicable($promo, $totalQty, $product_id)
     {
         if ($promo->kategori === 'nominal') {
-            // totalQty di sini sudah berupa rawSubtotal
-            // min_qty & max_qty langsung sebagai nilai nominal (rupiah)
             $minValue = $promo->min_qty ?: 0;
             $maxValue = $promo->max_qty ?: PHP_INT_MAX;
             return $totalQty >= $minValue && $totalQty <= $maxValue;
@@ -974,8 +973,15 @@ class SalesOrderController extends Controller
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
         $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
 
+        // Jika kelipatan=1, tidak ada batas atas — cukup >= min
+        if ($promo->kelipatan == 1) {
+            return $totalQty >= $minQtyPromoSmallest;
+        }
+
+        // Jika bukan kelipatan, cek range min-max
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->max_qty);
-        $maxQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->max_qty : 0;
+        $maxQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->max_qty : PHP_INT_MAX;
+
         return $totalQty >= $minQtyPromoSmallest && $totalQty <= $maxQtyPromoSmallest;
     }
 
@@ -1050,7 +1056,7 @@ class SalesOrderController extends Controller
             }
 
             // echo '<pre>';
-            // print_r($promoHeaders);die;
+            // print_r($mixTotalPromo);die;
 
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
@@ -1064,6 +1070,7 @@ class SalesOrderController extends Controller
                 $valItem = collect($items)->where('product_id', $h)->first();
                 $itemsValue[] = $valItem;
             }
+
 
             // =============================
             // HITUNG SUBTOTAL MENTAH (sebelum diskon)
@@ -1089,13 +1096,19 @@ class SalesOrderController extends Controller
 
             $totalPromoAplicable = 0;
             foreach ($itemsValue as $v) {
-                if (!$this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
+                $applicable = $this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id']);
+                if (!$applicable) {
                     continue;
                 }
                 $totalPromoAplicable += 1;
             }
 
-            if ($totalPromoAplicable != $mix_min_promo) {
+            // if ($totalPromoAplicable != $mix_min_promo) {
+            //     continue;
+            // }
+
+            // Jadi ini:
+            if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo)) {
                 continue;
             }
 
@@ -1104,24 +1117,38 @@ class SalesOrderController extends Controller
             $grandTotal = 0;
 
             // Hitung diskon
+            // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
+            $discountApplied = false;
+            // debug tanpa die
             foreach ($itemsValue as $v) {
                 $discountAmount = 0;
-                if ($promo->discount_type === 'percent') {
-                    $discountPercent = $promo->discount_value;
-                    $discountAmount = ($v['price'] * $v['qty'])
-                        * ($discountPercent / 100);
-                    $discountAmounts += $discountAmount;
-                }
-                if ($promo->discount_type === 'nominal') {
-                    $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
-                    $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
-                    $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
 
-                    $discountAmount = $promo->discount_value * $multiplier;
-                    $discountAmounts += $discountAmount;
-                }
-                if ($promo->discount_type == 'price') {
-                    $v['price'] = $promo->discount_value;
+                // Jika promo mix dan diskon sudah diterapkan ke baris lain, skip diskon
+                $isMixPromo = $promo->max_mix > 1;
+                $shouldApplyDiscount = !$isMixPromo || !$discountApplied;
+                if ($shouldApplyDiscount) {
+                    if ($promo->discount_type === 'percent') {
+                        $discountPercent = $promo->discount_value;
+                        $discountAmount = ($v['price'] * $v['qty'])
+                            * ($discountPercent / 100);
+                        $discountAmounts += $discountAmount;
+                    }
+                    if ($promo->discount_type === 'nominal') {
+                        $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
+                        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                        $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+
+                        $discountAmount = $promo->discount_value * $multiplier;
+                        $discountAmounts += $discountAmount;
+                    }
+                    if ($promo->discount_type == 'price') {
+                        $v['price'] = $promo->discount_value;
+                    }
+
+                    // Tandai diskon sudah diterapkan untuk promo mix ini
+                    if ($isMixPromo) {
+                        $discountApplied = true;
+                    }
                 }
 
                 $subtotal = ($v['price'] * $v['qty']) - $discountAmount;
@@ -1153,7 +1180,8 @@ class SalesOrderController extends Controller
         }
 
         // echo '<pre>';
-        // print_r($resultItems);die;
+        // print_r($resultItems);
+        // die;
 
         return $resultItems;
     }

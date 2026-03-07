@@ -197,7 +197,7 @@
                                                         </div>
                                                     </td>
                                                     <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
-                                                    <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
+                                                    <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.recalculateAllRows(this)"></td>
                                                     <td><input type="text" class="form-control" id="unit_price" price="{{ $item->unit_price }}" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input type="text" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input type="text" class="form-control" id="disc_amount" amount="{{ $item->discount_amount }}" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
@@ -217,7 +217,7 @@
                                                     </div>
                                                 </td>
                                                 <td data_id="" id="unit"></td>
-                                                <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.calcDiscRow(this)"></td>
+                                                <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.recalculateAllRows(this)"></td>
                                                 <td><input type="text" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="text" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="text" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
