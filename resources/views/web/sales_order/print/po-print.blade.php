@@ -116,8 +116,8 @@
                 <th>Harga</th>
                 <th>Disc (%)</th>
                 <th>Disc (Rp)</th>
-                <th>Subtotal</th>
                 <th>Keterangan</th>
+                <th>Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -130,8 +130,8 @@
                     <td class="text-right">{{ number_format($item->unit_price, 0, ',', '.') }}</td>
                     <td class="text-center">{{ $item->discount_percent }}</td>
                     <td class="text-right">{{ number_format($item->discount_amount, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                     <td class="text-center">{{ $item->free_for == '' ? '' : 'FREE GOOD' }}</td>
+                    <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -139,6 +139,19 @@
             <tr>
                 <td colspan="8" class="text-right"><strong>Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
+            </tr>
+             <tr>
+                <td colspan="8" class="text-right"><strong>Discount {{($data->discount_percent == '0' ? '' : $data->discount_percent .' %')}}</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->discount_amount, 0, ',', '.') }}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="8" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
+                <!-- <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td> -->
+                <td class="text-right"><strong>0</strong></td>
+            </tr>
+            <tr>
+                <td colspan="8" class="text-right"><strong>Grand Total</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->total_amount - $data->discount_amount, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>
