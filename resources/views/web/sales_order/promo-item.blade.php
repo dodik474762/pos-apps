@@ -23,7 +23,7 @@
                     @php
                         $promo = collect($promo_item)->where('product_promo_item', $item)->first();
                     @endphp
-                    <tr data_id="{{ $item }}" kelipatan="{{ $promo->kelipatan }}">
+                    <tr data_id="{{ $item }}" potong_grand_total="{{ $promo->potong_grand_total }}" kelipatan="{{ $promo->kelipatan }}">
                         <td id="promo-name">{{ $promo->promo_name }}</td>
                         <td id="promo-min-qty">{{ $promo->min_qty }}</td>
                         <td id="promo-max-qty">{{ $promo->max_qty }}</td>

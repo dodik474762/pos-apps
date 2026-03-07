@@ -95,6 +95,16 @@
                                 <label class="form-label">Remarks</label>
                                 <textarea id="remarks" class="form-control" placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Disc (%)</label>
+                                <input disabled type="text" id="discount_percent_header" class="form-control" placeholder="Disc (%)"
+                                    value="{{ isset($data->discount_percent) ? $data->discount_percent : '0' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Disc (Rp)</label>
+                                <input disabled type="text" id="discount_amount_header" class="form-control" placeholder="Disc (%)"
+                                    value="{{ isset($data->discount_amount) ? $data->discount_amount : '0' }}">
+                            </div>
                         </div>
                     </div>
 
