@@ -249,10 +249,10 @@
 
                     <div class="text-end mt-4">
                         <div class="d-none">
-                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount + $data->tax_amount : 0 }}</span></h5>
+                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount - $data->discount_amount : 0 }}</span></h5>
                         </div>
                         <div>
-                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount + $data->tax_amount, 2, ',', '.') : 0 }}</span></h5>
+                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount - $data->discount_amount, 2, ',', '.') : 0 }}</span></h5>
                         </div>
                     </div>
 
