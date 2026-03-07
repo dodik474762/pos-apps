@@ -118,7 +118,7 @@
 
                                 @if (!empty($details))
                                     @foreach ($details as $item)
-                                        <tr class="input" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
+                                        <tr class="input" disc_amount_header="{{ $item->discount_amount_header }}" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
                                             <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
                                             <td id="qty">{{ $item->qty }}</td>
                                             <td id="price">{{ $item->price }}</td>

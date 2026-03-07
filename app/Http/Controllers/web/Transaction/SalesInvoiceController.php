@@ -188,8 +188,10 @@ class SalesInvoiceController extends Controller
                 'p.name as product_name',
                 'p.code as product_code',
                 'u.name as unit_name',
+                'soh.discount_amount as discount_amount_header'
             ])
             ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'sod.sales_order_id')
             ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
             ->join('unit as u', 'u.id', 'sod.unit')
             ->whereNull('sales_invoice_detail.deleted')

@@ -423,14 +423,16 @@ class SalesInvoiceController extends Controller
                 ]);
             }
 
+
+
             $data['total_amount'] = $subtotal;
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = isset($data['do_id']) ? $data['do_id'] : null;
             $header->sales_order = isset($data['so_id']) ? $data['so_id'] : null;
             $header->warehouse_id = empty($data['do_id']) ? 1 : $do->warehouse_id;
             $header->customer_id = $cust_id;
-            $header->subtotal = $subtotal - $tax_amount;
-            $header->discount_amount = $disc_total;
+            $header->subtotal = $subtotal;
+            $header->discount_amount = 0;
             $header->tax_base = $tax->rate;
             $header->tax_id = $data['tax'];
             $header->is_packing = $data['is_packing'];
@@ -494,7 +496,7 @@ class SalesInvoiceController extends Controller
                     $do->save();
                 }
             }
-
+            
             if (!empty($data['do_id'])) {
                 $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
                 if (empty($dev_status_log)) {
@@ -509,6 +511,7 @@ class SalesInvoiceController extends Controller
             }
 
 
+            $discountHeaderSo = 0;
             $so = empty($data['so_id']) ? SalesOrderHeader::find($do->so_id) : SalesOrderHeader::find($data['so_id']);
             if ($data['id'] == '') {
                 $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
@@ -520,7 +523,15 @@ class SalesInvoiceController extends Controller
                     $updateInv->due_date = $dueDate;
                     $updateInv->save();
                 }
+
+                $discountHeaderSo = $so->discount_amount;
             }
+
+            $header->subtotal = $subtotal;
+            $header->discount_amount = $discountHeaderSo;
+            $header->total_amount = $subtotal-$discountHeaderSo;
+            $header->save();
+
             $currency = $so->currency;
 
             $reference = $header->invoice_number;
@@ -528,16 +539,16 @@ class SalesInvoiceController extends Controller
                 cancelAllGL($reference);
             }
 
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $subtotal, $currency);
-            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal + $disc_total - $tax_amount), $currency);
-            postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($disc_total), $currency);
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, ($subtotal - $discountHeaderSo), $currency);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal), $currency);
+            postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($discountHeaderSo), $currency);
 
-            if ($type_pajak == 'exclude') {
-                if (!empty($ppnAccount)) {
-                    $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
-                    postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
-                }
-            }
+            // if ($type_pajak == 'exclude') {
+            //     if (!empty($ppnAccount)) {
+            //         $ppnAccount->dc = $ppnAccount->normal_balance == 'Debit' ? 'D' : 'C';
+            //         postingGL($reference, $ppnAccount->id, $ppnAccount->account_name, $ppnAccount->dc, ($tax_amount), $currency);
+            //     }
+            // }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -747,6 +758,7 @@ class SalesInvoiceController extends Controller
                 'p.type_tax',
                 'p.tax_sale',
                 't.rate as tax',
+                'soh.discount_amount as discount_amount_header',
                 // Hitung tax_amount sesuai tipe pajak
                 DB::raw("
                 CASE
@@ -765,6 +777,7 @@ class SalesInvoiceController extends Controller
                 END AS line_total
             ")
             ])
+            ->join('sales_order_headers as soh', 'soh.id', 'sales_order_details.sales_order_id')
             ->join('product as p', 'p.id', 'sales_order_details.product_id')
             ->join('tax as t', 't.id', 'p.tax_sale')
             ->join('unit as u', 'u.id', 'sales_order_details.unit')

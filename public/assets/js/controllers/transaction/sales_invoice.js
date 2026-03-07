@@ -1,5 +1,6 @@
 let elmChoose;
 let discProduct = [];
+let discountHeaderAmount = 0;
 let SalesInvoice = {
     module: () => {
         return "transaksi/sales_invoice";
@@ -891,7 +892,10 @@ let SalesInvoice = {
     hitungSummaryAll: () => {
         let total = 0;
         let totalTaxs = 0;
+        let disc_amount_header = 0;
+        let total_discount_detail = 0;
         document.querySelectorAll("#table-items tbody tr").forEach((tr) => {
+            disc_amount_header = parseFloat(tr.getAttribute("disc_amount_header")) || 0;
             const subtotal =
                 parseFloat(
                     $(tr).find("td#subtotal").text().replace(/,/g, "")
@@ -899,11 +903,17 @@ let SalesInvoice = {
             const totalTax = isNaN(
                 parseFloat($(tr).find("td#tax").text().replace(/,/g, ""))
             );
+            const discount =
+                parseFloat(
+                    $(tr).find("td#discount").text().replace(/,/g, "")
+                ) || 0;
+            // total_discount_detail += discount;
             total += subtotal;
-            totalTaxs += totalTax;
+            // totalTaxs += totalTax;
         });
 
-        total += totalTaxs;
+        // total += totalTaxs;
+        total -= disc_amount_header;
         document.getElementById("grand-total").textContent = total.toFixed(2);
     },
 

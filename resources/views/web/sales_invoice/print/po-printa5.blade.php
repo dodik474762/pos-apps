@@ -13,7 +13,7 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
+            font-size: 8px;
             color: #000;
         }
 
@@ -118,6 +118,8 @@
             </tr>
         </thead>
         <tbody>
+            @php
+            @endphp
             @foreach ($data->items as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
@@ -136,8 +138,13 @@
                 <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
+                <td colspan="6" class="text-right"><strong>Discount {{($data->so->discount_percent == '0' ? '' : $data->so->discount_percent .' %')}}</strong></td>
+                <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
+            </tr>
+            <tr>
                 <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td>
+                <!-- <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td> -->
+                <td class="text-right"><strong>0</strong></td>
             </tr>
             <tr>
                 <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
