@@ -34,22 +34,27 @@
                                     <input type="text" id="promo_name" class="form-control required" error="Nama Promo"
                                         placeholder="Nama Promo" value="{{ isset($data->promo_name) ? $data->promo_name : '' }}">
                                 </div>
-                            </div>
-                             <div class="mb-3">
-                                <label class="form-label">Max Qty</label>
+                            </div>                                                       
+                            <div class="mb-3">
+                                <label class="form-label">Min Qty</label>
                                 <div>
-                                    <input type="number" id="max_qty" name="max_qty" class="form-control required"
-                                        error="Max Qty" min="1" value="{{ isset($data->max_qty) ? $data->max_qty : '' }}">
+                                    <input type="number" id="min_qty" name="min_qty" class="form-control required"
+                                        error="Min Qty" min="1" value="{{ isset($data->min_qty) ? $data->min_qty : '' }}">
                                 </div>
-                            </div>
+                            </div>                            
                              <div class="mb-3">
-                                <label class="form-label">Discount Kategori</label>
-                                <select id="kategori" name="kategori" class="form-control required" error="Disc Tipe">
-                                    @foreach ($kategori as $item)
-                                        <option value="{{ $item }}" {{ isset($data->kategori) ? ($data->kategori == $item ? 'selected' : '') : '' }}>
-                                            {{ strtoupper($item) }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="form-label">Tanggal Berlaku Mulai</label>
+                                <div>
+                                    <input type="date" id="date_start" name="date_start" class="form-control required"
+                                        error="Tanggal Berlaku Mulai" value="{{ isset($data->date_start) ? $data->date_start : date('Y-m-d') }}">
+                                </div>
+                            </div>                              
+                             <div class="mb-3">
+                                <label class="form-label">Min Mix</label>
+                                <div>
+                                     <input type="number" id="min_mix" name="min_mix" class="form-control required"
+                                    error="Min Mix" min="1" value="{{ isset($data->min_mix) ? $data->min_mix : '' }}">
+                                </div>
                             </div>
                              <div class="mb-3">
                                 <label class="form-label">Discount Nilai</label>
@@ -58,13 +63,7 @@
                                     error="Disc Nilai" min="1" value="{{ isset($data->discount_value) ? $data->discount_value : '' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
-                                <label class="form-label">Min Mix</label>
-                                <div>
-                                     <input type="number" id="min_mix" name="min_mix" class="form-control required"
-                                    error="Min Mix" min="1" value="{{ isset($data->min_mix) ? $data->min_mix : '' }}">
-                                </div>
-                            </div>
+                            
                             <div class="mb-3">
                                 <label>Sub Channel Outlet</label>
                                  <div>
@@ -79,12 +78,21 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label class="form-label">Min Qty</label>
+                                <label class="form-label">Tipe Pengambilan</label>
+                                <select id="kategori" name="kategori" class="form-control required" error="Disc Tipe">
+                                    @foreach ($kategori as $item)
+                                        <option value="{{ $item }}" {{ isset($data->kategori) ? ($data->kategori == $item ? 'selected' : '') : '' }}>
+                                            {{ strtoupper($item) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>                                                                                                              
+                            <div class="mb-3">
+                                <label class="form-label">Max Qty</label>
                                 <div>
-                                    <input type="number" id="min_qty" name="min_qty" class="form-control required"
-                                        error="Min Qty" min="1" value="{{ isset($data->min_qty) ? $data->min_qty : '' }}">
+                                    <input type="number" id="max_qty" name="max_qty" class="form-control required"
+                                        error="Max Qty" min="1" value="{{ isset($data->max_qty) ? $data->max_qty : '' }}">
                                 </div>
-                            </div>
+                            </div>                            
                             <div class="mb-3">
                                 <label class="form-label">Discount Type</label>
                                 <select id="disc_type" name="disc_type" class="form-control required" error="Disc Tipe">
@@ -93,14 +101,7 @@
                                             {{ strtoupper($item) }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                             <div class="mb-3">
-                                <label class="form-label">Tanggal Berlaku Mulai</label>
-                                <div>
-                                    <input type="date" id="date_start" name="date_start" class="form-control required"
-                                        error="Tanggal Berlaku Mulai" value="{{ isset($data->date_start) ? $data->date_start : date('Y-m-d') }}">
-                                </div>
-                            </div>
+                            </div>   
                              <div class="mb-3">
                                 <label class="form-label">Max Mix</label>
                                 <div>

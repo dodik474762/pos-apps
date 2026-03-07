@@ -939,6 +939,7 @@ let SalesOrder = {
           !promoHeader.sub_channel_outlet ||
           promoHeader.sub_channel_outlet == sub_channel_outlet;
 
+          console.log('channel_outlet', channel_outlet, 'sub_channel_outlet', sub_channel_outlet);
         if (!channelMatch || !subChannelMatch) {
           continue; // skip promo ini, lanjut ke promo berikutnya
         }

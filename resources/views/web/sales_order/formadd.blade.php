@@ -61,7 +61,7 @@
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
                                         <option top="{{ $customer->top_value }}" channel_outlet="{{ $customer->channel_outlet }}" 
-                                        sub_channel_outlet="{{ $customer->channel_outlet }}"
+                                        sub_channel_outlet="{{ $customer->sub_channel_outlet }}"
                                         value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
                                             {{ $customer->code }} - {{ $customer->nama_customer }}
