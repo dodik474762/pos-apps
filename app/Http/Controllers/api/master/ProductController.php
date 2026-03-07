@@ -824,6 +824,8 @@ class ProductController extends Controller
                 }
             }
 
+            // echo '<pre>';
+            // print_r($data);die;
             $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
 
             if ($unit_dasar_id != 0) {
