@@ -232,7 +232,8 @@ Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, '
 Route::get('transaksi/sales_order', [SalesOrderController::class, 'index']);
 Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add'])->name('sales-order-add');
 Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah'])->name('sales-order-edit');;
-Route::get('transaksi/sales_order/cetak', [SalesOrderController::class, 'cetak'])->name('sales-order-print');;
+Route::get('transaksi/sales_order/cetak', [SalesOrderController::class, 'cetak'])->name('sales-order-print');
+Route::get('transaksi/sales_order/generateAll', [SalesOrderController::class, 'generateAll'])->name('sales-order-generate-all');
 
 Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
 Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);
@@ -515,6 +516,7 @@ Route::post('api/transaksi/sales_order/showDiscountProduct', [TransactionSalesOr
 Route::post('api/transaksi/sales_order/showDiscountFreeProduct', [TransactionSalesOrderController::class, 'showDiscountFreeProduct']);
 Route::post('api/transaksi/sales_order/showQtySmallestProduct', [TransactionSalesOrderController::class, 'showQtySmallestProduct']);
 Route::post('api/transaksi/sales_order/showPromoItem', [TransactionSalesOrderController::class, 'showPromoItem']);
+Route::post('api/transaksi/sales_order/generateAll', [TransactionSalesOrderController::class, 'generateAll']);
 Route::post('api_mobile/transaksi/sales_order/sync', [TransactionSalesOrderController::class, 'sync']);
 Route::post('api_mobile/transaksi/sales_order/getAverageTransaction', [TransactionSalesOrderController::class, 'getAverageTransaction']);
 Route::post('api_mobile/transaksi/sales_order/closingOrder', [TransactionSalesOrderController::class, 'closingOrder']);

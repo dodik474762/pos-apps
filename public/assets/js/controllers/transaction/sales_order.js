@@ -385,6 +385,50 @@ let SalesOrder = {
     });
   },
 
+  generateAll: (elm, e) => {
+    e.preventDefault();
+    let params = {};
+    const tanggal = $("#tanggal").val();
+    if (tanggal == "") {
+      message.sweetError("Informasi", "Pilih Tanggal");
+      return false;
+    }
+
+    params.tanggal = tanggal;
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      data: params,
+      url: url.base_url(SalesOrder.moduleApi()) + "generateAll",
+      headers: {
+        "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+      },
+
+      beforeSend: () => {
+        message.loadingProses("Proses Generate Data");
+      },
+
+      error: function () {
+        message.closeLoading();
+        message.sweetError("Informasi", "Gagal");
+      },
+
+      success: function (resp) {
+        message.closeLoading();
+        if (resp.is_valid) {
+          message.sweetSuccess();
+          setTimeout(function () {
+            // window.location.reload();
+            SalesOrder.back();
+          }, 1000);
+        } else {
+          message.sweetError("Informasi", resp.message);
+        }
+      },
+    });
+  },
+
   getDataProduct: () => {
     let tableData = $("table#table-data-modal");
     const params = {
@@ -1769,6 +1813,23 @@ let SalesOrder = {
     const principal = $("#principal").val();
     $("#principal").val(principal);
     $("#table-data-modal").DataTable().ajax.reload();
+  },
+
+  search: (elm, state = "") => {
+    const url = $(elm).attr("url");
+    const date = $("#filterDate").val();
+    if (date == "") {
+      message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
+      return;
+    }
+    window.location.href = url + "?tanggal=" + date + "&state=" + state;
+  },
+
+  checkAll: (elm) => {
+    let checked = $(elm).is(":checked");
+    document.querySelectorAll(".check-item").forEach((el) => {
+      el.checked = checked;
+    });
   },
 };
 

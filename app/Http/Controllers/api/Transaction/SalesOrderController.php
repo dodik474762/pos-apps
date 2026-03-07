@@ -21,6 +21,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use App\Models\Master\MobileSession;
+use App\Models\Master\AccountMapping;
+use App\Models\Master\Tax;
+use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesInvoiceHeader;
 
 class SalesOrderController extends Controller
 {
@@ -1839,6 +1843,208 @@ class SalesOrderController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+     public function getAllSalesNotInvoice($date = '', $state = '')
+    {
+        $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+        $datadb = SalesOrderHeader::select([
+                'sales_order_headers.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cy.code as currency_code',
+                'sales_order_headers.id as so_id',
+                'sales_order_headers.tax_id as tax'
+            ])
+            ->with(['items'])
+            ->join('users as u', 'u.id', 'sales_order_headers.created_by')
+            ->join('customer as cc', 'cc.id', 'sales_order_headers.customer_id')
+            ->join('currency as cy', 'cy.id', 'sales_order_headers.currency')
+            ->leftJoin('sales_invoice_header as sih', function($q){
+                return $q->on('sih.sales_order', 'sales_order_headers.id')
+                ->whereNull('sih.deleted');
+            })
+            ->whereIn('sales_order_headers.status', ['draft', 'submited'])
+            ->whereNull('sih.id')
+            ->where('sales_order_headers.total_amount', '>', 0)
+            ->where('sales_order_headers.so_date', $date)
+            ->whereNull('sales_order_headers.deleted')            
+            ->orderBy('sales_order_headers.id', 'desc');
+        if($state == ''){
+        }
+
+        $datadb = $datadb->get()->toArray();
+
+        return $datadb;
+    }
+
+    public function generateAll(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+        try {
+            $sales_order = $this->getAllSalesNotInvoice($data['tanggal'], '');        
+            foreach($sales_order as $v){
+                $process = $this->saveInvoice($v);
+            }
+            $result['is_valid'] = true;
+            $result['message'] = 'Data Berhasil Diproses';
+        } catch (\Throwable $th) {
+            $result['is_valid'] = $th->getMessage();
+        }
+        return response()->json($result);
+    }
+
+     public function saveInvoice($params)
+    {
+        $data = $params;
+        $userId = session('user_id');
+        $result = ['is_valid' => false];
+
+        DB::beginTransaction();
+        try {
+
+            $piutangAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'piutang usaha')
+                ->with('account') // kalau kamu pakai relasi
+                ->first();
+
+            $penjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'penjualan barang')
+                ->with('account')
+                ->first();
+
+            $discPenjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
+                ->where('account_type', 'diskon penjualan')
+                ->with('account')
+                ->first();
+
+            if (!$piutangAcc || !$penjualanAcc || !$discPenjualanAcc) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Konfigurasi akun untuk Sales Invoice belum lengkap.',
+                ]);
+            }
+
+            if (empty($data['items'])) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Item tidak boleh kosong.',
+                ]);
+            }
+
+            $tax_amount = collect($data['items'])->sum('tax_amount');
+            $tax = Tax::find($data['tax']);
+            if (empty($tax)) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tax tidak ditemukan.',
+                ]);
+            }
+                        // === HEADER ===
+            $header = new SalesInvoiceHeader();
+
+            $header->invoice_number = generateNoSI(); // misal helper
+            $header->created_by = $userId;
+            $header->warehouse_id = 1;
+            $header->status = 'POSTED';
+
+            $subtotal = $data['total_amount'];
+
+            $cust_id = $data['customer_id'];
+
+            $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
+            if (!$policyCreateInvoice['status']) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => $policyCreateInvoice['message']
+                ]);
+            }
+
+
+
+            $data['total_amount'] = $subtotal;
+            $header->invoice_date = date('Y-m-d');
+            $header->sales_order = $data['so_id'];
+            $header->customer_id = $cust_id;
+            $header->subtotal = $subtotal;
+            $header->discount_amount = 0;
+            $header->tax_base = $tax->rate;
+            $header->tax_id = $data['tax'];
+            $header->is_packing = 1;
+            $header->tax_amount = $tax_amount;
+            $header->total_amount = $data['total_amount'] - $data['discount_amount'];
+            $header->save();
+
+            $hdrId = $header->id;
+
+            // === DETAIL ===
+            $line_no = 1;
+            foreach ($data['items'] as $item) {
+                // Item baru atau update
+                $detail = new SalesInvoiceDtl();
+
+                $detail->invoice_id = $hdrId;
+                $detail->so_detail_id = $item['id'];
+                $detail->product_id = $item['product_id'];
+                $detail->qty = $item['qty'];
+                $detail->price = $item['unit_price'];
+                $detail->discount = $item['discount_amount'];
+                $detail->subtotal = $item['subtotal'];
+                $detail->tax = $item['tax'];
+                $detail->tax_amount = $item['tax_amount'];
+                $detail->tax_rate = $item['tax_rate'];
+                $detail->type_tax = $item['tax_type'];
+                $detail->line_no = $line_no++;
+                $detail->save();
+
+                /*mapping coa */
+            }
+            
+            
+            $discountHeaderSo = 0;
+            $so = SalesOrderHeader::find($data['so_id']);
+            $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
+            if ($so->payment_term == '' || $so->payment_term == 0) {
+                $updateInv->due_date = date('Y-m-d');
+                $updateInv->save();
+            } else {
+                $dueDate = date('Y-m-d', strtotime(date('Y-m-d') . ' + ' . $so->payment_term . ' days'));
+                $updateInv->due_date = $dueDate;
+                $updateInv->save();
+            }
+
+            $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
+            $header->discount_amount = $discountHeaderSo;
+            $header->save();
+
+            $currency = $so->currency;
+
+            $reference = $header->invoice_number;
+            if ($data['id'] != '') {
+                cancelAllGL($reference);
+            }
+
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, ($subtotal - $discountHeaderSo), $currency);
+            postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal), $currency);
+            postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($discountHeaderSo), $currency);
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Sales Invoice berhasil disimpan';
+            $result['so_id'] = $hdrId;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['is_valid'] = false;
             $result['message'] = $th->getMessage();
         }
 

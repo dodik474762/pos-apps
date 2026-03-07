@@ -178,4 +178,55 @@ class SalesOrderController extends Controller
 
         return $pdf->stream('SO-'.$data->so_number.'.pdf');
     }
+
+    public function getAllSalesNotInvoice($date = '', $state = '')
+    {
+        $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+        $datadb = DB::table('sales_order_headers as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cy.code as currency_code'
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('currency as cy', 'cy.id', 'm.currency')
+            ->leftJoin('sales_invoice_header as sih', function($q){
+                return $q->on('sih.sales_order', 'm.id')
+                ->whereNull('sih.deleted');
+            })
+            ->whereIn('m.status', ['draft', 'submited'])
+            ->whereNull('sih.id')
+            ->where('m.total_amount', '>', 0)
+            ->where('m.so_date', $date)
+            ->whereNull('m.deleted')            
+            ->orderBy('m.id', 'desc');
+        if($state == ''){
+        }
+
+        $datadb = $datadb->get();
+
+        return $datadb;
+    }
+
+    public function generateAll(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['title'] = $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = $this->akses_menu;
+        $data['sales_orders'] = $this->getAllSalesNotInvoice($data['tanggal'], $data['state']);
+        // echo '<pre>';
+        // print_r($data);die;
+        $view = view('web.sales_order.list-sales-order', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
 }

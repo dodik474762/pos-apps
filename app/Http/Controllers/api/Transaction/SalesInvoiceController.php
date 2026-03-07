@@ -524,7 +524,7 @@ class SalesInvoiceController extends Controller
                     $updateInv->save();
                 }
 
-                $discountHeaderSo = $so->discount_amount;
+                $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
             }
 
             $header->subtotal = $subtotal;
