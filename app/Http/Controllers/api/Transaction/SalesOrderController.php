@@ -1124,6 +1124,7 @@ class SalesOrderController extends Controller
         $promoHeaders = $promoAll['promo_header'];
 
 
+        $discountHeader = [];
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
         // =============================
