@@ -131,6 +131,8 @@ let PromoItem = {
             channel_outlet: $("#channel_outlet").val(),
             kelipatan: $("#kelipatan").is(':checked') ? 1 : 0,
             potong_grand_total: $("#potong_grand_total").is(':checked') ? 1 : 0,
+            additional_disc: $("#additional_disc").val(),
+            additional_disc_type: $("#additional_disc_type").val(),
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
         };

@@ -81,6 +81,8 @@ class PromoItemController extends Controller
             $roles->potong_grand_total = $data['potong_grand_total'];
             $roles->channel_outlet = $data['channel_outlet'];
             $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+            $roles->additional_disc_type = $data['additional_disc_type'];
+            $roles->additional_disc = $data['additional_disc'];
             $roles->unit = $unitsId;
             $roles->save();
             $headerId = $roles->id;

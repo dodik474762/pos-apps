@@ -75,6 +75,14 @@
                                     </select>
                                 </div>
                             </div>
+
+                             <div class="mb-3">
+                                <label class="form-label">Tambahan Discount Nilai</label>
+                                <div>
+                                     <input type="number" id="additional_disc" name="additional_disc" class="form-control"
+                                    error="Tambahan Disc Nilai" min="1" value="{{ isset($data->additional_disc) ? $data->additional_disc : '0' }}">
+                                </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
@@ -119,7 +127,17 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>                             
+                            </div> 
+                            <div class="mb-3">
+                                <label class="form-label">Tambahan Discount Type</label>
+                                <select id="additional_disc_type" name="additional_disc_type" class="form-control" error="Tambahan Discount Type">
+                                    <option value=""></option>
+                                    @foreach ($data_disc_tipe as $item)
+                                        <option value="{{ $item }}" {{ isset($data->additional_disc_type) ? ($data->additional_disc_type == $item ? 'selected' : '') : '' }}>
+                                            {{ strtoupper($item) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>                               
                             <div class="mb-3">
                                 <br/>
                                 <br/>
