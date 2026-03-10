@@ -1139,6 +1139,17 @@ let SalesOrder = {
           discAmountHeader = promoHeader.discount_value * pengaliFix;
         }
 
+        // Tambah additional disc
+        if (promoHeader.additional_disc > 0) {
+          let additionalDiscAmount = 0;
+          if (promoHeader.additional_disc_type === "percent") {
+            additionalDiscAmount = grandTotal * (promoHeader.additional_disc / 100);
+          } else if (promoHeader.additional_disc_type === "nominal") {
+            additionalDiscAmount = promoHeader.additional_disc;
+          }
+          discAmountHeader += additionalDiscAmount;
+        }
+
         $("#discount_percent_header").val(discPercentHeader);
         $("#discount_amount_header").val(
           new Intl.NumberFormat("id-ID", {
@@ -1452,6 +1463,36 @@ let SalesOrder = {
           }
         }
 
+        // Additional disc ke grand total jika promoApplicable
+        if (promoApplicable && promoHeader.additional_disc > 0) {
+          let grandTotal = 0;
+          $("table#table-items tbody tr.input").not(".freegood").each(function () {
+            const rowPrice = parseFloat($(this).find("#unit_price").attr("price")) || 0;
+            const rowQty = parseFloat($(this).find("#qty").val()) || 0;
+            const rowDiscAmount = parseFloat($(this).find("#disc_amount").attr("amount")) || 0;
+            grandTotal += (rowPrice * rowQty) - rowDiscAmount; 
+          });
+
+          let additionalDiscAmount = 0;
+          if (promoHeader.additional_disc_type === "percent") {
+            additionalDiscAmount = grandTotal * (promoHeader.additional_disc / 100);
+          } else if (promoHeader.additional_disc_type === "nominal") {
+            additionalDiscAmount = promoHeader.additional_disc;
+          }
+
+          // Akumulasi ke discount_amount_header
+          const existingDiscHeader = parseFloat($("#discount_amount_header").attr("amount")) || 0;
+          const totalDiscHeader = existingDiscHeader + additionalDiscAmount;
+
+          $("#discount_amount_header").attr("amount", totalDiscHeader);
+          $("#discount_amount_header").val(
+            new Intl.NumberFormat("id-ID", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(totalDiscHeader)
+          );
+        }
+
         // ========================
         // PROMO FREE GOOD
         // ========================
@@ -1662,6 +1703,14 @@ let SalesOrder = {
           .trim(),
         kelipatan: $(this).attr("kelipatan"),
         potong_grand_total: $(this).attr("potong_grand_total"),
+        additional_disc: $(this)
+          .find("#promo-additional-disc")
+          .text()
+          .trim(),
+        additional_disc_type: $(this)
+          .find("#promo-additional-disc-type")
+          .text()
+          .trim(),
         id: $(this).attr("data_id"),
       };
 
@@ -1802,6 +1851,13 @@ let SalesOrder = {
   },
 
   recalculateAllRows: () => {
+    SalesOrder._promoAppliedMap = {};
+    $("tr.input[data-promo-applied]").removeAttr("data-promo-applied");
+
+    // Reset semua diskon header
+    $("#discount_percent_header").val("0");
+    $("#discount_amount_header").val("0").attr("amount", "0");
+
     $("table#table-items tbody tr.input")
       .not(".freegood")
       .each(function () {

@@ -15,6 +15,8 @@
                 <th>Tanggal Berlaku</th>
                 <th>Channel Outlet</th>
                 <th>Sub Channel Outlet</th>
+                <th>Tambahan Discount</th>
+                <th>Tambahan Discount Type</th>
             </tr>
         </thead>
         <tbody>
@@ -36,6 +38,8 @@
                         <td id="promo-date-start">{{ $promo->date_start }}</td>
                         <td id="promo-channel-outlet">{{ $promo->channel_outlet }}</td>
                         <td id="promo-sub-channel-outlet">{{ $promo->sub_channel_outlet }}</td>
+                        <td id="promo-additional-disc">{{ $promo->additional_disc }}</td>
+                        <td id="promo-additional-disc-type">{{ $promo->additional_disc_type }}</td>
                     </tr>
                 @endforeach
             @endif

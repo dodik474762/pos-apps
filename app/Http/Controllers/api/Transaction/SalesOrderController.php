@@ -190,9 +190,6 @@ class SalesOrderController extends Controller
             $productIds = $items->pluck('product_id')->toArray();
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
-            // echo '<pre>';
-            // print_r($calculatePromo);
-            // die;
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -977,7 +974,9 @@ class SalesOrderController extends Controller
                 'ppi.channel_outlet',
                 'ppi.sub_channel_outlet',
                 'ppi.kategori',
-                'ppi.potong_grand_total'
+                'ppi.potong_grand_total',
+                'ppi.additional_disc',
+                'ppi.additional_disc_type'
             )
             ->join('product as p', 'p.id', '=', 'ppid.product')
             ->join('unit as u', 'u.id', '=', 'ppi.unit')
@@ -1203,6 +1202,19 @@ class SalesOrderController extends Controller
                 $discAmountHeader = $promo->discount_value * $multiplier;
             }
 
+            // Tambah additional disc
+            // Hitung grand total setelah disc header utama
+            $grandTotalAfterMainDisc = $grandTotalAllItems - $discAmountHeader;
+            if (!empty($promo->additional_disc) && $promo->additional_disc > 0) {
+                $additionalDiscAmount = 0;
+                if ($promo->additional_disc_type === 'percent') {
+                    $additionalDiscAmount = $grandTotalAfterMainDisc * ($promo->additional_disc / 100); // ← pakai after disc
+                } else if ($promo->additional_disc_type === 'nominal') {
+                    $additionalDiscAmount = $promo->additional_disc;
+                }
+                $discAmountHeader += $additionalDiscAmount;
+            }
+
             $discountHeader = [
                 'discount_percent' => $discPercentHeader,
                 'discount_amount' => $discAmountHeader,
@@ -1313,8 +1325,8 @@ class SalesOrderController extends Controller
 
             // Hitung diskon
             // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
-            $discountApplied = false;
-            // debug tanpa die
+            $discountApplied = false;            
+            $itemsValueApplied = [];
             foreach ($itemsValue as $v) {
                 $discountAmount = 0;
 
@@ -1351,7 +1363,33 @@ class SalesOrderController extends Controller
                 $v['discountAmount'] = $discountAmount;
                 $v['discountPercent'] = $discountPercent;
 
+                $itemsValueApplied[] = $v;
+
                 $grandTotal += $subtotal;
+            }
+
+            // Hitung grand total setelah disc per item untuk basis additional_disc
+            $grandTotalAfterDisc = 0;
+            foreach ($itemsValueApplied as $v) {
+                $grandTotalAfterDisc += ($v['price'] * $v['qty']) - ($v['discountAmount'] ?? 0);
+            }
+
+            // Additional disc ke discount_header jika ada disc per item
+            $additionalDiscAmount = 0;
+            if (!empty($promo->additional_disc) && $promo->additional_disc > 0 && $discountAmounts > 0) {
+                if ($promo->additional_disc_type === 'percent') {
+                    $additionalDiscAmount = $grandTotalAfterDisc * ($promo->additional_disc / 100);
+                } else if ($promo->additional_disc_type === 'nominal') {
+                    $additionalDiscAmount = $promo->additional_disc;
+                }
+
+                // Akumulasi ke discountHeader
+                $discountHeader['discount_amount'] = ($discountHeader['discount_amount'] ?? 0) + $additionalDiscAmount;
+                if (empty($discountHeader['promo_id'])) {
+                    $discountHeader['promo_id'] = $promo->id;
+                    $discountHeader['promo_name'] = $promo->promo_name;
+                    $discountHeader['discount_percent'] = $promo->additional_disc_type === 'percent' ? $promo->additional_disc : 0;
+                }
             }
 
             // Hitung free good
