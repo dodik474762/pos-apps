@@ -2089,4 +2089,16 @@ class SalesOrderController extends Controller
 
         return response()->json($result);
     }
+
+    public function checkDiscount(Request $request){
+        $data = $request->all();
+        $productIds = $data['product_ids'];
+        $promoItem = $this->getPromoItemAll($productIds);
+        $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
+
+        $result['is_valid'] = true;
+        $result['data'] = $calculatePromo;
+
+        return response()->json($result);
+    }
 }
