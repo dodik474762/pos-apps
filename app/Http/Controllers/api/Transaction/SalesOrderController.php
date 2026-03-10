@@ -2092,9 +2092,22 @@ class SalesOrderController extends Controller
 
     public function checkDiscount(Request $request){
         $data = $request->all();
-        $productIds = $data['product_ids'];
+        $items = [];
+        $productIds = [];
+        foreach ($data['details'] as $i) {
+            [$products, $product_unit] = explode(':', $i['product_id']);
+            $products = explode('/', $products);
+            $product_unit = explode('/', $product_unit);
+            $items = [
+                'product_id' => $products[0],
+                'unit_id' => $product_unit[0],
+                'qty' => $i['qty'],
+                'price' => doubleval(trim($product_unit[1]))
+            ];
+            $productIds[] = $products[0];
+        }
         $promoItem = $this->getPromoItemAll($productIds);
-        $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
+        $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
 
         $result['is_valid'] = true;
         $result['data'] = $calculatePromo;
