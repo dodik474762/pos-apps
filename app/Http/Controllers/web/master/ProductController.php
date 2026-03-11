@@ -110,7 +110,8 @@ class ProductController extends Controller
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
         $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
-        $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
+        // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
+        $data['tax_type'] = ['include'];
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
         $data['vendors'] = $this->getListVendor();
         $data['product_logs'] = [];
@@ -217,7 +218,8 @@ class ProductController extends Controller
         $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
 
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
-        $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
+        // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
+        $data['tax_type'] = ['include'];
         $data['data_satuan'] = Unit::whereNull('deleted')->get();
         $data['vendors'] = $this->getListVendor();
         $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
