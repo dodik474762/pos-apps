@@ -10,10 +10,24 @@
             @endforeach
         </select>
     </td>
-    <td>
+    <td class="d-none">
         <select id="type_price" name="type_price[]" class="form-control required" error="Type Price">
             @foreach ($tipe_price as $item)
                 <option value="{{ $item->id }}">{{ $item->name }}</option>
+            @endforeach
+        </select>
+    </td>
+    <td class="">
+        <select id="channel" name="channel[]" class="form-control required" error="Channel">
+            @foreach ($channels as $item)
+                <option value="{{ $item->term_id }}">{{ $item->keterangan }}</option>
+            @endforeach
+        </select>
+    </td>
+    <td class="">
+        <select id="sub_channel" name="sub_channel[]" class="form-control required" error="Sub Channel">
+            @foreach ($sub_channels as $item)
+                <option value="{{ $item->term_id }}">{{ $item->keterangan }}</option>
             @endforeach
         </select>
     </td>

@@ -834,32 +834,131 @@ class ProductController extends Controller
                 $update->save();
             }
 
+            $indexPrice = 0;
             if (isset($data['uom_id'])) {
                 if (!empty($data['uom_id'])) {
                     for ($i = 0; $i < count($data['uom_id']); $i++) {
                         $product_uom_price = isset($data['price_uom'][$i]) ? ProductUomPrice::find($data['price_uom'][$i]) : new ProductUomPrice();
-                        $product_uom_price->product = $data['id'];
-                        $product_uom_price->unit = $data['uom_id'][$i];
-                        $product_uom_price->price_list = $data['type_price'][$i];
-                        // $product_uom_price->price = $data['price'][$i];
-                        $product_uom_price->price = $pricingApply[$i]['price'];
-                        $product_uom_price->date_start = $data['date_start'][$i];
-                        $product_uom_price->min_qty = $data['min_qty'][$i];
-                        $product_uom_price->max_qty = $data['max_qty'][$i];
-                        if ($data['customer'][$i] != '') {
-                            list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
-                            $product_uom_price->customer = $id_cust;
-                            $product_uom_price->customer_name = $name_cust;
+                        if($product_uom_price->type == 'RETAIL'){
+                            $product_uom_price->product = $data['id'];
+                            $product_uom_price->unit = $data['uom_id'][$i];
+                            $product_uom_price->price_list = $data['type_price'][$i];
+                            // $product_uom_price->price = $data['price'][$i];
+                            $product_uom_price->price = $pricingApply[$i]['price'];
+                            $product_uom_price->date_start = $data['date_start'][$i];
+                            $product_uom_price->min_qty = $data['min_qty'][$i];
+                            $product_uom_price->max_qty = $data['max_qty'][$i];
+                            if ($data['customer'][$i] != '') {
+                                list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
+                                $product_uom_price->customer = $id_cust;
+                                $product_uom_price->customer_name = $name_cust;
 
-                            /*cek customer sudah setup pricel level */
-                            $cust = Customer::find($id_cust);
-                            if ($cust->price_list != '') {
-                                $result['message'] = 'Customer sudah setup pricelist';
-                                return response()->json($result);
+                                /*cek customer sudah setup pricel level */
+                                $cust = Customer::find($id_cust);
+                                if ($cust->price_list != '') {
+                                    $result['message'] = 'Customer sudah setup pricelist';
+                                    return response()->json($result);
+                                }
+                                /*cek customer sudah setup pricel level */
                             }
-                            /*cek customer sudah setup pricel level */
+                            $product_uom_price->save();
+                        }else{                            
+
+                            //conversi
+                            if(!isset($data['price_uom'][$i])){
+                                $pricingApply = [];
+                                for ($x = 0; $x < count($data['unit_dasar']); $x++) {
+                                    $pricingApply[] = [
+                                        'price' => $data['price'][$i] / $data['nilai_konversi_terkecil'][$x],
+                                        'unit_dasar' => $data['unit_dasar'][$x],
+                                        'unit_tujuan' => $data['unit_tujuan'][$x],
+                                        'konversi'=> $data['nilai_konversi_terkecil'][$x],
+                                    ];
+                                }
+                                
+                                $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
+                                // echo '<pre>';
+                                // print_r($pricingApply);die;
+
+                                $product_uom_price = new ProductUomPrice();
+                                $product_uom_price->product = $data['id'];
+                                $product_uom_price->unit = $data['uom_id'][$i];
+                                $product_uom_price->price_list = $data['type_price'][$i];
+                                $product_uom_price->price = $data['price'][$i];
+                                $product_uom_price->date_start = $data['date_start'][$i];
+                                $product_uom_price->min_qty = $data['min_qty'][$i];
+                                $product_uom_price->max_qty = $data['max_qty'][$i];
+                                $product_uom_price->channel = $data['channel'][$i];
+                                $product_uom_price->sub_channel = $data['sub_channel'][$i];
+                                if ($data['customer'][$i] != '') {
+                                    list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
+                                    $product_uom_price->customer = $id_cust;
+                                    $product_uom_price->customer_name = $name_cust;
+
+                                    /*cek customer sudah setup pricel level */
+                                    $cust = Customer::find($id_cust);
+                                    if ($cust->price_list != '') {
+                                        $result['message'] = 'Customer sudah setup pricelist';
+                                        return response()->json($result);
+                                    }
+                                    /*cek customer sudah setup pricel level */
+                                }
+                                $product_uom_price->save();
+
+                                foreach ($pricingApply as $key => $value) {
+                                    if($key != count($pricingApply)-1){
+                                        $product_uom_price = new ProductUomPrice();
+                                        $product_uom_price->product = $data['id'];
+                                        $product_uom_price->unit = $value['unit_dasar'];
+                                        $product_uom_price->price_list = $data['type_price'][$i];
+                                        $product_uom_price->price = $value['price'];
+                                        $product_uom_price->date_start = $data['date_start'][$i];
+                                        $product_uom_price->min_qty = $data['min_qty'][$i];
+                                        $product_uom_price->max_qty = $data['max_qty'][$i];
+                                        $product_uom_price->channel = $data['channel'][$i];
+                                        $product_uom_price->sub_channel = $data['sub_channel'][$i];
+                                        if ($data['customer'][$i] != '') {
+                                            list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
+                                            $product_uom_price->customer = $id_cust;
+                                            $product_uom_price->customer_name = $name_cust;
+
+                                            /*cek customer sudah setup pricel level */
+                                            $cust = Customer::find($id_cust);
+                                            if ($cust->price_list != '') {
+                                                $result['message'] = 'Customer sudah setup pricelist';
+                                                return response()->json($result);
+                                            }
+                                            /*cek customer sudah setup pricel level */
+                                        }
+                                        $product_uom_price->save();
+                                    }                                    
+                                } 
+                            }else{
+                                $product_uom_price->product = $data['id'];
+                                $product_uom_price->unit = $data['uom_id'][$i];
+                                $product_uom_price->price_list = $data['type_price'][$i];
+                                $product_uom_price->price = $data['price'][$i];
+                                $product_uom_price->date_start = $data['date_start'][$i];
+                                $product_uom_price->min_qty = $data['min_qty'][$i];
+                                $product_uom_price->max_qty = $data['max_qty'][$i];
+                                $product_uom_price->channel = $data['channel'][$i];
+                                $product_uom_price->sub_channel = $data['sub_channel'][$i];
+                                if ($data['customer'][$i] != '') {
+                                    list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
+                                    $product_uom_price->customer = $id_cust;
+                                    $product_uom_price->customer_name = $name_cust;
+
+                                    /*cek customer sudah setup pricel level */
+                                    $cust = Customer::find($id_cust);
+                                    if ($cust->price_list != '') {
+                                        $result['message'] = 'Customer sudah setup pricelist';
+                                        return response()->json($result);
+                                    }
+                                    /*cek customer sudah setup pricel level */
+                                }
+                                $product_uom_price->save();
+                            }                                                 
                         }
-                        $product_uom_price->save();
                     }
                 }
             } else {
@@ -873,6 +972,7 @@ class ProductController extends Controller
                         $product_uom_price->date_start = date('Y-m-d');
                         $product_uom_price->min_qty = 1;
                         $product_uom_price->max_qty = 99999;
+                        $product_uom_price->type = 'RETAIL';
                         $product_uom_price->save();
                     }
                 }
@@ -1132,6 +1232,22 @@ class ProductController extends Controller
         return $datadb;
     }
 
+    public function getChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+    
+    public function getSubChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'SUB_CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+
     public function addItemPrice(Request $request)
     {
         $data = $request->all();
@@ -1139,11 +1255,12 @@ class ProductController extends Controller
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
             ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
+            ->where('product_uom.state', 'large')
             ->get();
 
         $data_satuan = [];
         foreach ($product_uoms as $key => $value) {
-            $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
+            // $data_satuan[] = $value->unit_dasar . ' // ' . $value->unit_dasar_name;
             $data_satuan[] = $value->unit_tujuan . ' // ' . $value->unit_tujuan_name;
         }
         $data_satuan = collect($data_satuan)->unique()->values()->all();
@@ -1156,6 +1273,8 @@ class ProductController extends Controller
             ];
         }
         $data['data_satuan'] = $result_satuan;
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['tipe_price'] = $this->getListPriceList();
         return view('web.product.product-item-price', $data);
     }

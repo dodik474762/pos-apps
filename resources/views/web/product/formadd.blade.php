@@ -140,7 +140,7 @@
 
                              @if(count($product_uoms) > 0)
                                 <div class="mb-3">
-                                    <label>Harga Jual Satuan Besar</label>
+                                    <label>Harga Jual Retail Satuan Besar</label>
                                     <div>
                                         <input type="text" id="harga_satuan_besar" name="harga_satuan_besar" class="form-control required" error="Harga"
                                             placeholder="Harga"

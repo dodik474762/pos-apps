@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card d-none">
     <div class="card-body">
         <div class="card-title">
             <label>Product Diskon Strata</label>

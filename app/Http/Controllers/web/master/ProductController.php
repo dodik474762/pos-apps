@@ -114,6 +114,8 @@ class ProductController extends Controller
         $data['tax_type'] = ['include'];
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
         $data['vendors'] = $this->getListVendor();
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['product_logs'] = [];
         $data['product_stocks'] = [];
         $data['product_uoms'] = [];
@@ -207,6 +209,22 @@ class ProductController extends Controller
         return $result_satuan;
     }
 
+     public function getChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+    
+    public function getSubChannel(){
+        $datadb = DB::table('dictionary')->whereNull('deleted')
+        ->where('context', 'SUB_CHANNEL_OUTLET')
+        ->get();
+
+        return $datadb;
+    }
+
     public function ubah(Request $request)
     {
         $api = new MasterProductController();
@@ -231,6 +249,8 @@ class ProductController extends Controller
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
         $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
         $data['product_stocks'] = $this->getStock($data['id']);

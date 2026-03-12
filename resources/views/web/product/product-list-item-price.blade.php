@@ -9,7 +9,8 @@
                     <tr>
                         <th style="width: 5%;">#</th>
                         <th style="width: 10%;">Satuan</th>
-                        <th style="width: 15%;">Tipe</th>
+                        <th style="width: 7.5%;" class="text-center">Channel</th>
+                        <th style="width: 7.5%;" class="text-center">Sub Channel</th>
                         <th style="width: 10%;">Min Qty</th> <!-- 🔹 kolom baru -->
                         <th style="width: 10%;">Max Qty</th> <!-- 🔹 kolom baru -->
                         <th style="width: 10%;">Harga</th>
@@ -29,9 +30,11 @@
                         <input type="hidden" id="price_uom" name="price_uom[]" value="{{ $v->id }}">
                         <tr data_id="{{ $v->id }}">
                             <td class="text-center">
-                                <button class="btn btn-sm btn-danger" onclick="Product.removeItemPrice(this, event)">
-                                    <i class="bx bx-trash-alt"></i>
-                                </button>
+                                @if($v->type != 'RETAIL')
+                                    <button class="btn btn-sm btn-danger" onclick="Product.removeItemPrice(this, event)">
+                                        <i class="bx bx-trash-alt"></i>
+                                    </button>
+                                @endif                                
                             </td>
                             <td>
                                 <select id="uom_id" name="uom_id[]" class="form-control required" error="Unit">
@@ -42,14 +45,53 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td>
-                                <select id="type_price" name="type_price[]" class="form-control required" error="Type Price">
+                            <td class="text-center">
+                                <select id="type_price" name="type_price[]" class="form-control required d-none" error="Type Price">
                                     @foreach ($tipe_price as $item)
                                         <option value="{{ $item->id }}" {{ $v->price_list == $item->id ? 'selected' : '' }}>
                                             {{ $item->name }}
                                         </option>
                                     @endforeach
                                 </select>
+
+                                @if($v->type == 'RETAIL')
+                                    {{ $v->type }}
+                                    <select id="channel" name="channel[]" class="form-control required d-none" error="Channel">
+                                        @foreach ($channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ $v->channel == $item->term_id ? 'selected' : '' }}>
+                                                {{ $item->keterangan }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select id="channel" name="channel[]" class="form-control required" error="Channel">
+                                        @foreach ($channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ $v->channel == $item->term_id ? 'selected' : '' }}>
+                                                {{ $item->keterangan }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif                                
+                            </td>
+                             <td class="text-center">
+                                @if($v->type == 'RETAIL')
+                                    {{ $v->type }}
+                                    <select id="sub_channel" name="sub_channel[]" class="form-control required d-none" error="Sub Channel">
+                                        @foreach ($sub_channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ $v->sub_channel == $item->term_id ? 'selected' : '' }}>
+                                                {{ $item->keterangan }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select id="sub_channel" name="sub_channel[]" class="form-control required" error="Sub Channel">
+                                        @foreach ($sub_channels as $item)
+                                            <option value="{{ $item->term_id }}" {{ $v->sub_channel == $item->term_id ? 'selected' : '' }}>
+                                                {{ $item->keterangan }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif                                
                             </td>
                             <td>
                                 <!-- 🔹 input baru: Min Qty -->
@@ -62,7 +104,7 @@
                                     error="Max Qty" min="1" value="{{ $v->max_qty ?? 1 }}">
                             </td>
                             <td>
-                                <input type="number" id="price" name="price[]" class="form-control required"
+                                <input type="number" {{ $v->type == 'RETAIL' ? 'readonly' : '' }} id="price" name="price[]" class="form-control required"
                                     error="Harga" value="{{ $v->price }}">
                             </td>
                             <td>
