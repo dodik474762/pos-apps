@@ -140,14 +140,19 @@
                 <td colspan="8" class="text-right"><strong>Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
             </tr>
-             <tr>
-                <td colspan="8" class="text-right"><strong>Discount {{($data->discount_percent == '0' ? '' : $data->discount_percent .' %')}}</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->discount_amount, 0, ',', '.') }}</strong></td>
-            </tr>
+            @foreach($promo as $v)
+                <tr>
+                    <td colspan="8" class="text-right"><strong>{{ $v->promo_name }}</strong></td>
+                    <td class="text-right"><strong>{{ number_format($v->total_potongan, 0, ',', '.') }}</strong></td>
+                </tr>
+            @endforeach             
             <tr>
+                @php
+                    $subtotal = $data->total_amount - $data->discount_amount;
+                    $taxAmount = $subtotal - ($subtotal / (1 + ($data->tax_base / 100)));
+                @endphp
                 <td colspan="8" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
-                <!-- <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td> -->
-                <td class="text-right"><strong>0</strong></td>
+                <td class="text-right"><strong>{{ number_format($taxAmount, 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
                 <td colspan="8" class="text-right"><strong>Grand Total</strong></td>

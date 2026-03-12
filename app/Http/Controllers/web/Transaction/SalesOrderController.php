@@ -168,12 +168,28 @@ class SalesOrderController extends Controller
         // $qr = 'data:image/png;base64,'.base64_encode($rawQr);
         $qr = '';
 
+        $promo = DB::table('sales_order_promo as sop')
+        ->select([
+            'sop.promo_name',
+            DB::raw('MAX(sop.discount_percent) as discount_percent'),
+            DB::raw('SUM(sop.discount_amount) as total_potongan')
+        ])
+        ->where('sop.sales_order_id', $data['id'])
+        ->groupBy('sop.promo_name')
+        ->get();
+
+        // $promoString = $promo
+        //     ->map(fn($p) => $p->promo_name . ' : ' . $p->total_potongan)
+        //     ->implode('<br/>');
+        // echo '<pre>';
+        // print_r($promoString);die;
+
         // $qr = '';
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr'))
+        $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr', 'promo'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('SO-'.$data->so_number.'.pdf');
