@@ -1159,6 +1159,31 @@ let SalesOrder = {
         );
         $("#discount_amount_header").attr("amount", discAmountHeader);
 
+
+        // Hitung subtotal
+        const discAmount = parseFloat(discAmountInput.attr("amount")) || 0;
+        const subtotal = price * qty - discAmount;
+        let taxAmount = 0;
+        if (type_tax == "include") {
+          taxAmount = subtotal - subtotal / (1 + tax_rate / 100);
+        } else {
+          taxAmount = subtotal * (tax_rate / 100);
+        }
+        taxAmountInpute.attr("amount", taxAmount);
+        taxAmountInpute.val(
+          new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(taxAmount),
+        );
+        subtotalInput.attr("subtotal", subtotal.toFixed(2));
+        subtotalInput.val(
+          new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(subtotal),
+        );
+
         break; // promo grand total pertama yang applicable langsung break
       }
 
@@ -1470,7 +1495,7 @@ let SalesOrder = {
             const rowPrice = parseFloat($(this).find("#unit_price").attr("price")) || 0;
             const rowQty = parseFloat($(this).find("#qty").val()) || 0;
             const rowDiscAmount = parseFloat($(this).find("#disc_amount").attr("amount")) || 0;
-            grandTotal += (rowPrice * rowQty) - rowDiscAmount; 
+            grandTotal += (rowPrice * rowQty) - rowDiscAmount;
           });
 
           let additionalDiscAmount = 0;
