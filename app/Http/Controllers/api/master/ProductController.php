@@ -333,14 +333,31 @@ class ProductController extends Controller
         // ambil data excel (BELUM masuk DB)
         $rows = $import->rows;
 
+        // $groupByIdProduct = collect($rows)
+        //     // ->where('kode_produk_new_sistem', '63')
+        //     ->where('kode_produk_principle', '1017914')
+        //     ->groupBy('kode_produk_principle')
+        //     ->map(function ($items) {
+
+        //         $totalItem = $items->count(); // panjang array
+    
+        //         return [
+        //             'total_item' => $totalItem,
+        //             'items' => $items->reverse()->values(),
+        //         ];
+        //     })
+        //     ->toArray();
+
         $groupByIdProduct = collect($rows)
-            // ->where('kode_produk_new_sistem', '63')
-            // ->where('kode_produk_principle', 'KPQ-003')
-            ->groupBy('kode_produk_new_sistem')
+            ->filter(function ($row) {
+                return !empty($row['kode_produk_principle']);
+            })
+            // ->where('kode_produk_principle', '1018261')
+            ->groupBy('kode_produk_principle')
             ->map(function ($items) {
 
                 $totalItem = $items->count(); // panjang array
-    
+
                 return [
                     'total_item' => $totalItem,
                     'items' => $items->reverse()->values(),
@@ -360,369 +377,412 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             $productRowsImport = 0;
+            $failImported = 0;
             foreach ($groupByIdProduct as $key => $group) {
-                // proses setiap group
-                $productId = $key;
-                $total_item = $group['total_item'];
-                $items = $group['items'];
-                if ($total_item == 4) {
-                    //satuan terkecil, satuan menengah, satuan besar
-                    $satuan_terkecil = $items[0];
-                    $satuan_renceng = $items[1];
-                    $satuan_menengah = $items[2];
-                    $satuan_besar = $items[3];
+                try {
+                        // proses setiap group
+                    $productId = $key;
+                    $total_item = $group['total_item'];
+                    $items = $group['items'];
 
-                    $satuan_kecil_ke_renceng = $satuan_terkecil['isi_satuan'] / $satuan_renceng['isi_satuan'];
-                    $satuan_tengah_ke_renceng = $satuan_renceng['isi_satuan'] / $satuan_menengah['isi_satuan'];
+                    $prod = new Product();
+                    $prod->code = $key;
+                    $prod->name = $group['items'][0]['nama_barang'];
+                    $prod->product_type = 1;
+                    $prod->unit = $group['items'][0]['id_satuan'];
+                    $prod->remarks = 'IMPORTED';
+                    $prod->creator = 1;
+                    $prod->type_tax = 'include';
+                    $prod->type_retur = 'RETUR';
+                    $prod->sku_name = $group['items'][0]['sku_name'];
+                    $prod->category = $group['items'][0]['kategori_barang_sku'];
+                    $prod->save();
+                    $productId = $prod->id;
 
-                    $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
-                    $harga_jual_non_ppn_kecil = ceil(str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']));
-                    $harga_jual_non_ppn_renceng = ceil(str_replace(',', '', $satuan_renceng['harga_jual_non_ppn']));
-                    $harga_jual_non_ppn_tengah = ceil(str_replace(',', '', $satuan_menengah['harga_jual_non_ppn']));
-                    $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jual_non_ppn']));
+                    if ($total_item == 4) {
+                        //satuan terkecil, satuan menengah, satuan besar
+                        $satuan_terkecil = $items[0];
+                        $satuan_renceng = $items[1];
+                        $satuan_menengah = $items[2];
+                        $satuan_besar = $items[3];
 
-                    // echo '<pre>';
-                    // print_r($satuan_terkecil);die;
+                        $satuan_kecil_ke_renceng = $satuan_terkecil['isi_satuan'] / $satuan_renceng['isi_satuan'];
+                        $satuan_tengah_ke_renceng = $satuan_renceng['isi_satuan'] / $satuan_menengah['isi_satuan'];
 
-                    //insert product satuan terkecil
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
-                    $product_satuan->nilai_konversi = 1;
-                    $product_satuan->level = 1;
-                    $product_satuan->state = 'small';
-                    $product_satuan->nilai_konversi_terkecil = 1;
-                    $product_satuan->save();
+                        // $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
+                        // $harga_jual_non_ppn_kecil = ceil(str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']));
+                        // $harga_jual_non_ppn_renceng = ceil(str_replace(',', '', $satuan_renceng['harga_jual_non_ppn']));
+                        // $harga_jual_non_ppn_tengah = ceil(str_replace(',', '', $satuan_menengah['harga_jual_non_ppn']));
+                        // $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jual_non_ppn']));
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_terkecil['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_kecil;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_belippn']));
+                        $harga_jual_non_ppn_kecil = ceil(str_replace(',', '', $satuan_besar['harga_jualppn']) / $satuan_terkecil['isi_satuan']);
+                        $harga_jual_non_ppn_renceng = ceil(str_replace(',', '', $satuan_besar['harga_jualppn']) / $satuan_kecil_ke_renceng);
+                        $harga_jual_non_ppn_tengah = ceil(str_replace(',', '', $satuan_besar['harga_jualppn']) / ($satuan_tengah_ke_renceng * $satuan_kecil_ke_renceng));
+                        $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jualppn']));
 
-                    //insert product satuan renceng
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_renceng['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_kecil_ke_renceng;
-                    $product_satuan->level = 2;
-                    $product_satuan->nilai_konversi_terkecil = $satuan_kecil_ke_renceng;
-                    $product_satuan->save();
+                        // echo '<pre>';
+                        // print_r($satuan_terkecil);die;
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_renceng['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_renceng;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan terkecil
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
+                        $product_satuan->nilai_konversi = 1;
+                        $product_satuan->level = 1;
+                        $product_satuan->state = 'small';
+                        $product_satuan->nilai_konversi_terkecil = 1;
+                        $product_satuan->save();
 
-                    //insert product satuan menengah
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_renceng['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_menengah['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_tengah_ke_renceng;
-                    $product_satuan->level = 3;
-                    $product_satuan->nilai_konversi_terkecil = $satuan_tengah_ke_renceng * $satuan_kecil_ke_renceng;
-                    $product_satuan->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_terkecil['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_kecil;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_menengah['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_tengah;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan renceng
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_renceng['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_kecil_ke_renceng;
+                        $product_satuan->level = 2;
+                        $product_satuan->nilai_konversi_terkecil = $satuan_tengah_ke_renceng * $satuan_kecil_ke_renceng;
+                        $product_satuan->save();
 
-                    //insert product satuan besar
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_menengah['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_menengah['isi_satuan'];
-                    $product_satuan->level = 4;
-                    $product_satuan->state = 'large';
-                    $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
-                    $product_satuan->save();
-                    $productSatuanId = $product_satuan->id;
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_renceng['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_tengah;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_besar['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_besar;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan menengah
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_renceng['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_menengah['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_tengah_ke_renceng;
+                        $product_satuan->level = 3;
+                        $product_satuan->nilai_konversi_terkecil = $satuan_kecil_ke_renceng;
+                        $product_satuan->save();
 
-                    //insert harga beli
-                    $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if (empty($existVendor)) {
-                        //throw error vendor not found
-                        DB::rollBack();
-                        $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
-                        return response()->json($result);
-                    } else {
-                        $vendorId = $existVendor->id;
-                        $productCost = new ProductUomCost();
-                        $productCost->product = $productId;
-                        $productCost->unit_id = $satuan_besar['id_satuan'];
-                        $productCost->cost = $harga_beli_non_ppn_besar;
-                        $productCost->vendor = $vendorId;
-                        $productCost->date_start = '2026-01-01';
-                        $productCost->is_active = 1;
-                        $productCost->product_uom = $productSatuanId;
-                        $productCost->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_menengah['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_renceng;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
+
+                        //insert product satuan besar
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_menengah['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_menengah['isi_satuan'];
+                        $product_satuan->level = 4;
+                        $product_satuan->state = 'large';
+                        $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        $product_satuan->save();
+                        $productSatuanId = $product_satuan->id;
+
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_besar['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_besar;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
+
+                        //insert harga beli
+                        $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
+                        if (empty($existVendor)) {
+                            //throw error vendor not found
+                            DB::rollBack();
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
+                            return response()->json($result);
+                        } else {
+                            $vendorId = $existVendor->id;
+                            $productCost = new ProductUomCost();
+                            $productCost->product = $productId;
+                            $productCost->unit_id = $satuan_besar['id_satuan'];
+                            $productCost->cost = $harga_beli_non_ppn_besar;
+                            $productCost->vendor = $vendorId;
+                            $productCost->date_start = '2026-01-01';
+                            $productCost->is_active = 1;
+                            $productCost->product_uom = $productSatuanId;
+                            $productCost->save();
+                        }
                     }
-                }
 
-                if ($total_item == 3) {
-                    //satuan terkecil, satuan menengah, satuan besar
-                    $satuan_terkecil = $items[0];
-                    $satuan_menengah = $items[1];
-                    $satuan_besar = $items[2];
-                    $satuan_menengah_ke_kecil = $satuan_terkecil['isi_satuan'] / $satuan_menengah['isi_satuan'];
+                    if ($total_item == 3) {
+                        //satuan terkecil, satuan menengah, satuan besar
+                        $satuan_terkecil = $items[0];
+                        $satuan_menengah = $items[1];
+                        $satuan_besar = $items[2];
+                        $satuan_menengah_ke_kecil = $satuan_terkecil['isi_satuan'] / $satuan_menengah['isi_satuan'];
 
-                    $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_beli_non_ppn']);
-                    $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']);
-                    $harga_jual_non_ppn_tengah = str_replace(',', '', $satuan_menengah['harga_jual_non_ppn']);
-                    $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jual_non_ppn']);
+                        // $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_beli_non_ppn']);
+                        // $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']);
+                        // $harga_jual_non_ppn_tengah = str_replace(',', '', $satuan_menengah['harga_jual_non_ppn']);
+                        // $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jual_non_ppn']);
 
-                    // echo '<pre>';
-                    // print_r($satuan_terkecil);die;
+                        $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_belippn']);
+                        $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_besar['harga_jualppn']) / $satuan_terkecil['isi_satuan'];
+                        $harga_jual_non_ppn_tengah = str_replace(',', '', $satuan_besar['harga_jualppn']) / $satuan_menengah_ke_kecil;
+                        $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jualppn']);
 
-                    //insert product satuan terkecil
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
-                    $product_satuan->nilai_konversi = 1;
-                    $product_satuan->level = 1;
-                    $product_satuan->state = 'small';
-                    $product_satuan->nilai_konversi_terkecil = 1;
-                    $product_satuan->save();
+                        // echo '<pre>';
+                        // print_r($satuan_terkecil);die;
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_terkecil['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_kecil;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan terkecil
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
+                        $product_satuan->nilai_konversi = 1;
+                        $product_satuan->level = 1;
+                        $product_satuan->state = 'small';
+                        $product_satuan->nilai_konversi_terkecil = 1;
+                        $product_satuan->save();
 
-                    //insert product satuan menengah
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_menengah['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_menengah_ke_kecil;
-                    $product_satuan->level = 2;
-                    $product_satuan->nilai_konversi_terkecil = $satuan_menengah_ke_kecil;
-                    $product_satuan->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_terkecil['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_kecil;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_menengah['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_tengah;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan menengah
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_menengah['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_menengah_ke_kecil;
+                        $product_satuan->level = 2;
+                        $product_satuan->nilai_konversi_terkecil = $satuan_menengah_ke_kecil;
+                        $product_satuan->save();
 
-                    //insert product satuan besar
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_menengah['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_menengah['isi_satuan'];
-                    $product_satuan->level = 3;
-                    $product_satuan->state = 'large';
-                    $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
-                    $product_satuan->save();
-                    $productSatuanId = $product_satuan->id;
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_menengah['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_tengah;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_besar['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_besar;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan besar
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_menengah['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_menengah['isi_satuan'];
+                        $product_satuan->level = 3;
+                        $product_satuan->state = 'large';
+                        $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        $product_satuan->save();
+                        $productSatuanId = $product_satuan->id;
 
-                    //insert harga beli
-                    $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if (empty($existVendor)) {
-                        //throw error vendor not found
-                        DB::rollBack();
-                        $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
-                        return response()->json($result);
-                    } else {
-                        $vendorId = $existVendor->id;
-                        $productCost = new ProductUomCost();
-                        $productCost->product = $productId;
-                        $productCost->unit_id = $satuan_besar['id_satuan'];
-                        $productCost->cost = $harga_beli_non_ppn_besar;
-                        $productCost->vendor = $vendorId;
-                        $productCost->date_start = '2026-01-01';
-                        $productCost->is_active = 1;
-                        $productCost->product_uom = $productSatuanId;
-                        $productCost->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_besar['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_besar;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
+
+                        //insert harga beli
+                        $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
+                        if (empty($existVendor)) {
+                            //throw error vendor not found
+                            DB::rollBack();
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
+                            return response()->json($result);
+                        } else {
+                            $vendorId = $existVendor->id;
+                            $productCost = new ProductUomCost();
+                            $productCost->product = $productId;
+                            $productCost->unit_id = $satuan_besar['id_satuan'];
+                            $productCost->cost = $harga_beli_non_ppn_besar;
+                            $productCost->vendor = $vendorId;
+                            $productCost->date_start = '2026-01-01';
+                            $productCost->is_active = 1;
+                            $productCost->product_uom = $productSatuanId;
+                            $productCost->save();
+                        }
                     }
-                }
 
-                if ($total_item == 2) {
-                    //satuan terkecil, satuan menengah, satuan besar
-                    $satuan_terkecil = $items[0];
-                    $satuan_besar = $items[1];
+                    if ($total_item == 2) {
+                        //satuan terkecil, satuan menengah, satuan besar
+                        $satuan_terkecil = $items[0];
+                        $satuan_besar = $items[1];
 
-                    $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_beli_non_ppn']);
-                    $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']);
-                    $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jual_non_ppn']);
-                    // echo '<pre>';
-                    // print_r($satuan_besar_ke_satuan_menengah);die;
+                        // $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_beli_non_ppn']);
+                        // $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_terkecil['harga_jual_non_ppn']);
+                        // $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jual_non_ppn']);
+
+                        $harga_beli_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_belippn']);
+                        $harga_jual_non_ppn_kecil = str_replace(',', '', $satuan_besar['harga_jualppn']) / $satuan_terkecil['isi_satuan'];
+                        $harga_jual_non_ppn_besar = str_replace(',', '', $satuan_besar['harga_jualppn']);
+                        // echo '<pre>';
+                        // print_r($satuan_besar_ke_satuan_menengah);die;
 
 
-                    //insert product satuan terkecil
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
-                    $product_satuan->nilai_konversi = 1;
-                    $product_satuan->level = 1;
-                    $product_satuan->state = 'small';
-                    $product_satuan->nilai_konversi_terkecil = 1;
-                    $product_satuan->save();
+                        //insert product satuan terkecil
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_terkecil['id_satuan'];
+                        $product_satuan->nilai_konversi = 1;
+                        $product_satuan->level = 1;
+                        $product_satuan->state = 'small';
+                        $product_satuan->nilai_konversi_terkecil = 1;
+                        $product_satuan->save();
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_terkecil['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_kecil;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_terkecil['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_kecil;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    //insert product satuan besar
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_terkecil['isi_satuan'];
-                    $product_satuan->level = 2;
-                    $product_satuan->state = 'large';
-                    $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
-                    $product_satuan->save();
-                    $productSatuanId = $product_satuan->id;
+                        //insert product satuan besar
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_terkecil['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_terkecil['isi_satuan'];
+                        $product_satuan->level = 2;
+                        $product_satuan->state = 'large';
+                        $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        $product_satuan->save();
+                        $productSatuanId = $product_satuan->id;
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_besar['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_besar;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_besar['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_besar;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
 
-                    //insert harga beli
-                    $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
-                    if (empty($existVendor)) {
-                        //throw error vendor not found
-                        DB::rollBack();
-                        $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
-                        return response()->json($result);
-                    } else {
-                        $vendorId = $existVendor->id;
-                        $productCost = new ProductUomCost();
-                        $productCost->product = $productId;
-                        $productCost->unit_id = $satuan_besar['id_satuan'];
-                        $productCost->cost = $harga_beli_non_ppn_besar;
-                        $productCost->vendor = $vendorId;
-                        $productCost->date_start = '2026-01-01';
-                        $productCost->is_active = 1;
-                        $productCost->product_uom = $productSatuanId;
-                        $productCost->save();
+                        //insert harga beli
+                        $existVendor = isset($vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_terkecil['nama_vendordistributor'])][0] : null;
+                        if (empty($existVendor)) {
+                            //throw error vendor not found
+                            DB::rollBack();
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Error Vendor ' . trim($satuan_terkecil['nama_vendordistributor']) . ' not found';
+                            return response()->json($result);
+                        } else {
+                            $vendorId = $existVendor->id;
+                            $productCost = new ProductUomCost();
+                            $productCost->product = $productId;
+                            $productCost->unit_id = $satuan_besar['id_satuan'];
+                            $productCost->cost = $harga_beli_non_ppn_besar;
+                            $productCost->vendor = $vendorId;
+                            $productCost->date_start = '2026-01-01';
+                            $productCost->is_active = 1;
+                            $productCost->product_uom = $productSatuanId;
+                            $productCost->save();
+                        }
                     }
-                }
 
-                if ($total_item == 1) {
-                    //satuan terkecil, satuan menengah, satuan besar
-                    $satuan_besar = $items[0];
-                    $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
-                    $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jual_non_ppn']));
-                    // echo '<pre>';
-                    // print_r($satuan_besar_ke_satuan_menengah);die;
+                    if ($total_item == 1) {
+                        //satuan terkecil, satuan menengah, satuan besar
+                        $satuan_besar = $items[0];
+                        // $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_beli_non_ppn']));
+                        // $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jual_non_ppn']));
 
-                    //insert product satuan besar
-                    $product_satuan = new ProductUom();
-                    $product_satuan->product = $productId;
-                    $product_satuan->unit_dasar = $satuan_besar['id_satuan'];
-                    $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
-                    $product_satuan->nilai_konversi = $satuan_besar['isi_satuan'];
-                    $product_satuan->level = 1;
-                    $product_satuan->state = 'large';
-                    $product_satuan->nilai_konversi_terkecil = $satuan_besar['isi_satuan'];
-                    $product_satuan->save();
-                    $productSatuanId = $product_satuan->id;
+                        $harga_beli_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_belippn']));
+                        $harga_jual_non_ppn_besar = ceil(str_replace(',', '', $satuan_besar['harga_jualppn']));
+                        // echo '<pre>';
+                        // print_r($satuan_besar_ke_satuan_menengah);die;
 
-                    $productPrice = new ProductUomPrice();
-                    $productPrice->product = $productId;
-                    $productPrice->unit = $satuan_besar['id_satuan'];
-                    $productPrice->price_list = 2;
-                    $productPrice->price = $harga_jual_non_ppn_besar;
-                    $productPrice->date_start = '2026-01-01';
-                    $productPrice->min_qty = 1;
-                    $productPrice->max_qty = 99999;
-                    $productPrice->save();
+                        //insert product satuan besar
+                        $product_satuan = new ProductUom();
+                        $product_satuan->product = $productId;
+                        $product_satuan->unit_dasar = $satuan_besar['id_satuan'];
+                        $product_satuan->unit_tujuan = $satuan_besar['id_satuan'];
+                        $product_satuan->nilai_konversi = $satuan_besar['isi_satuan'];
+                        $product_satuan->level = 1;
+                        $product_satuan->state = 'large';
+                        $product_satuan->nilai_konversi_terkecil = $satuan_besar['isi_satuan'];
+                        $product_satuan->save();
+                        $productSatuanId = $product_satuan->id;
 
-                    //insert harga beli
-                    $existVendor = isset($vendorGrouped[trim($satuan_besar['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_besar['nama_vendordistributor'])][0] : null;
-                    if (empty($existVendor)) {
-                        //throw error vendor not found
-                        DB::rollBack();
-                        $result['is_valid'] = false;
-                        $result['message'] = 'Error Vendor ' . trim($satuan_besar['nama_vendordistributor']) . ' not found';
-                        return response()->json($result);
-                    } else {
-                        $vendorId = $existVendor->id;
-                        $productCost = new ProductUomCost();
-                        $productCost->product = $productId;
-                        $productCost->unit_id = $satuan_besar['id_satuan'];
-                        $productCost->cost = $harga_beli_non_ppn_besar;
-                        $productCost->vendor = $vendorId;
-                        $productCost->date_start = '2026-01-01';
-                        $productCost->is_active = 1;
-                        $productCost->product_uom = $productSatuanId;
-                        $productCost->save();
+                        $productPrice = new ProductUomPrice();
+                        $productPrice->product = $productId;
+                        $productPrice->unit = $satuan_besar['id_satuan'];
+                        $productPrice->price_list = 2;
+                        $productPrice->price = $harga_jual_non_ppn_besar;
+                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->min_qty = 1;
+                        $productPrice->max_qty = 99999;
+                        $productPrice->save();
+
+                        //insert harga beli
+                        $existVendor = isset($vendorGrouped[trim($satuan_besar['nama_vendordistributor'])]) ? $vendorGrouped[trim($satuan_besar['nama_vendordistributor'])][0] : null;
+                        if (empty($existVendor)) {
+                            //throw error vendor not found
+                            DB::rollBack();
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Error Vendor ' . trim($satuan_besar['nama_vendordistributor']) . ' not found';
+                            return response()->json($result);
+                        } else {
+                            $vendorId = $existVendor->id;
+                            $productCost = new ProductUomCost();
+                            $productCost->product = $productId;
+                            $productCost->unit_id = $satuan_besar['id_satuan'];
+                            $productCost->cost = $harga_beli_non_ppn_besar;
+                            $productCost->vendor = $vendorId;
+                            $productCost->date_start = '2026-01-01';
+                            $productCost->is_active = 1;
+                            $productCost->product_uom = $productSatuanId;
+                            $productCost->save();
+                        }
                     }
-                }
-
+                } catch (\Throwable $th) {
+                    $failImported += 1;
+                    // DB::rollBack();
+                    // $result['is_valid'] = false;
+                    // $result['data'] = $group;
+                    // $result['message'] = 'Error ' . $th->getMessage();
+                    // return response()->json($result);
+                }               
+                
                 $productRowsImport++;
             }
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Success ' . $productRowsImport . ' Imported';
+            $result['message'] = 'Success ' . $productRowsImport . ' Imported dan Failed Imported '.$failImported;
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = 'Error ' . $th->getMessage();
