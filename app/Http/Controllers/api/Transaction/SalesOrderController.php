@@ -16,6 +16,7 @@ use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
 use App\Models\Transaction\StockCustomer;
 use App\Models\Transaction\SalesOrderPromo;
+use App\Models\Transaction\SalesOrderPromoItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -189,7 +190,7 @@ class SalesOrderController extends Controller
             // print_r($items);die;
             $productIds = $items->pluck('product_id')->toArray();
             $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $data['customer_id']);
+            $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $data['customer_id']);
             /*CALCULATE PROMO ITEM */
 
             // === HEADER ===
@@ -212,8 +213,6 @@ class SalesOrderController extends Controller
             $header->payment_term = $data['payment_term'] ?? null;
             $header->salesman = $data['salesman'] ?? null;
             $header->currency = $data['currency'];
-            $header->discount_amount = !empty($calculatePromo['discount_header']) ? $calculatePromo['discount_header']['discount_amount'] : 0;
-            $header->discount_percent = !empty($calculatePromo['discount_header']) ? $calculatePromo['discount_header']['discount_percent'] : 0;
             $header->remarks = $data['remarks'] ?? null;
             $header->total_amount = 0; // akan dihitung ulang di bawah
             $header->platform = $platform; // akan dihitung ulang di bawah
@@ -226,14 +225,14 @@ class SalesOrderController extends Controller
             $taxRate = 0;
 
             // === DETAIL ===
+            $detailIdMap = []; // map product_id => detail_id untuk keperluan promo item
+            
             foreach ($data['items'] as $item) {
-                // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesOrderDetail::find($item['id']);
                         if ($exist && $exist->status !== 'draft') {
                             DB::rollBack();
-
                             return response()->json([
                                 'is_valid' => false,
                                 'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
@@ -245,59 +244,58 @@ class SalesOrderController extends Controller
                             $exist->save();
                         }
                     }
-
                     continue;
                 }
 
-                // Item baru atau update
                 $detail = empty($item['id'])
                     ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
 
-                $promoItem = null;
+                // Cek promo per item
+                $promoItemFound = null;
+                $promoItemRef = null;
                 if (!empty($calculatePromo['result_items'])) {
                     foreach ($calculatePromo['result_items'] as $promo) {
-                        $items = $promo['items'];
-                        $promoItem = collect($items)->where('product_id', $item['product_id'])->first();
-                        if (!empty($promoItem)) {
+                        $promoItemFound = collect($promo['items'])->where('product_id', $item['product_id'])->first();
+                        if (!empty($promoItemFound)) {
+                            $promoItemRef = $promo;
                             if ($promo['discount_type'] == 'price') {
-                                $item['price'] = $promoItem['price'];
+                                $item['price'] = $promoItemFound['price'];
                             }
-                            $item['disc_percent'] = $promoItem['disc_percent'];
-                            $item['disc_amount'] = $promoItem['disc_amount'];
-                            $item['subtotal'] = $promoItem['subtotal'];
+                            $item['disc_percent'] = $promoItemFound['discountPercent'] ?? 0;
+                            $item['disc_amount'] = $promoItemFound['discountAmount'] ?? 0;
+                            $subtotal = ($item['price'] * $item['qty']) - $item['disc_amount'];
+                            $item['subtotal'] = $subtotal;
                             break;
                         }
                     }
                 }
-
-                // echo '<pre>';
-                // print_r($item);die;
 
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = $item['product_id'];
                 $detail->qty = $item['qty'];
                 $detail->unit = $item['unit_id'];
                 $detail->unit_price = $item['price'];
-                $detail->discount_type = $item['disc_percent'] == 0 ? 'nominal' : 'percent';
-                $detail->discount_percent = $item['disc_percent'];
-                $detail->discount_amount = $item['disc_amount'];
-                $detail->tax = $item['tax_amount'];
-                $detail->tax_rate = $item['tax_rate'];
-                $detail->tax_type = $item['tax_type'];
-                $detail->tax_amount = $item['tax_amount'];
-                $detail->subtotal = $item['subtotal'];
+                $detail->discount_type = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
+                $detail->discount_percent = $item['disc_percent'] ?? 0;
+                $detail->discount_amount = $item['disc_amount'] ?? 0;
+                $detail->tax = $item['tax'] ?? null;
+                $detail->tax_rate = $item['tax_rate'] ?? 0;
+                $detail->tax_type = $item['tax_type'] ?? null;
+                $detail->tax_amount = $item['tax_amount'] ?? 0;
+                $detail->subtotal = $item['subtotal'] ?? 0;
                 $detail->is_free_good = $item['is_freegood'] ?? 0;
                 $detail->free_for = $item['free_for'] ?? null;
                 $detail->status = $detail->status ?? 'draft';
                 $detail->save();
 
-                // Hanya tambahkan ke total jika bukan free good
+                // Simpan map product_id => detail id
                 if (empty($item['is_freegood'])) {
+                    $detailIdMap[$item['product_id']] = $detail->id;
                     $grandTotal += $item['subtotal'];
-                    $totalTaxAmount += $item['tax_amount'];
-                    $taxId = $item['tax'];
-                    $taxRate = $item['tax_rate'];
+                    $totalTaxAmount += $item['tax_amount'] ?? 0;
+                    $taxId = $item['tax'] ?? null;
+                    $taxRate = $item['tax_rate'] ?? 0;
                 }
             }
 
@@ -306,41 +304,61 @@ class SalesOrderController extends Controller
             $header->tax_amount = $totalTaxAmount;
             $header->tax_base = $taxRate;
             $header->tax_id = $taxId;
-            if ($data['id'] != '') {
-                if ($platform == 'mobile') {
-                    $header->status = 'draft';
-                }
+            if (!empty($data['id']) && $platform == 'mobile') {
+                $header->status = 'draft';
+            }           
+
+            // Simpan discount header ke header
+            if (!empty($calculatePromo['discount_header'])) {
+                $lastHeader = end($calculatePromo['discount_header']);
+                $totalDiscAmount = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
+                $header->discount_amount = $totalDiscAmount;
+                $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
             }
-            $header->save();
+            $header->save();            
             $soId = $header->id;
 
-            /*sales order promo */
+            
+            // ========================
+            // SIMPAN PROMO
+            // ========================
             SalesOrderPromo::where('sales_order_id', $soId)->delete();
+            SalesOrderPromoItem::where('sales_order_id', $soId)->delete();
+            // Promo Header → sales_order_promo
             if (!empty($calculatePromo['discount_header'])) {
-                $salesPromo = new SalesOrderPromo();
-                $salesPromo->sales_order_id = $soId;
-                $salesPromo->promo = $calculatePromo['discount_header']['promo_id'];
-                $salesPromo->promo_name = $calculatePromo['discount_header']['promo_name'];
-                $salesPromo->discount_percent = $calculatePromo['discount_header']['discount_percent'];
-                $salesPromo->discount_amount = $calculatePromo['discount_header']['discount_amount'];
-                $salesPromo->save();
-            }
-
-            if (!empty($calculatePromo['result_items'])) {
-                foreach ($calculatePromo['result_items'] as $promo) {
-                    $items = $promo['items'];
-                    $promo_id = $promo['promo_id'];
-                    $promo_name = $promo['promo_name'];
-                    $disc_percent = $items[0]['disc_percent'];
-                    $disc_amount = collect($items)->sum('disc_amount');
-
+                foreach ($calculatePromo['discount_header'] as $dh) {
                     $salesPromo = new SalesOrderPromo();
                     $salesPromo->sales_order_id = $soId;
-                    $salesPromo->promo = $promo_id;
-                    $salesPromo->promo_name = $promo_name;
-                    $salesPromo->discount_percent = $disc_percent;
-                    $salesPromo->discount_amount = $disc_amount;
+                    $salesPromo->promo = $dh['promo_id'];
+                    $salesPromo->promo_name = $dh['promo_name'];
+                    $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
+                    $salesPromo->discount_amount = $dh['discount_amount'] ?? 0;
                     $salesPromo->save();
+                }
+            }
+
+            // Promo Item → sales_order_promo_item
+            if (!empty($calculatePromo['result_items'])) {
+                foreach ($calculatePromo['result_items'] as $promo) {
+                    foreach ($promo['items'] as $promoItem) {
+                        $detailId = $detailIdMap[$promoItem['product_id']] ?? null;
+                        if (!$detailId) continue;
+
+                        $discAmount = $promoItem['discountAmount'] ?? 0;
+                        $discPercent = $promoItem['discountPercent'] ?? 0;
+
+                        // Skip jika tidak ada diskon
+                        if ($discAmount == 0 && $discPercent == 0) continue;
+
+                        $salesPromoItem = new SalesOrderPromoItem();
+                        $salesPromoItem->sales_order_id = $soId;
+                        $salesPromoItem->sales_order_detail_id = $detailId;
+                        $salesPromoItem->promo = $promo['promo_id'];
+                        $salesPromoItem->promo_name = $promo['promo_name'];
+                        $salesPromoItem->discount_percent = $discPercent;
+                        $salesPromoItem->discount_amount = $discAmount;
+                        $salesPromoItem->save();
+                    }
                 }
             }
 
@@ -1099,6 +1117,7 @@ class SalesOrderController extends Controller
         return $promo->promoFree->map(function ($free) use ($multiplier) {
             return [
                 'product_id' => $free->free_product,
+                'product_name'=> $free->product_name,
                 'unit' => $free->free_unit,
                 'qty' => $free->free_qty * $multiplier,
             ];
@@ -1413,6 +1432,349 @@ class SalesOrderController extends Controller
 
             // break;
         }
+
+        // echo '<pre>';
+        // print_r($resultItems);
+        // die;
+
+        return [
+            'discount_header' => $discountHeader, // ← tambahan untuk potong grand total
+            'result_items' => $resultItems,
+            'free_goods' => $freeGoods,
+        ];
+    }
+
+    public function calculatePromoV2($items = [], $promoAll = [], $productIds = [], $customer_id = '')
+    {
+        $resultItems = [];
+        $freeGoods = [];
+        $grandTotal = 0;
+
+        $customers = [];
+        $channel_outlet = '';
+        $sub_channel_outlet = '';
+        if ($customer_id != '') {
+            $customers = Customer::where('id', $customer_id)->first();
+            $channel_outlet = $customers->channel_outlet;
+            $sub_channel_outlet = $customers->sub_channel_outlet;
+        }
+
+        $promoHeaders = $promoAll['promo_header'];
+
+        $discountHeader = [];
+        $grandTotalAfterItemDisc = 0; // ← akan diisi setelah Loop 2
+        foreach ($promoHeaders as $promo) {
+            // =============================
+            // FILTER CHANNEL OUTLET
+            // =============================
+            if ($promo->potong_grand_total != 0)
+                continue; // skip yang grand total
+
+            if ($customer_id != '') {
+
+                $channelMatch =
+                    empty($promo->channel_outlet) ||
+                    $promo->channel_outlet == $channel_outlet;
+
+                $subChannelMatch =
+                    empty($promo->sub_channel_outlet) ||
+                    $promo->sub_channel_outlet == $sub_channel_outlet;
+
+                if (!$channelMatch || !$subChannelMatch) {
+                    continue; // skip promo ini
+                }
+            }
+
+            $promoProduc = $promo->promoProducts
+                ->pluck('product')->toArray();
+
+            //match kan dulu total promo bundle itemnya;
+            $mixTotalPromo = 0;
+            $itemsHasDiscount = [];
+            foreach ($promoProduc as $v) {
+                foreach ($productIds as $k) {
+                    if ($k == $v) {
+                        $mixTotalPromo += 1;
+                        $itemsHasDiscount[] = $v;
+                    }
+                }
+            }
+
+            // echo '<pre>';
+            // print_r($mixTotalPromo);die;
+
+            $mix_min_promo = $promo->min_mix;
+            $mix_max_promo = $promo->max_mix;
+            // if ($mix_min_promo != $mixTotalPromo) {
+            if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo)) {
+                continue;
+            }
+
+            $itemsValue = [];
+            foreach ($itemsHasDiscount as $h) {
+                $valItem = collect($items)->where('product_id', $h)->first();
+                $itemsValue[] = $valItem;
+            }
+
+
+            // =============================
+            // HITUNG SUBTOTAL MENTAH (sebelum diskon)
+            // untuk keperluan promo kategori nominal
+            // =============================
+            $rawSubtotal = 0;
+            foreach ($itemsValue as $v) {
+                $rawSubtotal += $v['price'] * $v['qty'];
+            }
+
+            // =============================
+            // TENTUKAN BASIS PENGECEKAN PROMO
+            // qty  → pakai qtySmallestAllProduct
+            // nominal → pakai rawSubtotal
+            // =============================
+            $isNominalCategory = $promo->kategori === 'nominal';
+
+            if ($isNominalCategory) {
+                $qtySmallestAllProduct = $rawSubtotal;
+            } else {
+                $qtySmallestAllProduct = $this->calculateTotalSmallestQty($itemsValue);
+            }
+
+            $totalPromoAplicable = 0;
+            foreach ($itemsValue as $v) {
+                $applicable = $this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id']);
+                if (!$applicable) {
+                    continue;
+                }
+                $totalPromoAplicable += 1;
+            }
+
+            // if ($totalPromoAplicable != $mix_min_promo) {
+            //     continue;
+            // }
+
+            // Jadi ini:
+            if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo)) {
+                continue;
+            }
+
+            $discountPercent = 0;
+            $discountAmounts = 0;
+            $grandTotal = 0;
+
+            // Hitung diskon
+            // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
+            $discountApplied = false;            
+            $itemsValueApplied = [];
+            foreach ($itemsValue as $v) {                
+                $discountAmount = 0;
+
+                // Jika promo mix dan diskon sudah diterapkan ke baris lain, skip diskon
+                $isMixPromo = $promo->max_mix > 1;
+                $shouldApplyDiscount = !$isMixPromo || !$discountApplied;
+                if ($shouldApplyDiscount) {
+                    if ($promo->discount_type === 'percent') {
+                        $discountPercent = $promo->discount_value;
+                        $discountAmount = ($v['price'] * $v['qty'])
+                            * ($discountPercent / 100);
+                        $discountAmounts += $discountAmount;
+                    }
+                    if ($promo->discount_type === 'nominal') {
+                        $qtyBaseUnit = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
+                        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                        $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+
+                        $discountAmount = $promo->discount_value * $multiplier;
+                        $discountAmounts += $discountAmount;
+                    }
+                    if ($promo->discount_type == 'price') {
+                        $v['price'] = $promo->discount_value;
+                    }
+
+                    // Tandai diskon sudah diterapkan untuk promo mix ini
+                    if ($isMixPromo) {
+                        $discountApplied = true;
+                    }
+                }
+
+                $subtotal = ($v['price'] * $v['qty']) - $discountAmount;
+                $v['subtotal'] = $subtotal;
+                $v['discountAmount'] = $discountAmount;
+                $v['discountPercent'] = $discountPercent;
+
+                $itemsValueApplied[] = $v;
+
+                $grandTotal += $subtotal;
+            }
+
+            // Hitung grand total setelah disc per item untuk basis additional_disc
+            $grandTotalAfterDisc = 0;
+            foreach ($itemsValueApplied as $v) {
+                $grandTotalAfterDisc += ($v['price'] * $v['qty']) - ($v['discountAmount'] ?? 0);
+            }
+
+            // Additional disc ke discount_header jika ada disc per item
+            $additionalDiscAmount = 0;
+            if (!empty($promo->additional_disc) && $promo->additional_disc > 0 && $discountAmounts > 0) {
+                if ($promo->additional_disc_type === 'percent') {
+                    $additionalDiscAmount = $grandTotalAfterDisc * ($promo->additional_disc / 100);
+                } else if ($promo->additional_disc_type === 'nominal') {
+                    $additionalDiscAmount = $promo->additional_disc;
+                }
+
+                // Akumulasi ke discountHeader
+                $discountHeader['discount_amount'] = ($discountHeader['discount_amount'] ?? 0) + $additionalDiscAmount;
+                if (empty($discountHeader['promo_id'])) {
+                    $discountHeader['promo_id'] = $promo->id;
+                    $discountHeader['promo_name'] = $promo->promo_name;
+                    $discountHeader['discount_percent'] = $promo->additional_disc_type === 'percent' ? $promo->additional_disc : 0;
+                }
+            }
+
+            // Hitung free good
+            $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
+            $freeGoods = array_merge(
+                $freeGoods,
+                $discountFree
+            );
+
+
+            $resultItems[] = [
+                'promo_id' => $promo->id,
+                'promo_name' => $promo->promo_name,
+                'items' => $itemsValue,
+                'discount_type' => $promo->discount_type,
+                'discount_percent' => $discountPercent,
+                'discount_amount' => $discountAmount,
+                'grand_total' => $grandTotal,
+                'discount_free' => $discountFree
+            ];
+
+            // break;
+        }
+
+        // Tambahkan juga item yang tidak kena promo apapun
+        foreach ($items as $item) {
+            $productInPromo = false;
+            foreach ($resultItems as $r) {
+                $found = collect($r['items'])->where('product_id', $item['product_id'])->first();
+                if ($found) {
+                    $productInPromo = true;
+                    break;
+                }
+            }
+            if (!$productInPromo) {
+                $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
+            }
+        }
+        
+        
+        // =============================
+        // LOOP 1: PROMO POTONG GRAND TOTAL
+        // pakai $grandTotalAfterItemDisc sebagai basis
+        // =============================
+        $grandTotalRunning = $grandTotalAfterItemDisc; // ← dari hasil loop 2
+        // =============================
+        // LOOP 1: PROMO POTONG GRAND TOTAL
+        // =============================
+        foreach ($promoHeaders as $promo) {
+            if ($promo->potong_grand_total != 1)
+                continue; // skip yang bukan grand total
+
+            if ($customer_id != '') {
+                $channelMatch = empty($promo->channel_outlet) || $promo->channel_outlet == $channel_outlet;
+                $subChannelMatch = empty($promo->sub_channel_outlet) || $promo->sub_channel_outlet == $sub_channel_outlet;
+                if (!$channelMatch || !$subChannelMatch)
+                    continue;
+            }
+
+            $promoProduc = $promo->promoProducts->pluck('product')->toArray();
+
+            $mixTotalPromo = 0;
+            $itemsHasDiscount = [];
+            foreach ($promoProduc as $v) {
+                foreach ($productIds as $k) {
+                    if ($k == $v) {
+                        $mixTotalPromo += 1;
+                        $itemsHasDiscount[] = $v;
+                    }
+                }
+            }
+
+            $mix_min_promo = $promo->min_mix;
+            $mix_max_promo = $promo->max_mix;
+            if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo))
+                continue;
+
+            $itemsValue = [];
+            foreach ($itemsHasDiscount as $h) {
+                $valItem = collect($items)->where('product_id', $h)->first();
+                $itemsValue[] = $valItem;
+            }
+
+            $rawSubtotal = 0;
+            foreach ($itemsValue as $v) {
+                $rawSubtotal += $v['price'] * $v['qty'];
+            }
+
+            $isNominalCategory = $promo->kategori === 'nominal';
+            $qtySmallestAllProduct = $isNominalCategory
+                ? $rawSubtotal
+                : $this->calculateTotalSmallestQty($itemsValue);
+
+            $totalPromoAplicable = 0;
+            foreach ($itemsValue as $v) {
+                if ($this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
+                    $totalPromoAplicable += 1;
+                }
+            }
+
+            if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo))
+                continue;
+
+            // Hitung grand total semua items
+            $grandTotalAllItems = 0;
+            foreach ($items as $item) {
+                $grandTotalAllItems += $item['price'] * $item['qty'];
+            }
+
+            $discAmountHeader = 0;
+            $discPercentHeader = 0;
+
+            if ($promo->discount_type === 'percent') {
+                $discPercentHeader = $promo->discount_value;
+                $discAmountHeader = $grandTotalRunning * ($promo->discount_value / 100); // ← pakai running after item disc
+            }
+            if ($promo->discount_type === 'nominal') {
+                $qtyBaseUnit = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
+                $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+                $discAmountHeader = $promo->discount_value * $multiplier;
+            }
+
+            $grandTotalAfterMainDisc = $grandTotalRunning - $discAmountHeader;
+            if (!empty($promo->additional_disc) && $promo->additional_disc > 0) {
+                $additionalDiscAmount = 0;
+                if ($promo->additional_disc_type === 'percent') {
+                    $additionalDiscAmount = $grandTotalAfterMainDisc * ($promo->additional_disc / 100);
+                } else if ($promo->additional_disc_type === 'nominal') {
+                    $additionalDiscAmount = $promo->additional_disc;
+                }
+                $discAmountHeader += $additionalDiscAmount;
+            }
+
+            $grandTotalRunning -= $discAmountHeader;
+
+            $discountHeader[] = [
+                'discount_percent' => $discPercentHeader,
+                'discount_amount' => $discAmountHeader,
+                'grand_total_before' => $grandTotalRunning + $discAmountHeader,
+                'grand_total_after' => $grandTotalRunning,
+                'promo_id' => $promo->id,
+                'promo_name' => $promo->promo_name
+            ];
+
+            // break; // promo grand total pertama yang applicable langsung break
+        }        
 
         // echo '<pre>';
         // print_r($resultItems);
@@ -2099,6 +2461,9 @@ class SalesOrderController extends Controller
         $result['is_valid'] = false;
         $result['message'] = '';
 
+        // echo '<pre>';
+        // print_r($data);die;
+
         try {
             foreach ($data['details'] as $i) {
                 [$products, $product_unit] = explode(':', $i['product_id']);
@@ -2114,6 +2479,42 @@ class SalesOrderController extends Controller
             }
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
+
+            $result['is_valid'] = true;
+            $result['data'] = $calculatePromo;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }        
+
+        return response()->json($result);
+    }
+
+    public function checkDiscountWeb(Request $request){
+        $data = $request->all();
+        $customersId = $data['customer_id'];
+        $items = [];
+        $productIds = [];
+
+        $result['is_valid'] = false;
+        $result['message'] = '';
+
+        // echo '<pre>';
+        // print_r($data);die;
+
+        try {
+            foreach ($data['details'] as $i) {
+                $products = $i['product_id'];
+                $product_unit = $i['unit_id'];
+                $items[] = [
+                    'product_id' => $products,
+                    'unit_id' => $product_unit,
+                    'qty' => $i['qty'],
+                    'price' => doubleval(trim($i['unit_price']))
+                ];
+                $productIds[] = $products;
+            }
+            $promoItem = $this->getPromoItemAll($productIds);
+            $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
 
             $result['is_valid'] = true;
             $result['data'] = $calculatePromo;

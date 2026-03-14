@@ -60,7 +60,7 @@
                                 <select class="form-control select2 required" id="customer_id" error="Customer" onchange="SalesOrder.changeCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
-                                        <option top="{{ $customer->top_value }}" channel_outlet="{{ $customer->channel_outlet }}" 
+                                        <option top="{{ $customer->top_value }}" channel_outlet="{{ $customer->channel_outlet }}"
                                         sub_channel_outlet="{{ $customer->sub_channel_outlet }}"
                                         value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
@@ -175,6 +175,8 @@
                     <div class="tab-content pt-3" id="barangTabContent">
                         <!-- Tab Diskon -->
                         <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel" aria-labelledby="tab-barang">
+                            <button id="btn-check-disc" class="btn btn-small btn-primary" onclick="SalesOrder.checkDiscount(this, event)">Check Discount</button>
+                            <br/>
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="table-items">
                                     <thead class="table-light">
