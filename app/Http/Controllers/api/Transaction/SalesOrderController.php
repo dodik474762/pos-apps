@@ -2467,7 +2467,7 @@ class SalesOrderController extends Controller
                 $productIds[] = $products[0];
             }
             $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
+            $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
 
             $result['is_valid'] = true;
             $result['data'] = $calculatePromo;
