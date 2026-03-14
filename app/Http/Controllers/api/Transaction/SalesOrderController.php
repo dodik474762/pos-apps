@@ -513,16 +513,12 @@ class SalesOrderController extends Controller
         $so_date = $periode->format('Y-m-d H:i:s');
 
         $check_in_time = null;
-        if (isset($data['check_in_time'])) {
-            if (!empty($data['check_in_time'])) {
-                $check_in_time = Carbon::parse($data['check_in_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
-            }
+        if (isset($data['check_in_time']) && !empty($data['check_in_time'])) {
+            $check_in_time = Carbon::parse($data['check_in_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
         }
         $check_out_time = null;
-        if (isset($data['check_out_time'])) {
-            if (!empty($data['check_out_time'])) {
-                $check_out_time = Carbon::parse($data['check_out_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
-            }
+        if (isset($data['check_out_time']) && !empty($data['check_out_time'])) {
+            $check_out_time = Carbon::parse($data['check_out_time'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
         }
 
         $customers = Customer::where('id', trim($data['customer_id']))->first();
@@ -540,55 +536,44 @@ class SalesOrderController extends Controller
             $dir = 'berkas/document/sales_order/';
             $dir .= date('Y') . '/' . date('m');
             $pathlamp = public_path() . '/' . $dir . '/';
-            // Create the directory if it doesn't exist
             if (!File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_' . time() . '.jpg';
-            $fileTtdName = 'signature_' . time() . '.jpg';
+            $fileOutletName = $users_id.'_outlet_' . time() . '.jpg';
+            $fileTtdName = $users_id.'_signature_' . time() . '.jpg';
 
-            $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            $files_outlet->move(public_path($dir), $fileOutletName);
             $dbpathlampOutlet = '/' . $dir . '/';
 
-            $path = $files_ttd->move(public_path($dir), $fileTtdName);
+            $files_ttd->move(public_path($dir), $fileTtdName);
             $dbpathlampSignature = '/' . $dir . '/';
 
             $currency = Currency::where('code', 'IDR')->first();
             if (!$currency) {
                 DB::rollBack();
-
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Currency IDR tidak ditemukan',
-                ]);
+                return response()->json(['is_valid' => false, 'message' => 'Currency IDR tidak ditemukan']);
             }
             $currencyId = $currency->id;
 
-            /*update koordinat customer */
+            // Update koordinat customer
             if ($customers) {
-                if ($customers->latitude == '') {
-                    $customers->latitude = $data['latitude'];
-                }
-                if ($customers->longitude == '') {
-                    $customers->longitude = $data['longitude'];
-                }
-                if ($customers->customer_category == '2') {
-                    $customers->customer_category = '1';
-                }
+                if ($customers->latitude == '') $customers->latitude = $data['latitude'];
+                if ($customers->longitude == '') $customers->longitude = $data['longitude'];
+                if ($customers->customer_category == '2') $customers->customer_category = '1';
                 $customers->save();
             }
-            /*update koordinat customer */
 
-
-            /*CALCULATE PROMO ITEM */
+            // =============================
+            // CALCULATE PROMO
+            // =============================
             $items = [];
             $productIds = [];
             foreach ($data['details'] as $i) {
                 [$products, $product_unit] = explode(':', $i['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
-                $items = [
+                $items[] = [
                     'product_id' => $products[0],
                     'unit_id' => $product_unit[0],
                     'qty' => $i['qty'],
@@ -597,184 +582,149 @@ class SalesOrderController extends Controller
                 $productIds[] = $products[0];
             }
 
-            $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromo($items, $promoItem, $productIds, $customersId);
-            /*CALCULATE PROMO ITEM */
+            $promoAll = $this->getPromoItemAll($productIds);
+            $calculatePromo = $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
 
-            // === HEADER ===
+            // =============================
+            // HEADER
+            // =============================
             $header = new SalesOrderHeader;
-            $header->so_number = generateNoSO(); // misal helper
+            $header->so_number = generateNoSO();
             $header->created_by = $users_id;
             $header->status = 'submited';
-
             $header->so_date = $so_date;
             $header->customer_id = $customersId;
             $header->payment_term = $payment_term;
             $header->salesman = $users_id;
             $header->currency = $currencyId;
             $header->remarks = $data['remarks'];
-            $header->total_amount = 0; // akan dihitung ulang di bawah
-            $header->platform = 'mobile'; // akan dihitung ulang di bawah
+            $header->total_amount = 0;
+            $header->platform = 'mobile';
             $header->photo_path = $dbpathlampOutlet . $fileOutletName;
             $header->signature_path = $dbpathlampSignature . $fileTtdName;
             $header->latitude = $data['latitude'];
             $header->longitude = $data['longitude'];
             $header->check_in_time = $check_in_time;
             $header->check_out_time = $check_out_time;
-            $header->discount_amount = !empty($calculatePromo['discount_header']) ? $calculatePromo['discount_header']['discount_amount'] : 0;
-            $header->discount_percent = !empty($calculatePromo['discount_header']) ? $calculatePromo['discount_header']['discount_percent'] : 0;
-            $header->save();
 
+            // Discount header dari promo
+            if (!empty($calculatePromo['discount_header'])) {
+                $totalDiscAmount = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
+                $lastHeader = end($calculatePromo['discount_header']);
+                $header->discount_amount = $totalDiscAmount;
+                $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
+            } else {
+                $header->discount_amount = 0;
+                $header->discount_percent = 0;
+            }
+
+            $header->save();
             $hdrId = $header->id;
+
             $grandTotal = 0;
-            $taxAmount = 0;
+            $totalTaxAmount = 0;
             $taxId = 0;
             $taxRate = 0;
+            $detailIdMap = []; // map product_id => detail_id untuk promo item
 
-            // === DETAIL ===
+            // =============================
+            // DETAIL
+            // =============================
             foreach ($data['details'] as $item) {
-                // Item baru atau update
                 [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
-                // DB::rollBack();
-                // return response()->json([
-                //     'is_valid' => false,
-                //     'message' => 'Product UOM Price tidak ditemukan',
-                //     'data'=> $products[0].' dan unit '.$product_unit[0]
-                // ]);
-                $puom_price = ProductUomPrice::where('product', trim($products[0]))->where('unit', trim($product_unit[0]))
+
+                $puom_price = ProductUomPrice::where('product', trim($products[0]))
+                    ->where('unit', trim($product_unit[0]))
                     ->whereNull('deleted')
                     ->first();
 
                 if (empty($puom_price)) {
                     DB::rollBack();
-
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Product UOM Price tidak ditemukan',
-                    ]);
+                    return response()->json(['is_valid' => false, 'message' => 'Product UOM Price tidak ditemukan']);
                 }
 
-                $uom_price_id = $puom_price->id;
-
-                $detail = new SalesOrderDetail;
-
-                $detail->sales_order_id = $hdrId;
-                $detail->product_id = trim($products[0]);
-                $detail->qty = $item['qty'];
-                $detail->unit = trim($product_unit[0]);
-
-                // perhitungan diskon dan free good
+                // Hitung diskon regular
                 $params['product_id'] = trim($products[0]);
                 $params['produk_id'] = trim($products[0]);
                 $params['unit'] = trim($product_unit[0]);
-                $params['customer'] = '1';
-                $params['customer_id'] = '1';
+                $params['customer'] = $customersId;
+                $params['customer_id'] = $customersId;
                 $params['price'] = doubleval(trim($product_unit[1]));
                 $params['today'] = $data['so_date'];
                 $params['qty'] = $item['qty'];
                 $calculateDisc = $this->calculateDisc($params);
 
-                /*PROMO */
-                $promoItem = null;
+                // Override dengan promo jika ada
+                $promoItemFound = null;
+                $promoItemRef = null;
                 $freeGoods = [];
                 if (!empty($calculatePromo['result_items'])) {
                     foreach ($calculatePromo['result_items'] as $promo) {
-                        $items = $promo['items'];
-                        $promoItem = collect($items)->where('product_id', trim($products[0]))->first();
-                        if (!empty($promoItem)) {
+                        $promoItemFound = collect($promo['items'])->where('product_id', trim($products[0]))->first();
+                        if (!empty($promoItemFound)) {
+                            $promoItemRef = $promo;
                             if ($promo['discount_type'] == 'price') {
-                                $product_unit[1] = $promoItem['price'];
+                                $product_unit[1] = $promoItemFound['price'];
                             }
-                            $calculateDisc['disc_percent'] = $promoItem['disc_percent'];
-                            $calculateDisc['disc_amount'] = $promoItem['disc_amount'];
-                            $calculateDisc['subtotal'] = $promoItem['subtotal'];
-                            $freeGoods = $promo['discount_free'];
+                            $calculateDisc['disc_percent'] = $promoItemFound['discountPercent'] ?? 0;
+                            $calculateDisc['disc_amount'] = $promoItemFound['discountAmount'] ?? 0;
+                            $subtotal = (doubleval(trim($product_unit[1])) * $item['qty']) - $calculateDisc['disc_amount'];
+                            $calculateDisc['subtotal'] = $subtotal;
+                            $freeGoods = $promo['discount_free'] ?? [];
                             break;
                         }
                     }
                 }
-                /*PROMO */
 
-                $detail->unit_price = trim($product_unit[1]);
-
+                $detail = new SalesOrderDetail;
+                $detail->sales_order_id = $hdrId;
+                $detail->product_id = trim($products[0]);
+                $detail->qty = $item['qty'];
+                $detail->unit = trim($product_unit[0]);
+                $detail->unit_price = doubleval(trim($product_unit[1]));
                 $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $calculateDisc['disc_percent'];
                 $detail->discount_amount = $calculateDisc['disc_amount'];
-                $detail->subtotal = $calculateDisc['subtotal']; // ini sudah dikurangi diskon
+                $detail->subtotal = $calculateDisc['subtotal'];
+                $detail->is_free_good = 0;
+                $detail->status = 'draft';
+
                 if (isset($item['taxAmount'])) {
                     $detail->tax_amount = $item['taxAmount'];
                     $detail->tax_rate = $item['tax_rate'];
                     $detail->tax_type = $item['type_tax'];
                     $detail->tax = $item['tax_sale'];
-
-                    $taxAmount += $item['taxAmount'];
+                    $totalTaxAmount += $item['taxAmount'];
                     $taxId = $item['tax_sale'];
                     $taxRate = $item['tax_rate'];
                 }
-                $detail->is_free_good = 0;
-                $detail->status = 'draft';
+
                 $detail->save();
 
+                // Simpan map product_id => detail_id
+                $detailIdMap[trim($products[0])] = $detail->id;
+                $grandTotal += $calculateDisc['subtotal'];
+
+                // Free goods
                 if (!empty($freeGoods)) {
                     foreach ($freeGoods as $free) {
-                        $detail = new SalesOrderDetail();
-
-                        $detail->sales_order_id = $hdrId;
-                        $detail->product_id = $free['product'];
-                        $detail->qty = $free['qty'];
-                        $detail->unit = $free['unit'];
-                        $detail->unit_price = 0;
-                        $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
-                        $detail->discount_percent = 0;
-                        $detail->discount_amount = 0;
-                        $detail->subtotal = 0;
-                        $detail->is_free_good = 1;
-                        $detail->free_for = trim($products[0]);
-                        $detail->status = 'draft';
-                        $detail->save();
+                        $freeDetail = new SalesOrderDetail();
+                        $freeDetail->sales_order_id = $hdrId;
+                        $freeDetail->product_id = $free['product'];
+                        $freeDetail->qty = $free['qty'];
+                        $freeDetail->unit = $free['unit'];
+                        $freeDetail->unit_price = 0;
+                        $freeDetail->discount_type = 'nominal';
+                        $freeDetail->discount_percent = 0;
+                        $freeDetail->discount_amount = 0;
+                        $freeDetail->subtotal = 0;
+                        $freeDetail->is_free_good = 1;
+                        $freeDetail->free_for = trim($products[0]);
+                        $freeDetail->status = 'draft';
+                        $freeDetail->save();
                     }
-                }
-
-                $grandTotal += $calculateDisc['subtotal'];
-            }
-
-            // Update total header
-            $header->total_amount = $grandTotal;
-            $header->tax_id = $taxId;
-            $header->tax_amount = $taxAmount;
-            $header->tax_base = $taxRate;
-            $header->save();
-            $soId = $header->id;
-
-            /*sales order promo */
-            SalesOrderPromo::where('sales_order_id', $soId)->delete();
-            if (!empty($calculatePromo['discount_header'])) {
-                $salesPromo = new SalesOrderPromo();
-                $salesPromo->sales_order_id = $soId;
-                $salesPromo->promo = $calculatePromo['discount_header']['promo_id'];
-                $salesPromo->promo_name = $calculatePromo['discount_header']['promo_name'];
-                $salesPromo->discount_percent = $calculatePromo['discount_header']['discount_percent'];
-                $salesPromo->discount_amount = $calculatePromo['discount_header']['discount_amount'];
-                $salesPromo->save();
-            }
-
-            if (!empty($calculatePromo['result_items'])) {
-                foreach ($calculatePromo['result_items'] as $promo) {
-                    $items = $promo['items'];
-                    $promo_id = $promo['promo_id'];
-                    $promo_name = $promo['promo_name'];
-                    $disc_percent = $items[0]['disc_percent'];
-                    $disc_amount = collect($items)->sum('disc_amount');
-
-                    $salesPromo = new SalesOrderPromo();
-                    $salesPromo->sales_order_id = $soId;
-                    $salesPromo->promo = $promo_id;
-                    $salesPromo->promo_name = $promo_name;
-                    $salesPromo->discount_percent = $disc_percent;
-                    $salesPromo->discount_amount = $disc_amount;
-                    $salesPromo->save();
                 }
             }
 
@@ -782,12 +732,10 @@ class SalesOrderController extends Controller
             // RECALC TAX JIKA ADA DISCOUNT HEADER
             // =============================
             $discAmountHeader = !empty($calculatePromo['discount_header'])
-                ? $calculatePromo['discount_header']['discount_amount']
+                ? array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'))
                 : 0;
 
-
             if ($discAmountHeader > 0) {
-                // Hitung ulang tax proporsional per baris
                 $details = SalesOrderDetail::where('sales_order_id', $hdrId)
                     ->where('is_free_good', 0)
                     ->get();
@@ -801,43 +749,84 @@ class SalesOrderController extends Controller
                     $discPorsi = $discAmountHeader * $proporsi;
                     $dppAfterDisc = $det->subtotal - $discPorsi;
 
-                    $taxRate = $det->tax_rate ?? 0;
+                    $detTaxRate = $det->tax_rate ?? 0;
                     $typeTax = $det->tax_type ?? '';
 
                     $taxAfterDisc = 0;
                     if ($typeTax == 'include') {
-                        $taxAfterDisc = $dppAfterDisc - $dppAfterDisc / (1 + $taxRate / 100);
-                        $newGrandTotal += $dppAfterDisc; // sudah include tax
+                        $taxAfterDisc = $dppAfterDisc - $dppAfterDisc / (1 + $detTaxRate / 100);
+                        $newGrandTotal += $dppAfterDisc;
                     } else {
-                        $taxAfterDisc = $dppAfterDisc * ($taxRate / 100);
+                        $taxAfterDisc = $dppAfterDisc * ($detTaxRate / 100);
                         $newGrandTotal += $dppAfterDisc + $taxAfterDisc;
                     }
 
                     $newTaxAmount += $taxAfterDisc;
-
-                    // Update tax_amount per detail
                     $det->tax_amount = $taxAfterDisc;
                     $det->save();
                 }
 
                 $grandTotal = $newGrandTotal;
-                $taxAmount = $newTaxAmount;
+                $totalTaxAmount = $newTaxAmount;
             }
 
             // Update total header
             $header->total_amount = $grandTotal;
             $header->tax_id = $taxId;
-            $header->tax_amount = $taxAmount;
+            $header->tax_amount = $totalTaxAmount;
             $header->tax_base = $taxRate;
             $header->save();
+            $soId = $header->id;
+
+            // =============================
+            // SIMPAN PROMO
+            // =============================
+            SalesOrderPromo::where('sales_order_id', $soId)->delete();
+            SalesOrderPromoItem::where('sales_order_id', $soId)->delete();
+
+            // Promo Header → sales_order_promo
+            if (!empty($calculatePromo['discount_header'])) {
+                foreach ($calculatePromo['discount_header'] as $dh) {
+                    $salesPromo = new SalesOrderPromo();
+                    $salesPromo->sales_order_id = $soId;
+                    $salesPromo->promo = $dh['promo_id'];
+                    $salesPromo->promo_name = $dh['promo_name'];
+                    $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
+                    $salesPromo->discount_amount = $dh['discount_amount'] ?? 0;
+                    $salesPromo->save();
+                }
+            }
+
+            // Promo Item → sales_order_promo_item
+            if (!empty($calculatePromo['result_items'])) {
+                foreach ($calculatePromo['result_items'] as $promo) {
+                    foreach ($promo['items'] as $promoItem) {
+                        $detailId = $detailIdMap[$promoItem['product_id']] ?? null;
+                        if (!$detailId) continue;
+
+                        $discAmount = $promoItem['discountAmount'] ?? 0;
+                        $discPercent = $promoItem['discountPercent'] ?? 0;
+                        if ($discAmount == 0 && $discPercent == 0) continue;
+
+                        $salesPromoItem = new SalesOrderPromoItem();
+                        $salesPromoItem->sales_order_id = $soId;
+                        $salesPromoItem->sales_order_detail_id = $detailId;
+                        $salesPromoItem->promo = $promo['promo_id'];
+                        $salesPromoItem->promo_name = $promo['promo_name'];
+                        $salesPromoItem->discount_percent = $discPercent;
+                        $salesPromoItem->discount_amount = $discAmount;
+                        $salesPromoItem->save();
+                    }
+                }
+            }
 
             DB::commit();
             $result['is_valid'] = true;
             $result['path'] = $dbpathlampOutlet . $fileOutletName;
             $result['message'] = 'Success';
             $result['sales_order_id'] = $hdrId;
+
         } catch (\Throwable $th) {
-            // throw $th;
             DB::rollBack();
             $result['message'] = $th->getMessage();
         }
