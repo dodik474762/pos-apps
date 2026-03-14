@@ -164,6 +164,10 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $promo_item = DB::table('sales_order_promo_item as sopi')
+        ->where('sales_order_id', $data['id'])
+        ->get();
+        
         // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);
         // $qr = 'data:image/png;base64,'.base64_encode($rawQr);
         $qr = '';
@@ -189,7 +193,7 @@ class SalesOrderController extends Controller
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr', 'promo'))
+        $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr', 'promo', 'promo_item'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('SO-'.$data->so_number.'.pdf');
