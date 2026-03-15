@@ -280,4 +280,99 @@ class ProductController extends Controller
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
     }
+
+    public function updateProduct()
+    {
+        // Ambil semua produk beserta UOM-nya sekaligus
+        $products = DB::table('product as p')
+            ->whereNull('p.deleted')
+            ->select([
+                'p.id as product_id',
+                'pu.id as uom_id',
+                'pu.unit_dasar',
+                'pu.unit_tujuan',
+                'pu.nilai_konversi',
+                'pu.level',
+                'puo.price as harga_jual'
+            ])
+            ->join('product_uom as pu', 'pu.product', 'p.id')
+            ->join('product_uom_price as puo', function($q){
+                return $q->on('puo.product', 'p.id')
+                ->on('puo.unit', 'pu.unit_tujuan');
+            })
+            ->whereNull('pu.deleted')
+            ->where('p.id', '<=', 2)
+            ->orderBy('p.id')
+            ->orderBy('pu.level', 'desc') // level terbesar dulu
+            ->get()
+            ->groupBy('product_id'); // group per produk
+
+        foreach ($products as $productId => $uoms) {
+            $hargaJual = $uoms->first()->harga_jual ?? 0;
+
+            // Unit terbesar = level tertinggi (sudah urut desc)
+            $unitTerbesar = $uoms->first();
+
+            // Hitung multiplier unit terbesar ke terkecil
+            // Kalikan semua nilai_konversi dari level terbesar ke terkecil
+            // Karena sudah urut desc, tinggal akumulasi
+            $multiplierTerbesar = 1;
+            foreach ($uoms as $uom) {
+                if ($uom->level > 1) { // skip level 1 (unit terkecil)
+                    $multiplierTerbesar *= $uom->nilai_konversi;
+                }
+            }
+
+            // Sekarang hitung per unit tanpa query tambahan
+            $updates = [];
+            $runningMultiplier = $multiplierTerbesar;
+
+            foreach ($uoms as $uom) {
+                // nilai_konversi_terkecil = multiplier dari unit ini ke unit terkecil
+                $nilaiKonversiTerkecil = $runningMultiplier;
+
+                // Harga per unit ini = hargaJual / (multiplierTerbesar / runningMultiplier)
+                $hargaPerUnit = $multiplierTerbesar > 0
+                    ? $hargaJual / ($multiplierTerbesar / $runningMultiplier)
+                    : 0;
+
+                echo "Product: {$productId} | Level: {$uom->level} | Unit: {$uom->unit_tujuan} | ";
+                echo "nilai_konversi_terkecil: {$nilaiKonversiTerkecil} | Harga: {$hargaPerUnit}\n";
+
+                $updates[] = [
+                    'uom_id'                  => $uom->uom_id,
+                    'nilai_konversi_terkecil' => $nilaiKonversiTerkecil,
+                    'harga_per_unit'          => $hargaPerUnit,
+                    'unit_tujuan'             => $uom->unit_tujuan
+                ];
+
+                // Kurangi running multiplier untuk unit berikutnya (level lebih kecil)
+                if ($uom->level > 1) {
+                    $runningMultiplier /= $uom->nilai_konversi;
+                }
+            }
+
+            // Batch update — 1 query per uom_id, tapi dalam 1 loop produk
+            foreach ($updates as $upd) {
+                DB::table('product_uom')
+                    ->where('id', $upd['uom_id'])
+                    ->update([
+                        'nilai_konversi_terkecil' => $upd['nilai_konversi_terkecil'],
+                        'updated_at'              => now(),
+                    ]);
+                DB::table('product_uom_price')
+                    ->where('product', $productId)
+                    ->where('unit', $upd['unit_tujuan'])
+                    ->update([
+                        'price'          => $upd['harga_per_unit'],
+                        'updated_at'              => now(),
+                    ]);
+            }
+
+            echo "--- Product {$productId} selesai ---\n";
+        }
+
+        echo "Update selesai.";
+        die;
+    }
 }

@@ -125,6 +125,7 @@ Route::get('master/product', [ProductController::class, 'index']);
 Route::get('master/product/add', [ProductController::class, 'add']);
 Route::get('master/product/ubah', [ProductController::class, 'ubah']);
 Route::get('master/product/import', [ProductController::class, 'import']);
+Route::get('master/product/updateProduct', [ProductController::class, 'updateProduct']);
 
 Route::get('master/product_type', [ProductTypeController::class, 'index']);
 Route::get('master/product_type/add', [ProductTypeController::class, 'add']);
