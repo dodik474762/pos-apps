@@ -712,7 +712,7 @@ class SalesOrderController extends Controller
                     foreach ($freeGoods as $free) {
                         $freeDetail = new SalesOrderDetail();
                         $freeDetail->sales_order_id = $hdrId;
-                        $freeDetail->product_id = $free['product'];
+                        $freeDetail->product_id = $free['product_id'];
                         $freeDetail->qty = $free['qty'];
                         $freeDetail->unit = $free['unit'];
                         $freeDetail->unit_price = 0;
