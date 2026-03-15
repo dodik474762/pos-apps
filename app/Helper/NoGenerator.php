@@ -937,6 +937,43 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
+function getHargaSemuaUnit($productId, $hargaUnit, $unitId)
+{
+    $result = [];
+
+    // Simpan harga unit ini
+    $unitName = DB::table('unit')->where('id', $unitId)->value('name');
+    $result[] = [
+        'unit_id'   => $unitId,
+        'unit_name' => $unitName,
+        'harga'     => $hargaUnit,
+    ];
+
+    // Cari konversi dari unit ini ke unit lebih kecil
+    // unit_tujuan = unitId ini, unit_dasar = unit lebih kecil
+    $conversion = DB::table('product_uom')
+        ->where('product', $productId)
+        ->where('unit_tujuan', $unitId)
+        ->whereNull('deleted')
+        ->first();
+
+    if ($conversion && $conversion->level != 1) {
+        // Harga unit lebih kecil = harga sekarang / nilai_konversi
+        $hargaUnitLebihKecil = $hargaUnit / $conversion->nilai_konversi;
+
+        // Rekursi ke unit lebih kecil
+        $subResult = getHargaSemuaUnit(
+            $productId,
+            $hargaUnitLebihKecil,
+            $conversion->unit_dasar
+        );
+
+        $result = array_merge($result, $subResult);
+    }
+
+    return $result;
+}
+
 
 function getSmallestUnitV2($productId, $fromUnitId, $qty = 1)
 {

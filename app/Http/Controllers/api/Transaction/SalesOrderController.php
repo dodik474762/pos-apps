@@ -1577,7 +1577,20 @@ class SalesOrderController extends Controller
                         $discountAmounts += $discountAmount;
                     }
                     if ($promo->discount_type == 'price') {
-                        $v['price'] = $promo->discount_value;
+                        // $v['price'] = $promo->discount_value;
+                        $originalPrice = $v['price'];                        
+                        $allPrice = getHargaSemuaUnit($v['product_id'], $promo->discount_value, $promo->unit);
+                        foreach ($allPrice as $p) {
+                            if($v['unit_id'] == $p['unit_id']){
+                                $v['price'] = $p['harga'];
+                                break;
+                            }
+                        }                                            
+                        // Output:
+                        // CARTON  => 144.000
+                        // PACK    => 24.000
+                        // RENCENG => 12.000
+                        // PCS     => 1.000
                     }
 
                     // Tandai diskon sudah diterapkan untuk promo mix ini
