@@ -301,7 +301,7 @@ class ProductController extends Controller
                 ->on('puo.unit', 'pu.unit_tujuan');
             })
             ->whereNull('pu.deleted')
-            ->where('p.id', '<=', 2)
+            ->where('p.id', '>=', 180)
             ->orderBy('p.id')
             ->orderBy('pu.level', 'desc') // level terbesar dulu
             ->get()
