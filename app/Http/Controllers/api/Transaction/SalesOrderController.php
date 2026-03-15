@@ -1643,6 +1643,13 @@ class SalesOrderController extends Controller
         }
 
         // Tambahkan juga item yang tidak kena promo apapun
+        // Akumulasi grand total setelah disc — termasuk item yang kena promo
+        foreach ($resultItems as $r) {
+            foreach ($r['items'] as $ri) {
+                $grandTotalAfterItemDisc += $ri['subtotal'];
+            }
+        }
+        // Tambah item yang tidak kena promo apapun
         foreach ($items as $item) {
             $productInPromo = false;
             foreach ($resultItems as $r) {
