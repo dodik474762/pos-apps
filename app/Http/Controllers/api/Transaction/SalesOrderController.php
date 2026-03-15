@@ -694,12 +694,12 @@ class SalesOrderController extends Controller
 
                 if (isset($item['taxAmount'])) {
                     $detail->tax_amount = $item['taxAmount'];
-                    $detail->tax_rate = $item['tax_rate'];
+                    $detail->tax_rate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
                     $detail->tax_type = $item['type_tax'];
-                    $detail->tax = $item['tax_sale'];
+                    $detail->tax = in_array($item['tax_sale'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_sale'];
                     $totalTaxAmount += $item['taxAmount'];
-                    $taxId = $item['tax_sale'];
-                    $taxRate = $item['tax_rate'];
+                    $taxId = in_array($item['tax_sale'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_sale'];
+                    $taxRate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
                 }
 
                 $detail->save();
