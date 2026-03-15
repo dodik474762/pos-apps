@@ -271,6 +271,7 @@ class SalesOrderController extends Controller
                     }
                 }
 
+
                 $detail->sales_order_id = $hdrId;
                 $detail->product_id = $item['product_id'];
                 $detail->qty = $item['qty'];
@@ -279,9 +280,9 @@ class SalesOrderController extends Controller
                 $detail->discount_type = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $item['disc_percent'] ?? 0;
                 $detail->discount_amount = $item['disc_amount'] ?? 0;
-                $detail->tax = $item['tax'] ?? null;
-                $detail->tax_rate = $item['tax_rate'] ?? 0;
-                $detail->tax_type = $item['tax_type'] ?? null;
+                $detail->tax = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+                $detail->tax_rate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+                $detail->tax_type = $item['tax_type'] ?? 'include';
                 $detail->tax_amount = $item['tax_amount'] ?? 0;
                 $detail->subtotal = $item['subtotal'] ?? 0;
                 $detail->is_free_good = $item['is_freegood'] ?? 0;
@@ -294,8 +295,8 @@ class SalesOrderController extends Controller
                     $detailIdMap[$item['product_id']] = $detail->id;
                     $grandTotal += $item['subtotal'];
                     $totalTaxAmount += $item['tax_amount'] ?? 0;
-                    $taxId = $item['tax'] ?? null;
-                    $taxRate = $item['tax_rate'] ?? 0;
+                    $taxId = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+                    $taxRate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
                 }
             }
 
@@ -1630,7 +1631,7 @@ class SalesOrderController extends Controller
             $resultItems[] = [
                 'promo_id' => $promo->id,
                 'promo_name' => $promo->promo_name,
-                'items' => $itemsValue,
+                'items' => $itemsValueApplied,
                 'discount_type' => $promo->discount_type,
                 'discount_percent' => $discountPercent,
                 'discount_amount' => $discountAmount,
