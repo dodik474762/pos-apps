@@ -195,7 +195,7 @@
                                     <tbody id="detail-body">
                                         @if (!empty($data_item))
                                             @foreach ($data_item as $item)
-                                                <tr class="input {{ $item->is_free_good ? 'freegood' : '' }}" data_id="{{ $item->id }}" {{ $item->is_free_good ? 'data-free-for='.$item->product_id : '' }}>
+                                                <tr {{ $item->is_free_good ? 'data-free-for='.$item->product_id : '' }} class="input {{ $item->is_free_good ? 'freegood' : '' }}" data_id="{{ $item->id }}">
                                                     <td>
                                                         <div class="input-group">
                                                             <button {{ $item->is_free_good ? 'disabled' : '' }} class="btn btn-outline-primary" type="button"
