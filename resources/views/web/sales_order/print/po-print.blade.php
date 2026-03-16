@@ -102,10 +102,10 @@
         <tr>
             <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
             <td style="padding-left:40px;"><strong>Keterangan:</strong> {{ $data->remarks ?? '-' }}</td>
+            <td style="padding-left:40px;"><strong>Channel Outlet:</strong> {{ $data->customers->channel_outlet ?? '-' }}</td>
         </tr>
     </table>
 
-    <h4>Detail Barang</h4>
     <h4>Detail Barang</h4>
 <table class="table-detail">
     <thead>
