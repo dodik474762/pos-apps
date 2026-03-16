@@ -377,13 +377,19 @@
                             Confirm
                         </button>
                     @else
-                        <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                        <!-- <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                            Submit
+                        </button> -->
+                        <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')" class="btn btn-success waves-effect waves-light me-1">
                             Submit
                         </button>
                     @endif
                 @endif
             @else
-                <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                <!-- <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                    Submit
+                </button> -->
+                 <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')" class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
             @endif

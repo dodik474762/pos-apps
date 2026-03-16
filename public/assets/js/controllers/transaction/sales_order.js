@@ -2039,7 +2039,7 @@ let SalesOrder = {
         });
     },
 
-    checkDiscount: (elm, e) => {
+    checkDiscount: (elm, e, state = 'check') => {
         e.preventDefault();
         const customerId = $("#customer_id").val();
         if (!customerId) {
@@ -2256,6 +2256,10 @@ let SalesOrder = {
                 // UPDATE GRAND TOTAL
                 // ========================
                 SalesOrder.hitungSummaryAll();
+
+                if(state == 'save'){
+                    SalesOrder.submit(elm, e);
+                }
             },
         });
     },
