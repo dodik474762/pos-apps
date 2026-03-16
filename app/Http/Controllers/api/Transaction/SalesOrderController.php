@@ -219,6 +219,11 @@ class SalesOrderController extends Controller
             $header->save();
 
             $hdrId = $header->id;
+            // Hapus freegood lama
+            SalesOrderDetail::where('sales_order_id', $hdrId)
+                ->where('is_free_good', 1)
+                ->delete();
+
             $grandTotal = 0;
             $totalTaxAmount = 0;
             $taxId = 0;

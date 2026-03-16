@@ -2082,12 +2082,26 @@ let SalesOrder = {
                 }
 
                 const data = resp.data;
+
+                // ========================
+                // SIMPAN data_id FREEGOOD LAMA SEBELUM DIHAPUS
+                // ========================
+                const savedFreeGoodIds = {};
+                $("table#table-items tbody tr.freegood").each(function () {
+                    const freeFor = $(this).data("free-for");         // product_id induk
+                    const freeProductId = $(this).find("#product").attr("data_id"); // product_id free good
+                    const dataId = $(this).attr("data_id") || null;
+                    if (freeFor && freeProductId) {
+                        const key = freeFor + "_" + freeProductId;
+                        savedFreeGoodIds[key] = dataId;
+                        console.log("saved key:", key, "=>", dataId);
+                    }
+                });
+
                 // ========================
                 // RESET DULU SEMUA BARIS
                 // ========================
-                // Hapus semua baris freegood lama
                 $("table#table-items tbody tr.freegood").remove();
-                // Reset disc per baris
                 $("table#table-items tbody tr.input").not(".freegood").each(function () {
                     $(this).find("#disc_percent").val("0");
                     $(this).find("#disc_amount").val("0").attr("amount", "0");
@@ -2103,7 +2117,6 @@ let SalesOrder = {
                 if (data.result_items && data.result_items.length > 0) {
                     data.result_items.forEach((promo) => {
                         promo.items.forEach((item) => {
-                            // Cari baris yang product_id-nya match
                             $("table#table-items tbody tr.input").not(".freegood").each(function () {
                                 const rowProductId = $(this).find("#product").attr("data_id");
                                 if (rowProductId != item.product_id) return;
@@ -2116,10 +2129,8 @@ let SalesOrder = {
                                 const subtotal = (price * qty) - discAmount;
                                 const taxRate = parseFloat(tr.find("#product").attr("tax_rate")) || 0;
 
-                                // Tax always include: tax = subtotal - subtotal / (1 + taxRate/100)
                                 const taxAmount = subtotal - subtotal / (1 + taxRate / 100);
 
-                                // Update harga jika discount_type = price
                                 if (promo.discount_type === "price") {
                                     tr.find("#unit_price").val(
                                         new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price)
@@ -2147,7 +2158,6 @@ let SalesOrder = {
                         // ========================
                         if (promo.discount_free && promo.discount_free.length > 0) {
                             promo.discount_free.forEach((free) => {
-                                // Cari baris produk induknya                               
                                 $("table#table-items tbody tr.input").not(".freegood").each(function () {
                                     const rowProductId = $(this).find("#product").attr("data_id");
                                     const freeFor = promo.items[0]?.product_id;
@@ -2156,31 +2166,36 @@ let SalesOrder = {
                                     const tr = $(this);
                                     const exists = tr.next('tr.freegood[data-free-for="' + freeFor + '"]').length > 0;
                                     if (!exists) {
+                                        // Ambil data_id lama jika mode edit
+                                        const savedKey = free.product_id + "_" + free.product_id;
+                                        console.log('savedKey', savedKey);
+                                        const existingDataId = savedFreeGoodIds[savedKey] || "";
+
                                         const freeRow = `
-                                        <tr class="input freegood" data-free-for="${freeFor}">
-                                        <td>
-                                            <div class="input-group">
-                                            <button class="btn btn-outline-secondary" type="button" disabled>Free</button>
-                                            <input disabled type="text" id="product" class="form-control"
-                                                tax="0" tax_amount="0" tax_type="" tax_rate="0"
-                                                data_id="${free.product_id}"
-                                                value="${free.product_name || 'Free Product'}">
-                                            </div>
-                                        </td>
-                                        <td id="unit" data_id="${free.unit}">${free.unit_name || ""}</td>
-                                        <td><input type="number" class="form-control" id="qty" value="${free.qty}" disabled></td>
-                                        <td><input type="text" class="form-control" price="0" id="unit_price" value="0" disabled></td>
-                                        <td><input type="text" class="form-control" id="disc_percent" value="0" disabled></td>
-                                        <td><input type="text" class="form-control" amount="0" id="disc_amount" value="0" disabled></td>
-                                        <td><input disabled type="text" class="form-control" id="subtotal" subtotal="0" value="0"></td>
-                                        <td><input disabled type="text" class="form-control" amount="0" id="tax_amount" value="0"></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger" disabled>
-                                            <i class="bx bx-gift"></i>
-                                            </button>
-                                        </td>
-                                        </tr>
-                                        `;
+                                    <tr class="input freegood" data-free-for="${freeFor}" data_id="${existingDataId}">
+                                    <td>
+                                        <div class="input-group">
+                                        <button class="btn btn-outline-secondary" type="button" disabled>Free</button>
+                                        <input disabled type="text" id="product" class="form-control"
+                                            tax="0" tax_amount="0" tax_type="" tax_rate="0"
+                                            data_id="${free.product_id}"
+                                            value="${free.product_name || 'Free Product'}">
+                                        </div>
+                                    </td>
+                                    <td id="unit" data_id="${free.unit}">${free.unit_name || ""}</td>
+                                    <td><input type="number" class="form-control" id="qty" value="${free.qty}" disabled></td>
+                                    <td><input type="text" class="form-control" price="0" id="unit_price" value="0" disabled></td>
+                                    <td><input type="text" class="form-control" id="disc_percent" value="0" disabled></td>
+                                    <td><input type="text" class="form-control" amount="0" id="disc_amount" value="0" disabled></td>
+                                    <td><input disabled type="text" class="form-control" id="subtotal" subtotal="0" value="0"></td>
+                                    <td><input disabled type="text" class="form-control" amount="0" id="tax_amount" value="0"></td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-danger" disabled>
+                                        <i class="bx bx-gift"></i>
+                                        </button>
+                                    </td>
+                                    </tr>
+                                    `;
                                         tr.after(freeRow);
                                     }
                                 });
@@ -2197,7 +2212,6 @@ let SalesOrder = {
                     const productId = tr.find("#product").attr("data_id");
                     if (!productId) return;
 
-                    // Cek apakah baris ini sudah di-handle oleh promo
                     let sudahKenaPromo = false;
                     if (data.result_items && data.result_items.length > 0) {
                         data.result_items.forEach((promo) => {
@@ -2238,7 +2252,6 @@ let SalesOrder = {
                 // APPLY DISCOUNT HEADER
                 // ========================
                 if (data.discount_header && data.discount_header.length > 0) {
-                    // Ambil total disc amount dari semua discount header
                     let totalDiscPercent = 0;
                     let totalDiscAmount = 0;
                     data.discount_header.forEach((dh) => {
@@ -2257,7 +2270,7 @@ let SalesOrder = {
                 // ========================
                 SalesOrder.hitungSummaryAll();
 
-                if(state == 'save'){
+                if (state == 'save') {
                     SalesOrder.submit(elm, e);
                 }
             },
