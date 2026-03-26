@@ -29,6 +29,11 @@ use App\Models\Transaction\SalesInvoiceHeader;
 
 class SalesOrderController extends Controller
 {
+    public function __construct()
+    {
+        date_default_timezone_set('Asia/Jakarta');
+    }
+
     public function getTableName()
     {
         return 'sales_order_headers';
@@ -2186,9 +2191,18 @@ class SalesOrderController extends Controller
                 ->first();
 
             if (empty($mobile_session)) {
-                DB::rollBack();
-                $result['message'] = 'Session Tidak Ditemukan';
-                return response()->json($result);
+                // DB::rollBack();
+                // $result['message'] = 'Session Tidak Ditemukan';
+                // return response()->json($result);
+                $mobile_session = new MobileSession();
+                $mobile_session->users = $users_id;
+                $mobile_session->date_process = date('Y-m-d');
+                $mobile_session->status = 'OPEN';
+                $mobile_session->save();
+                $mobilId= $mobile_session->id;
+
+                $mobile_session = MobileSession::where('id', $mobilId)
+                ->first();
             }
 
             $mobile_session->total_visit = $data['total_visit'];
