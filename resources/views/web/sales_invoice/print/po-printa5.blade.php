@@ -7,7 +7,8 @@
 
     <style>
         @page {
-            size: A5 landscape; /* 📌 Ukuran setengah A4 */
+            /* size: A5 landscape;  */
+            /* 📌 Ukuran setengah A4 */
             margin: 5mm;        /* 📌 Margin kecil khas dot matrix */
         }
 
