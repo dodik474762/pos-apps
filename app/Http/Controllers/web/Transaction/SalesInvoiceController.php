@@ -293,8 +293,9 @@ class SalesInvoiceController extends Controller
             ]);
         }
 
+        $customPaper = [0, 0, 612.0, 792.0]; //Letter
         $pdf = Pdf::loadView('web.sales_invoice.print.multipleprinta5', compact('invoices', 'company'))
-            ->setPaper('a4', 'portrait');
+            ->setPaper($customPaper, 'portrait');
 
         return $pdf->stream('Multiple-SIInvoice.pdf');
     }
