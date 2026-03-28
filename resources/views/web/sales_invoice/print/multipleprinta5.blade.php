@@ -14,29 +14,26 @@
             font-size: 9px;
         }
 
-        /* ✅ Wrapper baris: 2 invoice per baris */
-        .invoice-row {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+        /* ✅ Wrapper 1 halaman = 2 invoice atas-bawah */
+        .page-wrapper {
             page-break-after: always;
         }
 
-        .invoice-row:last-child {
+        .page-wrapper:last-child {
             page-break-after: avoid;
         }
 
-        /* ✅ Tiap kolom = 1 invoice, lebar 50% */
-        .invoice-col {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            padding: 1mm 2mm;
-            border-right: 1px dashed #aaa;
+        /* ✅ Tiap invoice ambil ~50% tinggi halaman */
+        .invoice-block {
+            height: 48%;
+            overflow: hidden;
+            padding-bottom: 2mm;
         }
 
-        .invoice-col:last-child {
-            border-right: none;
+        /* Garis pemisah antar invoice */
+        .invoice-divider {
+            border-top: 1px dashed #aaa;
+            margin: 2mm 0;
         }
 
         /* scale down */
@@ -72,7 +69,7 @@
 @endphp
 
 @foreach ($chunks as $chunkIndex => $chunk)
-<div class="invoice-row">
+<div class="page-wrapper">
 
     @foreach ($chunk as $data)
     @php
@@ -80,9 +77,15 @@
         $do = empty($data->do) ? [] : $data->do;
         $so = empty($data->do) ? $data->so : $do->so;
         $salesman_name = $so->salesman->nama_lengkap ?? '-';
+        $globalIndex = $chunkIndex * 2 + $loop->iteration;
     @endphp
 
-    <div class="invoice-col">
+    {{-- Garis pemisah (hanya antara invoice 1 dan 2, bukan sebelum yang pertama) --}}
+    @if (!$loop->first)
+        <div class="invoice-divider"></div>
+    @endif
+
+    <div class="invoice-block">
         <div class="scale-down">
             @include('web.sales_invoice.print.po-printa5', [
                 'data'         => $data,
@@ -93,7 +96,7 @@
             ])
         </div>
         <div class="page-info">
-            Invoice {{ $loop->parent->index * 2 + $loop->iteration }} / {{ $invoices->count() }}
+            Invoice {{ $globalIndex }} / {{ $invoices->count() }}
         </div>
     </div>
 

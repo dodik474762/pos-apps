@@ -2185,7 +2185,7 @@ class SalesOrderController extends Controller
                 ]
             ];
         }
-        $data->periode = date('Y-m');
+        $data['periode'] = date('Y-m');
         $result['is_valid'] = true;
         $result['data'] = $data;
         return response()->json($result);

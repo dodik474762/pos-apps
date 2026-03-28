@@ -9,7 +9,9 @@
         @page {
             /* size: A5 landscape;  */
             /* 📌 Ukuran setengah A4 */
-            margin: 5mm;        /* 📌 Margin kecil khas dot matrix */
+            /* margin: 5mm;  */
+                   /* 📌 Margin kecil khas dot matrix */
+            margin: 3mm 2mm; 
         }
 
         body {
@@ -64,101 +66,101 @@
     {{-- HEADER --}}
     <table class="header-table">
         <tr>
-            <td style="width:70px;">
+            <td style="width:60px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
             </td>
             <td>
                 <strong>{{ $company->nama_company }}</strong><br>
                 <small>{!! $company->alamat !!}</small>
             </td>
-            <td style="text-align:right;">
-                <strong>FAKTUR PENJUALAN</strong><br>
+             {{-- ✅ lebar cukup, nowrap supaya tidak wrap --}}
+            <td style="width:100px; text-align:right; white-space:nowrap;">
+                <strong style="font-size:10px;">FAKTUR PENJUALAN</strong><br>
                 <small>No: {{ $data->invoice_number }}</small>
-                <br>
-                {{-- <img src="data:image/png;base64,{{ $qr }}" width="55" height="55"> --}}
             </td>
         </tr>
     </table>
 
-    {{-- INFO PO --}}
-    <table class="no-border">
+   {{-- INFO PO --}}
+    <table class="no-border" style="font-size:10px;">
         <tr>
-            <td><strong>Kode Pesanan:</strong> {{ isset($data->do->so->so_number) ? $data->do->so->so_number : $data->so->so_number }}</td>
-            <td style="padding-left:20px;"><strong>Tanggal Pesanan:</strong> {{ isset($data->do->so->so_date) ? date('d/m/Y', strtotime($data->do->so->so_date)) : date('d/m/Y', strtotime($data->so->so_date)) }}</td>
+            <td style="font-size:10px !important;"><strong>Kode Pesanan:</strong> {{ isset($data->do->so->so_number) ? $data->do->so->so_number : $data->so->so_number }}</td>
+            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Pesanan:</strong> {{ isset($data->do->so->so_date) ? date('d/m/Y', strtotime($data->do->so->so_date)) : date('d/m/Y', strtotime($data->so->so_date)) }}</td>
         </tr>
         <tr>
-            <td><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:20px;"><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
+            <td style="font-size:10px !important;"><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
+            <td style="padding-left:20px;font-size:10px !important;"><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
         </tr>
         <tr>
-            <td><strong>Syarat Pembarayan:</strong> {{ $data->customers->top->remarks ?? '-' }}</td>            
-            <td style="padding-left:20px;"><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
+            <td style="font-size:10px !important;"><strong>Syarat Pembayaran:</strong> {{ $data->customers->top->remarks ?? '-' }}</td>            
+            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
         </tr>
         <tr>            
-            <td><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>            
-            <td style="padding-left:20px;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
+            <td style="font-size:10px !important;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>            
+            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
         </tr>
         <tr>
-            <td><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>        
-            <td style="padding-left:20px;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>                
+            <td style="font-size:10px !important;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>        
+            <td style="padding-left:20px;font-size:10px !important;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>                
         </tr>
     </table>
 
-    <h4 style="margin-top:6px;">Detail Barang</h4>
+    <h4 style="margin-top:6px;font-size:10px !important;">Detail Barang</h4>
 
-    <table class="table-detail">
-        <thead>
+  <table class="table-detail" style="width:100%; table-layout:fixed;">
+    <thead>
+        <tr>
+            <th class="text-center" style="width:4%;">No</th>
+            <th class="text-center" style="width:36%;">Produk</th>
+            <th class="text-center" style="width:10%;">Satuan</th>
+            <th class="text-center" style="width:8%;">Qty</th>
+            <th class="text-center" style="width:14%;">Harga</th>
+            <th class="text-center" style="width:10%;">Diskon</th>
+            <th class="text-center" style="width:6%;">Note</th>
+            <th class="text-center" style="width:12%;">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($data->items as $i => $item)
             <tr>
-                <th class="text-center">No</th>
-                <th class="text-center">Produk</th>
-                <th class="text-center">Satuan</th>
-                <th class="text-center">Qty</th>
-                <th class="text-center">Harga</th>
-                <th class="text-center">Diskon</th>
-                <th class="text-center">Note</th>
-                <th class="text-center">Total Harga</th>
+                <td class="text-center">{{ $i + 1 }}</td>
+                <td style="overflow:hidden; white-space:nowrap;">{{ $item->products->name ?? '-' }}</td>
+                <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
+                <td class="text-center">{{ $item->qty }}</td>
+                <td class="text-right">{{ number_format($item->price, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
+                <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE' }}</td>
+                <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
             </tr>
-        </thead>
-        <tbody>
-            @php
-            @endphp
-            @foreach ($data->items as $i => $item)
-                <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->products->name ?? '-' }}</td>
-                    <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
-                    <td class="text-center">{{ $item->qty }}</td>
-                    <td class="text-right">{{ number_format($item->price, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ $item->so_detail->free_for == '' ? '' : 'FREE GOOD' }}</td>
-                    <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
-            </tr>
-            <tr>
-                <td colspan="7" class="text-right"><strong>Discount {{($data->so->discount_percent == '0' ? '' : $data->so->discount_percent .' %')}}</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
-            </tr>
-            <tr>
-                <td colspan="7" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
-                <!-- <td class="text-right"><strong>{{ number_format($data->tax_amount, 0, ',', '.') }}</strong></td> -->
-                <td class="text-right"><strong>0</strong></td>
-            </tr>
-            <tr>
-                <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
+        @endforeach
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
+            <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="7" class="text-right"><strong>Discount {{ $data->so->discount_percent == '0' ? '' : $data->so->discount_percent.' %' }}</strong></td>
+            <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="7" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
+            <td class="text-right"><strong>0</strong></td>
+        </tr>
+        <tr>
+            <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
+            <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
+        </tr>
+    </tfoot>
+</table>
 
     <table class="no-border">
         <tr>
-            <td>Note: Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening :<br/>{{ $company->akun_bank }} - {{ $company->akun_bank_number }} <br/>{{ $company->akun_bank_name }}</td>
+            <td style="font-size:10px !important;">
+                Note: Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening :<br/>
+                {{ $company->akun_bank }} - {{ $company->akun_bank_number }}<br/>
+                {{ $company->akun_bank_name }}
+            </td>
         </tr>
     </table>
 
