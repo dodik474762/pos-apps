@@ -518,6 +518,8 @@ class SalesOrderController extends Controller
         $data = json_decode($request->input('data'), true);
         $files_outlet = $request->file('files_outlet');
         $files_ttd = $request->file('files_ttd');
+        $files_checkin = $request->file('files_checkin');
+        $files_owner = $request->file('files_owner');
         $users_id = $data['user_id'];
 
         $periode = Carbon::parse($data['so_date'])->setTimezone('Asia/Jakarta');
@@ -553,12 +555,26 @@ class SalesOrderController extends Controller
 
             $fileOutletName = $users_id.'_outlet_' . time() . '.jpg';
             $fileTtdName = $users_id.'_signature_' . time() . '.jpg';
+            $fileCheckinName = $users_id.'_checkin_' . time() . '.jpg';
+            $fileOwnerName = $users_id.'_owner_' . time() . '.jpg';
 
             $files_outlet->move(public_path($dir), $fileOutletName);
             $dbpathlampOutlet = '/' . $dir . '/';
 
             $files_ttd->move(public_path($dir), $fileTtdName);
             $dbpathlampSignature = '/' . $dir . '/';
+
+            $dbpathlampCheckin = '';
+            if(!empty($files_checkin)){
+                $files_checkin->move(public_path($dir), $fileCheckinName);
+                $dbpathlampCheckin = '/' . $dir . '/';
+            }
+
+            $dbpathlampOwner = '';
+            if(!empty($files_owner)){
+                $files_owner->move(public_path($dir), $fileOwnerName);
+                $dbpathlampOwner = '/' . $dir . '/';
+            }
 
             $currency = Currency::where('code', 'IDR')->first();
             if (!$currency) {
@@ -613,6 +629,8 @@ class SalesOrderController extends Controller
             $header->platform = 'mobile';
             $header->photo_path = $dbpathlampOutlet . $fileOutletName;
             $header->signature_path = $dbpathlampSignature . $fileTtdName;
+            $header->checkin_path = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin.$fileCheckinName;
+            $header->owner_path = $dbpathlampOwner == '' ? null : $dbpathlampOwner.$fileOwnerName;
             $header->latitude = $data['latitude'];
             $header->longitude = $data['longitude'];
             $header->check_in_time = $check_in_time;
