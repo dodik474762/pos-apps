@@ -434,7 +434,8 @@ class SalesPlanController extends Controller
 
     public function getSalesRoutePlan(Request $request)
     {
-        $today = Carbon::today();
+        // $today = Carbon::today();
+        $today = Carbon::now('Asia/Jakarta')->startOfDay();
         $data = $request->all();
 
         $weekNow = $today->isoWeek();
