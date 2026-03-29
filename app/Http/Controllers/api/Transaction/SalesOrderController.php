@@ -2266,6 +2266,24 @@ class SalesOrderController extends Controller
             $path = $files_outlet->move(public_path($dir), $fileOutletName);
             $dbpathlampOutlet = '/' . $dir . '/';
 
+            if(isset($data['toko_tutup'])){
+                if($data['toko_tutup'] == '1'){
+                    $detail = new StockCustomer();
+                    $detail->customer = $data['customer'];
+                    $detail->product_id = 44;
+                    $detail->qty = 0;
+                    $detail->unit = 1;
+                    $detail->unit_price = 0;
+                    $detail->discount_type = null;
+                    $detail->is_free_good = 0;
+                    $detail->status = 'draft';
+                    $detail->created_by = $users_id;
+                    $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+                    $detail->toko_tutup = $data['toko_tutup'];
+                    $detail->save();
+                }
+            }
+            
             foreach ($data['details'] as $item) {
                 [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
