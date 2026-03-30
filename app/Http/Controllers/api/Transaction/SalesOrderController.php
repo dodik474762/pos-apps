@@ -558,8 +558,12 @@ class SalesOrderController extends Controller
             $fileCheckinName = $users_id.'_checkin_' . time() . '.jpg';
             $fileOwnerName = $users_id.'_owner_' . time() . '.jpg';
 
-            $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/' . $dir . '/';
+            $dbpathlampOutlet = '';
+            if(!empty($files_outlet)){
+                $files_outlet->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/' . $dir . '/';
+            }
+                            
 
             $files_ttd->move(public_path($dir), $fileTtdName);
             $dbpathlampSignature = '/' . $dir . '/';
