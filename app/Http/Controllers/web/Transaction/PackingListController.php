@@ -261,13 +261,16 @@ class PackingListController extends Controller
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number', 'sih.total_amount'])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
             ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.do_id', 'doh.id')
+                return $q->on('sih.sales_order', 'soh.id')
                     ->whereNull('sih.deleted');
             })
             ->join('customer as c', 'c.id', 'doh.customer_id')
             // ->where('doh.do_number', 'DO11250004')
             ->get();
+        // echo '<pre>';
+        // print_r($details);die;
         $doIds = $details->pluck('delivery_order_id')->toArray();
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
             ->select([
