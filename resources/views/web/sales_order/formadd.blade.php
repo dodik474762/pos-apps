@@ -151,6 +151,44 @@
                                 </div>
                             </div>
 
+                             <div class="row mb-4">
+                                <!-- Gambar Outlet -->
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Foto Checkin</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <img
+                                                id="outlet-image-preview"
+                                                src="{{ isset($data->checkin_path) ? asset($data->checkin_path) : asset('assets/images/no-image.png') }}"
+                                                alt="Outlet Image"
+                                                class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tanda Tangan Outlet -->
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Foto Dengan Pemilik Outlet</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <img
+                                                id="outlet-image-preview"
+                                                src="{{ isset($data->owner_path) ? asset($data->owner_path) : asset('assets/images/no-image.png') }}"
+                                                alt="Outlet Image"
+                                                class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <hr>
                         @endif
                     @endif
