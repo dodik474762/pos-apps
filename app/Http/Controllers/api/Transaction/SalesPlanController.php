@@ -651,7 +651,7 @@ class SalesPlanController extends Controller
             ->keyBy('code')
             ->toArray();
         // echo '<pre>';
-        // print_r($rows);
+        // print_r($masterCircle);
         // die;
 
         $salesman = !empty($rows) ? $rows[0]['kode_sales'] : '';
@@ -685,17 +685,27 @@ class SalesPlanController extends Controller
 
             $hdrId = $header->id;
 
-            // $hdrId = 15;
+            // $hdrId = 27;
 
             // Item baru atau update
             foreach ($rows as $key => $item) {
                 $detail = new SalesPlanDetailRoute();
                 $cust_id = isset($masterCustomer[$item['customer_code']]->id) ? $masterCustomer[$item['customer_code']]->id : 0;
                 $item['visit_type'] = isset($masterCircle[$item['id_circle_kunjungan']]->id) ? $masterCircle[$item['id_circle_kunjungan']]->id : 0;
+                $itemVisit = $item['visit_type'];
+                if($item['visit_type'] == '13'){
+                    $itemVisit = '14';
+                }
+                if($item['visit_type'] == '14'){
+                    $itemVisit = '13';
+                }
+
+                // echo '<pre>';
+                // print_r($item['visit_type']);die;
 
                 $detail->header_id = $hdrId;
                 $detail->customer_id = $cust_id;
-                $detail->visit_circle = $item['visit_type'];
+                $detail->visit_circle = $itemVisit;
                 $detail->visit_mon = $item['senin'] == 'Y' ? 1 : 0;
                 $detail->visit_tue = $item['selasa'] == 'Y' ? 1 : 0;
                 $detail->visit_wed = $item['rabu'] == 'Y' ? 1 : 0;

@@ -90,7 +90,8 @@ class DeliveryOrderController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
-            ->whereIn('m.status', ['draft', 'partial'])
+            // ->where('m.id', '991')
+            ->whereIn('m.status', ['draft', 'partial', 'submited'])
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
