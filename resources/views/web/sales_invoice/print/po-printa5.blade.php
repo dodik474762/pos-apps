@@ -11,7 +11,10 @@
             /* 📌 Ukuran setengah A4 */
             /* margin: 5mm;  */
                    /* 📌 Margin kecil khas dot matrix */
-            margin: 3mm 2mm; 
+            /* margin: 8mm 10mm; */
+
+            size: 215.9mm auto;  /* 8.5 inch lebar, tinggi otomatis */
+            margin: 5mm 8mm;
         }
 
         body {
@@ -57,7 +60,7 @@
         .table-detail th,
         .table-detail td {
             font-size: 10px;
-            padding: 3px;
+            padding: 2px 3px; /* kurangi padding */
         }
     </style>
 </head>
@@ -110,14 +113,14 @@
   <table class="table-detail" style="width:100%; table-layout:fixed;">
     <thead>
         <tr>
-            <th class="text-center" style="width:4%;">No</th>
-            <th class="text-center" style="width:36%;">Produk</th>
+             <th class="text-center" style="width:3%;">No</th>
+            <th class="text-center" style="width:32%;">Produk</th>
             <th class="text-center" style="width:10%;">Satuan</th>
-            <th class="text-center" style="width:8%;">Qty</th>
-            <th class="text-center" style="width:14%;">Harga</th>
-            <th class="text-center" style="width:10%;">Diskon</th>
+            <th class="text-center" style="width:7%;">Qty</th>
+            <th class="text-center" style="width:16%;">Harga</th>
+            <th class="text-center" style="width:11%;">Diskon</th>
             <th class="text-center" style="width:6%;">Note</th>
-            <th class="text-center" style="width:12%;">Total</th>
+            <th class="text-center" style="width:15%;">Total</th>
         </tr>
     </thead>
     <tbody>
