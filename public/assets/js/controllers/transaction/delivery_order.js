@@ -436,6 +436,9 @@ let DeliveryOrder = {
                     data: "nama_customer",
                 },
                 {
+                    data: "address",
+                },
+                {
                     data: "status",
                 },
                 {

@@ -85,6 +85,7 @@ class DeliveryOrderController extends Controller
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
+                'cc.address'
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
@@ -92,6 +93,7 @@ class DeliveryOrderController extends Controller
             ->whereNull('m.deleted')
             // ->where('m.id', '991')
             ->whereIn('m.status', ['draft', 'partial', 'submited'])
+            ->where('m.total_amount', '>', 0)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
