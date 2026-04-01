@@ -57,6 +57,31 @@ let PackingList = {
         window.location.href = url.base_url(PackingList.module()) + "addAll";
     },
 
+     getPostItemChecked: () => {
+        const checkboxs = $("input.checkbox-so");
+        let result = [];
+
+        checkboxs.each((index, elm) => {
+            const $check = $(elm);
+            if($check.is(':checked')){
+                const td = $(elm).closest('td');
+                const $row = td.closest('tr');
+    
+                result.push({
+                    id: td.find('a').attr('data_id') || null,
+                    so_detail_id: null,
+                    product_id: null,
+                    qty:  0,
+                    uom: null,
+                    note: "",
+                    remove: 0,
+                });
+            }
+        });
+
+        return result;
+    },
+
     getPostItem: () => {
         const rows = $("#table-items tbody tr");
         let result = [];
@@ -113,6 +138,7 @@ let PackingList = {
 
             do_list: PackingList.getPostDo(),      // 🔥 DO LIST
             details: PackingList.getPostItem(),    // 🔥 ITEM LIST
+            items_checked: PackingList.getPostItemChecked()
         };
 
         return data;
@@ -833,6 +859,9 @@ let PackingList = {
                     data: "nama_customer",
                 },
                 {
+                    data: "address",
+                },
+                {
                     data: "so_number",
                 },
                 {
@@ -845,7 +874,8 @@ let PackingList = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="PackingList.pilihDataDO(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        html += `<a href='' code="${row.code}" nama_customer="${row.nama_customer}" onclick="PackingList.pilihDataDO(this, event)" data_id="${row.id}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;
+                        <input type="checkbox" class="checkbox-so" id="check-so"/>`;
                         return html;
                     },
                 },
@@ -933,6 +963,15 @@ let PackingList = {
         });
     },
 
+    // pilihDataDO: (elm, e) => {
+    //     e.preventDefault();
+    //     const data_id = $(elm).attr("data_id");
+    //     $("button.btn-close").trigger("click");
+
+    //     PackingList.getDOConfirmed(data_id);
+    //     PackingList.getDODetailConfirmed(data_id);
+    // },
+
     pilihDataDO: (elm, e) => {
         e.preventDefault();
         const data_id = $(elm).attr("data_id");
@@ -940,6 +979,29 @@ let PackingList = {
 
         PackingList.getDOConfirmed(data_id);
         PackingList.getDODetailConfirmed(data_id);
+    },
+
+    generateCheckedDO: () => {
+        const checkboxes = $("input.checkbox-so:checked");
+        
+        if (checkboxes.length === 0) {
+            message.sweetError("Informasi", "Pilih minimal satu DO terlebih dahulu");
+            return;
+        }
+
+        // Tutup modal dulu
+        $("button.btn-close").trigger("click");
+
+        // Loop setiap checkbox yang dicentang
+        checkboxes.each((index, elm) => {
+            const td = $(elm).closest("td");
+            const data_id = td.find("a").attr("data_id");
+
+            if (data_id) {
+                PackingList.getDOConfirmed(data_id);
+                PackingList.getDODetailConfirmed(data_id);
+            }
+        });
     },
 
     pilihDataSR: (elm, e) => {

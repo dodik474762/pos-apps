@@ -141,6 +141,7 @@ class PackingListController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
+                'cc.address',
                 'cc.code as customer_code',
                 'c.code as currency_code',
                 'soh.so_number',

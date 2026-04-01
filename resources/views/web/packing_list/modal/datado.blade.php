@@ -8,6 +8,11 @@
                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
              </div>
              <div class="modal-body">
+                <button type="button" class="btn btn-success" onclick="PackingList.generateCheckedDO()">
+                    <i class="bx bx-check-double"></i> Generate Selected
+                </button>
+                <br/>
+                <br/>
                  <div class="table-responsive">
                      <table id="table-data-modal" class="table table-striped table-bordered dt-responsive nowrap"
                          style="border-collapse: collapse; border-spacing: 0; width: 100%;">
@@ -18,6 +23,7 @@
                               <th>Tanggal DO</th>
                               <th>Kode Customer</th>
                               <th>Nama Customer</th>
+                              <th>Alamat</th>
                               <th>No. SO</th>
                               <th>Tanggal SO</th>
                               <th>Status</th>
@@ -26,7 +32,7 @@
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="9">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="10">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>
