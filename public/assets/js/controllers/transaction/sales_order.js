@@ -200,6 +200,15 @@ let SalesOrder = {
                 },
                 {
                     data: "total_amount",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: "currency_code",
