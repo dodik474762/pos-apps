@@ -14,7 +14,7 @@
             /* margin: 8mm 10mm; */
 
             size: 215.9mm auto;  /* 8.5 inch lebar, tinggi otomatis */
-            margin: 5mm 8mm;
+            margin: 5mm 11mm;
         }
 
         body {
