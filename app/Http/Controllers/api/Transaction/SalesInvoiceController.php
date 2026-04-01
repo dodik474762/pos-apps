@@ -206,6 +206,7 @@ class SalesInvoiceController extends Controller
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
+                'cc.address',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')

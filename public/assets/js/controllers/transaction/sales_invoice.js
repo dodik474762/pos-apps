@@ -658,6 +658,9 @@ let SalesInvoice = {
                     data: "nama_customer",
                 },
                 {
+                    data: "address",
+                },
+                {
                     data: "status",
                 },
                 {
