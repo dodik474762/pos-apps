@@ -335,6 +335,10 @@ class CustomerController extends Controller
             $roles->address = $data['address'];
             $roles->kota = $data['kota'];
             $roles->provinsi = $data['provinsi'];
+            if(isset($data['kecamatan'])){
+                $roles->kecamatan = $data['kecamatan'];
+                $roles->kelurahan = $data['kelurahan'];
+            }
             $roles->npwp = $data['npwp'];
             $roles->customer_category = 2; //kandidat
             $roles->latitude = $data['latitude'];

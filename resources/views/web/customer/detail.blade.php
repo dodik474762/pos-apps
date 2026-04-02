@@ -136,6 +136,22 @@
                                     @endif
                                 </select>
                             </div>
+                              <div class="mb-3">
+                                <label class="form-label">Kecamatan</label>
+                                <select disabled class="form-control select2" error="Kecamatan" id="kecamatan" onchange="Customer.getKelurahan(this)">
+                                    @if (isset($data->kecamatan))
+                                        <option value="{{ $data->kecamatan }}" selected>{{ $data->kecamatan_name }}</option>
+                                    @endif
+                                </select>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Kelurahan</label>
+                                <select disabled class="form-control select2" error="Kelurahan" id="kelurahan">
+                                    @if (isset($data->kelurahan))
+                                        <option value="{{ $data->kelurahan }}" selected>{{ $data->kelurahan_name }}</option>
+                                    @endif
+                                </select>
+                            </div>
                             <div class="mb-3">
                                 <label>NPWP</label>
                                 <div>
