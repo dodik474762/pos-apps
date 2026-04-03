@@ -85,30 +85,30 @@
     </table>
 
    {{-- INFO PO --}}
-    <table class="no-border" style="font-size:10px;">
+    <table class="no-border" style="font-size:12px;">
         <tr>
-            <td style="font-size:10px !important;"><strong>Kode Pesanan:</strong> {{ isset($data->do->so->so_number) ? $data->do->so->so_number : $data->so->so_number }}</td>
-            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Pesanan:</strong> {{ isset($data->do->so->so_date) ? date('d/m/Y', strtotime($data->do->so->so_date)) : date('d/m/Y', strtotime($data->so->so_date)) }}</td>
+            <td style="font-size:12px !important;"><strong>Kode Pesanan:</strong> {{ isset($data->do->so->so_number) ? $data->do->so->so_number : $data->so->so_number }}</td>
+            <td style="padding-left:20px;font-size:12px !important;"><strong>Tanggal Pesanan:</strong> {{ isset($data->do->so->so_date) ? date('d/m/Y', strtotime($data->do->so->so_date)) : date('d/m/Y', strtotime($data->so->so_date)) }}</td>
         </tr>
         <tr>
-            <td style="font-size:10px !important;"><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
-            <td style="padding-left:20px;font-size:10px !important;"><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
+            <td style="font-size:12px !important;"><strong>Pelanggan:</strong> {{ $data->customers->nama_customer ?? '-' }}</td>
+            <td style="padding-left:20px;font-size:12px !important;"><strong>Nomor Faktur:</strong> {{ $data->invoice_number }}</td>
         </tr>
         <tr>
-            <td style="font-size:10px !important;"><strong>Syarat Pembayaran:</strong> {{ $data->customers->top->remarks ?? '-' }}</td>            
-            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
+            <td style="font-size:12px !important;"><strong>Syarat Pembayaran:</strong> {{ $data->customers->top->remarks ?? '-' }}</td>            
+            <td style="padding-left:20px;font-size:12px !important;"><strong>Tanggal Faktur:</strong> {{ date('d/m/Y', strtotime($data->invoice_date)) }}</td>
         </tr>
         <tr>            
-            <td style="font-size:10px !important;"><strong>Gudang:</strong> {{ $data->warehouses->name ?? '-' }}</td>            
-            <td style="padding-left:20px;font-size:10px !important;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
+            <td style="font-size:12px !important;"><strong>Alamat:</strong> {{ $data->customers->address ?? '-' }}</td>            
+            <td style="padding-left:20px;font-size:12px !important;"><strong>Tanggal Jatuh Tempo:</strong> {{ date('d/m/Y', strtotime($data->due_date)) }}</td>
         </tr>
         <tr>
-            <td style="font-size:10px !important;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>        
-            <td style="padding-left:20px;font-size:10px !important;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>                
+            <td style="font-size:12px !important;"><strong>Penjual:</strong> {{ $salesman_name ?? '-' }}</td>        
+            <td style="padding-left:20px;font-size:12px !important;"><strong>No. Kiriman:</strong> {{ isset($data->do->do_number) ? $data->do->do_number : '-' }}</td>                
         </tr>
     </table>
 
-    <h4 style="margin-top:6px;font-size:10px !important;">Detail Barang</h4>
+    <h4 style="margin-top:6px;font-size:12px !important;">Detail Barang</h4>
 
   <table class="table-detail" style="width:100%; table-layout:fixed;">
     <thead>
@@ -159,7 +159,7 @@
 
     <table class="no-border">
         <tr>
-            <td style="font-size:10px !important;">
+            <td style="font-size:12px !important;">
                 Note: Barang telah diterima dengan cukup dan baik, pembayaran transfer hanya diakui melalui rekening :<br/>
                 {{ $company->akun_bank }} - {{ $company->akun_bank_number }}<br/>
                 {{ $company->akun_bank_name }}
