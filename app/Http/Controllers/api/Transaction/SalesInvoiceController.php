@@ -590,7 +590,15 @@ class SalesInvoiceController extends Controller
             $items = SalesInvoiceDtl::where('invoice_id', $data['id'])->get();
 
             $do = DeliveryOrderHeader::find($menu->do_id);
-            $so = SalesOrderHeader::find($do->so_id);
+            if(empty($do)){
+              $so = SalesOrderHeader::find($menu->sales_order);
+              $so->status = 'draft';
+              $so->save();
+            }else{
+              $so = SalesOrderHeader::find($do->so_id);
+              $so->status = 'draft';
+              $so->save();
+            }            
 
             foreach ($items as $value) {
 
