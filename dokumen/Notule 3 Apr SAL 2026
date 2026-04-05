@@ -1,0 +1,33 @@
+user selain superadmin dashboard total laba tidak perlu OK
+
+ADMIN SUPERVISOR
+user : adminspv
+pass : adminspv
+
+SUPERVISOR SALES
+user : spvsales
+pass : spvsales
+
+WAREHOUSE & LOGISTIK SPV
+user : spvwh
+pass : spvwh
+
+OPERATIONAL MGR
+user : omsal
+pass : omsal
+
+
+Module Salesman Produk
+ - pilih salesman
+ - semua produk / bisa beberapa produk saja
+ - waktu download di HH harus cek ke module ini dulu
+
+Sales Order Mobile
+- waktu sudah pilih produk tertentu, posisi terakhir tetap di produk itu OK
+- di table tambahkan kolom satuan OK
+- produk 859288 check data satuan, dobel OK
+- foto dg pemilik dan outlet dibawah total OK
+- foto outlet diganti (additional foto) OK
+
+Stok Customer
+- foto outlet (ganti foto stok toko) OK

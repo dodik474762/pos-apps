@@ -47,6 +47,7 @@ class DashboardController extends Controller
         $data['year'] = $year;
         $data['data'] = [];
         $data['username'] = session('username');
+        $data['akses'] = session('akses');
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_salesman'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['summary_po'] = $this->getSummaryPO($year);

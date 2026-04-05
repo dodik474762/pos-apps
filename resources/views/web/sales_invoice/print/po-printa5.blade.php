@@ -8,9 +8,9 @@
     <style>
         @page {
             /* size: A5 landscape;  */
-            /* 📌 Ukuran setengah A4 */
+            /* ðŸ“Œ Ukuran setengah A4 */
             /* margin: 5mm;  */
-                   /* 📌 Margin kecil khas dot matrix */
+                   /* ðŸ“Œ Margin kecil khas dot matrix */
             /* margin: 8mm 10mm; */
 
             size: 215.9mm auto;  /* 8.5 inch lebar, tinggi otomatis */
@@ -36,7 +36,8 @@
         }
 
         th {
-            background: #f0f0f0;
+            /* background: #f0f0f0; */
+            background: #ffffff;
         }
 
         .no-border td {
@@ -54,12 +55,12 @@
         }
 
         .logo {
-            width: 60px; /* diperkecil agar muat A5 */
+            width: 80px; /* diperkecil agar muat A5 */
         }
 
         .table-detail th,
         .table-detail td {
-            font-size: 10px;
+            font-size: 12px;
             padding: 2px 3px; /* kurangi padding */
         }
     </style>
@@ -69,16 +70,16 @@
     {{-- HEADER --}}
     <table class="header-table">
         <tr>
-            <td style="width:60px;">
+            <td style="width:80px;height:80px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
             </td>
             <td>
-                <strong>{{ $company->nama_company }}</strong><br>
-                <small>{!! $company->alamat !!}</small>
+                <strong style="font-size:12px !important;">{{ $company->nama_company }}</strong><br>
+                <small style="font-size:12px  !important;">{!! $company->alamat !!}</small>
             </td>
-             {{-- ✅ lebar cukup, nowrap supaya tidak wrap --}}
+             {{-- âœ… lebar cukup, nowrap supaya tidak wrap --}}
             <td style="width:100px; text-align:right; white-space:nowrap;">
-                <strong style="font-size:10px;">FAKTUR PENJUALAN</strong><br>
+                <strong style="font-size:12px;">FAKTUR PENJUALAN</strong><br>
                 <small>No: {{ $data->invoice_number }}</small>
             </td>
         </tr>
@@ -114,13 +115,13 @@
     <thead>
         <tr>
              <th class="text-center" style="width:3%;">No</th>
-            <th class="text-center" style="width:32%;">Produk</th>
+            <th class="text-center" style="width:42%;">Produk</th>
             <th class="text-center" style="width:10%;">Satuan</th>
             <th class="text-center" style="width:7%;">Qty</th>
-            <th class="text-center" style="width:16%;">Harga</th>
-            <th class="text-center" style="width:11%;">Diskon</th>
-            <th class="text-center" style="width:6%;">Note</th>
-            <th class="text-center" style="width:15%;">Total</th>
+            <th class="text-center" style="width:10%;">Harga</th>
+            <th class="text-center" style="width:10%;">Diskon</th>
+            <!-- <th class="text-center" style="width:6%;">Note</th> -->
+            <th class="text-center" style="width:18%;">Total</th>
         </tr>
     </thead>
     <tbody>
@@ -129,29 +130,29 @@
                 <td class="text-center">{{ $i + 1 }}</td>
                 <td style="overflow:hidden; white-space:nowrap;">{{ $item->products->name ?? '-' }}</td>
                 <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
-                <td class="text-center">{{ $item->qty }}</td>
+                <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($item->price, 0, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
-                <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE' }}</td>
+                <!-- <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE' }}</td> -->
                 <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
             </tr>
         @endforeach
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
+            <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
             <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
         </tr>
         <tr>
-            <td colspan="7" class="text-right"><strong>Discount {{ $data->so->discount_percent == '0' ? '' : $data->so->discount_percent.' %' }}</strong></td>
+            <td colspan="6" class="text-right"><strong>Discount {{ $data->so->discount_percent == '0' ? '' : $data->so->discount_percent.' %' }}</strong></td>
             <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
         </tr>
         <tr>
-            <td colspan="7" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
+            <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
             <td class="text-right"><strong>0</strong></td>
         </tr>
         <tr>
-            <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
+            <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
             <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
         </tr>
     </tfoot>
@@ -170,15 +171,15 @@
     <table class="no-border">
         <tr>
             <td class="text-center">
-                <strong>Diterima Oleh</strong><br><br><br>
+                <strong style="font-size:12px;">Diterima Oleh</strong><br><br><br>
                 (__________________)
             </td>
             <td class="text-center">
-                <strong>Disetujui Oleh</strong><br><br><br>
+                <strong style="font-size:12px;">Disetujui Oleh</strong><br><br><br>
                 (__________________)
             </td>
             <td class="text-center">
-                <strong>Dibuat Oleh</strong><br><br><br>
+                <strong style="font-size:12px;">Dibuat Oleh</strong><br><br><br>
                 (__________________)
             </td>
         </tr>

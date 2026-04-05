@@ -63,7 +63,7 @@
         </div><!-- end card -->
     </div><!-- end col -->
 
-    <div class="col-xl-3 col-md-6">
+    <div class="col-xl-3 col-md-6 {{ strtolower($akses) != 'superadmin' ? 'd-none' : '' }}">
         <!-- card -->
         <div class="card card-animate">
             <div class="card-body">
