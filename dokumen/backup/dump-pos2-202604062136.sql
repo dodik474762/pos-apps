@@ -1010,6 +1010,35 @@ INSERT INTO `karyawan_group` VALUES (3,1,'GROUP_25OCT0001',0,NULL,'2025-12-08 13
 UNLOCK TABLES;
 
 --
+-- Table structure for table `karyawan_has_product`
+--
+
+DROP TABLE IF EXISTS `karyawan_has_product`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `karyawan_has_product` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `karyawan` int DEFAULT NULL,
+  `product` int DEFAULT NULL,
+  `remarks` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `deleted` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `karyawan_has_product`
+--
+
+LOCK TABLES `karyawan_has_product` WRITE;
+/*!40000 ALTER TABLE `karyawan_has_product` DISABLE KEYS */;
+INSERT INTO `karyawan_has_product` VALUES (1,2,30,NULL,NULL,'2026-04-06 07:10:54','2026-04-06 07:13:32');
+/*!40000 ALTER TABLE `karyawan_has_product` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `menu`
 --
 
@@ -3566,4 +3595,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-01 20:42:05
+-- Dump completed on 2026-04-06 21:36:46
