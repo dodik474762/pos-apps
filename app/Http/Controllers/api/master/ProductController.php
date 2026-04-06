@@ -165,8 +165,8 @@ class ProductController extends Controller
                 $karyawan = DB::table('karyawan')->where('nik', $users->nik)->first();
                 $karyawanId = $karyawan->id;
                 $productIds = DB::table('karyawan_has_product')
-                ->where('karyawan_id', $karyawanId)
-                ->pluck('product_id')
+                ->where('karyawan', $karyawanId)
+                ->pluck('product')
                 ->toArray();
             }            
 
