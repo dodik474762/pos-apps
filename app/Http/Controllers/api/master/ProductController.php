@@ -151,14 +151,25 @@ class ProductController extends Controller
         return json_encode($data);
     }
 
-    public function getDataProductMobile()
+    public function getDataProductMobile(Request $request)
     {
         DB::enableQueryLog();
+        $data = $request->all();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         try {
-            //code...
+            $productIds = [];
+            if(isset($data['user_id'])){
+                $users = DB::table('users')->where('id', $data['user_id'])->first();
+                $karyawan = DB::table('karyawan')->where('nik', $users->nik)->first();
+                $karyawanId = $karyawan->id;
+                $productIds = DB::table('karyawan_has_product')
+                ->where('karyawan_id', $karyawanId)
+                ->pluck('product_id')
+                ->toArray();
+            }            
+
             $datadb = DB::table($this->getTableName() . ' as m')
                 ->select([
                     'm.id as product_id',
@@ -192,6 +203,10 @@ class ProductController extends Controller
                 ->whereNull('m.deleted')
                 ->orderBy('m.id', 'desc')
                 ->orderBy('pup.id', 'asc');
+
+            if (!empty($productIds)) {
+                $datadb->whereIn('m.id', $productIds);
+            }
             $data = $datadb->get()->toArray();
             // echo '<pre>';
             // print_r($query);die;
