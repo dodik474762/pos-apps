@@ -322,6 +322,105 @@ let Karyawan = {
             $("#group").val(group);
         }
     },
+
+    openProductModal: function(el, event) {
+        event.preventDefault();
+
+        document.getElementById('modal-product-row-index').value = '';
+        document.getElementById('modal-product-item').classList.remove('is-invalid');
+
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#modal-product-item').val('').trigger('change');
+        } else {
+            document.getElementById('modal-product-item').value = '';
+        }
+
+        document.getElementById('modalProductLabel').innerHTML =
+            '<i class="bx bx-package me-1"></i> Add Product';
+
+        var modalEl = document.getElementById('modalProduct');
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        // ⬇️ Tambahan penting
+        $(modalEl).on('shown.bs.modal', function () {
+            $('#modal-product-item')
+                .select2({
+                    dropdownParent: $('#modalProduct')
+                })
+                .select2('open');
+        });
+    },
+
+    saveProduct:(elm,e)=>{
+        const params = {
+            id: $('#id').val(),
+            product: $('#modal-product-item').val()
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Karyawan.moduleApi()) + "saveProduct",
+            headers: {
+                "X-CSRF-TOKEN": Karyawan.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+     deleteProduct: function(el, event) {
+       event.preventDefault();
+       const params = {
+            id: $(el).closest('tr').attr('data_id'),
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Karyawan.moduleApi()) + "deleteProduct",
+            headers: {
+                "X-CSRF-TOKEN": Karyawan.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Hapus Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {

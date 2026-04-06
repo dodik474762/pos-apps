@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Dictionary;
 use App\Models\Master\KaryawanGroup;
+use App\Models\Master\KaryawanHasProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KaryawanController extends Controller
 {
@@ -84,6 +86,8 @@ class KaryawanController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['list_bank'] = $this->getListBankAccount();
+        $data['karyawan_product'] = [];
+        $data['products'] = [];
         $data['karyawan_group'] = [];
         $view = view('web.karyawan.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -92,6 +96,23 @@ class KaryawanController extends Controller
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
+    }
+
+    public function getListProduct($id){
+        $datadb = KaryawanHasProduct::whereNull('karyawan_has_product.deleted')
+        ->select(['karyawan_has_product.*', 'p.code as kode_product', 'p.name as nama_product'])
+        ->join('product as p', 'p.id', 'karyawan_has_product.product')
+        ->where('karyawan_has_product.karyawan', $id)
+        ->get();
+        return $datadb;
+    }
+
+    public function getAllProduct(){
+        $datadb = DB::table('product as p')->whereNull('p.deleted')
+        ->select(['p.*', 'v.nama_vendor'])
+        ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+        ->get();
+        return $datadb;
     }
 
     public function ubah(Request $request)
@@ -105,6 +126,8 @@ class KaryawanController extends Controller
         $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
         $data['karyawan_group'] = $this->getListKaryawanGroup($data['id']);
+        $data['karyawan_product'] = $this->getListProduct($data['id']);
+        $data['products'] = $this->getAllProduct();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.karyawan.formadd', $data);

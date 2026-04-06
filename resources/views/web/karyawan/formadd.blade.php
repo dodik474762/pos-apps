@@ -135,6 +135,7 @@
 
                     <hr/>
 
+                    <!-- Karyawan Group Table -->
                     <div class="row">
                         <div class="col-md-12">
                             <label>Karyawan Group </label>
@@ -225,12 +226,64 @@
                             </div>
                         </div>
                     </div>
+
+                    <hr/>
+
+                    <!-- List Product Table -->
+                    @if(isset($id))
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <label class="mb-0">List Product</label>
+                                    <button type="button" class="btn btn-primary btn-sm waves-effect waves-light"
+                                        onclick="Karyawan.openProductModal(this, event)">
+                                        <i class="bx bx-plus me-1"></i> Add Product
+                                    </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0 table-sm table-nowrap" id="table-product">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Kode Product</th>
+                                                <th>Nama Product</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (isset($data->id) && isset($karyawan_product) && !empty($karyawan_product))
+                                                @foreach ($karyawan_product as $item)
+                                                    <tr class="input" data_id="{{ $item['id'] }}" data-product-id="{{ $item['product_id'] ?? '' }}">
+                                                        <td>&nbsp;</td>
+                                                        <td>{{ $item['kode_product'] }}</td>
+                                                        <td>{{ $item['nama_product'] }}</td>
+                                                        <td class="text-center">
+                                                            <button type="button" onclick="Karyawan.deleteProduct(this, event)"
+                                                                class="btn btn-danger btn-sm waves-effect waves-light">
+                                                                <i class="bx bx-trash-alt"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            @else
+                                                <tr id="product-empty-row">
+                                                    <td colspan="4" class="text-center text-muted py-3">
+                                                        <i class="bx bx-package font-size-18 d-block mb-1"></i>
+                                                        Belum ada product
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 </form>
 
             </div>
         </div>
-
-        <!-- end select2 -->
 
         <div class="text-end">
             <div>
@@ -244,7 +297,55 @@
             </div>
         </div>
     </div>
-
-
 </div>
 <!-- end row -->
+
+
+<!-- ============================================================ -->
+<!-- Modal Add / Edit Product                                      -->
+<!-- ============================================================ -->
+<div class="modal fade" id="modalProduct" tabindex="-1" aria-labelledby="modalProductLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProductLabel">
+                    <i class="bx bx-package me-1"></i> Add Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Menyimpan referensi baris saat mode edit -->
+                <input type="hidden" id="modal-product-row-index" value="">
+
+                <div class="mb-3">
+                    <label class="form-label">Nama Product <span class="text-danger">*</span></label>
+                    <select class="form-control select2" id="modal-product-item">
+                        <option value="">-- Pilih Product --</option>
+                        @isset($products)
+                            @foreach ($products as $product)
+                                <option value="{{ $product->id }}" data-nama="{{ $product->name }}">
+                                    {{ $product->code }} - {{ $product->name }} - {{ $product->sku_name }} - {{ $product->nama_vendor }}
+                                </option>
+                            @endforeach
+                        @endisset
+                    </select>
+                    <div class="invalid-feedback">Nama product wajib dipilih.</div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light waves-effect" data-bs-dismiss="modal">
+                    <i class="bx bx-x me-1"></i> Batal
+                </button>
+                <button type="button" class="btn btn-primary waves-effect waves-light"
+                    id="btn-save-product" onclick="Karyawan.saveProduct(this, event)">
+                    <i class="bx bx-save me-1"></i> Simpan
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- end Modal Add Product -->

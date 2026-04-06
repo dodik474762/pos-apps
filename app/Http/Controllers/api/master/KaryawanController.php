@@ -4,7 +4,9 @@ namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\Karyawan;
+use App\Models\Master\Product;
 use App\Models\Master\KaryawanGroup;
+use App\Models\Master\KaryawanHasProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -127,6 +129,46 @@ class KaryawanController extends Controller
             $menu = Karyawan::find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function saveProduct(Request $request){
+        $data = $request->all();
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            //code...
+            $kry = KaryawanHasProduct::where('karyawan',$data['id'])->where('product', $data['product'])->first();
+            $kryUpdate = empty($kry) ? new KaryawanHasProduct() : $kry;
+            $kryUpdate->karyawan = $data['id'];
+            $kryUpdate->product = $data['product'];
+            $kryUpdate->save();
+
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+        return response()->json($result);
+    }
+
+    public function deleteProduct(Request $request){
+        $data = $request->all();
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            //code...
+            KaryawanHasProduct::where('id',$data['id'])->delete();
 
             DB::commit();
             $result['is_valid'] = true;

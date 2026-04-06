@@ -398,7 +398,9 @@ Route::post('api/master/users/showDataKaryawan', [MasterUsersController::class, 
 Route::post('api/master/karyawan/getData', [MasterKaryawanController::class, 'getData']);
 Route::post('api/master/karyawan/submit', [MasterKaryawanController::class, 'submit']);
 Route::post('api/master/karyawan/delete', [MasterKaryawanController::class, 'delete']);
+Route::post('api/master/karyawan/saveProduct', [MasterKaryawanController::class, 'saveProduct']);
 Route::post('api/master/karyawan/confirmDelete', [MasterKaryawanController::class, 'confirmDelete']);
+Route::post('api/master/karyawan/deleteProduct', [MasterKaryawanController::class, 'deleteProduct']);
 
 Route::post('api/master/permission/getData', [MasterPermissionsController::class, 'getData']);
 Route::post('api/master/permission/submit', [MasterPermissionsController::class, 'submit']);
