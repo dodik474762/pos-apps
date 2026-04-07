@@ -521,11 +521,13 @@ Route::post('api/transaksi/sales_order/showQtySmallestProduct', [TransactionSale
 Route::post('api/transaksi/sales_order/showPromoItem', [TransactionSalesOrderController::class, 'showPromoItem']);
 Route::post('api/transaksi/sales_order/generateAll', [TransactionSalesOrderController::class, 'generateAll']);
 Route::post('api/transaksi/sales_order/checkDiscount', [TransactionSalesOrderController::class, 'checkDiscountWeb']);
+Route::post('api/transaksi/sales_order/pilihProdukDulu', [TransactionSalesOrderController::class, 'pilihProdukDulu']);
 Route::post('api_mobile/transaksi/sales_order/sync', [TransactionSalesOrderController::class, 'sync']);
 Route::post('api_mobile/transaksi/sales_order/getAverageTransaction', [TransactionSalesOrderController::class, 'getAverageTransaction']);
 Route::post('api_mobile/transaksi/sales_order/closingOrder', [TransactionSalesOrderController::class, 'closingOrder']);
 Route::post('api_mobile/transaksi/sales_order/stockSubmit', [TransactionSalesOrderController::class, 'stockSubmit']);
 Route::post('api_mobile/transaksi/sales_order/checkDiscount', [TransactionSalesOrderController::class, 'checkDiscount']);
+
 
 Route::post('api/transaksi/sales_plan/getData', [TransactionSalesPlanController::class, 'getData']);
 Route::post('api/transaksi/sales_plan/submit', [TransactionSalesPlanController::class, 'submit']);

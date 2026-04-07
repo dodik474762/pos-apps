@@ -5,6 +5,7 @@
 <input type="hidden" id="status" value="{{ isset($data->status) ? $data->status : 'draft' }}">
 <input type="hidden" id="url" value="{{ isset($id) ? route('sales-order-edit') : route('sales-order-add') }}">
 
+
 <!-- start page title -->
 <div class="row">
     <div class="col-12">

@@ -18,9 +18,9 @@ pass : omsal
 
 
 Module Salesman Produk
- - pilih salesman
- - semua produk / bisa beberapa produk saja
- - waktu download di HH harus cek ke module ini dulu
+ - pilih salesman OK
+ - semua produk / bisa beberapa produk saja OK
+ - waktu download di HH harus cek ke module ini dulu OK
 
 Sales Order Mobile
 - waktu sudah pilih produk tertentu, posisi terakhir tetap di produk itu OK

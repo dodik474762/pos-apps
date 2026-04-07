@@ -953,6 +953,54 @@ class SalesOrderController extends Controller
         return view('web.product.modal.dataproductorder', $data);
     }
 
+    public function pilihProdukDulu(Request $request)
+    {
+        $data = $request->all();
+        $datadb =  DB::table('product as m')
+            ->select([
+                'm.*',
+                'pt.type',
+                'u.name as unit_name',
+                'uo.name as unit_tujuan_name',
+                'uo.id as unit_tujuan_id',
+                'pu.id as id_uom',
+
+                // kolom harga dari tabel product_uom_price
+                'pup.price as harga',
+                'pup.min_qty',
+                'pup.max_qty',
+                'pup.date_start',
+                'pup.date_end',
+                'pup.customer_name',
+                'pup.id as price_id',
+                'v.nama_vendor',
+                'tx.rate as tax_rate'
+            ])
+            ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
+            ->join('product_uom as pu', function($q){
+                return $q->on('pu.product', '=', 'm.id');
+            })
+            ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
+            ->join('unit as u', 'u.id', '=', 'm.unit')
+            ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
+            ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
+            ->leftJoin('product_uom_price as pup', function ($join) {
+                $join->on('pup.product', '=', 'm.id')
+                    ->on('pup.unit', '=', 'pu.unit_tujuan')
+                    ->whereNull('pup.deleted')
+                    ->where(function ($query) {
+                        $query->whereNull('pup.date_end')
+                            ->orWhere('pup.date_end', '>=', now());
+                    })
+                    ->where('pup.date_start', '<=', now());
+            })
+            ->whereNull('m.deleted')
+            ->where('m.id', $data['product_id'])->get();
+        $data['products'] = $datadb;
+
+        return view('web.sales_order.modal.dataproductsatuan', $data);
+    }
+
     public function showDiscountProduct(Request $request)
     {
         $data = $request->all();
@@ -2041,7 +2089,10 @@ class SalesOrderController extends Controller
                 'tx.rate as tax_rate'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
-            ->join('product_uom as pu', 'pu.product', '=', 'm.id')
+            ->join('product_uom as pu', function($q){
+                return $q->on('pu.product', '=', 'm.id')
+                ->where('pu.state', 'large');
+            })
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
             ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')

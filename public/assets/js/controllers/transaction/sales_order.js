@@ -3,6 +3,9 @@ let discProduct = [];
 let productCheckPromo = [];
 let channel_outlet = null;
 let sub_channel_outlet = null;
+// Simpan sementara semua data harga+satuan dari baris produk yang dipilih
+let _selectedProductRows = [];
+
 let SalesOrder = {
     module: () => {
         return "transaksi/sales_order";
@@ -502,24 +505,24 @@ let SalesOrder = {
                 {
                     data: "name",
                 },
-                {
-                    data: "unit_tujuan_name",
-                },
-                {
-                    data: "min_qty",
-                },
-                {
-                    data: "max_qty",
-                },
+                // {
+                //     data: "unit_tujuan_name",
+                // },
+                // {
+                //     data: "min_qty",
+                // },
+                // {
+                //     data: "max_qty",
+                // },
                 {
                     data: "customer_name",
                 },
-                {
-                    data: "harga",
-                },
-                {
-                    data: "date_start",
-                },
+                // {
+                //     data: "harga",
+                // },
+                // {
+                //     data: "date_start",
+                // },
                 {
                     data: "id",
                     render: function (data, type, row) {
@@ -531,13 +534,108 @@ let SalesOrder = {
                         tax="${row.tax_sale}"
                         tax_rate="${row.tax_rate}"
                         type_tax="${row.type_tax}"
-                        onclick="SalesOrder.pilihDataProduct(this, event)"
+                        onclick="SalesOrder.pilihProdukDulu(this, event)"
                         data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
             ],
         });
+    },
+
+    pilihSatuan_fromRow: (row) => {
+        // contoh isi
+        console.log("Selected:", row);
+
+        // lanjutkan logic yang sama seperti pilihSatuan()
+        SalesOrder.pilihSatuan(row);
+    },
+
+    pilihProdukDulu: (elm, e) => {
+        e.preventDefault();
+        $("button.btn-close").trigger("click");
+        const produk_id = $(elm).attr("produk_id");
+        const params = {
+            product_id: produk_id,
+        };
+
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesOrder.moduleApi()) + "pilihProdukDulu",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+            },
+        });
+    },
+
+    pilihSatuan: (row) => {
+        console.log('row chooce',row);
+        // const row = _selectedProductRows[index];
+        // if (!row) return;
+
+        // Tutup modal satuan
+        $("button.btn-close").trigger("click");
+
+        // Jalankan logic yang sama dengan pilihDataProduct
+        let produk_name = row.name;
+        let produk_id = row.id;
+        let unit = row.unit_tujuan_id;
+        let unit_name = row.unit_tujuan_name;
+        let product_uom_id = row.id_uom;
+        let price = row.harga;
+        let price_id = row.price_id;
+        let tax = row.tax_sale;
+        let tax_rate = row.tax_rate;
+        let tax_type = row.type_tax;
+
+        $(elmChoose).closest("div").find("input")
+            .val(product_uom_id + "//" + produk_id + "//" + produk_name)
+            .attr("data_id", produk_id)
+            .attr("tax", tax)
+            .attr("tax_type", tax_type)
+            .attr("tax_rate", tax_rate);
+
+        $(elmChoose).closest("tr").find("td#unit")
+            .text(unit_name)
+            .attr("data_id", unit);
+
+        $(elmChoose).closest("tr").find("#unit_price")
+            .attr("price", price)
+            .attr("data_id", price_id)
+            .val(new Intl.NumberFormat("id-ID", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(price));
+
+        SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
+        SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
+        SalesOrder.showPromoItem(produk_id, produk_name, unit, 0);
+        SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
+    },
+
+    pilihDataProduct_fromRow: (row) => {
+        // Untuk kasus satuan cuma 1, langsung apply tanpa modal
+        document.activeElement.blur(); // 🔥 penting
+        $("button.btn-close").trigger("click");
+        SalesOrder.pilihSatuan_fromRow(row);
     },
 
     pilihDataProduct: (elm, e) => {
