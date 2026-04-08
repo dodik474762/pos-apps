@@ -43,6 +43,7 @@ use App\Http\Controllers\api\Transaction\SalesReturnController as TransactionSal
 use App\Http\Controllers\api\Transaction\SessionsController as TransactionSessionsController;
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
+use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -89,6 +90,7 @@ use App\Http\Controllers\web\Transaction\SalesReturnController;
 use App\Http\Controllers\web\Transaction\SessionsController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
+use App\Http\Controllers\web\report\ReportStockController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -296,6 +298,8 @@ Route::get('transaksi/sessions', [SessionsController::class, 'index']);
 Route::get('transaksi/adjustment_stock', [ProductAdjustmentStockController::class, 'index']);
 Route::get('transaksi/adjustment_stock/add', [ProductAdjustmentStockController::class, 'add']);
 Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController::class, 'ubah']);
+
+Route::get('report/report_stock', [ReportStockController::class, 'index']);
 
 /*API */
 
@@ -643,4 +647,6 @@ Route::post('api/transaksi/adjustment_stock/delete', [TransactionProductAdjustme
 Route::post('api/transaksi/adjustment_stock/confirmDelete', [TransactionProductAdjustmentStockController::class, 'confirmDelete']);
 Route::post('api/transaksi/adjustment_stock/showDataProduct', [TransactionProductAdjustmentStockController::class, 'showDataProduct']);
 Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProductAdjustmentStockController::class, 'getDataProduct']);
+
+Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
 /*API */
