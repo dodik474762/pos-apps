@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="SearchData();"> <i
+                                        <button type="button" class="btn btn-primary w-100" onclick="ReportStock.getData();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>

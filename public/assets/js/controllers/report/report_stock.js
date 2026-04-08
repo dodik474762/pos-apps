@@ -192,6 +192,7 @@ let ReportStock = {
             serverSide: true,
             ordering: true,
             autoWidth: false,
+            destroy: true,
             fixedHeader: true,
             fixedColumns: {
                 leftColumns: 4,
