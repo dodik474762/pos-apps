@@ -236,7 +236,7 @@ class SalesOrderController extends Controller
 
             // === DETAIL ===
             $detailIdMap = []; // map product_id => detail_id untuk keperluan promo item
-            
+
             foreach ($data['items'] as $item) {
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
@@ -317,7 +317,7 @@ class SalesOrderController extends Controller
             $header->tax_id = $taxId;
             if (!empty($data['id']) && $platform == 'mobile') {
                 $header->status = 'draft';
-            }           
+            }
 
             // Simpan discount header ke header
             if (!empty($calculatePromo['discount_header'])) {
@@ -326,10 +326,10 @@ class SalesOrderController extends Controller
                 $header->discount_amount = $totalDiscAmount;
                 $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
             }
-            $header->save();            
+            $header->save();
             $soId = $header->id;
 
-            
+
             // ========================
             // SIMPAN PROMO
             // ========================
@@ -563,7 +563,7 @@ class SalesOrderController extends Controller
                 $files_outlet->move(public_path($dir), $fileOutletName);
                 $dbpathlampOutlet = '/' . $dir . '/';
             }
-                            
+
 
             $files_ttd->move(public_path($dir), $fileTtdName);
             $dbpathlampSignature = '/' . $dir . '/';
@@ -1414,7 +1414,7 @@ class SalesOrderController extends Controller
 
             // Hitung diskon
             // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
-            $discountApplied = false;            
+            $discountApplied = false;
             $itemsValueApplied = [];
             foreach ($itemsValue as $v) {
                 $discountAmount = 0;
@@ -1633,9 +1633,9 @@ class SalesOrderController extends Controller
 
             // Hitung diskon
             // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
-            $discountApplied = false;            
+            $discountApplied = false;
             $itemsValueApplied = [];
-            foreach ($itemsValue as $v) {                
+            foreach ($itemsValue as $v) {
                 $discountAmount = 0;
 
                 // Jika promo mix dan diskon sudah diterapkan ke baris lain, skip diskon
@@ -1658,14 +1658,14 @@ class SalesOrderController extends Controller
                     }
                     if ($promo->discount_type == 'price') {
                         // $v['price'] = $promo->discount_value;
-                        $originalPrice = $v['price'];                        
+                        $originalPrice = $v['price'];
                         $allPrice = getHargaSemuaUnit($v['product_id'], $promo->discount_value, $promo->unit);
                         foreach ($allPrice as $p) {
                             if($v['unit_id'] == $p['unit_id']){
                                 $v['price'] = $p['harga'];
                                 break;
                             }
-                        }                                            
+                        }
                         // Output:
                         // CARTON  => 144.000
                         // PACK    => 24.000
@@ -1756,8 +1756,8 @@ class SalesOrderController extends Controller
                 $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
             }
         }
-        
-        
+
+
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
         // pakai $grandTotalAfterItemDisc sebagai basis
@@ -1864,7 +1864,7 @@ class SalesOrderController extends Controller
             ];
 
             // break; // promo grand total pertama yang applicable langsung break
-        }        
+        }
 
         // echo '<pre>';
         // print_r($resultItems);
@@ -2207,10 +2207,10 @@ class SalesOrderController extends Controller
                 ->select([
                     DB::raw("
                         CONCAT(
-                            p.code, '-', 
-                            p.name, '-', 
-                            sod.qty, ' ', 
-                            u.name, '-', 
+                            p.code, '-',
+                            p.name, '-',
+                            sod.qty, ' ',
+                            u.name, '-',
                             sod.subtotal
                         ) as detail_string
                     ")
@@ -2300,7 +2300,7 @@ class SalesOrderController extends Controller
     public function stockSubmit(Request $request)
     {
         $data = json_decode($request->input('data'), true);
-        $files_outlet = $request->file('files_outlet');
+        // $files_outlet = $request->file('files_outlet');
         $users_id = $data['user_id'];
 
         $result['is_valid'] = false;
@@ -2316,10 +2316,21 @@ class SalesOrderController extends Controller
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_' . time() . '.jpg';
+            // $fileOutletName = 'outlet_' . time() . '.jpg';
 
-            $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/' . $dir . '/';
+            // $path = $files_outlet->move(public_path($dir), $fileOutletName);
+            // $dbpathlampOutlet = '/' . $dir . '/';
+            $dbpathlampOutlet = null;
+            $fileOutletName = null;
+
+            if ($request->hasFile('files_outlet')) {
+                $files_outlet = $request->file('files_outlet');
+
+                $fileOutletName = 'outlet_' . time() . '.' . $files_outlet->getClientOriginalExtension();
+                $files_outlet->move(public_path($dir), $fileOutletName);
+
+                $dbpathlampOutlet = '/' . $dir . '/';
+            }
 
             if(isset($data['toko_tutup'])){
                 if($data['toko_tutup'] == '1'){
@@ -2333,12 +2344,13 @@ class SalesOrderController extends Controller
                     $detail->is_free_good = 0;
                     $detail->status = 'draft';
                     $detail->created_by = $users_id;
-                    $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+                    // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+                    $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
                     $detail->toko_tutup = $data['toko_tutup'];
                     $detail->save();
                 }
             }
-            
+
             foreach ($data['details'] as $item) {
                 [$products, $product_unit] = explode(':', $item['product_id']);
                 $products = explode('/', $products);
@@ -2354,7 +2366,8 @@ class SalesOrderController extends Controller
                 $detail->is_free_good = 0;
                 $detail->status = 'draft';
                 $detail->created_by = $users_id;
-                $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+                // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+                $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
                 $detail->save();
             }
 
@@ -2393,7 +2406,7 @@ class SalesOrderController extends Controller
             ->whereNull('sih.id')
             ->where('sales_order_headers.total_amount', '>', 0)
             ->where('sales_order_headers.so_date', $date)
-            ->whereNull('sales_order_headers.deleted')            
+            ->whereNull('sales_order_headers.deleted')
             ->orderBy('sales_order_headers.id', 'desc');
         if($state == ''){
         }
@@ -2408,7 +2421,7 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
         try {
-            $sales_order = $this->getAllSalesNotInvoice($data['tanggal'], '');        
+            $sales_order = $this->getAllSalesNotInvoice($data['tanggal'], '');
             foreach($sales_order as $v){
                 $process = $this->saveInvoice($v);
             }
@@ -2530,8 +2543,8 @@ class SalesOrderController extends Controller
 
                 /*mapping coa */
             }
-            
-            
+
+
             $discountHeaderSo = 0;
             $so = SalesOrderHeader::find($data['so_id']);
             $updateInv = SalesInvoiceHeader::where('id', $hdrId)->first();
@@ -2604,7 +2617,7 @@ class SalesOrderController extends Controller
             $result['data'] = $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
-        }        
+        }
 
         return response()->json($result);
     }
@@ -2640,7 +2653,7 @@ class SalesOrderController extends Controller
             $result['data'] = $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
-        }        
+        }
 
         return response()->json($result);
     }
