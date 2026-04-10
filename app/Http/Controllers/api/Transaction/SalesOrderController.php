@@ -553,13 +553,13 @@ class SalesOrderController extends Controller
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = $users_id.'_outlet_' . time() . '.jpg';
-            $fileTtdName = $users_id.'_signature_' . time() . '.jpg';
-            $fileCheckinName = $users_id.'_checkin_' . time() . '.jpg';
-            $fileOwnerName = $users_id.'_owner_' . time() . '.jpg';
+            $fileOutletName = $users_id . '_outlet_' . time() . '.jpg';
+            $fileTtdName = $users_id . '_signature_' . time() . '.jpg';
+            $fileCheckinName = $users_id . '_checkin_' . time() . '.jpg';
+            $fileOwnerName = $users_id . '_owner_' . time() . '.jpg';
 
             $dbpathlampOutlet = '';
-            if(!empty($files_outlet)){
+            if (!empty($files_outlet)) {
                 $files_outlet->move(public_path($dir), $fileOutletName);
                 $dbpathlampOutlet = '/' . $dir . '/';
             }
@@ -569,13 +569,13 @@ class SalesOrderController extends Controller
             $dbpathlampSignature = '/' . $dir . '/';
 
             $dbpathlampCheckin = '';
-            if(!empty($files_checkin)){
+            if (!empty($files_checkin)) {
                 $files_checkin->move(public_path($dir), $fileCheckinName);
                 $dbpathlampCheckin = '/' . $dir . '/';
             }
 
             $dbpathlampOwner = '';
-            if(!empty($files_owner)){
+            if (!empty($files_owner)) {
                 $files_owner->move(public_path($dir), $fileOwnerName);
                 $dbpathlampOwner = '/' . $dir . '/';
             }
@@ -633,8 +633,8 @@ class SalesOrderController extends Controller
             $header->platform = 'mobile';
             $header->photo_path = $dbpathlampOutlet . $fileOutletName;
             $header->signature_path = $dbpathlampSignature . $fileTtdName;
-            $header->checkin_path = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin.$fileCheckinName;
-            $header->owner_path = $dbpathlampOwner == '' ? null : $dbpathlampOwner.$fileOwnerName;
+            $header->checkin_path = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin . $fileCheckinName;
+            $header->owner_path = $dbpathlampOwner == '' ? null : $dbpathlampOwner . $fileOwnerName;
             $header->latitude = $data['latitude'];
             $header->longitude = $data['longitude'];
             $header->check_in_time = $check_in_time;
@@ -858,7 +858,6 @@ class SalesOrderController extends Controller
             $result['path'] = $dbpathlampOutlet . $fileOutletName;
             $result['message'] = 'Success';
             $result['sales_order_id'] = $hdrId;
-
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = $th->getMessage();
@@ -977,7 +976,7 @@ class SalesOrderController extends Controller
                 'tx.rate as tax_rate'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
-            ->join('product_uom as pu', function($q){
+            ->join('product_uom as pu', function ($q) {
                 return $q->on('pu.product', '=', 'm.id');
             })
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
@@ -1187,7 +1186,7 @@ class SalesOrderController extends Controller
         return $promo->promoFree->map(function ($free) use ($multiplier) {
             return [
                 'product_id' => $free->free_product,
-                'product_name'=> $free->product_name,
+                'product_name' => $free->product_name,
                 'unit' => $free->free_unit,
                 'qty' => $free->free_qty * $multiplier,
             ];
@@ -1248,7 +1247,7 @@ class SalesOrderController extends Controller
             $itemsValue = [];
             foreach (array_unique($itemsHasDiscount) as $h) {
                 $valItems = collect($items)->where('product_id', $h)->all();
-                foreach($valItems as $vi) {
+                foreach ($valItems as $vi) {
                     $itemsValue[] = $vi;
                 }
             }
@@ -1592,7 +1591,7 @@ class SalesOrderController extends Controller
             $itemsValue = [];
             foreach (array_unique($itemsHasDiscount) as $h) {
                 $valItems = collect($items)->where('product_id', $h)->all();
-                foreach($valItems as $vi) {
+                foreach ($valItems as $vi) {
                     $itemsValue[] = $vi;
                 }
             }
@@ -1676,7 +1675,7 @@ class SalesOrderController extends Controller
                         $originalPrice = $v['price'];
                         $allPrice = getHargaSemuaUnit($v['product_id'], $promo->discount_value, $promo->unit);
                         foreach ($allPrice as $p) {
-                            if($v['unit_id'] == $p['unit_id']){
+                            if ($v['unit_id'] == $p['unit_id']) {
                                 $v['price'] = $p['harga'];
                                 break;
                             }
@@ -1819,7 +1818,7 @@ class SalesOrderController extends Controller
             $itemsValue = [];
             foreach (array_unique($itemsHasDiscount) as $h) {
                 $valItems = collect($items)->where('product_id', $h)->all();
-                foreach($valItems as $vi) {
+                foreach ($valItems as $vi) {
                     $itemsValue[] = $vi;
                 }
             }
@@ -2115,9 +2114,9 @@ class SalesOrderController extends Controller
                 'tx.rate as tax_rate'
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
-            ->join('product_uom as pu', function($q){
+            ->join('product_uom as pu', function ($q) {
                 return $q->on('pu.product', '=', 'm.id')
-                ->where('pu.state', 'large');
+                    ->where('pu.state', 'large');
             })
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
@@ -2207,6 +2206,8 @@ class SalesOrderController extends Controller
             ->select(
                 'soh.customer_id',
                 'c.nama_customer',
+                'c.npwp',
+                'c.no_ktp',
                 DB::raw('COUNT(soh.id) as total_transaksi'),
                 DB::raw('SUM(soh.total_amount) as total_nilai'),
                 DB::raw('AVG(soh.total_amount) as avg_transaksi')
@@ -2216,7 +2217,7 @@ class SalesOrderController extends Controller
             ->whereYear('soh.so_date', $year)
             ->whereIn('soh.status', ['confirmed', 'completed', 'partial', 'draft'])
             ->whereNull('soh.deleted')
-            ->groupBy('soh.customer_id', 'c.nama_customer');
+            ->groupBy('soh.customer_id', 'c.nama_customer', 'c.npwp', 'c.no_ktp');
         if ($customer) {
             $data = $data->where('soh.customer_id', $customer);
         }
@@ -2299,10 +2300,10 @@ class SalesOrderController extends Controller
                 $mobile_session->date_process = date('Y-m-d');
                 $mobile_session->status = 'OPEN';
                 $mobile_session->save();
-                $mobilId= $mobile_session->id;
+                $mobilId = $mobile_session->id;
 
                 $mobile_session = MobileSession::where('id', $mobilId)
-                ->first();
+                    ->first();
             }
 
             $mobile_session->total_visit = $data['total_visit'];
@@ -2359,8 +2360,8 @@ class SalesOrderController extends Controller
                 $dbpathlampOutlet = '/' . $dir . '/';
             }
 
-            if(isset($data['toko_tutup'])){
-                if($data['toko_tutup'] == '1'){
+            if (isset($data['toko_tutup'])) {
+                if ($data['toko_tutup'] == '1') {
                     $detail = new StockCustomer();
                     $detail->customer = $data['customer'];
                     $detail->product_id = 44;
@@ -2410,24 +2411,24 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-     public function getAllSalesNotInvoice($date = '', $state = '')
+    public function getAllSalesNotInvoice($date = '', $state = '')
     {
         $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
         $datadb = SalesOrderHeader::select([
-                'sales_order_headers.*',
-                'u.name as created_by_name',
-                'cc.nama_customer',
-                'cy.code as currency_code',
-                'sales_order_headers.id as so_id',
-                'sales_order_headers.tax_id as tax'
-            ])
+            'sales_order_headers.*',
+            'u.name as created_by_name',
+            'cc.nama_customer',
+            'cy.code as currency_code',
+            'sales_order_headers.id as so_id',
+            'sales_order_headers.tax_id as tax'
+        ])
             ->with(['items'])
             ->join('users as u', 'u.id', 'sales_order_headers.created_by')
             ->join('customer as cc', 'cc.id', 'sales_order_headers.customer_id')
             ->join('currency as cy', 'cy.id', 'sales_order_headers.currency')
-            ->leftJoin('sales_invoice_header as sih', function($q){
+            ->leftJoin('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'sales_order_headers.id')
-                ->whereNull('sih.deleted');
+                    ->whereNull('sih.deleted');
             })
             ->whereIn('sales_order_headers.status', ['draft', 'submited'])
             ->whereNull('sih.id')
@@ -2435,7 +2436,7 @@ class SalesOrderController extends Controller
             ->where('sales_order_headers.so_date', $date)
             ->whereNull('sales_order_headers.deleted')
             ->orderBy('sales_order_headers.id', 'desc');
-        if($state == ''){
+        if ($state == '') {
         }
 
         $datadb = $datadb->get()->toArray();
@@ -2449,7 +2450,7 @@ class SalesOrderController extends Controller
         $result['is_valid'] = false;
         try {
             $sales_order = $this->getAllSalesNotInvoice($data['tanggal'], '');
-            foreach($sales_order as $v){
+            foreach ($sales_order as $v) {
                 $process = $this->saveInvoice($v);
             }
             $result['is_valid'] = true;
@@ -2460,7 +2461,7 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-     public function saveInvoice($params)
+    public function saveInvoice($params)
     {
         $data = $params;
         $userId = session('user_id');
@@ -2510,7 +2511,7 @@ class SalesOrderController extends Controller
                     'message' => 'Tax tidak ditemukan.',
                 ]);
             }
-                        // === HEADER ===
+            // === HEADER ===
             $header = new SalesInvoiceHeader();
 
             $header->invoice_number = generateNoSI(); // misal helper
@@ -2612,7 +2613,8 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-    public function checkDiscount(Request $request){
+    public function checkDiscount(Request $request)
+    {
         $data = $request->all();
         $customersId = $data['customer_id'];
         $items = [];
@@ -2649,7 +2651,8 @@ class SalesOrderController extends Controller
         return response()->json($result);
     }
 
-    public function checkDiscountWeb(Request $request){
+    public function checkDiscountWeb(Request $request)
+    {
         $data = $request->all();
         $customersId = $data['customer_id'];
         $items = [];
