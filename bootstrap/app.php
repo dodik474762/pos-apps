@@ -6,12 +6,12 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-         // Tambahkan rute API publik Anda yang dikecualikan di sini
+        // Tambahkan rute API publik Anda yang dikecualikan di sini
         $middleware->validateCsrfTokens(except: [
             'api_mobile/master/product/getDataProductMobile',
             'api_mobile/transaksi/sales_plan/getSalesRoutePlan',
@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/sales_order/getAverageTransaction',
             'api_mobile/transaksi/sales_order/closingOrder',
             'api_mobile/transaksi/sales_order/stockSubmit',
+            'api_mobile/transaksi/sales_order/validateCustomer',
             'api_mobile/transaksi/sales_order/checkDiscount',
             'api_mobile/transaksi/sales_payment/sync',
             'api_mobile/transaksi/sales_return/sync',

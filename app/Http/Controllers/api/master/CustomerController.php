@@ -156,35 +156,35 @@ class CustomerController extends Controller
             }
 
             $dir = 'berkas/document/outlet/';
-            $dir .= date('Y').'/'.date('m');
-            $pathlamp = public_path().'/'.$dir.'/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
             // Create the directory if it doesn't exist
             if (! File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            if(isset($files_outlet)){
-                $fileOutletName = 'outlet_noo'.time().'.jpg';
-    
+            if (isset($files_outlet)) {
+                $fileOutletName = 'outlet_noo' . time() . '.jpg';
+
                 $path = $files_outlet->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->photo_path = $dbpathlampOutlet . $fileOutletName;
             }
-            
-            if(isset($files_ktp)){
-                $fileOutletName = 'files_ktp'.time().'.jpg';
-    
+
+            if (isset($files_ktp)) {
+                $fileOutletName = 'files_ktp' . time() . '.jpg';
+
                 $path = $files_ktp->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->foto_ktp_path = $dbpathlampOutlet . $fileOutletName;
             }
-            
-            if(isset($files_npwp)){
-                $fileOutletName = 'files_npwp'.time().'.jpg';
-    
+
+            if (isset($files_npwp)) {
+                $fileOutletName = 'files_npwp' . time() . '.jpg';
+
                 $path = $files_npwp->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->foto_npwp_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->foto_npwp_path = $dbpathlampOutlet . $fileOutletName;
             }
             // $roles->branch = $data['branch'];
             $roles->pic = $data['pic'];
@@ -242,7 +242,7 @@ class CustomerController extends Controller
             DB::rollBack();
         }
         return response()->json($result);
-    }   
+    }
 
     public function approve(Request $request)
     {
@@ -288,14 +288,14 @@ class CustomerController extends Controller
         try {
 
             $dir = 'berkas/document/outlet/';
-            $dir .= date('Y').'/'.date('m');
-            $pathlamp = public_path().'/'.$dir.'/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
             // Create the directory if it doesn't exist
             if (! File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            $fileOutletName = 'outlet_noo'.time().'.jpg';
+            $fileOutletName = 'outlet_noo' . time() . '.jpg';
 
             // $path = $files_outlet->move(public_path($dir), $fileOutletName);
             // $dbpathlampOutlet = '/'.$dir.'/';          
@@ -303,28 +303,28 @@ class CustomerController extends Controller
             $roles = new Customer();
             $roles->code = generateCodeCustomer();
 
-            if(isset($files_outlet)){
-                $fileOutletName = 'outlet_noo'.time().'.jpg';
-    
+            if (isset($files_outlet)) {
+                $fileOutletName = 'outlet_noo' . time() . '.jpg';
+
                 $path = $files_outlet->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->photo_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->photo_path = $dbpathlampOutlet . $fileOutletName;
             }
-           
-            if(isset($files_ktp)){
-                $fileOutletName = 'files_ktp'.time().'.jpg';
-    
+
+            if (isset($files_ktp)) {
+                $fileOutletName = 'files_ktp' . time() . '.jpg';
+
                 $path = $files_ktp->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->foto_ktp_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->foto_ktp_path = $dbpathlampOutlet . $fileOutletName;
             }
-            
-            if(isset($files_npwp)){
-                $fileOutletName = 'files_npwp'.time().'.jpg';
-    
+
+            if (isset($files_npwp)) {
+                $fileOutletName = 'files_npwp' . time() . '.jpg';
+
                 $path = $files_npwp->move(public_path($dir), $fileOutletName);
-                $dbpathlampOutlet = '/'.$dir.'/';
-                $roles->foto_npwp_path = $dbpathlampOutlet.$fileOutletName;
+                $dbpathlampOutlet = '/' . $dir . '/';
+                $roles->foto_npwp_path = $dbpathlampOutlet . $fileOutletName;
             }
 
             $roles->pic = $data['pic'];
@@ -335,7 +335,7 @@ class CustomerController extends Controller
             $roles->address = $data['address'];
             $roles->kota = $data['kota'];
             $roles->provinsi = $data['provinsi'];
-            if(isset($data['kecamatan'])){
+            if (isset($data['kecamatan'])) {
                 $roles->kecamatan = $data['kecamatan'];
                 $roles->kelurahan = $data['kelurahan'];
             }
@@ -511,9 +511,9 @@ class CustomerController extends Controller
             ->join('product_uom as pu', 'pu.product', 'm.id')
             ->join('unit as uo', 'uo.id', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', 'm.unit')
-            ->leftJoin('product_uom_cost  as puc', function($q){
+            ->leftJoin('product_uom_cost  as puc', function ($q) {
                 return $q->on('puc.product_uom', 'pu.id')
-                ->where('puc.is_active', '1');
+                    ->where('puc.is_active', '1');
             })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
@@ -547,5 +547,68 @@ class CustomerController extends Controller
         // echo '<pre>';
         // print_r($query);die;
         return json_encode($data);
+    }
+
+    public function validateCustomer(Request $request)
+    {
+        $data = json_decode($request->input('data'), true);
+        $users_id = $data['user_id'];
+
+        $result['is_valid'] = false;
+        $result['message'] = '';
+        DB::beginTransaction();
+        try {
+
+            $dir = 'berkas/document/customer_validation/';
+            $dir .= date('Y') . '/' . date('m');
+            $pathlamp = public_path() . '/' . $dir . '/';
+            // Create the directory if it doesn't exist
+            if (!File::isDirectory($pathlamp)) {
+                File::makeDirectory($pathlamp, 0777, true, true);
+            }
+
+            $dbpathlampNpwp = null;
+            $fileNpWpName = null;
+
+            if ($request->hasFile('files_npwp')) {
+                $files_npwp = $request->file('files_npwp');
+
+                $fileNpWpName = 'files_npwp_' . time() . '.' . $files_npwp->getClientOriginalExtension();
+                $files_npwp->move(public_path($dir), $fileNpWpName);
+
+                $dbpathlampNpwp = '/' . $dir . '/';
+            }
+
+            $dbpathlampKtp = null;
+            $fileKtpName = null;
+
+            if ($request->hasFile('files_ktp')) {
+                $files_ktp = $request->file('files_ktp');
+
+                $fileKtpName = 'files_ktp_' . time() . '.' . $files_ktp->getClientOriginalExtension();
+                $files_ktp->move(public_path($dir), $fileKtpName);
+
+                $dbpathlampKtp = '/' . $dir . '/';
+            }
+
+            $detail = Customer::find($data['id']);
+            $detail->npwp = $data['npwp'] ?? $detail->npwp;
+            $detail->no_ktp = $data['no_ktp'] ?? $detail->no_ktp;
+            $detail->validate_time = date('Y-m-d H:i:s');
+            $detail->validate_by = $users_id;
+            // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+            $detail->foto_ktp_path = $fileKtpName ? $dbpathlampKtp . $fileKtpName : $detail->foto_ktp_path;
+            $detail->foto_npwp_path = $fileNpWpName ? $dbpathlampNpwp . $fileNpWpName : $detail->foto_npwp_path;
+            $detail->save();
+            DB::commit();
+            $result['message'] = 'Success';
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 }

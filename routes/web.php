@@ -335,6 +335,7 @@ Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);
 Route::post('api_mobile/master/customer/getProvinsi', [MasterCustomerController::class, 'getProvinsi']);
 Route::post('api_mobile/master/customer/submitNoo', [MasterCustomerController::class, 'submitNoo']);
+Route::post('api_mobile/master/customer/validateCustomer', [MasterCustomerController::class, 'validateCustomer']);
 
 Route::post('api/master/pasar/getData', [MasterPasarController::class, 'getData']);
 Route::post('api/master/pasar/getDataAcc', [MasterPasarController::class, 'getDataAcc']);
@@ -532,7 +533,6 @@ Route::post('api_mobile/transaksi/sales_order/closingOrder', [TransactionSalesOr
 Route::post('api_mobile/transaksi/sales_order/stockSubmit', [TransactionSalesOrderController::class, 'stockSubmit']);
 Route::post('api_mobile/transaksi/sales_order/checkDiscount', [TransactionSalesOrderController::class, 'checkDiscount']);
 
-
 Route::post('api/transaksi/sales_plan/getData', [TransactionSalesPlanController::class, 'getData']);
 Route::post('api/transaksi/sales_plan/submit', [TransactionSalesPlanController::class, 'submit']);
 Route::post('api/transaksi/sales_plan/delete', [TransactionSalesPlanController::class, 'delete']);
@@ -635,7 +635,7 @@ Route::post('api_mobile/transaksi/presensi/submitPresensi', [PresensiController:
 Route::post('api_mobile/transaksi/presensi/getDataPresensi', [PresensiController::class, 'getDataPresensi']);
 Route::post('api/transaksi/presensi/getData', [PresensiController::class, 'getData']);
 Route::post('api/transaksi/presensi/delete', [PresensiController::class, 'delete']);
-Route::post('api/transaksi/presensi/confirmDelete ',[PresensiController::class, 'confirmDelete']);
+Route::post('api/transaksi/presensi/confirmDelete ', [PresensiController::class, 'confirmDelete']);
 Route::post('api/transaksi/presensi/showDataKaryawan ', [PresensiController::class, 'showDataKaryawan']);
 Route::post('api/transaksi/presensi/submit ', [PresensiController::class, 'submit']);
 
