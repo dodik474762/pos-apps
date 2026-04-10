@@ -2133,6 +2133,7 @@ class SalesOrderController extends Controller
                 $query->where('m.name', 'like', "%{$keyword}%")
                     ->orWhere('m.remarks', 'like', "%{$keyword}%")
                     ->orWhere('m.model_number', 'like', "%{$keyword}%")
+                    ->orWhere('m.code', 'like', "%{$keyword}%")
                     ->orWhere('pt.type', 'like', "%{$keyword}%")
                     ->orWhere('uo.name', 'like', "%{$keyword}%")
                     ->orWhere('v.nama_vendor', 'like', "%{$keyword}%")
