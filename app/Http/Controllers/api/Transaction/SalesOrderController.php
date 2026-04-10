@@ -1232,7 +1232,7 @@ class SalesOrderController extends Controller
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
             foreach ($promoProduc as $v) {
-                foreach ($productIds as $k) {
+                foreach (array_unique($productIds) as $k) {
                     if ($k == $v) {
                         $mixTotalPromo += 1;
                         $itemsHasDiscount[] = $v;
@@ -1246,9 +1246,11 @@ class SalesOrderController extends Controller
                 continue;
 
             $itemsValue = [];
-            foreach ($itemsHasDiscount as $h) {
-                $valItem = collect($items)->where('product_id', $h)->first();
-                $itemsValue[] = $valItem;
+            foreach (array_unique($itemsHasDiscount) as $h) {
+                $valItems = collect($items)->where('product_id', $h)->all();
+                foreach($valItems as $vi) {
+                    $itemsValue[] = $vi;
+                }
             }
 
             $rawSubtotal = 0;
@@ -1262,7 +1264,10 @@ class SalesOrderController extends Controller
                 : $this->calculateTotalSmallestQty($itemsValue);
 
             $totalPromoAplicable = 0;
+            $checkedProducts = [];
             foreach ($itemsValue as $v) {
+                if (in_array($v['product_id'], $checkedProducts)) continue;
+                $checkedProducts[] = $v['product_id'];
                 if ($this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
                     $totalPromoAplicable += 1;
                 }
@@ -1531,6 +1536,10 @@ class SalesOrderController extends Controller
 
         $promoHeaders = $promoAll['promo_header'];
 
+        // echo '<pre>';
+        // print_r($promoHeaders);
+        // die;
+
         $discountHeader = [];
         $grandTotalAfterItemDisc = 0; // ← akan diisi setelah Loop 2
         foreach ($promoHeaders as $promo) {
@@ -1562,7 +1571,7 @@ class SalesOrderController extends Controller
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
             foreach ($promoProduc as $v) {
-                foreach ($productIds as $k) {
+                foreach (array_unique($productIds) as $k) {
                     if ($k == $v) {
                         $mixTotalPromo += 1;
                         $itemsHasDiscount[] = $v;
@@ -1581,9 +1590,11 @@ class SalesOrderController extends Controller
             }
 
             $itemsValue = [];
-            foreach ($itemsHasDiscount as $h) {
-                $valItem = collect($items)->where('product_id', $h)->first();
-                $itemsValue[] = $valItem;
+            foreach (array_unique($itemsHasDiscount) as $h) {
+                $valItems = collect($items)->where('product_id', $h)->all();
+                foreach($valItems as $vi) {
+                    $itemsValue[] = $vi;
+                }
             }
 
 
@@ -1610,7 +1621,11 @@ class SalesOrderController extends Controller
             }
 
             $totalPromoAplicable = 0;
+            $checkedProducts = [];
             foreach ($itemsValue as $v) {
+                if (in_array($v['product_id'], $checkedProducts)) continue;
+                $checkedProducts[] = $v['product_id'];
+
                 $applicable = $this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id']);
                 if (!$applicable) {
                     continue;
@@ -1735,6 +1750,9 @@ class SalesOrderController extends Controller
             // break;
         }
 
+        // echo '<pre>';
+        // print_r($resultItems);die;
+
         // Tambahkan juga item yang tidak kena promo apapun
         // Akumulasi grand total setelah disc — termasuk item yang kena promo
         foreach ($resultItems as $r) {
@@ -1782,7 +1800,7 @@ class SalesOrderController extends Controller
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
             foreach ($promoProduc as $v) {
-                foreach ($productIds as $k) {
+                foreach (array_unique($productIds) as $k) {
                     if ($k == $v) {
                         $mixTotalPromo += 1;
                         $itemsHasDiscount[] = $v;
@@ -1790,15 +1808,20 @@ class SalesOrderController extends Controller
                 }
             }
 
+            // echo '<pre>';
+            // print_r($itemsHasDiscount);die;
+
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
             if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo))
                 continue;
 
             $itemsValue = [];
-            foreach ($itemsHasDiscount as $h) {
-                $valItem = collect($items)->where('product_id', $h)->first();
-                $itemsValue[] = $valItem;
+            foreach (array_unique($itemsHasDiscount) as $h) {
+                $valItems = collect($items)->where('product_id', $h)->all();
+                foreach($valItems as $vi) {
+                    $itemsValue[] = $vi;
+                }
             }
 
             $rawSubtotal = 0;
@@ -1812,7 +1835,10 @@ class SalesOrderController extends Controller
                 : $this->calculateTotalSmallestQty($itemsValue);
 
             $totalPromoAplicable = 0;
+            $checkedProducts = [];
             foreach ($itemsValue as $v) {
+                if (in_array($v['product_id'], $checkedProducts)) continue;
+                $checkedProducts[] = $v['product_id'];
                 if ($this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
                     $totalPromoAplicable += 1;
                 }
@@ -1867,7 +1893,7 @@ class SalesOrderController extends Controller
         }
 
         // echo '<pre>';
-        // print_r($resultItems);
+        // print_r($discountHeader);
         // die;
 
         return [
