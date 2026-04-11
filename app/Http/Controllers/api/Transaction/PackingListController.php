@@ -592,7 +592,6 @@ class PackingListController extends Controller
                 'is_valid' => true,
                 'message' => 'Packing List berhasil dibatalkan'
             ]);
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -633,7 +632,6 @@ class PackingListController extends Controller
                 'is_valid' => true,
                 'message' => 'Packing List berhasil dibatalkan'
             ]);
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -827,7 +825,7 @@ class PackingListController extends Controller
             ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('users as u', 'u.id', 'm.created_by')
             // ->where('m.packing_date', $packing_date)
-            ->where('m.driver', $data['users'])
+            // ->where('m.driver', $data['users'])
             ->whereNull('m.deleted')
             ->where(function ($q) {
                 return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
@@ -837,6 +835,10 @@ class PackingListController extends Controller
             })
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
+        $users = User::where('id', $data['users'])->first();
+        if ($users->user_group == '5') { //driver
+            $datadb->where('m.driver', $data['users']);
+        }
         $datadb = $datadb->get()->toArray();
 
         $result['data'] = $datadb;
@@ -996,7 +998,7 @@ class PackingListController extends Controller
                             $discAcc = AccountMapping::where('module', 'SALES_VOID')
                                 ->where('account_type', 'diskon penjualan')
                                 ->with('account')
-                                ->first();                            
+                                ->first();
 
 
                             if (!$piutangUsaha || !$ppnKeluaranAcc || !$discAcc || !$penjualanBrg) {
@@ -1012,13 +1014,13 @@ class PackingListController extends Controller
                             $disc_total = 0;
                             $net_total = 0;
                             $tax_total = 0;
-                            
+
                             $idDtlCancel = [];
                             foreach ($data['cancelled_items'] as $value) {
                                 $invUpdate = SalesInvoiceDtl::find($value['id']);
                                 $invUpdate->flag_cancel = 1;
                                 $invUpdate->packing_list_id = $roles->packing_list_id;
-                                $invUpdate->save();                             
+                                $invUpdate->save();
 
                                 $disc_total += $invUpdate->discount;
                                 $tax_total += $invUpdate->tax_amount;
@@ -1048,14 +1050,14 @@ class PackingListController extends Controller
                             }
 
                             $dataInvoiceDtl = SalesInvoiceDtl::where('invoice_id', $invoiceId)
-                            ->whereNotIn('id', $idDtlCancel)->get();
+                                ->whereNotIn('id', $idDtlCancel)->get();
 
                             $totalAmountUpdate = 0;
                             $disc_total_update = 0;
                             $net_total_update = 0;
                             $tax_total_update = 0;
 
-                            if(!empty($dataInvoiceDtl)){
+                            if (!empty($dataInvoiceDtl)) {
                                 foreach ($dataInvoiceDtl as $v) {
                                     $disc_total_update += $v->discount;
                                     $tax_total_update += $v->tax_amount;
@@ -1107,7 +1109,7 @@ class PackingListController extends Controller
                             ]);
                         }
 
-                        $data['account_id'] = 3;//kas kecil
+                        $data['account_id'] = 3; //kas kecil
 
                         $kasAccount = Coa::find($data['account_id']);
 
@@ -1169,7 +1171,6 @@ class PackingListController extends Controller
                                 'is_valid' => false,
                                 'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-1'
                             ]);
-
                         }
 
                         $totalAmount += $data['total_amount'];
