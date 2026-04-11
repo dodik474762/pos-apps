@@ -854,7 +854,7 @@ class SalesInvoiceController extends Controller
 
             if (isset($data['akses'])) {
                 if (strtolower($data['akses']) != 'driver' && strtolower($data['akses']) != 'administrator') {
-                    $datadb->where('c.payment_terms', '3');
+                    $datadb->where('c.payment_terms', '!=', '3');
                 }
             }
 
