@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Controllers\api\Transaction\SalesPlanController;
 
 class SalesOrderController extends Controller
 {
@@ -149,11 +150,20 @@ class SalesOrderController extends Controller
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
-        $customers = DB::table('sales_plan_detail as d')
+        $salesPlan = new SalesPlanController();
+        $dataPlan = $salesPlan->getDailyVisits($salesmanId);
+        // echo '<pre>';
+        // print_r($dataPlan);
+        // die;
+        $planDtlId = !empty($dataPlan) ? collect($dataPlan)->pluck('id')->toArray() : [];
+
+
+        $customers = DB::table('sales_plan_detail_route as d')
             ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
             ->leftJoin('term_of_payment as top', 'top.id', '=', 'c.payment_terms')
             ->where('h.salesman', $salesmanId)
+            ->whereIn('d.id', $planDtlId)
             // ->where('h.period_year', $periodYear)
             // ->where('h.period_month', $periodMonth)
             ->whereNull('h.deleted')
