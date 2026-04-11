@@ -2250,6 +2250,8 @@ class SalesOrderController extends Controller
 
             $last_product = $detailProduct->pluck('detail_string')->implode("\n");
             $data->last_product = $last_product;
+            $data->no_ktp = $last_transaction->no_ktp;
+            $data->npwp = $last_transaction->npwp;
         }
 
 
@@ -2264,6 +2266,8 @@ class SalesOrderController extends Controller
                     'avg_transaksi' => 0,
                     'last_transaksi' => '-',
                     'last_product' => '-',
+                    'no_ktp' => '-',
+                    'npwp' => '-',
                     'periode' => date('Y-m')
                 ]
             ];
