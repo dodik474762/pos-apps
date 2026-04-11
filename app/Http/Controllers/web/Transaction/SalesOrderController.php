@@ -72,7 +72,7 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
             ->select(['customer.*', 'top.nilai as top_value'])
@@ -87,7 +87,7 @@ class SalesOrderController extends Controller
         $data['data_item'] = [];
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -101,10 +101,15 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
-        $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+        // $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+        //     ->select(['customer.*', 'top.nilai as top_value'])
+        //     ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+        //     ->get();
+        $data['customers'] = Customer::whereNull('customer.deleted')
             ->select(['customer.*', 'top.nilai as top_value'])
             ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
             ->get();
+
 
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -127,11 +132,11 @@ class SalesOrderController extends Controller
 
         $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -165,22 +170,22 @@ class SalesOrderController extends Controller
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
         $promo_item = DB::table('sales_order_promo_item as sopi')
-        ->where('sales_order_id', $data['id'])
-        ->get();
-        
+            ->where('sales_order_id', $data['id'])
+            ->get();
+
         // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);
         // $qr = 'data:image/png;base64,'.base64_encode($rawQr);
         $qr = '';
 
         $promo = DB::table('sales_order_promo as sop')
-        ->select([
-            'sop.promo_name',
-            DB::raw('MAX(sop.discount_percent) as discount_percent'),
-            DB::raw('SUM(sop.discount_amount) as total_potongan')
-        ])
-        ->where('sop.sales_order_id', $data['id'])
-        ->groupBy('sop.promo_name')
-        ->get();
+            ->select([
+                'sop.promo_name',
+                DB::raw('MAX(sop.discount_percent) as discount_percent'),
+                DB::raw('SUM(sop.discount_amount) as total_potongan')
+            ])
+            ->where('sop.sales_order_id', $data['id'])
+            ->groupBy('sop.promo_name')
+            ->get();
 
         // $promoString = $promo
         //     ->map(fn($p) => $p->promo_name . ' : ' . $p->total_potongan)
@@ -196,7 +201,7 @@ class SalesOrderController extends Controller
         $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr', 'promo', 'promo_item'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SO-'.$data->so_number.'.pdf');
+        return $pdf->stream('SO-' . $data->so_number . '.pdf');
     }
 
     public function getAllSalesNotInvoice($date = '', $state = '')
@@ -212,17 +217,17 @@ class SalesOrderController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as cy', 'cy.id', 'm.currency')
-            ->leftJoin('sales_invoice_header as sih', function($q){
+            ->leftJoin('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')
-                ->whereNull('sih.deleted');
+                    ->whereNull('sih.deleted');
             })
             ->whereIn('m.status', ['draft', 'submited'])
             ->whereNull('sih.id')
             ->where('m.total_amount', '>', 0)
             ->where('m.so_date', $date)
-            ->whereNull('m.deleted')            
+            ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
-        if($state == ''){
+        if ($state == '') {
         }
 
         $datadb = $datadb->get();
