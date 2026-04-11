@@ -207,10 +207,12 @@ class SalesInvoiceController extends Controller
                 'cc.nama_customer',
                 'c.code as currency_code',
                 'cc.address',
+                'top.remarks as top_name'
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
             ->whereNotIn('m.status', ['canceled'])
@@ -223,6 +225,7 @@ class SalesInvoiceController extends Controller
                     $query->where('m.so_number', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
@@ -497,7 +500,7 @@ class SalesInvoiceController extends Controller
                     $do->save();
                 }
             }
-            
+
             if (!empty($data['do_id'])) {
                 $dev_status_log = DeliveryOrderStatusLog::where('do_id', $data['do_id'])->first();
                 if (empty($dev_status_log)) {
@@ -530,7 +533,7 @@ class SalesInvoiceController extends Controller
 
             $header->subtotal = $subtotal;
             $header->discount_amount = $discountHeaderSo;
-            $header->total_amount = $subtotal-$discountHeaderSo;
+            $header->total_amount = $subtotal - $discountHeaderSo;
             $header->save();
 
             $currency = $so->currency;
@@ -590,15 +593,15 @@ class SalesInvoiceController extends Controller
             $items = SalesInvoiceDtl::where('invoice_id', $data['id'])->get();
 
             $do = DeliveryOrderHeader::find($menu->do_id);
-            if(empty($do)){
-              $so = SalesOrderHeader::find($menu->sales_order);
-              $so->status = 'draft';
-              $so->save();
-            }else{
-              $so = SalesOrderHeader::find($do->so_id);
-              $so->status = 'draft';
-              $so->save();
-            }            
+            if (empty($do)) {
+                $so = SalesOrderHeader::find($menu->sales_order);
+                $so->status = 'draft';
+                $so->save();
+            } else {
+                $so = SalesOrderHeader::find($do->so_id);
+                $so->status = 'draft';
+                $so->save();
+            }
 
             foreach ($items as $value) {
 
@@ -627,7 +630,6 @@ class SalesInvoiceController extends Controller
 
             DB::commit();
             $result['is_valid'] = true;
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
@@ -656,7 +658,6 @@ class SalesInvoiceController extends Controller
             $menu->save();
             DB::commit();
             $result['is_valid'] = true;
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
@@ -861,20 +862,20 @@ class SalesInvoiceController extends Controller
 
             foreach ($datadb as $invoice) {
                 $invoice->detail_item = DB::table('sales_invoice_detail as sid')
-                ->select([
-                    'sid.id',
-                    'p.id as product_id',
-                    'sid.qty',
-                    'sid.price as unit_price',
-                    'sid.subtotal',
-                    'p.code as product_code',
-                    'p.name as product_name',
-                    'u.name as unit_name'
+                    ->select([
+                        'sid.id',
+                        'p.id as product_id',
+                        'sid.qty',
+                        'sid.price as unit_price',
+                        'sid.subtotal',
+                        'p.code as product_code',
+                        'p.name as product_name',
+                        'u.name as unit_name'
 
-                ])
-                ->join('product as p', 'p.id', 'sid.product_id')
-                ->join('sales_order_details as sod', 'sod.id', 'sid.so_detail_id')
-                ->join('unit as u', 'u.id', 'sod.unit')
+                    ])
+                    ->join('product as p', 'p.id', 'sid.product_id')
+                    ->join('sales_order_details as sod', 'sod.id', 'sid.so_detail_id')
+                    ->join('unit as u', 'u.id', 'sod.unit')
                     ->where('sid.invoice_id', $invoice->id)
                     ->whereNull('sid.deleted')
                     ->get();

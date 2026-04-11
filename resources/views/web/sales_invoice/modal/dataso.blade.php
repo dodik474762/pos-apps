@@ -24,13 +24,14 @@
                               <th>So Date</th>
                               <th>Customer</th>
                               <th>Address</th>
+                              <th>TOP</th>
                               <th>Status</th>
                               <th>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="7">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="8">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>

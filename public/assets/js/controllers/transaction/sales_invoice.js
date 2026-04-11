@@ -35,7 +35,7 @@ let SalesInvoice = {
         e.preventDefault();
         window.location.href = url.base_url(SalesInvoice.module()) + "add";
     },
-    
+
     addFromDo: (elm, e) => {
         e.preventDefault();
         window.location.href = url.base_url(SalesInvoice.module()) + "addFromDo";
@@ -277,15 +277,13 @@ let SalesInvoice = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             SalesInvoice.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesInvoice.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -322,7 +320,7 @@ let SalesInvoice = {
                 },
             });
     },
-    
+
     getDataFromDO: async () => {
         let tableData = $("table#table-data-do");
 
@@ -426,15 +424,13 @@ let SalesInvoice = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             SalesInvoice.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesInvoice.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -568,7 +564,7 @@ let SalesInvoice = {
             },
         });
     },
-    
+
     showModalSO: (elm) => {
         let params = {};
         // const tax = $("#tax").val();
@@ -661,6 +657,9 @@ let SalesInvoice = {
                     data: "address",
                 },
                 {
+                    data: "top_name",
+                },
+                {
                     data: "status",
                 },
                 {
@@ -679,7 +678,7 @@ let SalesInvoice = {
             ],
         });
     },
-   
+
     getDataDo: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
@@ -775,7 +774,7 @@ let SalesInvoice = {
 
         SalesInvoice.getDoDetail(data_id);
     },
-   
+
     pilihDataSo: (elm, e) => {
         e.preventDefault();
         let nama_customer = $(elm).attr("nama_customer");
@@ -824,7 +823,7 @@ let SalesInvoice = {
             },
         });
     },
-    
+
     getDoDetail: (do_id) => {
         let params = {
             do_id: do_id,
@@ -1180,10 +1179,9 @@ let SalesInvoice = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesInvoice.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
@@ -1302,7 +1300,7 @@ let SalesInvoice = {
             message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date+"&state="+state;
+        window.location.href = url + "?tanggal=" + date + "&state=" + state;
     },
 
     checkAll: (elm) => {
@@ -1330,12 +1328,12 @@ let SalesInvoice = {
         window.open(url + "?ids=" + ids.join(","), "_blank");
     },
 
-    generate:(elm)=>{
+    generate: (elm) => {
         const checkDo = $('input.checkbox-do');
         $("button.btn-close").trigger("click");
 
-        $.each(checkDo, function(elm){
-            if($(this).is(':checked')){
+        $.each(checkDo, function (elm) {
+            if ($(this).is(':checked')) {
                 const data_id = $(this).closest('td').find('a').attr('data_id');
                 SalesInvoice.getDoDetail(data_id);
             }
