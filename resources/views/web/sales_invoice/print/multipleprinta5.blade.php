@@ -6,15 +6,15 @@
 
     <style>
         @page {
-            margin: 4mm;
+            size: 215.9mm auto;  /* 8.5 inch lebar, tinggi otomatis */
+            margin: 5mm 11mm;
         }
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 9px;
+            font-size: 8px;
         }
 
-        /* ✅ Wrapper 1 halaman = 2 invoice atas-bawah */
         .page-wrapper {
             page-break-after: always;
         }
@@ -23,85 +23,40 @@
             page-break-after: avoid;
         }
 
-        /* ✅ Tiap invoice ambil ~50% tinggi halaman */
-        .invoice-block {
-            height: 48%;
-            overflow: hidden;
-            padding-bottom: 2mm;
-        }
-
-        /* Garis pemisah antar invoice */
-        .invoice-divider {
-            border-top: 1px dashed #aaa;
-            margin: 2mm 0;
-        }
-
-        /* scale down */
-        .scale-down {
-            font-size: 8px !important;
-        }
-
-        .scale-down table,
-        .scale-down td,
-        .scale-down th {
-            font-size: 7px !important;
-            padding: 2px !important;
-        }
-
-        .scale-down h4 {
-            font-size: 8px !important;
-            margin: 2px 0 !important;
-        }
-
         .page-info {
             text-align: center;
-            font-size: 7px;
+            font-size: 10px;
             color: #555;
-            margin-top: 2px;
+            margin-top: 5px;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
 
-@php
-    $chunks = $invoices->chunk(2);
-@endphp
-
-@foreach ($chunks as $chunkIndex => $chunk)
+@foreach ($invoices as $globalIndex => $data)
 <div class="page-wrapper">
-
-    @foreach ($chunk as $data)
     @php
         $qr = '';
         $do = empty($data->do) ? [] : $data->do;
         $so = empty($data->do) ? $data->so : $do->so;
         $salesman_name = $so->salesman->nama_lengkap ?? '-';
-        $globalIndex = $chunkIndex * 2 + $loop->iteration;
     @endphp
 
-    {{-- Garis pemisah (hanya antara invoice 1 dan 2, bukan sebelum yang pertama) --}}
-    @if (!$loop->first)
-        <div class="invoice-divider"></div>
-    @endif
+    @include('web.sales_invoice.print.po-printa5', [
+        'data'         => $data,
+        'company'      => $company,
+        'qr'           => $qr,
+        'so'           => $so,
+        'salesman_name'=> $salesman_name,
+        'promo'        => $data->promo ?? collect(),
+        'promo_item'   => $data->promo_item ?? collect()
+    ])
 
-    <div class="invoice-block">
-        <div class="scale-down">
-            @include('web.sales_invoice.print.po-printa5', [
-                'data'         => $data,
-                'company'      => $company,
-                'qr'           => $qr,
-                'so'           => $so,
-                'salesman_name'=> $salesman_name
-            ])
-        </div>
-        <div class="page-info">
-            Invoice {{ $globalIndex }} / {{ $invoices->count() }}
-        </div>
+    <div class="page-info">
+        Invoice {{ $globalIndex + 1 }} / {{ $invoices->count() }}
     </div>
-
-    @endforeach
-
 </div>
 @endforeach
 

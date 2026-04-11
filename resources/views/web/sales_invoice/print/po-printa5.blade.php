@@ -143,10 +143,18 @@
             <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
             <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
         </tr>
-        <tr>
+        {{-- <tr>
             <td colspan="6" class="text-right"><strong>Discount {{ $data->so->discount_percent == '0' ? '' : $data->so->discount_percent.' %' }}</strong></td>
             <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
-        </tr>
+        </tr> --}}
+        @foreach($promo as $v)
+            <tr>
+                <td colspan="6" class="text-right"><strong>{{ $v->promo_name }}</strong></td>
+                <td class="text-right" style="color: #c00;">
+                    <strong>- {{ number_format($v->total_potongan, 0, ',', '.') }}</strong>
+                </td>
+            </tr>
+        @endforeach
         <tr>
             <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
             <td class="text-right"><strong>0</strong></td>

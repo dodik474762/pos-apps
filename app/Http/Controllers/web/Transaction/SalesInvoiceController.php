@@ -87,9 +87,9 @@ class SalesInvoiceController extends Controller
             ->leftJoin('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->where('m.invoice_date', $date)
-            ->whereNull('m.deleted')            
+            ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
-        if($state == ''){
+        if ($state == '') {
             $datadb->where(function ($q) {
                 return $q->where('m.reprint', 1)
                     ->orWhereNull('m.print_date');
@@ -126,7 +126,7 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -138,20 +138,20 @@ class SalesInvoiceController extends Controller
         $data['general_ledgers'] = [];
         $view = view('web.sales_invoice.formaddso', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
 
         return view('web.template.main', $put);
     }
-    
+
     public function addFromDo(Request $request)
     {
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -163,7 +163,7 @@ class SalesInvoiceController extends Controller
         $data['general_ledgers'] = [];
         $view = view('web.sales_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -199,11 +199,11 @@ class SalesInvoiceController extends Controller
             ->get();
 
         $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = $data['data']->do_id != '' ? view('web.sales_invoice.formadd', $data) : view('web.sales_invoice.formaddso', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -234,12 +234,27 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['so','do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
+        $data = SalesInvoiceHeader::with(['so', 'do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         $qr = '';
 
+        $promo_item = DB::table('sales_order_promo_item as sopi')
+            ->where('sales_order_id', $data->so->id)
+            ->get();
+
+        $promo = DB::table('sales_order_promo as sop')
+            ->select([
+                'sop.promo_name',
+                DB::raw('MAX(sop.discount_percent) as discount_percent'),
+                DB::raw('SUM(sop.discount_amount) as total_potongan')
+            ])
+            ->where('sop.sales_order_id', $data->so->id)
+            ->groupBy('sop.promo_name')
+            ->get();
+
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($promo);
+        // die;
 
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
         SalesInvoiceHeader::where('id', $data->id)->update([
@@ -254,10 +269,10 @@ class SalesInvoiceController extends Controller
         $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
         $customPaper = [0, 0, 612.0, 792.0]; //Letter
-        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name'))
+        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item'))
             ->setPaper($customPaper, 'portrait');
 
-        return $pdf->stream('SI-'.$data->invoice_number.'.pdf');
+        return $pdf->stream('SI-' . $data->invoice_number . '.pdf');
     }
 
     public function multiplePrint(Request $request)
@@ -277,8 +292,8 @@ class SalesInvoiceController extends Controller
             ->whereIn('id', $ids)
             ->get();
 
-            // echo '<pre>';
-            // print_r($invoices);die;
+        // echo '<pre>';
+        // print_r($invoices);die;
         $company = CompanyModel::where('id', session('id_company'))->first();
 
         // Update print count per invoice
@@ -291,6 +306,28 @@ class SalesInvoiceController extends Controller
                 'print_date' => now(),
                 'reprint' => 0,
             ]);
+
+            $so = $data['do_id'] != '' ? $data->do->so : $data->so;
+            $so_id = $so ? $so->id : null;
+
+            if ($so_id) {
+                $data->promo_item = DB::table('sales_order_promo_item as sopi')
+                    ->where('sales_order_id', $so_id)
+                    ->get();
+
+                $data->promo = DB::table('sales_order_promo as sop')
+                    ->select([
+                        'sop.promo_name',
+                        DB::raw('MAX(sop.discount_percent) as discount_percent'),
+                        DB::raw('SUM(sop.discount_amount) as total_potongan')
+                    ])
+                    ->where('sop.sales_order_id', $so_id)
+                    ->groupBy('sop.promo_name')
+                    ->get();
+            } else {
+                $data->promo_item = collect();
+                $data->promo = collect();
+            }
         }
 
         $customPaper = [0, 0, 612.0, 792.0]; //Letter
