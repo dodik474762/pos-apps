@@ -83,7 +83,7 @@ class SalesOrderController extends Controller
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
         $view = view('web.sales_order.formadd', $data);
@@ -131,7 +131,7 @@ class SalesOrderController extends Controller
         // echo '<pre>';
         // print_r($data['data_item']);die;
 
-        $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
