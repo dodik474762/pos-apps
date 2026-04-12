@@ -280,6 +280,13 @@
                                     </select>
                                 </div>
                             </div>
+                             <div class="mb-3">
+                                <label>Min Faktur</label>
+                                 <div>
+                                    <input tabindex="12" type="number" id="min_invoice" class="form-control required" error="Min Faktur "
+                                        placeholder="Min Faktur" value="{{ isset($data->min_invoice) ? $data->min_invoice : '1' }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -79,10 +79,10 @@ let Customer = {
     //     return data;
     // },
 
-    getPostItemPrice:()=>{
+    getPostItemPrice: () => {
         const table = $('table#table-price').find('tbody').find('tr.input');
         const result = [];
-        $.each(table, function(){
+        $.each(table, function () {
             const id = $(this).attr('data_id');
             const product = $(this).find('#product').val();
             const uom = $(this).find('td#uom').text();
@@ -138,6 +138,7 @@ let Customer = {
         formData.append("pasar", $("#pasar").val());
         formData.append("channel_outlet", $("#channel_outlet").val());
         formData.append("sub_channel_outlet", $("#sub_channel_outlet").val());
+        formData.append("min_invoice", $("#min_invoice").val());
         formData.append("items_price", JSON.stringify(items_price));
 
         // FOTO (single upload)
@@ -145,12 +146,12 @@ let Customer = {
         if (photo) {
             formData.append("photo_path", photo);
         }
-        
+
         let photo_ktp = $("#foto_ktp_path")[0].files[0];
         if (photo_ktp) {
             formData.append("foto_ktp_path", photo);
         }
-        
+
         let photo_npwp = $("#foto_npwp_path")[0].files[0];
         if (photo_npwp) {
             formData.append("foto_npwp_path", photo);
@@ -202,7 +203,7 @@ let Customer = {
     },
 
 
-    reject:(elm, e)=>{
+    reject: (elm, e) => {
         e.preventDefault();
         //swal alert dialog confirm with input remarks
         Swal.fire({
@@ -217,7 +218,7 @@ let Customer = {
         }).then((result) => {
             if (result.value) {
                 Customer.approve(elm, e, 'rej', result.value);
-            }else{
+            } else {
                 message.sweetError("Informasi", "Data Belum Lengkap");
                 return false;
             }
@@ -321,7 +322,7 @@ let Customer = {
         });
     },
 
-     pilihDataProduct: (elm, e) => {
+    pilihDataProduct: (elm, e) => {
         e.preventDefault();
         let produk_name = $(elm).attr("produk_name");
         let produk_id = $(elm).attr("produk_id");
@@ -331,8 +332,8 @@ let Customer = {
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(produk_id+ "//" + produk_name);
-        $(elmChoose).closest('tr').find('td#uom').html(unit+"-"+unit_name);
+            .val(produk_id + "//" + produk_name);
+        $(elmChoose).closest('tr').find('td#uom').html(unit + "-" + unit_name);
         $("button.btn-close").trigger("click");
     },
 
@@ -459,9 +460,8 @@ let Customer = {
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 Customer.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             html += `<button type="button" data_id="${row.id}" onclick="Customer.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
@@ -578,9 +578,8 @@ let Customer = {
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 Customer.module()
-                            )}detail?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}detail?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         return html;
                     },
@@ -703,10 +702,10 @@ let Customer = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                                value.id +
-                                '">' +
-                                value.name +
-                                "</option>"
+                            value.id +
+                            '">' +
+                            value.name +
+                            "</option>"
                         );
                     });
                 } else {
@@ -745,10 +744,10 @@ let Customer = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                                value.id +
-                                '">' +
-                                value.name +
-                                "</option>"
+                            value.id +
+                            '">' +
+                            value.name +
+                            "</option>"
                         );
                     });
                 } else {
@@ -787,10 +786,10 @@ let Customer = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                                value.id +
-                                '">' +
-                                value.name +
-                                "</option>"
+                            value.id +
+                            '">' +
+                            value.name +
+                            "</option>"
                         );
                     });
                 } else {
@@ -800,13 +799,13 @@ let Customer = {
         });
     },
 
-    changeCreditLimit:(elm)=>{
+    changeCreditLimit: (elm) => {
         const top = $(elm).val();
-        if(top == '3'){
+        if (top == '3') {
             $('#credit_limit').val(0);
-            $('#credit_limit').attr('disabled',true);
-        }else{
-            $('#credit_limit').attr('disabled',false);
+            $('#credit_limit').attr('disabled', true);
+        } else {
+            $('#credit_limit').attr('disabled', false);
         }
     },
 

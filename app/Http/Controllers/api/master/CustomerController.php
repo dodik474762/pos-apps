@@ -212,6 +212,7 @@ class CustomerController extends Controller
             $roles->pasar = $data['pasar'];
             $roles->channel_outlet = $data['channel_outlet'];
             $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+            $roles->min_invoice = $data['min_invoice'];
             $roles->branch = 'YOGYAKARTA';
             $roles->save();
             $id_cust = $roles->id;
