@@ -642,14 +642,14 @@ let SalesOrder = {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }).format(price));
-            
+
         $(elmChoose).closest("tr").find("#qty").val(qty);
 
         SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
         SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
         SalesOrder.showPromoItem(produk_id, produk_name, unit, qty);
         SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
-        
+
         SalesOrder.calcRow(elmChoose);
 
         // Callback ke pilih product lagi di baris baru

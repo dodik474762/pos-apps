@@ -1,7 +1,7 @@
 
 
 Mobile
-- kalo ada tagihan tidak bisa tekan tombol order
+- kalo ada tagihan tidak bisa tekan tombol order OK
 - driver input bayar (kasih total nominal koreksi) 
 - driver input bayar kasih inputan nominal baya
 - alasan tidak bayar (waktu tidak cukup)
@@ -12,6 +12,6 @@ Web
 - kontrol sales faktur (check boleh dobel faktur atau tidak) jika non cash OK
 - search product di list product sales order masih tersimpan OK
 - setelah klik product pada modal pilih satuan tambahkan input qty order OK
-- setelah di klik satuannya kembali ke modal pilih product
+- setelah di klik satuannya kembali ke modal pilih product OK
 - di packing list (masih ada do yg hanya call) OK
 - packing list hrus ada invoice dulu di donya OK
