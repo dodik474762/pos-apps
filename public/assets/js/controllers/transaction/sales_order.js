@@ -556,7 +556,7 @@ let SalesOrder = {
         console.log("Selected:", row);
 
         // lanjutkan logic yang sama seperti pilihSatuan()
-        SalesOrder.pilihSatuan(row);
+        SalesOrder.pilihSatuan(null, row);
     },
 
     pilihProdukDulu: (elm, e) => {
@@ -594,8 +594,18 @@ let SalesOrder = {
         });
     },
 
-    pilihSatuan: (row) => {
-        console.log('row chooce',row);
+    pilihSatuan: (elm, row) => {
+        if (!row) {
+            row = elm;
+            elm = null;
+        }
+
+        let qty = 1;
+        if (elm) {
+            qty = parseFloat($(elm).closest("tr").find(".qty-input").val()) || 1;
+        }
+
+        console.log('row chooce', row);
         // const row = _selectedProductRows[index];
         // if (!row) return;
 
@@ -632,11 +642,22 @@ let SalesOrder = {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }).format(price));
+            
+        $(elmChoose).closest("tr").find("#qty").val(qty);
 
         SalesOrder.showDiscountProduct(produk_id, produk_name, unit);
         SalesOrder.showDiscountFreeProduct(produk_id, produk_name, unit);
-        SalesOrder.showPromoItem(produk_id, produk_name, unit, 0);
+        SalesOrder.showPromoItem(produk_id, produk_name, unit, qty);
         SalesOrder.showQtySmallestProduct(produk_id, produk_name, unit);
+        
+        SalesOrder.calcRow(elmChoose);
+
+        // Callback ke pilih product lagi di baris baru
+        setTimeout(() => {
+            SalesOrder.addRow();
+            let newElm = $("table#table-items").find("tbody").find("tr.input:last").find("input#product").closest("div").find("button");
+            SalesOrder.showDataProduct(newElm[0] || newElm);
+        }, 800);
     },
 
     pilihDataProduct_fromRow: (row) => {

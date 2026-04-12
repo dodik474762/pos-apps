@@ -14,6 +14,7 @@
                             <tr>
                                 <th>Satuan</th>
                                 <th>Harga</th>
+                                <th width="15%">Qty</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -23,8 +24,11 @@
                                     <td>{{ $item->unit_tujuan_name }}</td>
                                     <td>{{ number_format($item->harga,0, ',','.') }}</td>
                                     <td>
+                                        <input type="number" class="form-control form-control-sm qty-input" value="1" min="1">
+                                    </td>
+                                    <td>
                                         <button type="button" class="btn btn-sm btn-primary"
-                                            onclick='SalesOrder.pilihSatuan(@json($item))'>
+                                            onclick='SalesOrder.pilihSatuan(this, @json($item))'>
                                             Pilih
                                         </button>
                                     </td>
