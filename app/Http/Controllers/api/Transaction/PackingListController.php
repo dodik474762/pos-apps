@@ -151,6 +151,10 @@ class PackingListController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('sales_order_headers as soh', 'soh.id', 'm.so_id')
             ->join('currency as c', 'c.id', 'soh.currency')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.do_id', 'm.id')
+                    ->orOn('sih.sales_order', 'soh.id');
+            })
             ->whereNull('m.deleted')
             ->where('soh.total_amount', '>', 0)
             ->whereIn('m.status', ['CONFIRMED', 'DRAFT'])
