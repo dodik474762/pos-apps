@@ -5,6 +5,7 @@ let channel_outlet = null;
 let sub_channel_outlet = null;
 // Simpan sementara semua data harga+satuan dari baris produk yang dipilih
 let _selectedProductRows = [];
+let lastProductSearchKeyword = "";
 
 let SalesOrder = {
     module: () => {
@@ -461,6 +462,9 @@ let SalesOrder = {
                 [25, 50, 100],
                 [25, 50, 100],
             ],
+            search: {
+                search: lastProductSearchKeyword
+            },
             // lengthChange: !1,
             language: {
                 paginate: {
@@ -540,6 +544,10 @@ let SalesOrder = {
                     },
                 },
             ],
+        });
+
+        data.on('search.dt', function () {
+            lastProductSearchKeyword = data.search();
         });
     },
 
