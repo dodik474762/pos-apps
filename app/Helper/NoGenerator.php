@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Session;
 function digit_count($length, $value)
 {
     while (strlen($value) < $length) {
-        $value = '0'.$value;
+        $value = '0' . $value;
     }
 
     return $value;
@@ -28,8 +28,8 @@ function digit_count($length, $value)
 
 function generateNoDocument()
 {
-    $no = 'DOC'.date('y').strtoupper(date('M'));
-    $data = DB::table('document')->where('no_document', 'LIKE', '%'.$no.'%')->orderBy('no_document', 'desc')->get()->toArray();
+    $no = 'DOC' . date('y') . strtoupper(date('M'));
+    $data = DB::table('document')->where('no_document', 'LIKE', '%' . $no . '%')->orderBy('no_document', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -55,8 +55,8 @@ function getRomawiMonth($date = '')
 
 function generateCodeProduct()
 {
-    $no = 'PROD-'.strtoupper(date('m')).date('y');
-    $data = DB::table('product')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'PROD-' . strtoupper(date('m')) . date('y');
+    $data = DB::table('product')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -74,8 +74,8 @@ function generateCodeProduct()
 
 function generateCodeCustomer()
 {
-    $no = 'CUST'.strtoupper(date('m')).date('y');
-    $data = DB::table('customer')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'CUST' . strtoupper(date('m')) . date('y');
+    $data = DB::table('customer')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -93,8 +93,8 @@ function generateCodeCustomer()
 
 function generateVPN()
 {
-    $no = 'VP'.strtoupper(date('m')).date('y');
-    $data = DB::table('vendor_payment_header')->where('payment_number', 'LIKE', '%'.$no.'%')->orderBy('payment_number', 'desc')->get()->toArray();
+    $no = 'VP' . strtoupper(date('m')) . date('y');
+    $data = DB::table('vendor_payment_header')->where('payment_number', 'LIKE', '%' . $no . '%')->orderBy('payment_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -112,8 +112,8 @@ function generateVPN()
 
 function generatePRN()
 {
-    $no = 'RE-'.strtoupper(date('m')).date('y');
-    $data = DB::table('purchase_return')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'RE-' . strtoupper(date('m')) . date('y');
+    $data = DB::table('purchase_return')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -131,8 +131,8 @@ function generatePRN()
 
 function generateCodePresence()
 {
-    $no = 'AB-'.strtoupper(date('m')).date('y');
-    $data = DB::table('purchase_return')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'AB-' . strtoupper(date('m')) . date('y');
+    $data = DB::table('purchase_return')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -150,8 +150,8 @@ function generateCodePresence()
 
 function generateNoPO()
 {
-    $no = 'PO'.strtoupper(date('m')).date('y');
-    $data = DB::table('purchase_order')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'PO' . strtoupper(date('m')) . date('y');
+    $data = DB::table('purchase_order')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -169,8 +169,8 @@ function generateNoPO()
 
 function generateNoSO()
 {
-    $no = 'SO'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_order_headers')->where('so_number', 'LIKE', '%'.$no.'%')->orderBy('so_number', 'desc')->get()->toArray();
+    $no = 'SO' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_order_headers')->where('so_number', 'LIKE', '%' . $no . '%')->orderBy('so_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -188,8 +188,8 @@ function generateNoSO()
 
 function generateNoAdjStock()
 {
-    $no = 'ADJ'.strtoupper(date('m')).date('y');
-    $data = DB::table('product_adjustment_stock_header')->where('code', 'LIKE', '%'.$no.'%')->orderBy('code', 'desc')->get()->toArray();
+    $no = 'ADJ' . strtoupper(date('m')) . date('y');
+    $data = DB::table('product_adjustment_stock_header')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -207,8 +207,8 @@ function generateNoAdjStock()
 
 function generateNoDO()
 {
-    $no = 'DO'.strtoupper(date('m')).date('y');
-    $data = DB::table('delivery_order_header')->where('do_number', 'LIKE', '%'.$no.'%')->orderBy('do_number', 'desc')->get()->toArray();
+    $no = 'DO' . strtoupper(date('m')) . date('y');
+    $data = DB::table('delivery_order_header')->where('do_number', 'LIKE', '%' . $no . '%')->orderBy('do_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -226,8 +226,8 @@ function generateNoDO()
 
 function generateNoSI()
 {
-    $no = 'SI'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_invoice_header')->where('invoice_number', 'LIKE', '%'.$no.'%')->orderBy('invoice_number', 'desc')->get()->toArray();
+    $no = 'SI' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_invoice_header')->where('invoice_number', 'LIKE', '%' . $no . '%')->orderBy('invoice_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -245,8 +245,8 @@ function generateNoSI()
 
 function generateNoSP()
 {
-    $no = 'SP'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_payment_header')->where('payment_code', 'LIKE', '%'.$no.'%')->orderBy('payment_code', 'desc')->get()->toArray();
+    $no = 'SP' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_payment_header')->where('payment_code', 'LIKE', '%' . $no . '%')->orderBy('payment_code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -264,8 +264,8 @@ function generateNoSP()
 
 function generateNoPL()
 {
-    $no = 'PL'.strtoupper(date('m')).date('y');
-    $data = DB::table('packing_list')->where('packing_list_no', 'LIKE', '%'.$no.'%')->orderBy('packing_list_no', 'desc')->get()->toArray();
+    $no = 'PL' . strtoupper(date('m')) . date('y');
+    $data = DB::table('packing_list')->where('packing_list_no', 'LIKE', '%' . $no . '%')->orderBy('packing_list_no', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -283,8 +283,8 @@ function generateNoPL()
 
 function generateNoReturn()
 {
-    $no = 'SR'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_return')->where('return_number', 'LIKE', '%'.$no.'%')->orderBy('return_number', 'desc')->get()->toArray();
+    $no = 'SR' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_return')->where('return_number', 'LIKE', '%' . $no . '%')->orderBy('return_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -302,8 +302,8 @@ function generateNoReturn()
 
 function generateNoCN()
 {
-    $no = 'CN'.strtoupper(date('m')).date('y');
-    $data = DB::table('credit_note')->where('credit_note_number', 'LIKE', '%'.$no.'%')->orderBy('credit_note_number', 'desc')->get()->toArray();
+    $no = 'CN' . strtoupper(date('m')) . date('y');
+    $data = DB::table('credit_note')->where('credit_note_number', 'LIKE', '%' . $no . '%')->orderBy('credit_note_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -321,8 +321,8 @@ function generateNoCN()
 
 function generateNoReturOther()
 {
-    $no = 'RH'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_retur_of_consigment')->where('return_number', 'LIKE', '%'.$no.'%')->orderBy('return_number', 'desc')->get()->toArray();
+    $no = 'RH' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_retur_of_consigment')->where('return_number', 'LIKE', '%' . $no . '%')->orderBy('return_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -340,8 +340,8 @@ function generateNoReturOther()
 
 function generateNoRoutePlan()
 {
-    $no = 'RP'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%'.$no.'%')->orderBy('plan_code', 'desc')->get()->toArray();
+    $no = 'RP' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%' . $no . '%')->orderBy('plan_code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -359,8 +359,8 @@ function generateNoRoutePlan()
 
 function generatePlanCode()
 {
-    $no = 'SO'.strtoupper(date('m')).date('y');
-    $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%'.$no.'%')->orderBy('plan_code', 'desc')->get()->toArray();
+    $no = 'SO' . strtoupper(date('m')) . date('y');
+    $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%' . $no . '%')->orderBy('plan_code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -378,8 +378,8 @@ function generatePlanCode()
 
 function generateGrNumber()
 {
-    $no = 'GR'.strtoupper(date('m')).date('y');
-    $data = DB::table('goods_receipt_header')->where('gr_number', 'LIKE', '%'.$no.'%')->orderBy('gr_number', 'desc')->get()->toArray();
+    $no = 'GR' . strtoupper(date('m')) . date('y');
+    $data = DB::table('goods_receipt_header')->where('gr_number', 'LIKE', '%' . $no . '%')->orderBy('gr_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -397,8 +397,8 @@ function generateGrNumber()
 
 function generatePINumber()
 {
-    $no = 'PI'.strtoupper(date('m')).date('y');
-    $data = DB::table('purchase_invoice_header')->where('invoice_number', 'LIKE', '%'.$no.'%')->orderBy('invoice_number', 'desc')->get()->toArray();
+    $no = 'PI' . strtoupper(date('m')) . date('y');
+    $data = DB::table('purchase_invoice_header')->where('invoice_number', 'LIKE', '%' . $no . '%')->orderBy('invoice_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -467,8 +467,8 @@ function cekStatusRequest($id_req)
 
 function generateNoPayment()
 {
-    $no = 'PAY'.strtoupper(date('m')).date('y');
-    $data = DB::table('payment_invoice')->where('no_payment', 'LIKE', '%'.$no.'%')->orderBy('no_payment', 'desc')->get()->toArray();
+    $no = 'PAY' . strtoupper(date('m')) . date('y');
+    $data = DB::table('payment_invoice')->where('no_payment', 'LIKE', '%' . $no . '%')->orderBy('no_payment', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -501,13 +501,13 @@ function sendFonteNotification($phoneNumber, $message)
         ]);
 
         $status = json_decode($response->getBody(), true);
-        Log::info('Fonnte API Response: '.json_encode($status));
+        Log::info('Fonnte API Response: ' . json_encode($status));
 
         if (! $status['status']) {
             throw new \Exception('Failed to send WhatsApp message.');
         }
     } catch (\Exception $e) {
-        throw new \Exception('Fonnte API error: '.$e->getMessage());
+        throw new \Exception('Fonnte API error: ' . $e->getMessage());
     }
 }
 
@@ -562,7 +562,7 @@ function routingCreate($menu = 0, $prevState = null, $group = null, $from_id = 0
         $apiFcm = new FcmController;
         $params['user_id'] = $data->users;
         $params['title'] = 'Informasi';
-        $params['body'] = 'Terdapat Pemberitahuan Approval Module '.$data->nama_menu.' Silakan Buka dan Approval Melalui Web';
+        $params['body'] = 'Terdapat Pemberitahuan Approval Module ' . $data->nama_menu . ' Silakan Buka dan Approval Melalui Web';
         $fcm = $apiFcm->sendFcmNotificationSystem($params);
     }
 
@@ -591,7 +591,7 @@ function routingAcc($users = 0, $menu = 0, $prev_step = '', $group = null, $from
         $apiFcm = new FcmController;
         $params['user_id'] = $data->users;
         $params['title'] = 'Informasi';
-        $params['body'] = 'Terdapat Pemberitahuan Approval Module '.$data->nama_menu.' Silakan Buka dan Approval Melalui Web';
+        $params['body'] = 'Terdapat Pemberitahuan Approval Module ' . $data->nama_menu . ' Silakan Buka dan Approval Melalui Web';
         $apiFcm->sendFcmNotificationSystem($params);
     }
 
@@ -669,7 +669,7 @@ function routingReminder($users = 0, $menu = 0, $code = '', $state = 'COMPLETED'
         $notificationCenter->creator = $users;
         $notificationCenter->to_users = $value['users'];
         $notificationCenter->remarks = $remarks;
-        $notificationCenter->redirect_link = $remarks.'/detail?id='.$primary;
+        $notificationCenter->redirect_link = $remarks . '/detail?id=' . $primary;
         $notificationCenter->save();
         $remindersSave[] = $notificationCenter->id;
 
@@ -677,7 +677,7 @@ function routingReminder($users = 0, $menu = 0, $code = '', $state = 'COMPLETED'
             $apiFcm = new FcmController;
             $params['user_id'] = $value['users'];
             $params['title'] = 'Informasi';
-            $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$value['nama_menu'].' Silakan Buka dan Reminder Melalui Web';
+            $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $value['nama_menu'] . ' Silakan Buka dan Reminder Melalui Web';
             $resultRoutingMessage['fcm_result'] = $apiFcm->sendFcmNotificationSystem($params);
         } catch (\Throwable $th) {
             $resultRoutingMessage['fcm_result'] = $th->getMessage();
@@ -707,13 +707,13 @@ function reminderToCreatorTransaction($users = 0, $menu = 0, $code = '', $state 
     $notificationCenter->creator = $users;
     $notificationCenter->to_users = $to_users;
     $notificationCenter->remarks = $remarks;
-    $notificationCenter->redirect_link = $remarks.'/ubah?id='.$primary;
+    $notificationCenter->redirect_link = $remarks . '/ubah?id=' . $primary;
     $notificationCenter->save();
 
     $apiFcm = new FcmController;
     $params['user_id'] = $to_users;
     $params['title'] = 'Informasi';
-    $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$remarks.' Silakan Buka dan Reminder Melalui Web';
+    $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $remarks . ' Silakan Buka dan Reminder Melalui Web';
     $apiFcm->sendFcmNotificationSystem($params);
 }
 
@@ -745,13 +745,13 @@ function reminderToRolesTransaction($users = 0, $menu = 0, $code = '', $state = 
             $notificationCenter->creator = $users;
             $notificationCenter->to_users = $to_users;
             $notificationCenter->remarks = $remarks;
-            $notificationCenter->redirect_link = $remarks.'/detail?id='.$primary.'&backto=dashboard';
+            $notificationCenter->redirect_link = $remarks . '/detail?id=' . $primary . '&backto=dashboard';
             $notificationCenter->save();
 
             $apiFcm = new FcmController;
             $params['user_id'] = $to_users;
             $params['title'] = 'Informasi';
-            $params['body'] = 'Terdapat Pemberitahuan Reminder Module '.$remarks.' Silakan Buka dan Reminder Melalui Web';
+            $params['body'] = 'Terdapat Pemberitahuan Reminder Module ' . $remarks . ' Silakan Buka dan Reminder Melalui Web';
             $apiFcm->sendFcmNotificationSystem($params);
         }
     }
@@ -844,19 +844,19 @@ function terbilang($angka)
     if ($angka < 20) {
         return $huruf[$angka];
     } elseif ($angka < 100) {
-        return terbilang(floor($angka / 10)).' puluh '.terbilang($angka % 10);
+        return terbilang(floor($angka / 10)) . ' puluh ' . terbilang($angka % 10);
     } elseif ($angka < 200) {
-        return 'seratus '.terbilang($angka - 100);
+        return 'seratus ' . terbilang($angka - 100);
     } elseif ($angka < 1000) {
-        return terbilang(floor($angka / 100)).' ratus '.terbilang($angka % 100);
+        return terbilang(floor($angka / 100)) . ' ratus ' . terbilang($angka % 100);
     } elseif ($angka < 1000000) {
-        return terbilang(floor($angka / 1000)).' ribu '.terbilang($angka % 1000);
+        return terbilang(floor($angka / 1000)) . ' ribu ' . terbilang($angka % 1000);
     } elseif ($angka < 1000000000) {
-        return terbilang(floor($angka / 1000000)).' juta '.terbilang($angka % 1000000);
+        return terbilang(floor($angka / 1000000)) . ' juta ' . terbilang($angka % 1000000);
     } elseif ($angka < 1000000000000) {
-        return terbilang(floor($angka / 1000000000)).' milyar '.terbilang($angka % 1000000000);
+        return terbilang(floor($angka / 1000000000)) . ' milyar ' . terbilang($angka % 1000000000);
     } elseif ($angka < 1000000000000000) {
-        return terbilang(floor($angka / 1000000000000)).' triliun '.terbilang($angka % 1000000000000);
+        return terbilang(floor($angka / 1000000000000)) . ' triliun ' . terbilang($angka % 1000000000000);
     }
 }
 
@@ -1134,6 +1134,35 @@ function checkCustomerCreditLimit($customer = 0)
         ];
     }
 
+    //jika payment terms bukan CASH
+    if ($datadb->payment_terms != 3) {
+        $min_invoice = 0;
+        if ($datadb) {
+            $min_invoice = $datadb->min_invoice;
+        }
+
+        if ($min_invoice == 0) {
+            return [
+                'status' => true,
+                'message' => 'Customer tidak memiliki batas minimal invoice',
+            ];
+        }
+
+        //count invoice outstanding
+        $countInvoiceOutstanding = DB::table('sales_invoice_header')
+            ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
+            ->whereNull('deleted')
+            ->where('customer_id', $customer)
+            ->count();
+
+        if ($countInvoiceOutstanding >= $min_invoice) {
+            return [
+                'status' => false,
+                'message' => 'Customer telah mencapai batas minimal invoice yaitu : ' . $min_invoice . ' dengan total invoice outstanding sebesar : ' . $countInvoiceOutstanding,
+            ];
+        }
+    }
+
     // cek piutang belum tertagih
     $totalOutstanding = DB::table('sales_invoice_header')
         ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
@@ -1142,15 +1171,16 @@ function checkCustomerCreditLimit($customer = 0)
         ->whereRaw('(total_amount - amount_paid) > 0')
         ->sum(DB::raw('total_amount - amount_paid'));
 
+
     if ($totalOutstanding >= $credit_limit) {
         return [
             'status' => false,
-            'message' => 'Customer telah mencapai batas kredit maksimal yaitu : '.$credit_limit.' dengan total piutang belum tertagih sebesar : '.$totalOutstanding,
+            'message' => 'Customer telah mencapai batas kredit maksimal yaitu : ' . $credit_limit . ' dengan total piutang belum tertagih sebesar : ' . $totalOutstanding,
         ];
     } else {
         return [
             'status' => true,
-            'message' => 'Customer masih memiliki sisa batas kredit sebesar : '.($credit_limit - $totalOutstanding),
+            'message' => 'Customer masih memiliki sisa batas kredit sebesar : ' . ($credit_limit - $totalOutstanding),
         ];
     }
 }
@@ -1180,15 +1210,15 @@ function getMaxReturKaryawan($karyawan = 0)
     $datadb = DB::table('karyawan')->where('id', $karyawan)->first();
 
     $total_refund = DB::table('sales_return as sr')
-    ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
-    ->join('delivery_order_header as doh', 'doh.id', 'sih.do_id')
-    ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
-    ->where('soh.salesman', $karyawan)
-    ->whereMonth('sr.created_at', date('m'))
-    ->whereYear('sr.created_at', date('Y'))
-    ->whereNull('sr.deleted')
-    ->where('sr.status', '!=', 'CANCELLED')
-    ->sum('sr.refund_amount');
+        ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
+        ->join('delivery_order_header as doh', 'doh.id', 'sih.do_id')
+        ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+        ->where('soh.salesman', $karyawan)
+        ->whereMonth('sr.created_at', date('m'))
+        ->whereYear('sr.created_at', date('Y'))
+        ->whereNull('sr.deleted')
+        ->where('sr.status', '!=', 'CANCELLED')
+        ->sum('sr.refund_amount');
 
     if ($total_refund >= $datadb->max_retur) {
         return false;

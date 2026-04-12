@@ -8,7 +8,7 @@ Mobile
 - tampilkan foto dari sales order ditaruh di atas tagihan
 
 Web
-- customer kasih minial faktur qty (input)
+- customer kasih minial faktur qty (input) OK
 - kontrol sales faktur (check boleh dobel faktur atau tidak) jika non cash
 - search product di list product sales order masih tersimpan
 - setelah klik product pada modal pilih satuan tambahkan input qty order
