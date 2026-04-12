@@ -383,20 +383,41 @@ class SalesPaymentController extends Controller
 
         DB::beginTransaction();
         try {
+            $periode = Carbon::parse($data['payment_date'])->setTimezone('Asia/Jakarta');
+            $payment_date = $periode->format('Y-m-d');
+
+            list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+
             if (!isset($data['alasan_tidak_bayar'])) {
                 $data['alasan_tidak_bayar'] = '';
             }
 
             if ($data['alasan_tidak_bayar'] != '') {
+                $header = new SalesPaymentHeader();
+
+                $header->payment_code = generateNoSP(); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'NOT PAID';
+
+                $header->payment_date = $payment_date;
+                $header->customer_id = $customer_id;
+                $header->payment_method = 'CASH';
+                $header->total_amount = 0;
+                $header->discount_amount = 0;
+                $header->net_amount = 0;
+                $header->reference_no = $data['_id'];
+                $header->remarks = $data['alasan_tidak_bayar'];
+                $header->coa_kas = $data['account_id'];
+                $header->bulk = 0;
+                $header->platform = 'mobile';
+                $header->save();
+
+                DB::commit();
                 $result['is_valid'] = true;
                 $result['message'] = 'Sales Payment berhasil disimpan';
                 return response()->json($result);
             }
 
-            $periode = Carbon::parse($data['payment_date'])->setTimezone('Asia/Jakarta');
-            $payment_date = $periode->format('Y-m-d');
-
-            list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
 
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
