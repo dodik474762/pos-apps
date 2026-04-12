@@ -2,6 +2,7 @@
 
 Mobile
 - kalo ada tagihan tidak bisa tekan tombol order OK
+- penambahan alasan tidak bayar di payment OK
 - driver input bayar (kasih total nominal koreksi) 
 - driver input bayar kasih inputan nominal baya
 - alasan tidak bayar (waktu tidak cukup)

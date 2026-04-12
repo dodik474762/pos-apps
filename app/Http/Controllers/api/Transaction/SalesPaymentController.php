@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class SalesPaymentController extends Controller
 {
-     public function getTableName()
+    public function getTableName()
     {
         return 'sales_payment_header';
     }
@@ -26,7 +26,7 @@ class SalesPaymentController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -41,10 +41,10 @@ class SalesPaymentController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.payment_code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.payment_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.payment_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.payment_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -95,13 +95,13 @@ class SalesPaymentController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('soh.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -168,14 +168,14 @@ class SalesPaymentController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -210,7 +210,7 @@ class SalesPaymentController extends Controller
         DB::beginTransaction();
         try {
 
-             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+            $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
@@ -257,7 +257,7 @@ class SalesPaymentController extends Controller
             $hdrId = $header->id;
 
             $reference = $header->payment_code;
-            if($data['id'] != ''){
+            if ($data['id'] != '') {
                 cancelAllGL($reference);
             }
 
@@ -266,7 +266,7 @@ class SalesPaymentController extends Controller
             $disc_total = 0;
             $net_total = 0;
             $line_no = 1;
-            foreach ($data['details'] as $key=>$value) {
+            foreach ($data['details'] as $key => $value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
@@ -281,32 +281,31 @@ class SalesPaymentController extends Controller
                 }
 
                 $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
-                if($outstanding_amount < 0){
+                if ($outstanding_amount < 0) {
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-'.($key+1)
+                        'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-' . ($key + 1)
                     ]);
                 }
 
                 $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
                 $disc_amount = 0;
-                if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+                if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
                     $disc_amount = $value['discount_amount'];
                     $disc_total += $disc_amount;
                 }
 
-                if($value['allocated_amount'] > 0){
+                if ($value['allocated_amount'] > 0) {
                     $net_total += ($value['allocated_amount'] - $disc_amount);
                 }
 
-                if($value['allocated_amount'] < $disc_amount){
+                if ($value['allocated_amount'] < $disc_amount) {
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-'.($key+1)
+                        'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-' . ($key + 1)
                     ]);
-
                 }
 
                 $totalAmount += $value['allocated_amount'];
@@ -327,20 +326,18 @@ class SalesPaymentController extends Controller
 
                 $invoice = SalesInvoiceHeader::find($value['invoice_id']);
                 $total_paid = 0;
-                if($value['id'] == ''){
-                    $total_paid = $invoice->amount_paid +$value['allocated_amount'];
-                }else{
+                if ($value['id'] == '') {
+                    $total_paid = $invoice->amount_paid + $value['allocated_amount'];
+                } else {
                     $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
                 }
                 $invoice->amount_paid = $total_paid;
-                if($outstanding_amount == 0){
+                if ($outstanding_amount == 0) {
                     $invoice->status = 'PAID';
-                }else{
+                } else {
                     $invoice->status = 'PARTIAL PAID';
                 }
                 $invoice->save();
-
-
             }
 
             $currency = Currency::where('code', 'IDR')->first();
@@ -356,7 +353,7 @@ class SalesPaymentController extends Controller
 
             $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
             postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
-            if($disc_total > 0){
+            if ($disc_total > 0) {
                 postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
             }
 
@@ -373,18 +370,29 @@ class SalesPaymentController extends Controller
         return response()->json($result);
     }
 
-    public function sync(Request $request){
+    public function sync(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $result['is_valid'] = false;
         $userId = $data['user_id'];
 
         $result['data'] = $data;
         $result['user_id'] = $userId;
-        $data['account_id'] = 3;//kas kecil
+        $data['account_id'] = 3; //kas kecil
         // return response()->json($result);
 
         DB::beginTransaction();
         try {
+            if (!isset($data['alasan_tidak_bayar'])) {
+                $data['alasan_tidak_bayar'] = '';
+            }
+
+            if ($data['alasan_tidak_bayar'] != '') {
+                $result['is_valid'] = true;
+                $result['message'] = 'Sales Payment berhasil disimpan';
+                return response()->json($result);
+            }
+
             $periode = Carbon::parse($data['payment_date'])->setTimezone('Asia/Jakarta');
             $payment_date = $periode->format('Y-m-d');
 
@@ -433,19 +441,19 @@ class SalesPaymentController extends Controller
             $hdrId = $header->id;
             $reference = $header->payment_code;
 
-             // === DETAIL ===
+            // === DETAIL ===
             $totalAmount = 0;
             $disc_total = 0;
             $net_total = 0;
 
             // Item baru atau update
-            $invoice = SalesInvoiceHeader::where('invoice_number',trim($invoice_number))->first();
-            if(empty($invoice)){
+            $invoice = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
+            if (empty($invoice)) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Invoice tidak ditemukan '.$invoice_number,
-                    'invoice'=> $invoice
+                    'message' => 'Invoice tidak ditemukan ' . $invoice_number,
+                    'invoice' => $invoice
                 ]);
             }
             $invoiceId = $invoice->id;
@@ -453,22 +461,21 @@ class SalesPaymentController extends Controller
 
             $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $invoiceId)->count();
             $disc_amount = 0;
-            if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+            if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
                 $disc_amount = $discount_amount;
                 $disc_total += $disc_amount;
             }
 
-            if($data['total_amount'] > 0){
+            if ($data['total_amount'] > 0) {
                 $net_total += ($data['total_amount'] - $disc_amount);
             }
 
-            if($data['total_amount'] < $disc_amount){
+            if ($data['total_amount'] < $disc_amount) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-1'
+                    'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-1'
                 ]);
-
             }
 
             $totalAmount += $data['total_amount'];
@@ -485,13 +492,13 @@ class SalesPaymentController extends Controller
             /*mapping coa */
 
             $total_paid = 0;
-            $total_paid = $invoice->amount_paid +$data['total_amount'];
+            $total_paid = $invoice->amount_paid + $data['total_amount'];
             $invoice->amount_paid = $total_paid;
 
             $outstanding_amount = $invoice->outstanding_amount - $data['total_amount'];
-            if($outstanding_amount == 0){
+            if ($outstanding_amount == 0) {
                 $invoice->status = 'PAID';
-            }else{
+            } else {
                 $invoice->status = 'PARTIAL PAID';
             }
             $invoice->save();
@@ -506,11 +513,11 @@ class SalesPaymentController extends Controller
             $update->net_amount = $net_total;
             $update->save();
 
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId, '',$userId);
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId, '', $userId);
 
             $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
-            postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId, '',$userId);
-            if($disc_total > 0){
+            postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId, '', $userId);
+            if ($disc_total > 0) {
                 postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId, '', $userId);
             }
 
@@ -536,7 +543,7 @@ class SalesPaymentController extends Controller
         DB::beginTransaction();
         try {
 
-             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
+            $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
@@ -558,7 +565,7 @@ class SalesPaymentController extends Controller
             $kasAccount = Coa::find($data['account_id']);
             // === HEADER ===
 
-            if(empty($data['customers'])){
+            if (empty($data['customers'])) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
@@ -595,7 +602,7 @@ class SalesPaymentController extends Controller
                 $disc_total = 0;
                 $net_total = 0;
                 $line_no = 1;
-                foreach ($data['details'] as $key=>$value) {
+                foreach ($data['details'] as $key => $value) {
                     // Skip baris yang ditandai untuk dihapus
                     if (!empty($value['remove']) && $value['remove'] == 1) {
                         if (!empty($value['id'])) {
@@ -610,32 +617,31 @@ class SalesPaymentController extends Controller
                     }
 
                     $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
-                    if($outstanding_amount < 0){
+                    if ($outstanding_amount < 0) {
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
-                            'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-'.($key+1)
+                            'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-' . ($key + 1)
                         ]);
                     }
 
                     $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
                     $disc_amount = 0;
-                    if($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1){
+                    if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
                         $disc_amount = $value['discount_amount'];
                         $disc_total += $disc_amount;
                     }
 
-                    if($value['allocated_amount'] > 0){
+                    if ($value['allocated_amount'] > 0) {
                         $net_total += ($value['allocated_amount'] - $disc_amount);
                     }
 
-                    if($value['allocated_amount'] < $disc_amount){
+                    if ($value['allocated_amount'] < $disc_amount) {
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
-                            'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount '.$disc_amount.' pada baris ke-'.($key+1)
+                            'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-' . ($key + 1)
                         ]);
-
                     }
 
                     $totalAmount += $value['allocated_amount'];
@@ -656,15 +662,15 @@ class SalesPaymentController extends Controller
 
                     $invoice = SalesInvoiceHeader::find($value['invoice_id']);
                     $total_paid = 0;
-                    if($value['id'] == ''){
-                        $total_paid = $invoice->amount_paid +$value['allocated_amount'];
-                    }else{
+                    if ($value['id'] == '') {
+                        $total_paid = $invoice->amount_paid + $value['allocated_amount'];
+                    } else {
                         $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
                     }
                     $invoice->amount_paid = $total_paid;
-                    if($outstanding_amount == 0){
+                    if ($outstanding_amount == 0) {
                         $invoice->status = 'PAID';
-                    }else{
+                    } else {
                         $invoice->status = 'PARTIAL PAID';
                     }
                     $invoice->save();
@@ -683,7 +689,7 @@ class SalesPaymentController extends Controller
 
                 $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
                 postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
-                if($disc_total > 0){
+                if ($disc_total > 0) {
                     postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
                 }
             }
@@ -779,7 +785,6 @@ class SalesPaymentController extends Controller
                 'is_valid' => true,
                 'message' => 'Sales Payment berhasil dibatalkan'
             ]);
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -794,7 +799,7 @@ class SalesPaymentController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'c.nama_customer'
@@ -821,44 +826,46 @@ class SalesPaymentController extends Controller
         return view('web.sales_payment.modal.datacustomer', $data);
     }
 
-    public function getOutstandingInvoice(Request $request){
+    public function getOutstandingInvoice(Request $request)
+    {
         $data = $request->all();
         $customerId = isset($data['customer']) ? $data['customer'] : '';
         try {
             //code...
             $datadb = DB::table('sales_invoice_header as sih')
-            ->select(
-                'sih.id',
-                'sih.invoice_number',
-                'sih.invoice_date',
-                'sih.customer_id',
-                'sih.total_amount',
-                'sih.discount_amount',
-                'sih.subtotal',
-                'sih.amount_paid',
-                'c.code as customer_code',
-                'c.nama_customer',
-                DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
-                DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
-            )
-            ->join('customer as c', 'c.id', '=', 'sih.customer_id')
-            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
-            ->whereNull('sih.deleted')            // tidak termasuk deleted
-            ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
+                ->select(
+                    'sih.id',
+                    'sih.invoice_number',
+                    'sih.invoice_date',
+                    'sih.customer_id',
+                    'sih.total_amount',
+                    'sih.discount_amount',
+                    'sih.subtotal',
+                    'sih.amount_paid',
+                    'c.code as customer_code',
+                    'c.nama_customer',
+                    DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
+                    DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
+                )
+                ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting
+                ->whereNull('sih.deleted')            // tidak termasuk deleted
+                ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
-            if($customerId != ''){
+            if ($customerId != '') {
                 $datadb->where('sih.customer_id', $customerId);
-            }else{
+            } else {
                 $ids = isset($data['customers']) ? $data['customers'] : [];
-                if(empty($ids)){
+                if (empty($ids)) {
                     $datadb->where('sih.customer_id', 0);
-                }else{
+                } else {
                     $datadb->whereIn('sih.customer_id', $ids);
                 }
             }
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
-            echo $th->getMessage();die;
+            echo $th->getMessage();
+            die;
         }
 
         $data['data'] = $datadb;
@@ -866,7 +873,7 @@ class SalesPaymentController extends Controller
         return view('web.sales_payment.datainvoiceoutstanding', $data);
     }
 
-     public function posted(Request $request)
+    public function posted(Request $request)
     {
         $data = $request->all();
         $result['is_valid'] = false;
@@ -881,7 +888,6 @@ class SalesPaymentController extends Controller
             DB::commit();
 
             $result['is_valid'] = true;
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
