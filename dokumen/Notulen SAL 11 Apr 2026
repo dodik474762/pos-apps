@@ -9,9 +9,9 @@ Mobile
 
 Web
 - customer kasih minial faktur qty (input) OK
-- kontrol sales faktur (check boleh dobel faktur atau tidak) jika non cash
+- kontrol sales faktur (check boleh dobel faktur atau tidak) jika non cash OK
 - search product di list product sales order masih tersimpan
 - setelah klik product pada modal pilih satuan tambahkan input qty order
 - setelah di klik satuannya kembali ke modal pilih product
-- di packing list (masih ada do yg hanya call)
+- di packing list (masih ada do yg hanya call) OK
 - packing list hrus ada invoice dulu di donya

@@ -152,6 +152,7 @@ class PackingListController extends Controller
             ->join('sales_order_headers as soh', 'soh.id', 'm.so_id')
             ->join('currency as c', 'c.id', 'soh.currency')
             ->whereNull('m.deleted')
+            ->where('soh.total_amount', '>', 0)
             ->whereIn('m.status', ['CONFIRMED', 'DRAFT'])
             ->orderBy('m.id', 'asc');
         if (!empty($do_choose)) {
