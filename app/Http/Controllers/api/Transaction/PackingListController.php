@@ -1089,6 +1089,63 @@ class PackingListController extends Controller
                     }
                 }
 
+                // ====== EDITED ITEMS (update qty) ======
+                if (!empty($data['edited_items'])) {
+                    foreach ($data['edited_items'] as $editedItem) {
+                        $invDtl = SalesInvoiceDtl::find($editedItem['id']);
+                        if (empty($invDtl)) {
+                            continue;
+                        }
+
+                        $newQty = $editedItem['qty'];
+                        $invDtl->qty = $newQty;
+
+                        // Recalculate subtotal & amounts per baris
+                        $grossAmount = $invDtl->price * $newQty;
+                        $discAmount  = isset($invDtl->discount_per_unit)
+                            ? ($invDtl->discount_per_unit * $newQty)
+                            : $invDtl->discount;
+                        $taxAmount   = isset($invDtl->tax_rate)
+                            ? round(($grossAmount - $discAmount) * ($invDtl->tax_rate / 100))
+                            : $invDtl->tax_amount;
+                        $subtotal    = $grossAmount - $discAmount + $taxAmount;
+
+                        $invDtl->discount   = $discAmount;
+                        $invDtl->tax_amount = $taxAmount;
+                        $invDtl->subtotal   = $subtotal;
+                        $invDtl->packing_list_id = $roles->packing_list_id;
+                        $invDtl->save();
+                    }
+
+                    // Recalculate invoice header totals berdasarkan semua detail aktif
+                    $idDtlCancelArr = !empty($idDtlCancel) ? $idDtlCancel : [];
+                    $allActiveDtl   = SalesInvoiceDtl::where('invoice_id', $invoiceId)
+                        ->whereNotIn('id', $idDtlCancelArr)
+                        ->where('flag_cancel', 0)
+                        ->get();
+
+                    $totalAmountRecalc = 0;
+                    $discTotalRecalc   = 0;
+                    $taxTotalRecalc    = 0;
+                    $netTotalRecalc    = 0;
+
+                    foreach ($allActiveDtl as $dtl) {
+                        $totalAmountRecalc += $dtl->price * $dtl->qty;
+                        $discTotalRecalc   += $dtl->discount;
+                        $taxTotalRecalc    += $dtl->tax_amount;
+                        $netTotalRecalc    += $dtl->subtotal;
+                    }
+
+                    $invoiceRecalc = SalesInvoiceHeader::find($invoiceId);
+                    if ($invoiceRecalc) {
+                        $invoiceRecalc->subtotal        = $totalAmountRecalc - $discTotalRecalc;
+                        $invoiceRecalc->discount_amount = $discTotalRecalc;
+                        $invoiceRecalc->tax_amount      = $taxTotalRecalc;
+                        $invoiceRecalc->total_amount    = $netTotalRecalc;
+                        $invoiceRecalc->save();
+                    }
+                }
+
                 ///PAYMENT
                 if ($data['customer_id'] != '' && $data['total_amount'] != '') {
                     if ($data['total_amount'] > 0) {

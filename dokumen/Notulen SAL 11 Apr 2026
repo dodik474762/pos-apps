@@ -3,8 +3,8 @@
 Mobile
 - kalo ada tagihan tidak bisa tekan tombol order OK
 - penambahan alasan tidak bayar di payment OK
-- driver input bayar (kasih total nominal koreksi) 
-- driver input bayar kasih inputan nominal baya
+- driver input bayar (kasih total nominal koreksi)  OK
+- driver input bayar kasih inputan nominal baya OK
 - alasan tidak bayar (waktu tidak cukup) OK
 - tampilkan foto dari sales order ditaruh di atas tagihan
 
