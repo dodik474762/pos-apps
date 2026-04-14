@@ -1099,6 +1099,10 @@ class PackingListController extends Controller
 
                         $newQty = $editedItem['qty'];
                         $invDtl->qty = $newQty;
+                        $invDtl->flag_correction = 1;
+                        $invDtl->original_qty = $editedItem['original_qty'];
+                        $invDtl->original_price = $editedItem['original_price'];
+                        $invDtl->original_subtotal = $editedItem['original_subtotal'];
 
                         // Recalculate subtotal & amounts per baris
                         $grossAmount = $invDtl->price * $newQty;
