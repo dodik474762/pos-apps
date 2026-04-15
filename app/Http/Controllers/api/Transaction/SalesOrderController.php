@@ -1013,6 +1013,32 @@ class SalesOrderController extends Controller
         return view('web.product.datainfoprogramdisk', $data);
     }
 
+    public function cekSalesman(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+        try {
+            $datadb = $customers = DB::table('sales_plan_detail_route as d')
+                ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
+                ->join('customer as c', 'c.id', '=', 'd.customer_id')
+                ->select([
+                    'h.salesman as salesman_id',
+                    's.name as salesman_name',
+                ])
+                ->join('users as s', 's.id', '=', 'h.salesman')
+                ->whereNull('h.deleted')
+                ->where('c.id', $data['customer_id'])
+                ->first();
+            $result['is_valid'] = true;
+            $result['salesman_id'] = empty($datadb->salesman_id) ? '' : $datadb->salesman_id;
+            $result['salesman_name'] = empty($datadb->salesman_name) ? '' : $datadb->salesman_name;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
     public function getPromoItem($produkIds = [])
     {
         $datadb = DB::table('product_promo_item_detail as ppid')

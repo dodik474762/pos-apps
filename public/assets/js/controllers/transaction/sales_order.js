@@ -6,6 +6,7 @@ let sub_channel_outlet = null;
 // Simpan sementara semua data harga+satuan dari baris produk yang dipilih
 let _selectedProductRows = [];
 let lastProductSearchKeyword = "";
+let _suppressSalesmanChange = false;
 
 let SalesOrder = {
     module: () => {
@@ -2034,15 +2035,36 @@ let SalesOrder = {
         return qty * uom.conversion;
     },
 
+    // changeCustomer: (elm) => {
+    //     const table = $("table#table-items tbody tr.input");
+    //     let result = [];
+
+    //     table.each((index, elm) => {
+    //         if (index > 0) {
+    //             $(elm).remove();
+    //         }
+
+    //         $(elm).find("input").val("");
+    //         $(elm).find("td#unit").text("");
+    //         $(elm).find("td#unit").attr("data_id", "");
+    //         $(elm).find("#price").attr("data_id", "");
+    //     });
+
+    //     const top = $(elm).find("option:selected").attr("top");
+    //     channel_outlet = $(elm).find("option:selected").attr("channel_outlet");
+    //     sub_channel_outlet = $(elm)
+    //         .find("option:selected")
+    //         .attr("sub_channel_outlet");
+    //     $("#payment_term").val(top);
+    // },
+
     changeCustomer: (elm) => {
         const table = $("table#table-items tbody tr.input");
-        let result = [];
 
         table.each((index, elm) => {
             if (index > 0) {
                 $(elm).remove();
             }
-
             $(elm).find("input").val("");
             $(elm).find("td#unit").text("");
             $(elm).find("td#unit").attr("data_id", "");
@@ -2051,13 +2073,46 @@ let SalesOrder = {
 
         const top = $(elm).find("option:selected").attr("top");
         channel_outlet = $(elm).find("option:selected").attr("channel_outlet");
-        sub_channel_outlet = $(elm)
-            .find("option:selected")
-            .attr("sub_channel_outlet");
+        sub_channel_outlet = $(elm).find("option:selected").attr("sub_channel_outlet");
         $("#payment_term").val(top);
+
+        const customerId = $(elm).val();
+        if (customerId) {
+            SalesOrder.cekSalesmanByCustomer(customerId);
+        }
+    },
+
+    cekSalesmanByCustomer: (customerId) => {
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: { customer_id: customerId },
+            url: url.base_url(SalesOrder.moduleApi()) + "cekSalesman",
+            headers: {
+                "X-CSRF-TOKEN": SalesOrder.csrf_token(),
+            },
+            success: function (resp) {
+                if (resp.is_valid && resp.salesman_id) {
+                    // 🔥 set flag supaya onchange tidak jalan
+                    _suppressSalesmanChange = true;
+
+                    $("#salesman").val(resp.salesman_id).trigger("change"); // trigger change untuk select2 re-render
+
+                    // 🔥 reset flag setelah select2 selesai
+                    // setTimeout(() => {
+                    //     _suppressSalesmanChange = false;
+                    // }, 100);
+                }
+            },
+            error: function () {
+                // silent fail, tidak perlu alert
+            },
+        });
     },
 
     getCustomer: (elm) => {
+        if (_suppressSalesmanChange) return;
+
         const url = $("input#url").val();
         const id = $("input#id").val();
         const salesman = $(elm).val() == "1" ? "" : $(elm).val();
