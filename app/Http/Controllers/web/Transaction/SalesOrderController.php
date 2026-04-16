@@ -187,7 +187,7 @@ class SalesOrderController extends Controller
         $tax = DB::table('tax')->where('id', $data->tax_id)->first();
         $ppn_val = '';
         if (!empty($tax)) {
-            $ppn_val = $tax->rate;
+            $ppn_val = number_format($tax->rate, 0, ',', '.');
         }
 
         // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);
