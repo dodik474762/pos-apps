@@ -125,7 +125,7 @@
     <tbody>
         @foreach ($data->items as $i => $item)
             @php
-                $taxRate = $data->tax_base ?? 11;
+                $taxRate = $ppn_val ?? 11;
                 $subtotalBeforeTax = $item->subtotal; // sudah include PPN
                 $dpp = $subtotalBeforeTax / (1 + $taxRate / 100); // harga exclude PPN
                 $ppn = $subtotalBeforeTax - $dpp;

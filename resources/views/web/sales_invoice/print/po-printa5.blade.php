@@ -115,10 +115,11 @@
     <thead>
         <tr>
              <th class="text-center" style="width:3%;">No</th>
-            <th class="text-center" style="width:42%;">Produk</th>
+            <th class="text-center" style="width:22%;">Produk</th>
             <th class="text-center" style="width:10%;">Satuan</th>
             <th class="text-center" style="width:7%;">Qty</th>
-            <th class="text-center" style="width:10%;">Harga</th>
+            <th class="text-center" style="width:20%;">Harga (Excl. PPN)</th>
+            <th class="text-center" style="width:10%;">PPN</th>
             <th class="text-center" style="width:10%;">Diskon</th>
             <!-- <th class="text-center" style="width:6%;">Note</th> -->
             <th class="text-center" style="width:18%;">Total</th>
@@ -126,12 +127,20 @@
     </thead>
     <tbody>
         @foreach ($data->items as $i => $item)
+            @php
+                $taxRate = $ppn_val ?? 11;
+                $subtotalBeforeTax = $item->subtotal; // sudah include PPN
+                $dpp = $subtotalBeforeTax / (1 + $taxRate / 100); // harga exclude PPN
+                $ppn = $subtotalBeforeTax - $dpp;
+                $hargaExcl = $item->price / (1 + $taxRate / 100);
+            @endphp
             <tr>
                 <td class="text-center">{{ $i + 1 }}</td>
                 <td style="overflow:hidden; white-space:nowrap;">{{ $item->products->name ?? '-' }}</td>
                 <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
                 <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->price, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($ppn, 0, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
                 <!-- <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE' }}</td> -->
                 <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
@@ -140,7 +149,7 @@
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="6" class="text-right"><strong>Sub Total</strong></td>
+            <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
             <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
         </tr>
         {{-- <tr>
@@ -149,19 +158,23 @@
         </tr> --}}
         @foreach($promo as $v)
             <tr>
-                <td colspan="6" class="text-right"><strong>{{ $v->promo_name }}</strong></td>
+                <td colspan="7" class="text-right"><strong>{{ $v->promo_name }}</strong></td>
                 <td class="text-right" style="color: #c00;">
                     <strong>- {{ number_format($v->total_potongan, 0, ',', '.') }}</strong>
                 </td>
             </tr>
         @endforeach
         <tr>
-            <td colspan="6" class="text-right"><strong>PPN {{ $data->tax_base }} %</strong></td>
-            <td class="text-right"><strong>0</strong></td>
+            @php
+                $subtotalAfterPromo = $data->subtotal - $data->discount_amount;
+                $taxAmount = $subtotalAfterPromo - ($subtotalAfterPromo / (1 + ($data->tax_base / 100)));
+            @endphp 
+            <td colspan="7" class="text-right"><strong>PPN {{ $ppn_val }} %</strong></td>
+            <td class="text-right"><strong>{{ number_format($taxAmount, 0, ',', '.') }}</strong></td>
         </tr>
         <tr>
-            <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
-            <td class="text-right"><strong>{{ number_format($data->total_amount, 0, ',', '.') }}</strong></td>
+            <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
+            <td class="text-right"><strong>{{ number_format($subtotalAfterPromo, 0, ',', '.') }}</strong></td>
         </tr>
     </tfoot>
 </table>

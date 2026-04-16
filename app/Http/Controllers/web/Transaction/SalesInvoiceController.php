@@ -268,8 +268,14 @@ class SalesInvoiceController extends Controller
         $salesman = Karyawan::where('id', $so->salesman)->first();
         $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
+        $tax = DB::table('tax')->where('id', $so->tax_id)->first();
+        $ppn_val = '';
+        if (!empty($tax)) {
+            $ppn_val = number_format($tax->rate, 0, ',', '.');
+        }
+
         $customPaper = [0, 0, 612.0, 792.0]; //Letter
-        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item'))
+        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item', 'ppn_val'))
             ->setPaper($customPaper, 'portrait');
 
         return $pdf->stream('SI-' . $data->invoice_number . '.pdf');
