@@ -805,9 +805,9 @@ class SalesOrderController extends Controller
 
             // Update total header
             $header->total_amount = $grandTotal;
-            $header->tax_id = $taxId;
+            $header->tax_base = $taxId;
             $header->tax_amount = $totalTaxAmount;
-            $header->tax_base = $taxRate;
+            $header->tax_id = $taxRate;
             $header->save();
             $soId = $header->id;
 
