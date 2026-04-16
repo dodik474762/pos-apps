@@ -315,6 +315,7 @@ class SalesInvoiceController extends Controller
 
             $so = $data['do_id'] != '' ? $data->do->so : $data->so;
             $so_id = $so ? $so->id : null;
+            $ppn_val = '';
 
             if ($so_id) {
                 $data->promo_item = DB::table('sales_order_promo_item as sopi')
@@ -330,10 +331,17 @@ class SalesInvoiceController extends Controller
                     ->where('sop.sales_order_id', $so_id)
                     ->groupBy('sop.promo_name')
                     ->get();
+
+                $tax = DB::table('tax')->where('id', $so->tax_id)->first();
+                if (!empty($tax)) {
+                    $ppn_val = number_format($tax->rate, 0, ',', '.');
+                }
             } else {
                 $data->promo_item = collect();
                 $data->promo = collect();
             }
+
+            $data->ppn_value = $ppn_val;
         }
 
         $customPaper = [0, 0, 612.0, 792.0]; //Letter

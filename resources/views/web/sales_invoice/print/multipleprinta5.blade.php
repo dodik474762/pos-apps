@@ -50,6 +50,7 @@
         'qr'           => $qr,
         'so'           => $so,
         'salesman_name'=> $salesman_name,
+        'ppn_val'    => $data->ppn_value,
         'promo'        => $data->promo ?? collect(),
         'promo_item'   => $data->promo_item ?? collect()
     ])
