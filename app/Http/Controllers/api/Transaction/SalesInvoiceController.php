@@ -843,7 +843,7 @@ class SalesInvoiceController extends Controller
                     'c.code as customer_code',
                     'c.nama_customer',
                     DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
-                    DB::raw('(sih.total_amount + sih.tax_amount - sih.amount_paid) AS outstanding_amount')
+                    DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
                 )
                 ->join('customer as c', 'c.id', '=', 'sih.customer_id')
                 ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID'])       // hanya invoice yang sudah diposting

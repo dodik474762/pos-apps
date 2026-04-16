@@ -126,55 +126,82 @@
         </tr>
     </thead>
     <tbody>
+        @php
+    $taxRate = $ppn_val ?? 11;
+
+    $totalDpp = 0;
+    $totalPpn = 0;
+@endphp
+
         @foreach ($data->items as $i => $item)
-            @php
-                $taxRate = $ppn_val ?? 11;
-                $subtotalBeforeTax = $item->subtotal; // sudah include PPN
-                $dpp = $subtotalBeforeTax / (1 + $taxRate / 100); // harga exclude PPN
-                $ppn = $subtotalBeforeTax - $dpp;
-                $hargaExcl = $item->price / (1 + $taxRate / 100);
-            @endphp
-            <tr>
-                <td class="text-center">{{ $i + 1 }}</td>
-                <td style="overflow:hidden; white-space:nowrap;">{{ $item->products->name ?? '-' }}</td>
-                <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
-                <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($ppn, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
-                <!-- <td class="text-center">{{ $item->so_detail->free_for == '' ? '' : 'FREE' }}</td> -->
-                <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
-            </tr>
+             @php
+        $subtotal = $item->subtotal; // include PPN
+        $dpp = $subtotal / (1 + $taxRate / 100);
+        $ppn = $subtotal - $dpp;
+        $hargaExcl = $item->price / (1 + $taxRate / 100);
+
+        $totalDpp += $dpp;
+        $totalPpn += $ppn;
+    @endphp
+          <tr>
+    <td class="text-center">{{ $i + 1 }}</td>
+    <td>{{ $item->products->name ?? '-' }}</td>
+    <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
+    <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
+    <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }}</td>
+    <td class="text-right">{{ number_format($ppn, 0, ',', '.') }}</td>
+    <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
+    <td class="text-right">{{ number_format($subtotal, 0, ',', '.') }}</td>
+</tr>
         @endforeach
     </tbody>
+    {{-- ================= FOOTER ================= --}}
+@php
+    // Ambil dari header
+    $subtotalInclude = $data->subtotal;
+    $discountInclude = $data->discount_amount;
+
+    // Convert ke DPP
+    $subtotalDpp = $subtotalInclude / (1 + $taxRate / 100);
+    $discountDpp = $discountInclude / (1 + $taxRate / 100);
+
+    $dppAfterDiscount = $subtotalDpp - $discountDpp;
+    $taxAmount = $dppAfterDiscount * ($taxRate / 100);
+    $grandTotal = $dppAfterDiscount + $taxAmount;
+@endphp
+
     <tfoot>
         <tr>
-            <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
-            <td class="text-right"><strong>{{ number_format($data->subtotal, 0, ',', '.') }}</strong></td>
-        </tr>
-        {{-- <tr>
-            <td colspan="6" class="text-right"><strong>Discount {{ $data->so->discount_percent == '0' ? '' : $data->so->discount_percent.' %' }}</strong></td>
-            <td class="text-right"><strong>{{ number_format($data->so->discount_amount, 0, ',', '.') }}</strong></td>
-        </tr> --}}
-        @foreach($promo as $v)
-            <tr>
-                <td colspan="7" class="text-right"><strong>{{ $v->promo_name }}</strong></td>
-                <td class="text-right" style="color: #c00;">
-                    <strong>- {{ number_format($v->total_potongan, 0, ',', '.') }}</strong>
-                </td>
-            </tr>
-        @endforeach
+    <td colspan="7" class="text-right"><strong>Sub Total (DPP)</strong></td>
+    <td class="text-right"><strong>{{ number_format($subtotalDpp, 0, ',', '.') }}</strong></td>
+</tr>
+       @foreach($promo as $v)
+    @php
+        $taxRate = $ppn_val ?? 11;
+
+        // nilai promo masih include PPN
+        $promoInclude = $v->total_potongan;
+
+        // convert ke DPP
+        $promoDpp = $promoInclude / (1 + $taxRate / 100);
+    @endphp
+
+    <tr>
+        <td colspan="7" class="text-right">
+            <strong>{{ $v->promo_name }}</strong>
+        </td>
+        <td class="text-right" style="color: #c00;">
+            <strong>- {{ number_format($promoDpp, 0, ',', '.') }}</strong>
+        </td>
+    </tr>
+@endforeach
         <tr>
-            @php
-                $subtotalAfterPromo = $data->subtotal - $data->discount_amount;
-                $taxAmount = $subtotalAfterPromo - ($subtotalAfterPromo / (1 + ($data->tax_base / 100)));
-            @endphp 
-            <td colspan="7" class="text-right"><strong>PPN {{ $ppn_val }} %</strong></td>
-            <td class="text-right"><strong>{{ number_format($taxAmount, 0, ',', '.') }}</strong></td>
-        </tr>
+    <td colspan="7" class="text-right"><strong>PPN {{ $taxRate }} %</strong></td>
+    <td class="text-right"><strong>{{ number_format($taxAmount, 0, ',', '.') }}</strong></td>
+</tr>
         <tr>
             <td colspan="7" class="text-right"><strong>Grand Total</strong></td>
-            <td class="text-right"><strong>{{ number_format($subtotalAfterPromo, 0, ',', '.') }}</strong></td>
+            <td class="text-right"><strong>{{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
         </tr>
     </tfoot>
 </table>
