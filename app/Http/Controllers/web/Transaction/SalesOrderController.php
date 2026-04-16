@@ -178,10 +178,17 @@ class SalesOrderController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $data = SalesOrderHeader::with(['customers', 'items.products', 'items.units'])
+            ->findOrFail($data['id']);
         $promo_item = DB::table('sales_order_promo_item as sopi')
             ->where('sales_order_id', $data['id'])
             ->get();
+
+        $tax = DB::table('tax')->where('id', $data->tax_id)->first();
+        $ppn_val = '';
+        if (!empty($tax)) {
+            $ppn_val = $tax->rate;
+        }
 
         // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);
         // $qr = 'data:image/png;base64,'.base64_encode($rawQr);
@@ -201,14 +208,18 @@ class SalesOrderController extends Controller
         //     ->map(fn($p) => $p->promo_name . ' : ' . $p->total_potongan)
         //     ->implode('<br/>');
         // echo '<pre>';
-        // print_r($promoString);die;
+        // print_r($tax);
+        // die;
 
         // $qr = '';
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
         $total = $data->items->sum('subtotal');
 
-        $pdf = Pdf::loadView('web.sales_order.print.po-print', compact('data', 'total', 'company', 'qr', 'promo', 'promo_item'))
+        $pdf = Pdf::loadView(
+            'web.sales_order.print.po-print',
+            compact('data', 'total', 'company', 'qr', 'promo', 'promo_item', 'ppn_val')
+        )
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('SO-' . $data->so_number . '.pdf');

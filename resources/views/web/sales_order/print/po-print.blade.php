@@ -182,7 +182,7 @@
                 $subtotalAfterPromo = $data->total_amount - $data->discount_amount;
                 $taxAmount = $subtotalAfterPromo - ($subtotalAfterPromo / (1 + ($data->tax_base / 100)));
             @endphp
-            <td colspan="9" class="text-right"><strong>PPN {{ $data->tax_base }}%</strong></td>
+            <td colspan="9" class="text-right"><strong>PPN {{ $ppn_val }}%</strong></td>
             <td class="text-right"><strong>{{ number_format($taxAmount, 0, ',', '.') }}</strong></td>
         </tr>
         <tr>
