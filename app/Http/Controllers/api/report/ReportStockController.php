@@ -15,7 +15,7 @@ class ReportStockController extends Controller
 
     public function getData()
     {
-       DB::enableQueryLog();
+        DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -32,6 +32,19 @@ class ReportStockController extends Controller
                 'p.name as product_name',
                 'w.name as warehouse_name',
                 'u.name as unit_name',
+
+                DB::raw('(
+                    SELECT COALESCE(SUM(pod.qty),0)
+                    FROM purchase_order_detail pod
+                    JOIN purchase_order po ON po.id = pod.purchase_order
+                    WHERE pod.product = m.product
+                    AND pod.unit = m.unit
+                    AND po.warehouse = m.warehouse
+                    AND po.status = "draft"
+                    AND po.deleted IS NULL
+                    AND pod.deleted IS NULL
+                    AND po.po_date <= "' . $tanggal . '"
+                ) as qty_po_draft'),
 
                 // Semua transaksi s/d tanggal dipilih
                 DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in ELSE 0 END) as total_masuk'),
@@ -110,8 +123,10 @@ class ReportStockController extends Controller
 
         foreach ($datadb as $key => $value) {
             $value->stok_tersedia = number_format($value->stok_tersedia, 0, ',', '.');
+            $value->stock_future = $value->qty_po_draft;
+
             $value->total_masuk   = number_format($value->total_masuk, 0, ',', '.');
-            $value->total_keluar  = number_format($value->total_keluar, 0, ',', '.');            
+            $value->total_keluar  = number_format($value->total_keluar, 0, ',', '.');
             $value->stok_3bln = number_format($value->stok_3bln, 0, ',', '.');
             $value->hari_kerja = 25;
             $value->avg_omset = $value->stok_3bln / $value->hari_kerja;

@@ -279,6 +279,14 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
+                   {
+                    data: "stock_future",
+                    title: "Stok Akan Datang",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
                  {
                     data: "stok_3bln",
                     title: "Last 3 Month",

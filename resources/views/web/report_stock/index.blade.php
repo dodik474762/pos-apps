@@ -95,6 +95,7 @@
                                                     <th>Total Masuk</th>
                                                     <th>Total Keluar</th>
                                                     <th>Stok Tersedia</th>
+                                                    <th>Stok Akan Datang</th>
                                                     <th>Last 3 Months</th>
                                                     <th>Hari Kerja</th>
                                                     <th>Avg Omset Per Day</th>
