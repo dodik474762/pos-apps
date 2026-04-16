@@ -73,7 +73,7 @@ class PurchaseOrderController extends Controller
         $data = $request->all();
 
         $exceptPoDetailId = [];
-        if(!empty($data['itemsChoose'])) {
+        if (!empty($data['itemsChoose'])) {
             $exceptPoDetailId = collect($data['itemsChoose'])->pluck('purchase_order_detail_id')->toArray();
         }
         $data['data'] = [];
@@ -102,7 +102,7 @@ class PurchaseOrderController extends Controller
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
 
-        if(!empty($exceptPoDetailId)){
+        if (!empty($exceptPoDetailId)) {
             $datadb->whereNotIn('m.id', $exceptPoDetailId);
         }
         if (isset($_POST)) {
@@ -151,7 +151,7 @@ class PurchaseOrderController extends Controller
         try {
             //code...
             $currency = Currency::where('code', 'IDR')->first();
-            if(empty($currency)){
+            if (empty($currency)) {
                 DB::rollBack();
                 $result['message'] = 'Currency IDR tidak ditemukan';
                 return response()->json($result);
@@ -166,7 +166,7 @@ class PurchaseOrderController extends Controller
             $roles->remarks = $data['remarks'];
             $roles->vendor = $data['vendor'];
             $roles->warehouse = $data['warehouse'];
-            $roles->status = 'DRAFT';
+            $roles->status = 'draft';
             $roles->est_received_date = $data['est_received_date'];
             $roles->currency = $currency->id;
             $roles->save();
@@ -174,16 +174,16 @@ class PurchaseOrderController extends Controller
 
             $grand_total = 0;
             foreach ($data['items'] as $key => $value) {
-                if($value['remove'] == '1'){
+                if ($value['remove'] == '1') {
                     $items = PurchaseOrderDetail::find($value['id']);
-                    if($items->status != 'open'){
+                    if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
                         return response()->json($result);
                     }
                     $items->deleted = now();
                     $items->save();
-                }else{
+                } else {
                     list($product_uom, $product, $product_name) = explode('//', $value['product']);
                     $items = $value['id'] == '' ? new PurchaseOrderDetail() : PurchaseOrderDetail::find($value['id']);
                     $items->purchase_order = $hdrId;
@@ -199,14 +199,14 @@ class PurchaseOrderController extends Controller
                     $items->tax = $value['tax'];
                     $items->tax_rate = $value['tax_rate'];
                     $items->tax_amount = $value['tax_amount'];
-                    if($value['id'] == ''){
+                    if ($value['id'] == '') {
                         $items->status = 'open';
                         $items->qty_received = 0;
                     }
                     $items->save();
 
-                    if($value['id'] != ''){
-                        if($items->status != 'open'){
+                    if ($value['id'] != '') {
+                        if ($items->status != 'open') {
                             DB::rollBack();
                             $result['message'] = 'Tidak dapat diubah karena status sudah tidak open';
                             return response()->json($result);
@@ -216,15 +216,15 @@ class PurchaseOrderController extends Controller
 
                     /*uom cost price */
                     $existCost = ProductUomCost::where('product', $product)->where('unit_id', $value['unit'])
-                    ->where('vendor', $data['vendor'])
-                    ->first();
-                    if(!empty($existCost)){
+                        ->where('vendor', $data['vendor'])
+                        ->first();
+                    if (!empty($existCost)) {
                         $existCost->cost = $value['price'];
                         $existCost->vendor = $data['vendor'];
                         $existCost->product_uom = $product_uom;
                         $existCost->date_start = date('Y-m-d');
                         $existCost->save();
-                    }else{
+                    } else {
                         $product_cost = new ProductUomCost();
                         $product_cost->cost = $value['price'];
                         $product_cost->vendor = $data['vendor'];
@@ -273,7 +273,7 @@ class PurchaseOrderController extends Controller
         try {
             //code...
             $menu = PurchaseOrder::find($data['id']);
-            if($menu->status != 'DRAFT'){
+            if ($menu->status != 'DRAFT') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
                 return response()->json($result);
