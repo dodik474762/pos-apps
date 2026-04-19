@@ -213,9 +213,13 @@ class SalesInvoiceController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
+            ->leftJoin('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
+            })
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
             ->whereNotIn('m.status', ['canceled'])
+            ->whereNull('sih.id')
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
