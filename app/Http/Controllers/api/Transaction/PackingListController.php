@@ -919,16 +919,20 @@ class PackingListController extends Controller
         DB::beginTransaction();
         try {
 
-            $dir = 'berkas/document/delivery/';
-            $dir .= date('Y') . '/' . date('m');
-            $pathlamp = public_path() . '/' . $dir . '/';
-            if (!File::isDirectory($pathlamp)) {
-                File::makeDirectory($pathlamp, 0777, true, true);
-            }
+            $fileOutletName = '';
+            $dbpathlampOutlet = '';
 
-            $fileOutletName = $users_id . 'confirm_delivery_' . time() . '.jpg';
-            $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            $dbpathlampOutlet = '/' . $dir . '/';
+            if ($files_outlet) {
+                $dir = 'berkas/document/delivery/';
+                $dir .= date('Y') . '/' . date('m');
+                $pathlamp = public_path() . '/' . $dir . '/';
+                if (!File::isDirectory($pathlamp)) {
+                    File::makeDirectory($pathlamp, 0777, true, true);
+                }
+                $fileOutletName = $users_id . 'confirm_delivery_' . time() . '.jpg';
+                $files_outlet->move(public_path($dir), $fileOutletName);
+                $dbpathlampOutlet = '/' . $dir . '/';
+            }
 
             $roles = PackingListDo::where('id', $data['id'])->first();
             if (empty($roles)) {
@@ -939,105 +943,88 @@ class PackingListController extends Controller
             $periode = Carbon::parse($data['confirm_date'])->setTimezone('Asia/Jakarta');
             $confirm_date = $periode->format('Y-m-d H:i:s');
             $roles->confirm_date = $confirm_date;
-            $roles->latitude = $data['latitude'];
-            $roles->longitude = $data['longitude'];
-            $roles->platform = 'mobile';
-            $roles->remarks = $data['remarks'];
-            $roles->status = $data['state'] == 'delivered' ? 'CONFIRMED' : 'NOT DELIVERED';
-            $roles->confirm_by = $users_id;
-            $roles->photo_path = $dbpathlampOutlet . $fileOutletName;
+            $roles->latitude     = $data['latitude'];
+            $roles->longitude    = $data['longitude'];
+            $roles->platform     = 'mobile';
+            $roles->remarks      = $data['remarks'];
+            $roles->status       = $data['state'] == 'delivered' ? 'CONFIRMED' : 'NOT DELIVERED';
+            $roles->confirm_by   = $users_id;
+            $roles->photo_path   = $dbpathlampOutlet . $fileOutletName;
             $roles->save();
 
             $allDetailDo = PackingListDo::where('packing_list_id', $roles->packing_list_id)->get()->toArray();
             $delivered = 0;
-            foreach ($allDetailDo as $key => $value) {
-                if ($value['status'] == 'CONFIRMED') {
-                    $delivered++;
-                }
+            foreach ($allDetailDo as $value) {
+                if ($value['status'] == 'CONFIRMED') $delivered++;
             }
+
+            $plHeader = PackingList::find($roles->packing_list_id);
             if ($delivered == 0) {
-                $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'NOT DELIVERED';
-                $plHeader->save();
-            }
-
-            if ($delivered == count($allDetailDo)) {
-                $plHeader = PackingList::find($roles->packing_list_id);
+            } elseif ($delivered == count($allDetailDo)) {
                 $plHeader->status = 'CONFIRMED';
-                $plHeader->save();
             } else {
-                $plHeader = PackingList::find($roles->packing_list_id);
                 $plHeader->status = 'PARTIAL';
-                $plHeader->save();
             }
+            $plHeader->save();
 
-            //CORET FAKTUR
+            // ====== CORET FAKTUR ======
             if ($data['state'] == 'delivered') {
 
-                $invoice    = null;
-                $invoiceId  = null;
+                $invoice     = null;
+                $invoiceId   = null;
                 $idDtlCancel = [];
-                $glCancelled = false; // ✅ flag agar cancelAllGL hanya dipanggil sekali
-                $currency   = null;
-                $currencyId = null;
+                $glCancelled = false;
+                $currency    = null;
+                $currencyId  = null;
+                $customer_id = null;
 
                 if ($data['customer_id'] != '') {
                     if (trim($data['invoice_number']) != '') {
+
                         $invoice = SalesInvoiceHeader::where('invoice_number', trim($data['invoice_number']))->first();
                         if (empty($invoice)) {
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Invoice ' . $data['invoice_number'] . ' Tidak Ditemukan',
+                                'message'  => 'Invoice ' . $data['invoice_number'] . ' Tidak Ditemukan',
                             ]);
                         }
 
-                        $invoiceId = $invoice->id;
-                        $currency  = Currency::where('code', 'IDR')->first();
+                        $invoiceId  = $invoice->id;
+                        $currency   = Currency::where('code', 'IDR')->first();
                         $currencyId = $currency->id;
-                        $reference = trim($data['invoice_number']);
+                        $reference  = trim($data['invoice_number']);
 
-                        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+                        $parts = array_map('trim', explode('/', $data['customer_id']));
+                        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = $parts;
 
                         // ====== CANCELLED ITEMS ======
                         if (!empty($data['cancelled_items'])) {
-                            $piutangUsaha = AccountMapping::where('module', 'SALES_VOID')
-                                ->where('account_type', 'piutang usaha')
-                                ->with('account')
-                                ->first();
 
-                            $penjualanBrg = AccountMapping::where('module', 'SALES_VOID')
-                                ->where('account_type', 'penjualan barang')
-                                ->with('account')
-                                ->first();
-
-                            $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_VOID')
-                                ->where('account_type', 'ppn keluaran')
-                                ->with('account')
-                                ->first();
-
-                            $discAcc = AccountMapping::where('module', 'SALES_VOID')
-                                ->where('account_type', 'diskon penjualan')
-                                ->with('account')
-                                ->first();
+                            $piutangUsaha   = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'piutang usaha')->with('account')->first();
+                            $penjualanBrg   = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'penjualan barang')->with('account')->first();
+                            $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'ppn keluaran')->with('account')->first();
+                            $discAcc        = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'diskon penjualan')->with('account')->first();
 
                             if (!$piutangUsaha || !$ppnKeluaranAcc || !$discAcc || !$penjualanBrg) {
                                 DB::rollBack();
-                                return response()->json([
-                                    'is_valid' => false,
-                                    'message' => 'Konfigurasi akun untuk Sales Return belum lengkap.',
-                                ]);
+                                return response()->json(['is_valid' => false, 'message' => 'Konfigurasi akun untuk Sales Void belum lengkap.']);
                             }
 
                             $totalAmount = 0;
                             $disc_total  = 0;
                             $net_total   = 0;
                             $tax_total   = 0;
-                            $totalRefund = 0;
+
+                            // ✅ Siapkan item untuk auto return cancelled
+                            $cancelReturnItems = [];
 
                             foreach ($data['cancelled_items'] as $value) {
                                 $invUpdate = SalesInvoiceDtl::find($value['id']);
-                                $invUpdate->flag_cancel = 1;
+                                if (empty($invUpdate)) continue;
+
+                                $invUpdate->flag_cancel     = 1;
                                 $invUpdate->packing_list_id = $roles->packing_list_id;
                                 $invUpdate->save();
 
@@ -1047,145 +1034,110 @@ class PackingListController extends Controller
                                 $net_total   += (($invUpdate->price * $invUpdate->qty) - $invUpdate->discount + $invUpdate->tax_amount);
 
                                 $so_detail = SalesOrderDetail::find($invUpdate->so_detail_id);
-                                $qtyBaseUnit = getSmallestUnit($invUpdate->product_id, $so_detail->unit, $invUpdate->qty);
-                                $productUomLevel1 = ProductUom::where('product', $invUpdate->product_id)->where('level', '1')->first();
-                                $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
+                                if ($so_detail) {
+                                    $qtyBaseUnit      = getSmallestUnit($invUpdate->product_id, $so_detail->unit, $invUpdate->qty);
+                                    $productUomLevel1 = ProductUom::where('product', $invUpdate->product_id)->where('level', '1')->first();
+                                    if ($productUomLevel1) {
+                                        stockUpdate($invoiceId, $invoice->warehouse_id, $invUpdate->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $value, 'add', 'sales_void');
+                                    }
+                                }
 
-                                $updateStock['product'] = $invUpdate->product_id;
-                                stockUpdate(
-                                    $invoiceId,
-                                    $invoice->warehouse_id,
-                                    $updateStock['product'],
-                                    $productUomLevel1->unit_tujuan,
-                                    $qtyBaseUnit,
-                                    $value,
-                                    'add',
-                                    'sales_void'
-                                );
-
-                                $totalRefund += $invUpdate->subtotal;
                                 $idDtlCancel[] = $value['id'];
+
+                                // ✅ Kumpulkan untuk auto return
+                                $cancelReturnItems[] = [
+                                    'invoice_detail_id' => $invUpdate->id,
+                                    'qty_return'        => (float)$invUpdate->qty,
+                                ];
                             }
 
-                            $dataInvoiceDtl = SalesInvoiceDtl::where('invoice_id', $invoiceId)
-                                ->whereNotIn('id', $idDtlCancel)->get();
-
+                            // Recalculate invoice setelah cancel
+                            $dataInvoiceDtl    = SalesInvoiceDtl::where('invoice_id', $invoiceId)->whereNotIn('id', $idDtlCancel)->get();
                             $totalAmountUpdate = 0;
                             $disc_total_update = 0;
                             $net_total_update  = 0;
                             $tax_total_update  = 0;
 
-                            if (!empty($dataInvoiceDtl)) {
-                                foreach ($dataInvoiceDtl as $v) {
-                                    $disc_total_update  += $v->discount;
-                                    $tax_total_update   += $v->tax_amount;
-                                    $totalAmountUpdate  += ($v->price * $v->qty);
-                                    $net_total_update   += (($v->price * $v->qty) - $v->discount + $v->tax_amount);
-                                }
+                            foreach ($dataInvoiceDtl as $v) {
+                                $disc_total_update  += $v->discount;
+                                $tax_total_update   += $v->tax_amount;
+                                $totalAmountUpdate  += ($v->price * $v->qty);
+                                $net_total_update   += (($v->price * $v->qty) - $v->discount + $v->tax_amount);
                             }
 
-                            $invoiceUpdate = SalesInvoiceHeader::find($invoiceId);
+                            $invoiceUpdate                 = SalesInvoiceHeader::find($invoiceId);
                             $invoiceUpdate->subtotal        = $totalAmountUpdate - $disc_total_update;
                             $invoiceUpdate->discount_amount = $disc_total_update;
                             $invoiceUpdate->tax_amount      = $tax_total_update;
                             $invoiceUpdate->total_amount    = $net_total_update;
                             $invoiceUpdate->save();
 
-                            // ✅ Cancel GL lama lalu posting ulang
                             cancelAllGL($reference);
                             $glCancelled = true;
 
                             postingGL($reference, $piutangUsaha->account_id, $piutangUsaha->account->account_name, $piutangUsaha->cd, $net_total_update, $currencyId);
-                            // postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total_update, $currencyId);
                             postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total_update, $currencyId);
                             postingGL($reference, $penjualanBrg->account_id, $penjualanBrg->account->account_name, $penjualanBrg->cd, $totalAmountUpdate, $currencyId);
+
+                            // ✅ Auto return untuk cancelled items
+                            if (!empty($cancelReturnItems)) {
+                                createAutoReturn($invoiceId, $cancelReturnItems, 'REFUND', $users_id, $customer_id);
+                            }
                         }
 
                         // ====== EDITED ITEMS ======
                         if (!empty($data['edited_items'])) {
+
+                            // ✅ Siapkan item untuk auto return selisih qty
+                            $editReturnItems = [];
+
                             foreach ($data['edited_items'] as $editedItem) {
                                 $invDtl = SalesInvoiceDtl::find($editedItem['id']);
-                                \Log::info('before find', [
-                                    'editedItem_id' => $editedItem['id'],
-                                    'invDtl'        => $invDtl ? $invDtl->toArray() : 'NOT FOUND',
-                                ]);
-                                if (empty($invDtl)) {
-                                    continue;
-                                }
+                                if (empty($invDtl)) continue;
 
                                 $newQty      = (float)$editedItem['qty'];
                                 $originalQty = (float)$editedItem['original_qty'];
 
-                                // ✅ Simpan original dari DB (bukan dari frontend, karena original_price bisa null)
+                                // ✅ Simpan original dari DB hanya sekali
                                 if (empty($invDtl->original_qty)) {
-                                    $invDtl->original_qty      = $invDtl->qty;        // dari DB sebelum diubah
-                                    $invDtl->original_price    = $invDtl->price;      // dari DB
-                                    $invDtl->original_subtotal = $invDtl->subtotal;   // dari DB
+                                    $invDtl->original_qty      = $invDtl->qty;
+                                    $invDtl->original_price    = $invDtl->price;
+                                    $invDtl->original_subtotal = $invDtl->subtotal;
                                 }
+
+                                $dbOriginalQty = (float)$invDtl->original_qty;
 
                                 $invDtl->qty             = $newQty;
                                 $invDtl->flag_correction = 1;
                                 $invDtl->packing_list_id = $roles->packing_list_id;
 
-                                // ✅ Recalculate proporsional per baris
-                                // originalQty pakai dari DB (invDtl->original_qty yang sudah tersimpan)
-                                $dbOriginalQty = (float)$invDtl->original_qty;
-
                                 $grossAmount = $invDtl->price * $newQty;
                                 $discAmount  = !empty($invDtl->discount_per_unit)
                                     ? ($invDtl->discount_per_unit * $newQty)
                                     : (($dbOriginalQty > 0) ? round($invDtl->discount / $dbOriginalQty * $newQty) : 0);
-                                // $taxAmount   = !empty($invDtl->tax_rate)
-                                //     ? round(($grossAmount - $discAmount) * ($invDtl->tax_rate / 100))
-                                //     : (($dbOriginalQty > 0) ? round($invDtl->tax_amount / $dbOriginalQty * $newQty) : 0);
-                                // $subtotal    = $grossAmount - $discAmount + $taxAmount;
                                 $subtotal    = $grossAmount - $discAmount;
 
-                                $invDtl->discount   = $discAmount;
-                                // $invDtl->tax_amount = $taxAmount;
-                                $invDtl->subtotal   = $subtotal;
-                                $saved = $invDtl->save();
+                                $invDtl->discount = $discAmount;
+                                $invDtl->subtotal = $subtotal;
+                                $invDtl->save();
 
-                                \Log::info('after save', [
-                                    'id'      => $invDtl->id,
-                                    'saved'   => $saved,
-                                    'qty'     => $invDtl->qty,
-                                    'subtotal' => $invDtl->subtotal,
-                                    'dirty'   => $invDtl->getDirty(),   // ✅ cek field apa yang berubah
-                                    'changes' => $invDtl->getChanges(), // ✅ cek field yang ter-save
-                                ]);
-
-                                \Log::info('edited item saved', [
-                                    'id'             => $invDtl->id,
-                                    'original_qty'   => $invDtl->original_qty,
-                                    'new_qty'        => $newQty,
-                                    'gross'          => $grossAmount,
-                                    'disc'           => $discAmount,
-                                    // 'tax'            => $taxAmount,
-                                    'subtotal'       => $subtotal,
-                                ]);
+                                // ✅ Hitung selisih untuk auto return
+                                $selisih = $dbOriginalQty - $newQty;
+                                if ($selisih > 0) {
+                                    $editReturnItems[] = [
+                                        'invoice_detail_id' => $invDtl->id,
+                                        'qty_return'        => $selisih,
+                                    ];
+                                }
                             }
 
-                            // ✅ Recalculate invoice header dari semua detail aktif
+                            // Recalculate invoice header
                             $allActiveDtl = SalesInvoiceDtl::where('invoice_id', $invoiceId)
                                 ->whereNotIn('id', $idDtlCancel)
                                 ->where(function ($q) {
                                     $q->where('flag_cancel', 0)->orWhereNull('flag_cancel');
                                 })
                                 ->get();
-
-                            \Log::info('allActiveDtl count', [
-                                'invoiceId'    => $invoiceId,
-                                'idDtlCancel'  => $idDtlCancel,
-                                'count'        => $allActiveDtl->count(),
-                                'items'        => $allActiveDtl->map(fn($d) => [
-                                    'id'          => $d->id,
-                                    'qty'         => $d->qty,
-                                    'price'       => $d->price,
-                                    'flag_cancel' => $d->flag_cancel,
-                                    'subtotal'    => $d->subtotal,
-                                ])->toArray(),
-                            ]);
 
                             $totalAmountRecalc = 0;
                             $discTotalRecalc   = 0;
@@ -1199,38 +1151,33 @@ class PackingListController extends Controller
                                 $netTotalRecalc    += $dtl->subtotal;
                             }
 
-                            \Log::info('invoice recalc', [
-                                'invoiceId'         => $invoiceId,
-                                'totalAmountRecalc' => $totalAmountRecalc,
-                                'discTotalRecalc'   => $discTotalRecalc,
-                                'taxTotalRecalc'    => $taxTotalRecalc,
-                                'netTotalRecalc'    => $netTotalRecalc,
-                            ]);
-
                             $invoiceRecalc = SalesInvoiceHeader::find($invoiceId);
                             if ($invoiceRecalc) {
-                                $invoiceRecalc->subtotal           = $totalAmountRecalc - $discTotalRecalc;
-                                $invoiceRecalc->discount_amount    = $discTotalRecalc;
-                                $invoiceRecalc->tax_amount         = $taxTotalRecalc;
-                                $invoiceRecalc->total_amount       = $netTotalRecalc;
+                                $invoiceRecalc->subtotal        = $totalAmountRecalc - $discTotalRecalc;
+                                $invoiceRecalc->discount_amount = $discTotalRecalc;
+                                $invoiceRecalc->tax_amount      = $taxTotalRecalc;
+                                $invoiceRecalc->total_amount    = $netTotalRecalc;
                                 $invoiceRecalc->save();
                             }
 
-                            // ✅ Reposting GL
+                            // Reposting GL
                             $piutangUsahaEdit = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'piutang usaha')->with('account')->first();
                             $penjualanBrgEdit = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'penjualan barang')->with('account')->first();
-                            $ppnKeluaranEdit  = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'ppn keluaran')->with('account')->first();
                             $discEdit         = AccountMapping::where('module', 'SALES_VOID')->where('account_type', 'diskon penjualan')->with('account')->first();
 
-                            if ($piutangUsahaEdit && $penjualanBrgEdit && $ppnKeluaranEdit && $discEdit) {
+                            if ($piutangUsahaEdit && $penjualanBrgEdit && $discEdit) {
                                 if (!$glCancelled) {
                                     cancelAllGL($reference);
                                     $glCancelled = true;
                                 }
                                 postingGL($reference, $piutangUsahaEdit->account_id, $piutangUsahaEdit->account->account_name, $piutangUsahaEdit->cd, $netTotalRecalc, $currencyId);
-                                // postingGL($reference, $ppnKeluaranEdit->account_id,  $ppnKeluaranEdit->account->account_name,  $ppnKeluaranEdit->cd,  $taxTotalRecalc,    $currencyId);
-                                postingGL($reference, $discEdit->account_id,         $discEdit->account->account_name,         $discEdit->cd,         $discTotalRecalc,   $currencyId);
+                                postingGL($reference, $discEdit->account_id, $discEdit->account->account_name, $discEdit->cd, $discTotalRecalc, $currencyId);
                                 postingGL($reference, $penjualanBrgEdit->account_id, $penjualanBrgEdit->account->account_name, $penjualanBrgEdit->cd, $totalAmountRecalc, $currencyId);
+                            }
+
+                            // ✅ Auto return untuk selisih qty edited items
+                            if (!empty($editReturnItems)) {
+                                createAutoReturn($invoiceId, $editReturnItems, 'REFUND', $users_id, $customer_id);
                             }
                         }
                     }
@@ -1240,44 +1187,35 @@ class PackingListController extends Controller
                 if ($data['customer_id'] != '' && $data['total_amount'] != '') {
                     if ((float)$data['total_amount'] > 0) {
                         $payment_date = $periode->format('Y-m-d');
-                        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
+                        $parts = array_map('trim', explode('/', $data['customer_id']));
+                        list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = $parts;
 
-                        $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                            ->where('account_type', 'piutang usaha')
-                            ->with('account')
-                            ->first();
-
-                        $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                            ->where('account_type', 'diskon bayar')
-                            ->with('account')
-                            ->first();
+                        $piutangAcc   = AccountMapping::where('module', 'SALES_PAYMENT')->where('account_type', 'piutang usaha')->with('account')->first();
+                        $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')->where('account_type', 'diskon bayar')->with('account')->first();
 
                         if (!$piutangAcc || !$discBayarAcc) {
                             DB::rollBack();
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
-                            ]);
+                            return response()->json(['is_valid' => false, 'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.']);
                         }
 
-                        $data['account_id'] = 3; //kas kecil
+                        $data['account_id'] = 3;
                         $kasAccount = Coa::find($data['account_id']);
 
-                        $paymentHeader = new SalesPaymentHeader();
-                        $paymentHeader->payment_code  = generateNoSP();
-                        $paymentHeader->created_by    = $users_id;
-                        $paymentHeader->status        = 'PENDING';
-                        $paymentHeader->payment_date  = $payment_date;
-                        $paymentHeader->customer_id   = $customer_id;
+                        $paymentHeader                 = new SalesPaymentHeader();
+                        $paymentHeader->payment_code   = generateNoSP();
+                        $paymentHeader->created_by     = $users_id;
+                        $paymentHeader->status         = 'PENDING';
+                        $paymentHeader->payment_date   = $payment_date;
+                        $paymentHeader->customer_id    = $customer_id;
                         $paymentHeader->payment_method = 'CASH';
-                        $paymentHeader->total_amount  = 0;
+                        $paymentHeader->total_amount   = 0;
                         $paymentHeader->discount_amount = 0;
-                        $paymentHeader->net_amount    = 0;
-                        $paymentHeader->reference_no  = $data['id'];
-                        $paymentHeader->remarks       = '-';
-                        $paymentHeader->coa_kas       = $data['account_id'];
-                        $paymentHeader->bulk          = 0;
-                        $paymentHeader->platform      = 'mobile';
+                        $paymentHeader->net_amount     = 0;
+                        $paymentHeader->reference_no   = $data['id'];
+                        $paymentHeader->remarks        = '-';
+                        $paymentHeader->coa_kas        = $data['account_id'];
+                        $paymentHeader->bulk           = 0;
+                        $paymentHeader->platform       = 'mobile';
                         $paymentHeader->save();
 
                         $hdrId     = $paymentHeader->id;
@@ -1287,14 +1225,10 @@ class PackingListController extends Controller
                         $disc_total  = 0;
                         $net_total   = 0;
 
-                        // ✅ Fresh load invoice untuk payment
                         $invoicePayment = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
                         if (empty($invoicePayment)) {
                             DB::rollBack();
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Invoice tidak ditemukan ' . $invoice_number,
-                            ]);
+                            return response()->json(['is_valid' => false, 'message' => 'Invoice tidak ditemukan ' . $invoice_number]);
                         }
 
                         $invoicePaymentId = $invoicePayment->id;
@@ -1313,15 +1247,12 @@ class PackingListController extends Controller
 
                         if ((float)$data['total_amount'] < $disc_amount) {
                             DB::rollBack();
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-1'
-                            ]);
+                            return response()->json(['is_valid' => false, 'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount]);
                         }
 
                         $totalAmount += (float)$data['total_amount'];
 
-                        $detail = new SalesPaymentDtl();
+                        $detail                    = new SalesPaymentDtl();
                         $detail->payment_id        = $hdrId;
                         $detail->invoice_id        = $invoicePaymentId;
                         $detail->allocated_amount  = (float)$data['total_amount'];
@@ -1329,18 +1260,16 @@ class PackingListController extends Controller
                         $detail->line_no           = 1;
                         $detail->save();
 
-                        $total_paid = (float)($invoicePayment->amount_paid ?? 0) + (float)$data['total_amount'];
+                        $total_paid                  = (float)($invoicePayment->amount_paid ?? 0) + (float)$data['total_amount'];
                         $invoicePayment->amount_paid = $total_paid;
-
-                        // ✅ Fix: fallback ke total_amount jika outstanding null
-                        $newOutstanding = (float)($invoicePayment->outstanding_amount ?? $invoicePayment->total_amount) - (float)$data['total_amount'];
-                        $invoicePayment->status = $newOutstanding <= 0 ? 'PAID' : 'PARTIAL PAID';
+                        $newOutstanding              = (float)($invoicePayment->total_amount) - $total_paid;
+                        $invoicePayment->status      = $newOutstanding <= 0 ? 'PAID' : 'PARTIAL PAID';
                         $invoicePayment->save();
 
                         $currency   = $currency ?? Currency::where('code', 'IDR')->first();
                         $currencyId = $currency->id;
 
-                        $update = SalesPaymentHeader::find($hdrId);
+                        $update                  = SalesPaymentHeader::find($hdrId);
                         $update->total_amount    = $totalAmount;
                         $update->discount_amount = $disc_total;
                         $update->net_amount      = $net_total;

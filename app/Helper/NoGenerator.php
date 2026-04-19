@@ -1,15 +1,22 @@
 <?php
 
 use App\Http\Controllers\api\Messaging\FcmController;
+use App\Models\Master\AccountMapping;
 use App\Models\Master\Actor;
+use App\Models\Master\Currency;
 use App\Models\Master\Customer;
 use App\Models\Master\DocumentTransaction;
 use App\Models\Master\PricePNBP;
+use App\Models\Master\ProductUom;
 use App\Models\Master\RoutingPermission;
 use App\Models\Master\RoutingReminder;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
 use App\Models\Transaction\GeneralLedger;
+use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesOrderDetail;
+use App\Models\Transaction\SalesReturnDtl;
+use App\Models\Transaction\SalesReturnHdr;
 use App\Models\Transaksi\NotificationCenter;
 use App\RequestCertificate;
 use GuzzleHttp\Client;
@@ -1183,6 +1190,116 @@ function checkCustomerCreditLimit($customer = 0)
             'message' => 'Customer masih memiliki sisa batas kredit sebesar : ' . ($credit_limit - $totalOutstanding),
         ];
     }
+}
+
+// ====== HELPER: CREATE AUTO SALES RETURN ======
+function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $customerId)
+{
+    $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'penjualan barang')->with('account')->first();
+    $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'ppn keluaran')->with('account')->first();
+    $discAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'diskon penjualan')->with('account')->first();
+    $depositAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'deposit pelanggan')->with('account')->first();
+    // $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'kas bank')->with('account')->first();
+
+    if (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc) {
+        throw new \Exception('Konfigurasi akun untuk Sales Return belum lengkap.');
+    }
+
+    $header = new SalesReturnHdr();
+    $header->return_number     = generateNoReturn();
+    $header->created_by        = $userId;
+    $header->status            = 'POSTED'; // langsung posted karena dari mobile
+    $header->return_date       = now()->format('Y-m-d');
+    $header->customer_id       = $customerId;
+    $header->return_type       = $returnType;
+    $header->refund_amount     = 0;
+    $header->deposit_amount    = 0;
+    $header->total_return_value = 0;
+    $header->reason            = 'Auto return dari delivery confirm';
+    $header->types            = 'good';
+    $header->invoice_id        = $invoiceId;
+    $header->save();
+
+    $hdrId     = $header->id;
+    $reference = $header->return_number;
+
+    $totalAmount = 0;
+    $disc_total  = 0;
+    $net_total   = 0;
+    $tax_total   = 0;
+
+    foreach ($items as $item) {
+        $invDtl = SalesInvoiceDtl::find($item['invoice_detail_id']);
+        if (empty($invDtl)) continue;
+
+        $qtyReturn  = (float)$item['qty_return'];
+        $unitPrice  = (float)$invDtl->price;
+        $originalQty = (float)($invDtl->original_qty ?? $invDtl->qty);
+
+        // Hitung disc & tax proporsional
+        $discAmount = ($originalQty > 0)
+            ? round($invDtl->discount / $originalQty * $qtyReturn)
+            : 0;
+        $taxAmount = !empty($invDtl->tax_rate)
+            ? round(($unitPrice * $qtyReturn - $discAmount) * ($invDtl->tax_rate / 100))
+            : (($originalQty > 0) ? round($invDtl->tax_amount / $originalQty * $qtyReturn) : 0);
+        $subtotal = ($unitPrice * $qtyReturn) - $discAmount + $taxAmount;
+
+        $detail = new SalesReturnDtl();
+        $detail->return_id         = $hdrId;
+        $detail->product_id        = $invDtl->product_id;
+        $detail->qty_return        = $qtyReturn;
+        $detail->unit_price        = $unitPrice;
+        $detail->discount_amount   = $discAmount;
+        $detail->tax_amount        = $taxAmount;
+        $detail->type_tax          = $invDtl->type_tax ?? 'include';
+        $detail->tax_rate          = $invDtl->tax_rate ?? 0;
+        $detail->tax               = $invDtl->tax ?? 0;
+        $detail->invoice_detail_id = $invDtl->id;
+        $detail->save();
+
+        // Update return_qty di invoice detail
+        $invDtl->return_qty = ($invDtl->return_qty ?? 0) + $qtyReturn;
+        $invDtl->save();
+
+        // Update stock
+        $so_detail = SalesOrderDetail::find($invDtl->so_detail_id);
+        if ($so_detail) {
+            $qtyBaseUnit = getSmallestUnit($invDtl->product_id, $so_detail->unit, $qtyReturn);
+            $productUomLevel1 = ProductUom::where('product', $invDtl->product_id)->where('level', '1')->first();
+            if ($productUomLevel1) {
+                stockUpdate($hdrId, $invDtl->warehouse_id, $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, 'add', 'sales_return');
+            }
+        }
+
+        $disc_total  += $discAmount;
+        $tax_total   += $taxAmount;
+        $totalAmount += ($unitPrice * $qtyReturn);
+        $net_total   += $subtotal;
+    }
+
+    // Update header total
+    $header->total_return_value = $net_total;
+    $header->deposit_amount     = $returnType == 'DEPOSIT' ? $net_total : 0;
+    $header->refund_amount      = $returnType == 'REFUND' ? $net_total : 0;
+    $header->save();
+
+    // Posting GL
+    $currency   = Currency::where('code', 'IDR')->first();
+    $currencyId = $currency->id;
+
+    postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
+    postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
+    postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId);
+
+    // if ($returnType == 'REFUND') {
+    //     postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, $net_total, $currencyId);
+    // }
+    if ($returnType == 'DEPOSIT') {
+        postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId);
+    }
+
+    return $hdrId;
 }
 
 function getMaxReturCustomer($customer = 0)

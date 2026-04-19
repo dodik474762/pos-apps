@@ -28,7 +28,7 @@ class SalesReturnController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -45,12 +45,12 @@ class SalesReturnController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.return_type', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.return_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.return_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('i.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.return_type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('i.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -103,14 +103,14 @@ class SalesReturnController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.invoice_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -161,13 +161,13 @@ class SalesReturnController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('soh.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -234,14 +234,14 @@ class SalesReturnController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -302,7 +302,7 @@ class SalesReturnController extends Controller
                 ->with('account')
                 ->first();
 
-            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc || ! $kasBankAcc || ! $depositAcc) {
+            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc  || ! $depositAcc) {
                 DB::rollBack();
 
                 return response()->json([
@@ -311,9 +311,9 @@ class SalesReturnController extends Controller
                 ]);
             }
 
-            if(empty($data['id'])){
+            if (empty($data['id'])) {
                 $allow_retur_customer = getMaxReturCustomer($data['customer_id']);
-                if(!$allow_retur_customer){
+                if (!$allow_retur_customer) {
                     DB::rollBack();
 
                     return response()->json([
@@ -372,7 +372,6 @@ class SalesReturnController extends Controller
                             $invoice->return_qty = $return_qty;
                             $invoice->save();
                         }
-
                     }
 
                     continue;
@@ -429,12 +428,17 @@ class SalesReturnController extends Controller
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $value['product'] = $value['product_id'];
-                stockUpdate($hdrId,
-                $invoice->warehouse_id,
-                $value['product_id'],
-                $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'sales_return');
+                stockUpdate(
+                    $hdrId,
+                    $invoice->warehouse_id,
+                    $value['product_id'],
+                    $productUomLevel1->unit_tujuan,
+                    $qtyBaseUnit,
+                    $value,
+                    'add',
+                    'sales_return'
+                );
                 /*menambah stock gudang */
-
             }
 
             $updateHdr = SalesReturnHdr::find($hdrId);
@@ -447,9 +451,9 @@ class SalesReturnController extends Controller
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
             postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
             postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
-            if ($data['return_type'] == 'REFUND') {
-                postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
-            }
+            // if ($data['return_type'] == 'REFUND') {
+            //     postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
+            // }
             if ($data['return_type'] == 'DEPOSIT') {
                 postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, ($net_total), $currencyId);
             }
@@ -467,7 +471,7 @@ class SalesReturnController extends Controller
         return response()->json($result);
     }
 
-    function hitungSummaryAll($invoice_number = '', $product_id= 0, $unit_id = 0, $qty_retur = 0, $product_code = '')
+    function hitungSummaryAll($invoice_number = '', $product_id = 0, $unit_id = 0, $qty_retur = 0, $product_code = '')
     {
         $total_subtotal = 0;
         $total_disc     = 0;
@@ -476,17 +480,17 @@ class SalesReturnController extends Controller
 
         $invoice = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
         $items = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $invoice->id)
-        ->where('sales_invoice_detail.product_id', trim($product_id))
-        ->whereNull('sales_invoice_detail.deleted')
-        ->select(['sales_invoice_detail.*'])
-        ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
-        ->where('sod.unit_price', '>', 0)
-        ->where('sod.unit', trim($unit_id))->first();
+            ->where('sales_invoice_detail.product_id', trim($product_id))
+            ->whereNull('sales_invoice_detail.deleted')
+            ->select(['sales_invoice_detail.*'])
+            ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
+            ->where('sod.unit_price', '>', 0)
+            ->where('sod.unit', trim($unit_id))->first();
 
-        if(empty($items)){
+        if (empty($items)) {
             return [
                 'is_valid' => false,
-                'message' => 'Data Product '.$product_code.' tidak ditemukan di Invoice ini : '.trim($invoice_number),
+                'message' => 'Data Product ' . $product_code . ' tidak ditemukan di Invoice ini : ' . trim($invoice_number),
             ];
         }
 
@@ -550,13 +554,13 @@ class SalesReturnController extends Controller
         $refund_amount = round($total_net, 2);
 
         return [
-            'is_valid'=> true,
+            'is_valid' => true,
             'items'           => $items,
             'item_subtotal' => $subtotal,
             'item_discount' => $discount_return,
             'item_tax'      => $tax_amount,
             'item_net'      => $net_total,
-            'type_tax'=> $type_tax,
+            'type_tax' => $type_tax,
             'total_subtotal'  => round($total_subtotal, 2),
             'total_discount'  => round($total_disc, 2),
             'total_tax'       => round($total_tax, 2),
@@ -567,7 +571,8 @@ class SalesReturnController extends Controller
     }
 
 
-    public function sync(Request $request){
+    public function sync(Request $request)
+    {
         $data = json_decode($request->input('data'), true);
         $userId = $data['user_id'];
 
@@ -625,9 +630,9 @@ class SalesReturnController extends Controller
                 ]);
             }
 
-            if(empty($data['id'])){
+            if (empty($data['id'])) {
                 $allow_retur_customer = getMaxReturCustomer(trim($customer_id));
-                if(!$allow_retur_customer){
+                if (!$allow_retur_customer) {
                     DB::rollBack();
 
                     return response()->json([
@@ -639,7 +644,7 @@ class SalesReturnController extends Controller
 
             $calculateReturn = $this->hitungSummaryAll($invoice_number, $product_id, $unit_id, $data['qty_return'], $product_code);
 
-              // === HEADER ===
+            // === HEADER ===
             $header = new SalesReturnHdr();
 
             if (empty($data['id'])) {
@@ -706,17 +711,23 @@ class SalesReturnController extends Controller
             $invoice->save();
 
             /*menambah stock gudang */
-            if($data['return_type'] == 'good'){
+            if ($data['return_type'] == 'good') {
                 $so_detail = SalesOrderDetail::find($invoice->so_detail_id);
                 $qtyBaseUnit = getSmallestUnit(trim($product_id), $so_detail->unit, $data['qty_return']);
                 $productUomLevel1 = ProductUom::where('product', trim($product_id))->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $value['product'] = trim($product_id);
-                stockUpdate($hdrId,
-                1,
-                trim($product_id),
-                $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'sales_return');
+                stockUpdate(
+                    $hdrId,
+                    1,
+                    trim($product_id),
+                    $productUomLevel1->unit_tujuan,
+                    $qtyBaseUnit,
+                    $value,
+                    'add',
+                    'sales_return'
+                );
             }
             /*menambah stock gudang */
 
@@ -788,17 +799,23 @@ class SalesReturnController extends Controller
 
                     $invoice->save();
 
-                     /*mengurangi stock gudang */
+                    /*mengurangi stock gudang */
                     $so_detail = SalesOrderDetail::find($invoice->so_detail_id);
                     $qtyBaseUnit = getSmallestUnit($dt->product_id, $so_detail->unit, $dt->qty_affected);
                     $productUomLevel1 = ProductUom::where('product', $dt->product_id)->where('level', '1')->first();
                     $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                     $value['product'] = $dt->product_id;
-                    stockUpdate($id,
-                    $invoice->warehouse_id,
-                    $dt->product_id,
-                    $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'min', 'sales_return_cancel');
+                    stockUpdate(
+                        $id,
+                        $invoice->warehouse_id,
+                        $dt->product_id,
+                        $productUomLevel1->unit_tujuan,
+                        $qtyBaseUnit,
+                        $value,
+                        'min',
+                        'sales_return_cancel'
+                    );
                     /*mengurangi stock gudang */
                 }
             }
@@ -818,7 +835,6 @@ class SalesReturnController extends Controller
                 'is_valid' => true,
                 'message' => 'Sales Return berhasil dibatalkan.',
             ]);
-
         } catch (\Throwable $th) {
 
             DB::rollBack();
@@ -833,7 +849,7 @@ class SalesReturnController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'c.nama_customer',
@@ -915,11 +931,11 @@ class SalesReturnController extends Controller
             $menu->status = 'POSTED';
             $menu->save();
 
-            if($menu->platform == 'mobile'){
+            if ($menu->platform == 'mobile') {
                 $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')
-                ->where('account_type', 'penjualan barang')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
+                    ->where('account_type', 'penjualan barang')
+                    ->with('account') // kalau kamu pakai relasi
+                    ->first();
 
                 $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')
                     ->where('account_type', 'ppn keluaran')
@@ -982,7 +998,6 @@ class SalesReturnController extends Controller
             DB::commit();
 
             $result['is_valid'] = true;
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
