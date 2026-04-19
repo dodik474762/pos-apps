@@ -175,12 +175,20 @@
                             class="btn btn-primary waves-effect waves-light me-1">
                         Posted
                     </button>
+                    &nbsp;
+                    <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                            class="btn btn-success waves-effect waves-light me-1">
+                        Submit
+                    </button>
                 @endif
             @endif
-            <button type="submit" onclick="SalesInvoice.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
-                Submit
-            </button>
+
+            @if (!isset($id))
+                <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                        class="btn btn-success waves-effect waves-light me-1">
+                    Submit
+                </button>
+            @endif          
 
             <button type="reset" onclick="SalesInvoice.back(this, event)"
                     class="btn btn-secondary waves-effect">
