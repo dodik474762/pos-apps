@@ -1107,7 +1107,7 @@ class PackingListController extends Controller
                                     $invDtl->original_qty      = $invDtl->qty;
                                     $invDtl->original_price    = $invDtl->price;
                                     $invDtl->original_subtotal = $invDtl->subtotal;
-                                
+                                }
 
                                 $dbOriginalQty = (float)$invDtl->original_qty;
                                 if (!empty($invDtl->original_qty)) {
