@@ -1199,9 +1199,9 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'ppn keluaran')->with('account')->first();
     $discAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'diskon penjualan')->with('account')->first();
     $depositAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'deposit pelanggan')->with('account')->first();
-    // $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'kas bank')->with('account')->first();
+    $piutangAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'piutang usaha')->with('account')->first();
 
-    if (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc) {
+    if (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc || !$piutangAcc) {
         throw new \Exception('Konfigurasi akun untuk Sales Return belum lengkap.');
     }
 
@@ -1243,7 +1243,8 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
         $taxAmount = !empty($invDtl->tax_rate)
             ? round(($unitPrice * $qtyReturn - $discAmount) * ($invDtl->tax_rate / 100))
             : (($originalQty > 0) ? round($invDtl->tax_amount / $originalQty * $qtyReturn) : 0);
-        $subtotal = ($unitPrice * $qtyReturn) - $discAmount + $taxAmount;
+        $subtotal = ($unitPrice * $qtyReturn) - $discAmount;
+        //  + $taxAmount;
 
         $detail = new SalesReturnDtl();
         $detail->return_id         = $hdrId;
@@ -1289,12 +1290,12 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $currencyId = $currency->id;
 
     postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
-    postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
+    // postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
     postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId);
 
-    // if ($returnType == 'REFUND') {
-    //     postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, $net_total, $currencyId);
-    // }
+    if ($returnType == 'REFUND') {
+        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $net_total, $currencyId);
+    }
     if ($returnType == 'DEPOSIT') {
         postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId);
     }

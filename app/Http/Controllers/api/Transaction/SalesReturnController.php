@@ -292,8 +292,8 @@ class SalesReturnController extends Controller
                 ->with('account')
                 ->first();
 
-            $kasBankAcc = AccountMapping::where('module', 'SALES_RETURN')
-                ->where('account_type', 'kas bank')
+            $piutangAcc = AccountMapping::where('module', 'SALES_RETURN')
+                ->where('account_type', 'piutang usaha')
                 ->with('account')
                 ->first();
 
@@ -302,7 +302,7 @@ class SalesReturnController extends Controller
                 ->with('account')
                 ->first();
 
-            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc  || ! $depositAcc) {
+            if (! $penjualanAcc || ! $ppnKeluaranAcc || ! $discAcc  || ! $depositAcc || ! $piutangAcc) {
                 DB::rollBack();
 
                 return response()->json([
@@ -397,7 +397,8 @@ class SalesReturnController extends Controller
                 $disc_total += $value['discount_return'];
                 $tax_total += $value['tax_amount_return'];
                 $totalAmount += (($value['unit_price'] * $value['qty_return']));
-                $net_total += (($value['unit_price'] * $value['qty_return']) - $value['discount_return'] + $value['tax_amount_return']);
+                $net_total += (($value['unit_price'] * $value['qty_return']) - $value['discount_return']);
+                // + $value['tax_amount_return']);
 
                 /* mapping coa */
 
@@ -451,9 +452,9 @@ class SalesReturnController extends Controller
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
             postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, ($tax_total), $currencyId);
             postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, ($disc_total), $currencyId);
-            // if ($data['return_type'] == 'REFUND') {
-            //     postingGL($reference, $kasBankAcc->account_id, $kasBankAcc->account->account_name, $kasBankAcc->cd, ($net_total), $currencyId);
-            // }
+            if ($data['return_type'] == 'REFUND') {
+                postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, ($net_total), $currencyId);
+            }
             if ($data['return_type'] == 'DEPOSIT') {
                 postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, ($net_total), $currencyId);
             }
