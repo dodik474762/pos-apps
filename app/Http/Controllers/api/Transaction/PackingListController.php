@@ -1096,39 +1096,59 @@ class PackingListController extends Controller
 
                 // ====== EDITED ITEMS (update qty) ======
                 if (!empty($data['edited_items'])) {
+                    // ✅ Pastikan $invoice & $invoiceId sudah ter-set
+                    // Jika cancelled_items kosong, $invoice belum tentu ter-set di atas
+                    if (empty($invoice)) {
+                        $invoice = SalesInvoiceHeader::where('invoice_number', trim($data['invoice_number']))->first();
+                        if (empty($invoice)) {
+                            DB::rollBack();
+                            return response()->json([
+                                'is_valid' => false,
+                                'message' => 'Invoice ' . $data['invoice_number'] . ' Tidak Ditemukan',
+                            ]);
+                        }
+                    }
+                    $invoiceId = $invoice->id; // ✅ pastikan integer, bukan object
+
                     foreach ($data['edited_items'] as $editedItem) {
                         $invDtl = SalesInvoiceDtl::find($editedItem['id']);
                         if (empty($invDtl)) {
                             continue;
                         }
 
-                        $newQty = $editedItem['qty'];
+                        $newQty         = (float)$editedItem['qty'];
+                        $originalQty    = (float)$editedItem['original_qty'];
+
+                        // ✅ Simpan original sebelum diubah (hanya sekali, jika belum pernah di-edit)
+                        if (empty($invDtl->original_qty)) {
+                            $invDtl->original_qty      = $originalQty;
+                            $invDtl->original_price    = $invDtl->price;
+                            $invDtl->original_subtotal = $invDtl->subtotal;
+                        }
+
                         $invDtl->qty = $newQty;
                         $invDtl->flag_correction = 1;
-                        $invDtl->original_qty = $editedItem['original_qty'];
-                        $invDtl->original_price = $editedItem['original_price'];
-                        $invDtl->original_subtotal = $editedItem['original_subtotal'];
+                        $invDtl->packing_list_id = $roles->packing_list_id;
 
-                        // Recalculate subtotal & amounts per baris
+                        // ✅ Recalculate per baris
                         $grossAmount = $invDtl->price * $newQty;
-                        $discAmount  = isset($invDtl->discount_per_unit)
+                        $discAmount  = !empty($invDtl->discount_per_unit)
                             ? ($invDtl->discount_per_unit * $newQty)
-                            : $invDtl->discount;
-                        $taxAmount   = isset($invDtl->tax_rate)
+                            : (($originalQty > 0) ? round($invDtl->discount / $originalQty * $newQty) : 0);
+                        $taxAmount   = !empty($invDtl->tax_rate)
                             ? round(($grossAmount - $discAmount) * ($invDtl->tax_rate / 100))
-                            : $invDtl->tax_amount;
+                            : (($originalQty > 0) ? round($invDtl->tax_amount / $originalQty * $newQty) : 0);
                         $subtotal    = $grossAmount - $discAmount + $taxAmount;
 
                         $invDtl->discount   = $discAmount;
                         $invDtl->tax_amount = $taxAmount;
                         $invDtl->subtotal   = $subtotal;
-                        $invDtl->packing_list_id = $roles->packing_list_id;
                         $invDtl->save();
                     }
 
-                    // Recalculate invoice header totals berdasarkan semua detail aktif
+                    // ✅ Recalculate invoice header dari semua detail aktif
                     $idDtlCancelArr = !empty($idDtlCancel) ? $idDtlCancel : [];
-                    $allActiveDtl   = SalesInvoiceDtl::where('invoice_id', $invoiceId)
+                    $allActiveDtl   = SalesInvoiceDtl::where('invoice_id', $invoiceId) // ✅ pakai integer
                         ->whereNotIn('id', $idDtlCancelArr)
                         ->where('flag_cancel', 0)
                         ->get();
@@ -1145,12 +1165,14 @@ class PackingListController extends Controller
                         $netTotalRecalc    += $dtl->subtotal;
                     }
 
+                    // ✅ Pakai fresh object dari DB
                     $invoiceRecalc = SalesInvoiceHeader::find($invoiceId);
                     if ($invoiceRecalc) {
-                        $invoiceRecalc->subtotal        = $totalAmountRecalc - $discTotalRecalc;
-                        $invoiceRecalc->discount_amount = $discTotalRecalc;
-                        $invoiceRecalc->tax_amount      = $taxTotalRecalc;
-                        $invoiceRecalc->total_amount    = $netTotalRecalc;
+                        $invoiceRecalc->subtotal         = $totalAmountRecalc - $discTotalRecalc;
+                        $invoiceRecalc->discount_amount  = $discTotalRecalc;
+                        $invoiceRecalc->tax_amount       = $taxTotalRecalc;
+                        $invoiceRecalc->total_amount     = $netTotalRecalc;
+                        $invoiceRecalc->outstanding_amount = $netTotalRecalc - (float)($invoiceRecalc->amount_paid ?? 0); // ✅ update outstanding
                         $invoiceRecalc->save();
                     }
                 }
