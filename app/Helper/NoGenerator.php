@@ -1268,7 +1268,7 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
             $qtyBaseUnit = getSmallestUnit($invDtl->product_id, $so_detail->unit, $qtyReturn);
             $productUomLevel1 = ProductUom::where('product', $invDtl->product_id)->where('level', '1')->first();
             if ($productUomLevel1) {
-                stockUpdate($hdrId, $invDtl->warehouse_id, $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, 'add', 'sales_return');
+                stockUpdate($hdrId, $item['warehouse_id'], $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, 'add', 'sales_return');
             }
         }
 

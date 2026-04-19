@@ -978,6 +978,7 @@ class PackingListController extends Controller
                 $currency    = null;
                 $currencyId  = null;
                 $customer_id = null;
+                $warehouseId = null;
 
                 if ($data['customer_id'] != '') {
                     if (trim($data['invoice_number']) != '') {
@@ -995,6 +996,7 @@ class PackingListController extends Controller
                         $currency   = Currency::where('code', 'IDR')->first();
                         $currencyId = $currency->id;
                         $reference  = trim($data['invoice_number']);
+                        $warehouseId = $invoice->warehouse_id;
 
                         $parts = array_map('trim', explode('/', $data['customer_id']));
                         list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = $parts;
@@ -1046,8 +1048,10 @@ class PackingListController extends Controller
 
                                 // ✅ Kumpulkan untuk auto return
                                 $cancelReturnItems[] = [
+                                    'product' => $invUpdate->product_id,
                                     'invoice_detail_id' => $invUpdate->id,
                                     'qty_return'        => (float)$invUpdate->qty,
+                                    'warehouse_id'      => $warehouseId,
                                 ];
                             }
 
@@ -1125,8 +1129,10 @@ class PackingListController extends Controller
                                 $selisih = $dbOriginalQty - $newQty;
                                 if ($selisih > 0) {
                                     $editReturnItems[] = [
+                                        'product' => $invDtl->product_id,
                                         'invoice_detail_id' => $invDtl->id,
                                         'qty_return'        => $selisih,
+                                        'warehouse_id'      => $warehouseId,
                                     ];
                                 }
                             }
