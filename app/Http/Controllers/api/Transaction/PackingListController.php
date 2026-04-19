@@ -17,6 +17,7 @@ use App\Models\Transaction\SalesReturnHdr;
 use App\Models\Master\AccountMapping;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceDtl;
+use App\Models\Transaction\SalesOrderHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
 use App\Models\User;
@@ -409,6 +410,10 @@ class PackingListController extends Controller
                 $do = DeliveryOrderHeader::find($value['delivery_order_id']);
                 $do->status = 'PACKED';
                 $do->save();
+
+                $so = SalesInvoiceHeader::where('do_id', $do->id)->orWhere('sales_order', $do->so_id)->first();
+                $so->status = 'PACKED';
+                $so->save();
 
 
                 $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
