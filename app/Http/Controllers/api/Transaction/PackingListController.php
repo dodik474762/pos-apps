@@ -1256,8 +1256,11 @@ class PackingListController extends Controller
                         $total_paid = $invoice->amount_paid + $data['total_amount'];
                         $invoice->amount_paid = $total_paid;
 
-                        $outstanding_amount = $invoice->outstanding_amount - $data['total_amount'];
-                        if ($outstanding_amount == 0) {
+                        // ✅ Fix: fallback ke total_amount jika outstanding null
+                        $outstanding_amount = (float)($invoice->outstanding_amount ?? $invoice->total_amount) - (float)$data['total_amount'];
+                        $invoice->outstanding_amount = $outstanding_amount;
+
+                        if ($outstanding_amount <= 0) {
                             $invoice->status = 'PAID';
                         } else {
                             $invoice->status = 'PARTIAL PAID';
