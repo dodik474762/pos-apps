@@ -47,7 +47,7 @@
                                         <select name="salesman" id="salesman" class="form-control select2">
                                             <option value=""></option>
                                             @foreach ($salesmans as $item)
-                                                <option {{ isset($salesman) ? $salesman == $item['id'] ? 'selected' : '' : '' }} value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['nama_lengkap'] }}</option>
+                                                <option {{ isset($salesman) ? $salesman == $item['id'] ? 'selected' : '' : '' }} value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}</option>
                                             @endforeach
                                         </select>
                                 </div>
