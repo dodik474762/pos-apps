@@ -226,4 +226,21 @@ class SalesPaymentController extends Controller
 
         return $pdf->stream('SP-' . $data->payment_code . '.pdf');
     }
+
+    public function cetakRekapan(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data['data_payment'] = SalesPaymentHeader::with(['customers', 'items.invoice'])
+            ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
+            ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
+            ->where('payment_date', $data['date'])->get();
+        $qr = '';
+
+
+        $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('REKAPAN-SP-' . $data['date'] . '.pdf');
+    }
 }

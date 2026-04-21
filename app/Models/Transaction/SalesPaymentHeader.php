@@ -9,11 +9,13 @@ class SalesPaymentHeader extends Model
 {
     protected $table = 'sales_payment_header';
 
-    public function customers(){
+    public function customers()
+    {
         return $this->hasOne(Customer::class, 'id', 'customer_id');
     }
 
-    public function items(){
+    public function items()
+    {
         return $this->hasMany(SalesPaymentDtl::class, 'payment_id', 'id')->whereNull('deleted');
     }
 }

@@ -1001,6 +1001,13 @@ let SalesPayment = {
         const url = $("input#url").val();
 
         window.location.href = url + "?payment_method=" + paymentMethod;
+    },
+
+    printRekapPembayaran: () => {
+        const date = $("#filter-date").val();
+        const url = $("input#url-print").val();
+
+        window.location.href = url + "?date=" + date;
     }
 };
 
