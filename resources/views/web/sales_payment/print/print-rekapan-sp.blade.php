@@ -115,10 +115,10 @@
                             <tr>
                             <td>{{ $i + 1 }}</td>                            
                             <td>{{ $item->invoice->invoice_number }}</td>
-                            <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                            <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
                             <td>{{ $item->invoice->invoice_date }}</td>
-                            <td>{{ $item->outstanding_amount }}</td>
-                            <td class="text-right">{{ $item->allocated_amount }}</td>
+                            <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
+                            <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
                         </tr>
                         @php
                             $total += $item->allocated_amount ?? 0;

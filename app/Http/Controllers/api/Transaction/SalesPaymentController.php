@@ -243,7 +243,7 @@ class SalesPaymentController extends Controller
             }
 
             $header->payment_date = $data['payment_date'];
-            $header->customer_id = $data['customer_id'];
+            $header->customer_id = trim($data['customer_id']);
             $header->payment_method = $data['payment_method'];
             $header->total_amount = 0;
             $header->discount_amount = 0;
@@ -400,7 +400,7 @@ class SalesPaymentController extends Controller
                 $header->status = 'NOT PAID';
 
                 $header->payment_date = $payment_date;
-                $header->customer_id = $customer_id;
+                $header->customer_id = trim($customer_id);
                 $header->payment_method = 'CASH';
                 $header->total_amount = 0;
                 $header->discount_amount = 0;
