@@ -4,21 +4,30 @@ namespace App\Models\Transaction;
 
 use App\Models\Master\Customer;
 use App\Models\Master\Karyawan;
+use App\Models\Master\Users;
 use Illuminate\Database\Eloquent\Model;
 
 class SalesOrderHeader extends Model
 {
     protected $table = 'sales_order_headers';
 
-    public function customers(){
+    public function customers()
+    {
         return $this->hasOne(Customer::class, 'id', 'customer_id');
     }
 
-    public function items(){
+    public function items()
+    {
         return $this->hasMany(SalesOrderDetail::class, 'sales_order_id', 'id')->whereNull('deleted');
     }
 
-    public function salesman(){
-        return $this->hasOne(Karyawan::class, 'id', 'salesman');
+    public function salesman()
+    {
+        return $this->hasOne(Users::class, 'id', 'salesman');
+    }
+
+    public function salesmans()
+    {
+        return $this->hasOne(Users::class, 'id', 'salesman');
     }
 }

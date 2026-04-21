@@ -98,8 +98,10 @@
         <thead>
             <tr>
                 <th>No</th>
+                <th>Salesman</th>
                 <th>No. Invoice</th>
                 <th>Pelanggan</th>
+                <th>Metode Bayar</th>
                 <th>Tanggal Invoice</th>
                 <th>Jumlah Belum Dibayar</th>
                 <th>Jumlah Dibayar</th>
@@ -112,10 +114,17 @@
             @if (!empty($data['data_payment']))
                 @foreach ($data['data_payment'] as $item_payment)
                         @foreach ($item_payment->items as $i => $item)
+                            @php
+                                $salesman = $item->invoice->do?->so?->salesmans?->name
+                                    ?? $item->invoice->so?->salesmans?->name
+                                    ?? '-';
+                            @endphp
                             <tr>
-                            <td>{{ $i + 1 }}</td>                            
+                            <td>{{ $i + 1 }}</td>        
+                            <td>{{ $salesman }}</td>                    
                             <td>{{ $item->invoice->invoice_number }}</td>
                             <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
+                            <td>{{ $item_payment->payment_method }}</td>
                             <td>{{ $item->invoice->invoice_date }}</td>
                             <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
                             <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
@@ -129,7 +138,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>

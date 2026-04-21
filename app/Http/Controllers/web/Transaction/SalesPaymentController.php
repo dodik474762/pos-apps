@@ -231,7 +231,13 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data['data_payment'] = SalesPaymentHeader::with(['customers', 'items.invoice'])
+        $data['data_payment'] = SalesPaymentHeader::with([
+            'customers',
+            'items.invoice',
+            'items.invoice.do',
+            'items.invoice.do.so.salesmans',
+            'items.invoice.so.salesmans'
+        ])
             ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
             ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
             ->where('payment_date', $data['date'])->get();
