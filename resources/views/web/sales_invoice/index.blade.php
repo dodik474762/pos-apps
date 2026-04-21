@@ -113,7 +113,9 @@
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
                                                     <th>Dibuat Oleh</th>
-                                                    <th>Total</th>
+                                                    <th>Total Tagihan</th>
+                                                    <th>Total Pembayaran</th>
+                                                    <th>Total Outstanding</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
                                                     <th>Status Cetak</th>
@@ -149,7 +151,9 @@
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
                                                     <th>Dibuat Oleh</th>
-                                                    <th>Total</th>
+                                                    <th>Total Tagihan</th>
+                                                    <th>Total Pembayaran</th>
+                                                    <th>Total Outstanding</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
                                                     <th>Status Cetak</th>

@@ -36,7 +36,8 @@ class SalesInvoiceController extends Controller
                 'cc.nama_customer',
                 'do.do_number',
                 'do.do_date',
-                'w.name as warehouse_name'
+                'w.name as warehouse_name',
+                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
@@ -93,7 +94,8 @@ class SalesInvoiceController extends Controller
                 'cc.nama_customer',
                 'so.so_number',
                 'so.so_date',
-                'w.name as warehouse_name'
+                'w.name as warehouse_name',
+                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
