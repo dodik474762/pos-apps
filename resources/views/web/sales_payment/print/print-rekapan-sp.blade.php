@@ -110,6 +110,7 @@
         <tbody>
             @php
                 $total = 0;
+                $no = 1;
             @endphp
             @if (!empty($data['data_payment']))
                 @foreach ($data['data_payment'] as $item_payment)
@@ -120,7 +121,7 @@
                                     ?? '-';
                             @endphp
                             <tr>
-                            <td>{{ $i + 1 }}</td>        
+                            <td>{{ $no++ }}</td>        
                             <td>{{ $salesman }}</td>                    
                             <td>{{ $item->invoice->invoice_number }}</td>
                             <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
