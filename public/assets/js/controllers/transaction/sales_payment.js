@@ -995,6 +995,13 @@ let SalesPayment = {
             });
         }
     },
+
+    changePaymentMethod:(elm)=>{
+        const paymentMethod = $(elm).val();
+        const url = $("input#url").val();
+
+        window.location.href = url + "?payment_method=" + paymentMethod;
+    }
 };
 
 $(function () {

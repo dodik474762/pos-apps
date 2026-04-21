@@ -65,10 +65,13 @@ class SalesPaymentController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListKasBank(){
+    public function getListKasBank($payment_method = 'CASH')
+    {
         $datadb = DB::table('coa')->where('is_active', 1)
-        ->where('parent_code', '1100')
-        ->whereNull('deleted')->get();
+            ->where('parent_code', '1100')
+            ->whereNull('deleted')
+            ->where('payment_method', $payment_method)
+            ->get();
         return $datadb;
     }
 
@@ -77,7 +80,7 @@ class SalesPaymentController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -87,10 +90,11 @@ class SalesPaymentController extends Controller
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $data['general_ledgers'] = [];
-        $data['cashBankAccounts'] = $this->getListKasBank();
+        $payment_method = $data['payment_method'] ?? 'CASH';
+        $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -98,17 +102,18 @@ class SalesPaymentController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListCustomer(){
+    public function getListCustomer()
+    {
         $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID'])
-        ->select([
-            'c.id as id',
-            'c.nama_customer'
-        ])
-        ->distinct()
-        ->join('customer as c', 'c.id', 'sales_invoice_header.customer_id')
-        ->whereNull('sales_invoice_header.deleted')
-        ->get()
-        ->toArray();
+            ->select([
+                'c.id as id',
+                'c.nama_customer'
+            ])
+            ->distinct()
+            ->join('customer as c', 'c.id', 'sales_invoice_header.customer_id')
+            ->whereNull('sales_invoice_header.deleted')
+            ->get()
+            ->toArray();
 
         return $datadb;
     }
@@ -118,7 +123,7 @@ class SalesPaymentController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -128,11 +133,12 @@ class SalesPaymentController extends Controller
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $data['details'] = [];
         $data['general_ledgers'] = [];
-        $data['cashBankAccounts'] = $this->getListKasBank();
+        $payment_method = $data['payment_method'] ?? 'CASH';
+        $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
         $data['data_customer'] = $this->getListCustomer();
         $view = view('web.sales_payment.formaddbulk', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -171,11 +177,11 @@ class SalesPaymentController extends Controller
             ->get();
 
         $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -183,7 +189,8 @@ class SalesPaymentController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -198,7 +205,7 @@ class SalesPaymentController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
@@ -217,6 +224,6 @@ class SalesPaymentController extends Controller
         $pdf = Pdf::loadView('web.sales_payment.print.po-print', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SP-'.$data->payment_code.'.pdf');
+        return $pdf->stream('SP-' . $data->payment_code . '.pdf');
     }
 }

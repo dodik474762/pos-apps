@@ -5,7 +5,7 @@
 
 <input type="hidden" id="id" value="{{ $data->id ?? '' }}">
 <input type="hidden" id="url"
-       value="{{ isset($data) ? route('sales-payment-edit') : route('sales-payment-add') }}">
+       value="{{ route('sales-payment-add') }}">
 
 <!-- Start Page Title -->
 <div class="row">
@@ -52,10 +52,11 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Payment Method</label>
-                                <select id="payment_method" class="form-control select2" required>
+                                <select id="payment_method" class="form-control select2" required
+                                    onchange="SalesPayment.changePaymentMethod(this)">
                                     <option value=""></option>
-                                    @foreach (['CASH','BANK','GIRO','TRANSFER','RETURN','OFFSET'] as $method)
-                                        <option value="{{ $method }}" {{ isset($data->payment_method) && $data->payment_method == $method ? 'selected' : '' }}>{{ $method }}</option>
+                                    @foreach (['CASH','GIRO','TRANSFER'] as $method)
+                                        <option value="{{ $method }}" {{ isset($payment_method) && $payment_method == $method ? 'selected' : '' }}>{{ $method }}</option>
                                     @endforeach
                                 </select>
                             </div>
