@@ -91,7 +91,8 @@ class PackingListController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getKendaraan(){
+    public function getKendaraan()
+    {
         $datadb = DB::table('vehicle')->whereNull('deleted')->get();
         return $datadb;
     }
@@ -258,7 +259,16 @@ class PackingListController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
-            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'sih.invoice_number', 'sih.total_amount'])
+            ->select([
+                'packing_list_do.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'doh.do_number',
+                'doh.do_date',
+                'sih.invoice_number',
+                'sih.total_amount',
+                'sih.amount_paid'
+            ])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
             ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
@@ -293,15 +303,15 @@ class PackingListController extends Controller
         $grouped = collect($packingListDetail)->groupBy('product_id')->toArray();
         $groupedItem = [];
         foreach ($grouped as $key => $value) {
-            $items = $value;            
+            $items = $value;
             $totalInSmallQty = 0;
             $remark = '';
             $groupByItemUom = collect($items)->groupBy('delivery_detail.uom');
             $uomIds = $groupByItemUom->keys()->toArray();
             $units = DB::table('unit')->whereIn('id', $uomIds)->get();
-            
+
             foreach ($items as $v) {
-                $remark .= $v['remark'].' / ';
+                $remark .= $v['remark'] . ' / ';
                 $delivery_detail = $v['delivery_detail'];
                 $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed']);
                 $qtyProductInSmall = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $v['qty_packed'] : 0;
@@ -310,7 +320,7 @@ class PackingListController extends Controller
 
             $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
             $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
-            
+
             $qtyOriginal = $largestUnit['qty_in_largest_unit'];
             $qtyLarges = ceil($qtyOriginal);
 
@@ -323,23 +333,23 @@ class PackingListController extends Controller
                 $qty = collect($items)->sum('qty_packed');
                 $unit_name = collect($units)->where('id', $key_uom)->first();
                 $groupedUom[] = [
-                    'unit'=> $key_uom,
-                    'units'=> $unit_name,
-                    'qty'=> $qty,
+                    'unit' => $key_uom,
+                    'units' => $unit_name,
+                    'qty' => $qty,
                 ];
-                $assemblysItem[] = $qty.' '.$unit_name->name;
+                $assemblysItem[] = $qty . ' ' . $unit_name->name;
             }
 
 
             $groupedItem[] = [
-                'product_id'=> $key,
-                'product_code'=> $items[0]['product']['code'],
-                'product_name'=> $items[0]['product']['name'],
-                'remarks'=> $remark,
-                'conversion'=> $largestUnit,
+                'product_id' => $key,
+                'product_code' => $items[0]['product']['code'],
+                'product_name' => $items[0]['product']['name'],
+                'remarks' => $remark,
+                'conversion' => $largestUnit,
                 'assembly' => $isAssembly,
-                'groupedUom'=> $groupedUom,
-                'assembly_name'=> implode('/', $assemblysItem)
+                'groupedUom' => $groupedUom,
+                'assembly_name' => implode('/', $assemblysItem)
             ];
         }
         // $productLargest = [];
@@ -377,11 +387,16 @@ class PackingListController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $details = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])
-            ->select(['packing_list_sales_return.*',
-            'c.code as customer_code', 'c.nama_customer', 'sr.return_number as do_number', 'sr.return_date as do_date',
-            'c.id as customer_id',
-            'sih.invoice_number',
-                'sih.total_amount',])
+            ->select([
+                'packing_list_sales_return.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'sr.return_number as do_number',
+                'sr.return_date as do_date',
+                'c.id as customer_id',
+                'sih.invoice_number',
+                'sih.total_amount',
+            ])
             ->with(['detail', 'detail.returnDetail', 'detail.returnDetail.invoice.so_detail.units', 'detail.product'])
             ->leftJoin('sales_return as sr', 'sr.id', 'packing_list_sales_return.sales_return_id')
             ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')

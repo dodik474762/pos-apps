@@ -120,8 +120,10 @@
                 <th>Tanggal DO</th>
                 <th>No. Faktur</th>
                 <th>Total Faktur</th>
+                <th>Outstanding Faktur</th>
                 <th>Kode Customer</th>
                 <th>Nama Customer</th>
+                <th>Remark</th>
             </tr>
         </thead>
 
@@ -134,15 +136,17 @@
                     <td>{{ $item->do_date }}</td>
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
+                    <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                     <td>{{ $item->customer_code }}</td>
                     <td>{{ $item->nama_customer }}</td>
+                    <td>&nbsp;</td>
                 </tr>
             @endforeach
         </tbody>
 
         <tfoot>
             <tr>
-                <td colspan="6" class="text-right"><strong>Total DO</strong></td>
+                <td colspan="8" class="text-right"><strong>Total DO</strong></td>
                 <td class="text-right">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
