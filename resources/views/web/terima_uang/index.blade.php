@@ -52,13 +52,13 @@
                                         </select>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('terima-uang-print-all') }}" onclick="PLTagihan.search(this);"> <i
+                                        <button type="button" class="btn btn-primary w-100" url="{{ route('terima-uang-print-all') }}" onclick="TerimaUang.search(this);"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Print All Invoice
                                         </button>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="button" class="btn btn-danger w-100" url="{{ route('terima-uang-print') }}" onclick="PLTagihan.cetak(this);"> <i
+                                        <button type="button" class="btn btn-danger w-100" url="{{ route('terima-uang-print') }}" onclick="TerimaUang.cetak(this);"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Print
                                         </button>
