@@ -59,7 +59,7 @@
         .table-detail th,
         .table-detail td {
             font-size: 10px;
-            padding: 5px;
+            padding: 3px;
         }
 
         .table-detail th {
@@ -107,7 +107,8 @@
     <table class="table-detail">
         <thead>
             <tr>
-                 <th>No</th>
+                <th>No</th>
+                <th>Tanggal Rute</th>
                 <th>Invoice Number</th>
                 <th>Tanggal Invoice</th>
                 <th>DO Number</th>
@@ -117,6 +118,7 @@
                 <th>Tanggal Jatuh Tempo</th>
                 <th>Status</th>
                 <th>Outstanding</th>
+                <th>Remark</th>
             </tr>
         </thead>
         <tbody>
@@ -127,18 +129,22 @@
             @foreach ($invoices as $item)
             @php
                 $out = $item->total_amount - $item->amount_paid;
+                $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
+                $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
             @endphp
                 <tr>
                     <td>{{ $no++ }}</td>
+                    <td>{{ $tanggal_rute }}</td>
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->invoice_date }}</td>
-                    <td>{{ $item->do_number }}</td>
-                    <td>{{ $item->do_date }}</td>
+                    <td>{{ $do_date }}</td>
+                    <td>{{ $do_number }}</td>
                     <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                     <td>{{ $item->warehouse_name }}</td>
                     <td>{{ $item->due_date }}</td>
                     <td>{{ $item->status }}</td>
                     <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
+                    <td>&nbsp;</td>
                 </tr>
                 @php
                     $outstandin += $out;
@@ -147,7 +153,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="9" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>

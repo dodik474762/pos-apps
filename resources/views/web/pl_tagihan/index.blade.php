@@ -86,6 +86,7 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>Tanggal Rute</th>
                                                     <th>Invoice Number</th>
                                                     <th>Tanggal Invoice</th>
                                                     <th>DO Number</th>
@@ -95,6 +96,7 @@
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
+                                                    <th>Remark</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
@@ -102,17 +104,23 @@
                                                     $no = 1;
                                                 @endphp
                                                 @foreach ($invoices as $item)
+                                                    @php
+                                                        $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
+                                                        $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                                                    @endphp
                                                     <tr>
                                                         <td>{{ $no++ }}</td>
+                                                        <td>{{ $tanggal }}</td>
                                                         <td>{{ $item->invoice_number }}</td>
                                                         <td>{{ $item->invoice_date }}</td>
-                                                        <td>{{ $item->do_number }}</td>
-                                                        <td>{{ $item->do_date }}</td>
+                                                        <td>{{ $do_date }}</td>
+                                                        <td>{{ $do_number }}</td>
                                                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                                                         <td>{{ $item->warehouse_name }}</td>
                                                         <td>{{ $item->due_date }}</td>
                                                         <td>{{ $item->status }}</td>
-                                                        <td>{{ $item->total_amount - $item->amount_paid }}</td>
+                                                        <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
+                                                        <td>&nbsp;</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>

@@ -99,11 +99,18 @@ class PLTagihanController extends Controller
                 'cc.code as customer_code',
                 'do.do_number',
                 'do.do_date',
+                'dohs.do_number as dohs_number',
+                'dohs.do_date as dohs_date',
                 'w.name as warehouse_name',
+                'soh.so_number',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('sales_order_headers as soh', function ($q) {
+                return $q->on('soh.id', 'do.id')->orOn('soh.id', 'm.sales_order');
+            })
+            ->leftJoin('delivery_order_header as dohs', 'dohs.so_id', 'soh.id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
@@ -131,7 +138,8 @@ class PLTagihanController extends Controller
         // echo '<pre>';
         // print_r($invoices);die;
 
-        $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name'))
+        $tanggal_rute = $data['tanggal'];
+        $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-' . $salesman_name . '.pdf');
