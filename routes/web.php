@@ -44,6 +44,7 @@ use App\Http\Controllers\api\Transaction\SessionsController as TransactionSessio
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
+use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\CityController;
@@ -91,6 +92,7 @@ use App\Http\Controllers\web\Transaction\SessionsController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use App\Http\Controllers\web\report\ReportStockController;
+use App\Http\Controllers\web\Transaction\TerimaUangController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -290,6 +292,10 @@ Route::get('transaksi/packing_list_pr/cetak', [PackingListController::class, 'ce
 
 Route::get('transaksi/pl_tagihan', [PLTagihanController::class, 'index'])->name('pl-tagihan-print-all');
 Route::get('transaksi/pl_tagihan/cetak', [PLTagihanController::class, 'cetak'])->name('pl-tagihan-print');
+
+Route::get('transaksi/terima_uang', [TerimaUangController::class, 'index'])->name('terima-uang-print-all');
+Route::get('transaksi/terima_uang/cetak', [TerimaUangController::class, 'cetak'])->name('terima-uang-print');
+
 
 Route::get('transaksi/presensi', [TransactionPresensiController::class, 'index']);
 Route::get('transaksi/presensi/add', [TransactionPresensiController::class, 'add'])->name('presensi-add');
@@ -632,6 +638,8 @@ Route::post('api/transaksi/packing_list_pr/cancelPl', [TransactionPackingListCon
 Route::post('api/transaksi/packing_list_pr/confirmCancel', [TransactionPackingListController::class, 'confirmCancel']);
 Route::post('api_mobile/transaksi/packing_list_pr/getData', [TransactionPackingListController::class, 'getDataPackingListPickup']);
 Route::post('api_mobile/transaksi/packing_list_pr/confirmDeliver', [TransactionPackingListController::class, 'confirmDeliverPickup']);
+
+Route::post('api/transaksi/terima_uang/submit', [TransactionTerimaUangController::class, 'submit']);
 
 Route::post('api_mobile/transaksi/presensi/submitPresensi', [PresensiController::class, 'submitPresensi']);
 Route::post('api_mobile/transaksi/presensi/getDataPresensi', [PresensiController::class, 'getDataPresensi']);
