@@ -127,7 +127,7 @@ class TerimaUangController extends Controller
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
-            ->where('top.code', 'CASH')
+            ->where('top.code', '!=', 'CASH')
             ->whereIn('cc.id', $customers)
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
