@@ -378,13 +378,24 @@ class SalesPaymentController extends Controller
 
         $result['data'] = $data;
         $result['user_id'] = $userId;
-        $data['account_id'] = 3; //kas kecil
+        $data['account_id'] = 3; //kas kecil        
         // return response()->json($result);
 
         DB::beginTransaction();
         try {
             $periode = Carbon::parse($data['payment_date'])->setTimezone('Asia/Jakarta');
             $payment_date = $periode->format('Y-m-d');
+            $payment_menthod = isset($data['payment_method']) ? $data['payment_method'] : 'CASH';
+            if ($payment_menthod == 'CASH') {
+                $data['account_id'] = 3; //kas kecil        
+            }
+            if ($payment_menthod == 'TRASNFER') {
+                $data['account_id'] = 4; //kas kecil        
+            }
+            if ($payment_menthod == 'GIRO') {
+                $data['account_id'] = 20; //kas kecil        
+            }
+
 
             list($customer_id, $customer_code, $customer_name, $outstanding_amount, $invoice_number) = explode('/', $data['customer_id']);
 
@@ -393,6 +404,7 @@ class SalesPaymentController extends Controller
             }
 
             if ($data['alasan_tidak_bayar'] != '') {
+
                 $header = new SalesPaymentHeader();
 
                 $header->payment_code = generateNoSP(); // misal helper
@@ -401,7 +413,7 @@ class SalesPaymentController extends Controller
 
                 $header->payment_date = $payment_date;
                 $header->customer_id = trim($customer_id);
-                $header->payment_method = 'CASH';
+                $header->payment_method = $payment_menthod;
                 $header->total_amount = 0;
                 $header->discount_amount = 0;
                 $header->net_amount = 0;
@@ -448,7 +460,7 @@ class SalesPaymentController extends Controller
 
             $header->payment_date = $payment_date;
             $header->customer_id = $customer_id;
-            $header->payment_method = 'CASH';
+            $header->payment_method = $payment_menthod;
             $header->total_amount = 0;
             $header->discount_amount = 0;
             $header->net_amount = 0;
