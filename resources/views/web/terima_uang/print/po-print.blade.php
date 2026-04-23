@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>PL Tagihan - {{ $salesman->nik }}</title>
+    <title>Terima Uang - {{ $salesman->nik }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -80,7 +80,7 @@
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">PACKING LIST TAGIHAN</h4>
+                <h4 style="margin:0; padding:0;">PENERIMAAN UANG TAGIHAN</h4>
                 <br>
                 {{-- QR Code (otomatis di-generate) --}}
                 <div style="margin-top:5px;">
@@ -103,7 +103,7 @@
         </tr>
     </table>
 
-    <h4>Detail Tagihan</h4>
+    <h4>Detail Penerimaan Uang</h4>
     <table class="table-detail">
         <thead>
             <tr>
@@ -118,19 +118,20 @@
                 <th>Tanggal Jatuh Tempo</th>
                 <th>Status</th>
                 <th>Outstanding</th>
-                <th>Remark</th>
+                <th>Nilai Terima</th>
             </tr>
         </thead>
         <tbody>
              @php
                 $no = 1;
-                $outstandin = 0;
+                $total_terima = 0;
             @endphp
             @foreach ($invoices as $item)
             @php
                 $out = $item->total_amount - $item->amount_paid;
                 $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
                 $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                $total_bayar = $item->total_terbayar_rph == '' ? $item->total_terbayar : $item->total_terbayar_rph;
             @endphp
                 <tr>
                     <td>{{ $no++ }}</td>
@@ -144,17 +145,17 @@
                     <td>{{ $item->due_date }}</td>
                     <td>{{ $item->status }}</td>
                     <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
-                    <td>&nbsp;</td>
+                    <td class="text-right">{{ number_format($total_bayar, 0, ',', '.') }}</td>
                 </tr>
                 @php
-                    $outstandin += $out;
+                    $total_terima += $total_bayar;
                 @endphp
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong></td>
+                <td colspan="11" class="text-right"><strong>Total Terima</strong></td>
+                <td class="text-right"><strong>{{ number_format($total_terima, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>

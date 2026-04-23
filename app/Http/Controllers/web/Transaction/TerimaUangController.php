@@ -58,7 +58,7 @@ class TerimaUangController extends Controller
         if (!empty($usersdb)) {
             $akses = $usersdb->user_group;
         }
-        $routeplan = $akses == 6 ? $this->getRoutePlanSales($data) : $this->getRoutePlanDelivery($data);
+        $routeplan = $akses == 6 || $akses == 4 ? $this->getRoutePlanSales($data) : $this->getRoutePlanDelivery($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
         $invoices = $this->getAllInvoiceCetak($customers, $akses == 5 ? 'delivery' : 'salesman');
         $data['invoices'] = $invoices;
@@ -202,6 +202,7 @@ class TerimaUangController extends Controller
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
             ->whereIn('cc.id', $customers)
+            ->whereRaw('(m.total_amount - COALESCE(spd.allocated_amount, 0) - COALESCE(rpd.amount_paid, 0)) > 0')
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
         if ($type == 'salesman') {
@@ -220,9 +221,14 @@ class TerimaUangController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $routeplan = $this->getRoutePlanSales($data);
+        $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
+        $akses = 6;
+        if (!empty($usersdb)) {
+            $akses = $usersdb->user_group;
+        }
+        $routeplan = $akses == 6 || $akses == 4 ? $this->getRoutePlanSales($data) : $this->getRoutePlanDelivery($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        $invoices = $this->getAllInvoiceCetak($customers);
+        $invoices = $this->getAllInvoiceCetak($customers, $akses == 5 ? 'delivery' : 'salesman');
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
@@ -231,7 +237,7 @@ class TerimaUangController extends Controller
         // print_r($invoices);die;
 
         $tanggal_rute = $data['tanggal'];
-        $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
+        $pdf = Pdf::loadView('web.terima_uang.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-' . $salesman_name . '.pdf');
