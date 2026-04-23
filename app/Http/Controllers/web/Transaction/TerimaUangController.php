@@ -52,11 +52,17 @@ class TerimaUangController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_user'] = session('akses');
-        $routeplan = $this->getRoutePlanSales($data);
+
+        $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
+        $akses = 6;
+        if (!empty($usersdb)) {
+            $akses = $usersdb->user_group;
+        }
+        $routeplan = $akses == 6 ? $this->getRoutePlanSales($data) : $this->getRoutePlanDelivery($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        $invoices = $this->getAllInvoiceCetak($customers);
+        $invoices = $this->getAllInvoiceCetak($customers, $akses == 5 ? 'delivery' : 'salesman');
         $data['invoices'] = $invoices;
-        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
+        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
         $view = view('web.terima_uang.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -65,6 +71,71 @@ class TerimaUangController extends Controller
         $put['header_data'] = $this->getHeaderCss();
 
         return view('web.template.main', $put);
+    }
+
+    public function getRoutePlanDelivery($data)
+    {
+        $month = date('m');
+        $year = date('Y');
+        if (isset($data['tanggal'])) {
+            list($year, $month, $day) = explode('-', $data['tanggal']);
+        } else {
+            $data['tanggal'] = date('Y-m-d');
+        }
+        $salesman = isset($data['salesman']) ? $data['salesman'] : 0;
+
+        $today = Carbon::parse($data['tanggal']);
+
+        if ($salesman == 0) {
+            return [];
+        }
+
+        $dailyVisit = $this->getPackingList($today, $salesman);
+
+        return $dailyVisit;
+    }
+
+    public function getPackingList($date, $users = 0)
+    {
+        $packing_date = $date->format('Y-m-d');
+
+        $datadb = DB::table('packing_list as m')
+            ->select([
+                'pld.id',
+                'm.packing_list_no',
+                'u.name as created_by_name',
+                'doh.do_number',
+                'doh.do_date',
+                'c.code as customer_code',
+                'c.id as customer_id',
+                'c.nama_customer',
+                'doh.total_item',
+                'pld.confirm_date',
+                'c.address',
+                'c.latitude',
+                'c.longitude',
+                'top.code as top_code',
+                'top.nilai as top_nilai'
+            ])
+            ->join('packing_list_do as pld', 'pld.packing_list_id', 'm.id')
+            ->join('delivery_order_header as doh', 'doh.id', 'pld.delivery_order_id')
+            ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->whereNull('m.deleted')
+            ->where(function ($q) {
+                return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
+            })
+            ->where(function ($q) {
+                return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
+            })
+            ->where('pld.confirm_date', $packing_date)
+            ->orderBy('c.nama_customer')
+            ->orderBy('doh.id', 'asc');
+        $datadb->where('m.driver', $users);
+        $datadb = $datadb->get()->toArray();
+
+        return $datadb;
     }
 
     public function getRoutePlanSales($data)
@@ -86,10 +157,13 @@ class TerimaUangController extends Controller
         return $dailyVisit;
     }
 
-    public function getAllInvoiceCetak($customers = [], $date = null)
+    public function getAllInvoiceCetak($customers = [], $type = 'salesman', $date = null)
     {
         $date = $date ?? date('Y-m-d');
-        $datadb = empty($customers) ? [] : DB::table('sales_invoice_header as m')
+        if (empty($customers)) {
+            return [];
+        }
+        $datadb = DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -127,12 +201,17 @@ class TerimaUangController extends Controller
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
-            ->where('top.code', '!=', 'CASH')
             ->whereIn('cc.id', $customers)
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
+        if ($type == 'salesman') {
+            $datadb->where('top.code', '!=', 'CASH');
+        }
+        if ($type == 'delivery') {
+            $datadb->where('top.code', '=', 'CASH');
+        }
 
-        $datadb = empty($customers) ?  [] : $datadb->get();
+        $datadb = $datadb->get();
 
         return $datadb;
     }
