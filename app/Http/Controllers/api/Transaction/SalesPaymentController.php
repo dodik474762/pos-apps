@@ -387,13 +387,13 @@ class SalesPaymentController extends Controller
             $payment_date = $periode->format('Y-m-d');
             $payment_menthod = isset($data['payment_method']) ? $data['payment_method'] : 'CASH';
             if ($payment_menthod == 'CASH') {
-                $data['account_id'] = 3; //kas kecil        
+                $data['account_id'] = 3;
             }
-            if ($payment_menthod == 'TRASNFER') {
-                $data['account_id'] = 4; //kas kecil        
+            if ($payment_menthod == 'TRANSFER') {
+                $data['account_id'] = 4;
             }
             if ($payment_menthod == 'GIRO') {
-                $data['account_id'] = 20; //kas kecil        
+                $data['account_id'] = 20;
             }
 
 
