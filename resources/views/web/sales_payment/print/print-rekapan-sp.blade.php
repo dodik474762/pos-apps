@@ -101,8 +101,11 @@
                 <th>Salesman</th>
                 <th>No. Invoice</th>
                 <th>Pelanggan</th>
+                <th>Kecamatan</th>
                 <th>Metode Bayar</th>
                 <th>Tanggal Invoice</th>
+                <th>Tanggal Jatuh Tempo</th>
+                <th>Status Invoice</th>
                 <th>Jumlah Belum Dibayar</th>
                 <th>Jumlah Dibayar</th>
             </tr>
@@ -125,8 +128,11 @@
                             <td>{{ $salesman }}</td>                    
                             <td>{{ $item->invoice->invoice_number }}</td>
                             <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
+                            <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
                             <td>{{ $item_payment->payment_method }}</td>
                             <td>{{ $item->invoice->invoice_date }}</td>
+                            <td>{{ $item->invoice->due_date }}</td>
+                            <td>{{ $item->invoice->status }}</td>
                             <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
                             <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
                         </tr>
@@ -139,7 +145,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="7" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="10" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>

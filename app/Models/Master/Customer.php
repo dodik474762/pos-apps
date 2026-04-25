@@ -9,7 +9,13 @@ class Customer extends Model
     //
     protected $table = 'customer';
 
-    public function top(){
+    public function top()
+    {
         return $this->hasOne(TermOfPayment::class, 'id', 'payment_terms');
+    }
+
+    public function kecamatans()
+    {
+        return $this->hasOne(Region::class, 'id', 'kecamatan');
     }
 }

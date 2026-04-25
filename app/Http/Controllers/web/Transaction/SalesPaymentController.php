@@ -233,6 +233,7 @@ class SalesPaymentController extends Controller
         $company = CompanyModel::where('id', session('id_company'))->first();
         $data['data_payment'] = SalesPaymentHeader::with([
             'customers',
+            'customers.kecamatans',
             'items.invoice',
             'items.invoice.do',
             'items.invoice.do.so.salesmans',
@@ -243,6 +244,9 @@ class SalesPaymentController extends Controller
             ->where('payment_date', $data['date'])->get();
         $qr = '';
 
+        // echo '<pre>';
+        // print_r($data['data_payment']);
+        // die;
 
         $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
