@@ -1006,8 +1006,9 @@ let SalesPayment = {
     printRekapPembayaran: () => {
         const date = $("#filter-date").val();
         const url = $("input#url-print").val();
+        const salesman = $('#salesman').val();
 
-        window.location.href = url + "?date=" + date;
+        window.location.href = url + "?date=" + date+"&salesman="+salesman;
     }
 };
 

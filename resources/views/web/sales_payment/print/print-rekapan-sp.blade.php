@@ -122,20 +122,35 @@
                                 $salesman = $item->invoice->do?->so?->salesmans?->name
                                     ?? $item->invoice->so?->salesmans?->name
                                     ?? '-';
+                                $show = true;
                             @endphp
-                            <tr>
-                            <td>{{ $no++ }}</td>        
-                            <td>{{ $salesman }}</td>                    
-                            <td>{{ $item->invoice->invoice_number }}</td>
-                            <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
-                            <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
-                            <td>{{ $item_payment->payment_method }}</td>
-                            <td>{{ $item->invoice->invoice_date }}</td>
-                            <td>{{ $item->invoice->due_date }}</td>
-                            <td>{{ $item->invoice->status }}</td>
-                            <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
-                            <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
-                        </tr>
+
+                            @if ($salesmans != '')
+                                @if ($salesman == $salesmans->name)
+                                    @php
+                                        $show = true
+                                    @endphp
+                                @else
+                                    @php
+                                        $show = false
+                                    @endphp
+                                @endif
+                            @endif
+                            @if ($show)
+                                <tr>
+                                    <td>{{ $no++ }}</td>        
+                                    <td>{{ $salesman }}</td>                    
+                                    <td>{{ $item->invoice->invoice_number }}</td>
+                                    <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
+                                    <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
+                                    <td>{{ $item_payment->payment_method }}</td>
+                                    <td>{{ $item->invoice->invoice_date }}</td>
+                                    <td>{{ $item->invoice->due_date }}</td>
+                                    <td>{{ $item->invoice->status }}</td>
+                                    <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
+                                    <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
+                                </tr>
+                            @endif                            
                         @php
                             $total += $item->allocated_amount ?? 0;
                         @endphp

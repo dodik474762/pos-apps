@@ -60,6 +60,14 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
+                                        <select name="salesman" id="salesman" class="form-control select2">
+                                            <option value="">ALL</option>
+                                            @foreach ($salesmans as $item)
+                                                <option {{ isset($salesman) ? $salesman == $item['id'] ? 'selected' : '' : '' }} value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                </div>
+                                <div class="col-md-3">
                                     <div>
                                         <button type="button" class="btn btn-danger w-100" onclick="SalesPayment.printRekapPembayaran();"> <i
                                                 class="ri-printer-line me-1 align-bottom"></i>

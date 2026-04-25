@@ -9,6 +9,7 @@ use App\Models\Master\Tax;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +56,7 @@ class SalesPaymentController extends Controller
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
         // print_r($data);die;
+        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
         $view = view('web.sales_payment.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -247,8 +249,12 @@ class SalesPaymentController extends Controller
         // echo '<pre>';
         // print_r($data['data_payment']);
         // die;
+        $salesmans = isset($data['salesman']) ? $data['salesman'] : '';
+        if ($salesmans != '') {
+            $salesmans = User::find($salesmans);
+        }
 
-        $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr'))
+        $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr', 'salesmans'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('REKAPAN-SP-' . $data['date'] . '.pdf');
