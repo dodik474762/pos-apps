@@ -169,18 +169,30 @@
     <br><br>
     <table class="no-border" style="width:100%;">
         <tr>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Disetorkan Oleh</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
+             <td class="text-center">
                 <br><br><br>
                 <strong>Dibuat Oleh</strong>
                 <br><br><br>
                 (__________________)
             </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Disetorkan Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>  
+            <td class="text-center">
+                <br><br><br>
+                <strong>Diterima Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>   
+            <td class="text-center">
+                <br><br><br>
+                <strong>Disetujui Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>        
         </tr>
     </table>
 </body>
