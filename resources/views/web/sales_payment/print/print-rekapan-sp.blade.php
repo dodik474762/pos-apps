@@ -156,7 +156,7 @@
         <tr>
             <td class="text-center">
                 <br><br><br>
-                <strong>Disetujui Oleh</strong>
+                <strong>Disetorkan Oleh</strong>
                 <br><br><br>
                 (__________________)
             </td>
