@@ -110,7 +110,7 @@
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
-                                                    <th>Terima Uang</th>
+                                                    <th>Koresi Terima Uang</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
