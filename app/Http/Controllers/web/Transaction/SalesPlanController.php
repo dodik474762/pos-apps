@@ -67,7 +67,8 @@ class SalesPlanController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListVisitType(){
+    public function getListVisitType()
+    {
         $datadb = Dictionary::where('context', 'VISIT_TYPE')->get()->toArray();
         return $datadb;
     }
@@ -76,7 +77,7 @@ class SalesPlanController extends Controller
     {
         $data['data'] = []; // Data header kosong untuk form
         $data['plan_code'] = generatePlanCode(); // Fungsi generate plan_code, bisa dibuat di model/helper
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
 
         // Dropdown
@@ -88,7 +89,7 @@ class SalesPlanController extends Controller
         $view = view('web.sales_plan.formaddnew', $data);
 
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -111,11 +112,11 @@ class SalesPlanController extends Controller
             ->get();
 
         $data['visit_types'] = $this->getListVisitType();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_plan.formaddnew', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -140,7 +141,7 @@ class SalesPlanController extends Controller
         $pdf = Pdf::loadView('web.sales_plan.print.po-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SALESPLAN-'.$data->code.'.pdf');
+        return $pdf->stream('SALESPLAN-' . $data->code . '.pdf');
     }
 
     public function import(Request $request)
@@ -152,6 +153,23 @@ class SalesPlanController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['title'] = 'Form Import ' . $this->getTitle();
         $view = view('web.sales_plan.form_import', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
+    public function exportPo(Request $request)
+    {
+        $api = new TransactionSalesPlanController();
+        $data = $request->all();
+
+        $data['data'] = [];
+        $data['title_parent'] = $this->getTitleParent();
+        $data['title'] = 'Form Export PO ' . $this->getTitle();
+        $view = view('web.sales_plan.export_po', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();

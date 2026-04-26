@@ -244,6 +244,7 @@ Route::get('transaksi/sales_plan', [SalesPlanController::class, 'index']);
 Route::get('transaksi/sales_plan/add', [SalesPlanController::class, 'add']);
 Route::get('transaksi/sales_plan/ubah', [SalesPlanController::class, 'ubah']);
 Route::get('transaksi/sales_plan/import', [SalesPlanController::class, 'import']);
+Route::get('transaksi/sales_plan/export_po', [SalesPlanController::class, 'exportPo']);
 
 Route::get('transaksi/delivery_order', [DeliveryOrderController::class, 'index']);
 Route::get('transaksi/delivery_order/add', [DeliveryOrderController::class, 'add'])->name('delivery-order-add');
