@@ -252,7 +252,7 @@ let ReportStock = {
                     title: "Warehouse",
                 },
                 {
-                    data: "unit_name",
+                    data: "unit_large_name",
                     title: "Unit",
                 },
                 {
@@ -288,7 +288,7 @@ let ReportStock = {
                     },
                 },
                 {
-                    data: "stock_and_instransit",
+                    data: "stock_and_intransit",
                     title: "Total Stock + Instransit",
                     className: "text-end",
                     render: function (data, type, row) {

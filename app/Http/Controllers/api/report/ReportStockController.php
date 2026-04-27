@@ -27,48 +27,169 @@ class ReportStockController extends Controller
             ->select([
                 'm.product',
                 'm.warehouse',
-                'm.unit',
+                // 'm.unit',
                 'p.code as product_code',
                 'p.name as product_name',
                 'w.name as warehouse_name',
-                'u.name as unit_name',
+                'u_large.name as unit_large_name',       // tampilkan satuan large
+                'pu_large.nilai_konversi_terkecil as konversi_large',
 
+                // QTY PO DRAFT → qty di PO sudah satuan terkecil? 
+                // Jika PO masih pakai satuan asli, tetap perlu join pu_pod
                 DB::raw('(
-                    SELECT COALESCE(SUM(pod.qty),0)
+                SELECT COALESCE(SUM(pod.qty * pu_pod.nilai_konversi_terkecil), 0)
+                    / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                FROM purchase_order_detail pod
+                JOIN purchase_order po ON po.id = pod.purchase_order
+                JOIN product_uom pu_pod ON pu_pod.product = pod.product
+                    AND pu_pod.unit_tujuan = pod.unit
+                    AND pu_pod.deleted IS NULL
+                WHERE pod.product = m.product
+                AND po.warehouse = m.warehouse
+                AND po.status = "draft"
+                AND po.deleted IS NULL
+                AND pod.deleted IS NULL
+                AND po.po_date <= "' . $tanggal . '"
+            ) as qty_po_draft'),
+
+                // qty_in/qty_out sudah satuan terkecil → langsung bagi konversi_large
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            as total_masuk'),
+
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            as total_keluar'),
+
+                DB::raw('ROUND(SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0))
+            as stok_tersedia'),
+
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            as masuk_3bln'),
+
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            as keluar_3bln'),
+
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            as stok_3bln'),
+
+                // stock_future = qty_po_draft (duplikasi subquery karena alias tidak bisa direferensikan)
+                DB::raw('ROUND((
+    SELECT COALESCE(SUM(pod.qty * pu_pod.nilai_konversi_terkecil), 0)
+        / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+    FROM purchase_order_detail pod
+    JOIN purchase_order po ON po.id = pod.purchase_order
+    JOIN product_uom pu_pod ON pu_pod.product = pod.product
+        AND pu_pod.unit_tujuan = pod.unit
+        AND pu_pod.deleted IS NULL
+    WHERE pod.product = m.product
+    AND po.warehouse = m.warehouse
+    AND po.status = "draft"
+    AND po.deleted IS NULL
+    AND pod.deleted IS NULL
+    AND po.po_date <= "' . $tanggal . '"
+), 2) as stock_future'),
+
+                // stock_and_intransit = stok_tersedia + stock_future
+                DB::raw('ROUND(
+                (
+                    SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" 
+                        THEN m.qty_in - m.qty_out ELSE 0 END)
+                    / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                    + (
+                        SELECT COALESCE(SUM(pod.qty * pu_pod.nilai_konversi_terkecil), 0)
+                            / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                        FROM purchase_order_detail pod
+                        JOIN purchase_order po ON po.id = pod.purchase_order
+                        JOIN product_uom pu_pod ON pu_pod.product = pod.product
+                            AND pu_pod.unit_tujuan = pod.unit
+                            AND pu_pod.deleted IS NULL
+                        WHERE pod.product = m.product
+                        AND po.warehouse = m.warehouse
+                        AND po.status = "draft"
+                        AND po.deleted IS NULL
+                        AND pod.deleted IS NULL
+                        AND po.po_date <= "' . $tanggal . '"
+                    )
+                )
+            , 2) as stock_and_intransit'),
+
+                // avg_omset = stok_3bln (satuan large) / 25 hari kerja
+                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                / 25
+            as avg_omset'),
+
+                // stock_scd = stok_tersedia / avg_omset
+                DB::raw('(
+                SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+            ) / NULLIF(
+                SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                / 25
+            , 0)
+            as stock_scd'),
+
+                // stock_scd_and_intransit = stock_and_intransit / avg_omset
+                DB::raw('(
+                SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                + (
+                    SELECT COALESCE(SUM(pod.qty * pu_pod.nilai_konversi_terkecil), 0)
+                        / NULLIF(pu_large.nilai_konversi_terkecil, 0)
                     FROM purchase_order_detail pod
                     JOIN purchase_order po ON po.id = pod.purchase_order
+                    JOIN product_uom pu_pod ON pu_pod.product = pod.product
+                        AND pu_pod.unit_tujuan = pod.unit
+                        AND pu_pod.deleted IS NULL
                     WHERE pod.product = m.product
-                    AND pod.unit = m.unit
                     AND po.warehouse = m.warehouse
                     AND po.status = "draft"
                     AND po.deleted IS NULL
                     AND pod.deleted IS NULL
                     AND po.po_date <= "' . $tanggal . '"
-                ) as qty_po_draft'),
-
-                // Semua transaksi s/d tanggal dipilih
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in ELSE 0 END) as total_masuk'),
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_out ELSE 0 END) as total_keluar'),
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END) as stok_tersedia'),
-
-                // Khusus 3 bulan terakhir dari tanggal dipilih
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in ELSE 0 END) as masuk_3bln'),
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_out ELSE 0 END) as keluar_3bln'),
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END) as stok_3bln'),
+                )
+            ) / NULLIF(
+                SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+                / 25
+            , 0)
+            as stock_scd_and_intransit'),
             ])
             ->join('product as p', 'p.id', 'm.product')
             ->join('warehouse as w', 'w.id', 'm.warehouse')
             ->join('unit as u', 'u.id', 'm.unit')
+            // Join product_uom LARGE saja — tidak perlu pu untuk unit transaksi
+            ->join('product_uom as pu_large', function ($q) {
+                return $q->on('pu_large.product', 'm.product')
+                    ->where('pu_large.state', 'large')
+                    ->whereNull('pu_large.deleted');
+            })
+            ->join('unit as u_large', 'u_large.id', 'pu_large.unit_tujuan')
             ->whereDate('m.created_at', '<=', $tanggal)
-            ->groupBy('m.product', 'm.warehouse', 'm.unit', 'p.code', 'p.name', 'w.name', 'u.name')
-            // ->having('stok_tersedia', '>', 0)
+            // ->where('p.id', '657')
+            ->groupBy(
+                'm.product',
+                'm.warehouse',
+                // 'm.unit',
+                'p.code',
+                'p.name',
+                'w.name',
+                // 'u.name',
+                'pu_large.nilai_konversi_terkecil',
+                'u_large.name'
+            )
             ->orderBy('p.name')
-            ->orderBy('u.name');
+            ->orderBy('u_large.name');
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
 
-            // Filter pencarian
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
@@ -80,7 +201,6 @@ class ReportStockController extends Controller
                 });
             }
 
-            // Sorting
             if (isset($_POST['order'][0]['column'])) {
                 switch ($_POST['order'][0]['column']) {
                     case 0:
@@ -93,13 +213,13 @@ class ReportStockController extends Controller
                         $datadb->orderBy('m.unit', $_POST['order'][0]['dir']);
                         break;
                     case 3:
-                        $datadb->orderByRaw('SUM(m.qty_in) ' . $_POST['order'][0]['dir']);
+                        $datadb->orderByRaw('total_masuk ' . $_POST['order'][0]['dir']);
                         break;
                     case 4:
-                        $datadb->orderByRaw('SUM(m.qty_out) ' . $_POST['order'][0]['dir']);
+                        $datadb->orderByRaw('total_keluar ' . $_POST['order'][0]['dir']);
                         break;
                     case 5:
-                        $datadb->orderByRaw('(SUM(m.qty_in) - SUM(m.qty_out)) ' . $_POST['order'][0]['dir']);
+                        $datadb->orderByRaw('stok_tersedia ' . $_POST['order'][0]['dir']);
                         break;
                     default:
                         $datadb->orderBy('m.product', 'asc');
@@ -109,7 +229,6 @@ class ReportStockController extends Controller
 
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            // Pagination
             if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
@@ -121,18 +240,15 @@ class ReportStockController extends Controller
         $resultdb = [];
         $datadb = $datadb->get()->toArray();
 
-        foreach ($datadb as $key => $value) {
-            $value->stok_tersedia = number_format($value->stok_tersedia, 0, ',', '.');
-            $value->stock_future = $value->qty_po_draft;
-            $value->stock_and_instransit = $value->stok_tersedia + $value->stock_future;
-
-            $value->total_masuk   = number_format($value->total_masuk, 0, ',', '.');
-            $value->total_keluar  = number_format($value->total_keluar, 0, ',', '.');
-            $value->stok_3bln = number_format($value->stok_3bln, 0, ',', '.');
-            $value->hari_kerja = 25;
-            $value->avg_omset = $value->stok_3bln / $value->hari_kerja;
-            $value->stock_scd = number_format($value->stok_tersedia / $value->avg_omset, 0, ',', '.');
-            $value->stock_scd_and_intransit = number_format($value->stock_and_instransit / $value->avg_omset, 0, ',', '.');
+        foreach ($datadb as $value) {
+            $value->stok_tersedia           = number_format($value->stok_tersedia, 2, ',', '.');
+            $value->total_masuk             = number_format($value->total_masuk, 2, ',', '.');
+            $value->total_keluar            = number_format($value->total_keluar, 2, ',', '.');
+            $value->stok_3bln               = number_format($value->stok_3bln, 2, ',', '.');
+            $value->avg_omset               = number_format($value->avg_omset, 2, ',', '.');
+            $value->stock_scd               = number_format($value->stock_scd, 2, ',', '.');
+            $value->stock_scd_and_intransit = number_format($value->stock_scd_and_intransit, 2, ',', '.');
+            $value->hari_kerja              = 25;
             $resultdb[] = $value;
         }
 
