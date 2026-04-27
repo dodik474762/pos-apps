@@ -96,10 +96,12 @@
                                                     <th>Total Keluar</th>
                                                     <th>Stok Tersedia</th>
                                                     <th>Stok Akan Datang</th>
+                                                    <th>Total Stock + Instransit</th>
                                                     <th>Last 3 Months</th>
                                                     <th>Hari Kerja</th>
                                                     <th>Avg Omset Per Day</th>
-                                                    <th>SCD</th>
+                                                    <th>SCD Stock</th>
+                                                    <th>SCD Stock + Instransit</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

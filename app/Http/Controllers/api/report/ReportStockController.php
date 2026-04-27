@@ -124,13 +124,15 @@ class ReportStockController extends Controller
         foreach ($datadb as $key => $value) {
             $value->stok_tersedia = number_format($value->stok_tersedia, 0, ',', '.');
             $value->stock_future = $value->qty_po_draft;
+            $value->stock_and_instransit = $value->stok_tersedia + $value->stock_future;
 
             $value->total_masuk   = number_format($value->total_masuk, 0, ',', '.');
             $value->total_keluar  = number_format($value->total_keluar, 0, ',', '.');
             $value->stok_3bln = number_format($value->stok_3bln, 0, ',', '.');
             $value->hari_kerja = 25;
             $value->avg_omset = $value->stok_3bln / $value->hari_kerja;
-            $value->stock_scd = $value->stok_tersedia / $value->avg_omset;
+            $value->stock_scd = number_format($value->stok_tersedia / $value->avg_omset, 0, ',', '.');
+            $value->stock_scd_and_intransit = number_format($value->stock_and_instransit / $value->avg_omset, 0, ',', '.');
             $resultdb[] = $value;
         }
 

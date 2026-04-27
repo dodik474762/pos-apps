@@ -211,7 +211,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -234,7 +234,7 @@ let ReportStock = {
                 },
             ],
             columns: [
-                 {
+                {
                     data: "product",
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
@@ -244,7 +244,7 @@ let ReportStock = {
                     data: "product",
                     title: "Product",
                     render: function (data, type, row) {
-                        return row.product_code +'-'+row.product_name;
+                        return row.product_code + "-" + row.product_name;
                     },
                 },
                 {
@@ -279,7 +279,7 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
-                   {
+                {
                     data: "stock_future",
                     title: "Stok Akan Datang",
                     className: "text-end",
@@ -287,7 +287,15 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
-                 {
+                {
+                    data: "stock_and_instransit",
+                    title: "Total Stock + Instransit",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+                {
                     data: "stok_3bln",
                     title: "Last 3 Month",
                     className: "text-end",
@@ -295,7 +303,7 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
-                 {
+                {
                     data: "hari_kerja",
                     title: "Hari Kerja",
                     className: "text-end",
@@ -303,7 +311,7 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
-                 {
+                {
                     data: "avg_omset",
                     title: "Avg Omset per Day",
                     className: "text-end",
@@ -311,9 +319,17 @@ let ReportStock = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
-                 {
+                {
                     data: "stock_scd",
-                    title: "SCD",
+                    title: "SCD Stock",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+                {
+                    data: "stock_scd_and_intransit",
+                    title: "SCD Stock + Instransit",
                     className: "text-end",
                     render: function (data, type, row) {
                         return `<strong>${data ?? 0}</strong>`;
@@ -327,13 +343,13 @@ let ReportStock = {
             data.ajax.reload();
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
-            );
+                "form-select form-select-sm",
+            ));
     },
 
     delete: (elm, e) => {
@@ -569,7 +585,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -633,7 +649,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -709,7 +725,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -767,7 +783,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -825,7 +841,7 @@ let ReportStock = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -928,7 +944,7 @@ let ReportStock = {
                     $("#nik").val(data.karyawan);
                     $("#nik").trigger("change");
                     $("#customer").val(
-                        data.customer + "//" + data.nama_customer
+                        data.customer + "//" + data.nama_customer,
                     );
                     $("#estimated_cost").val(data.estimated_cost);
                     $("#region").val(data.region);
@@ -982,10 +998,10 @@ let ReportStock = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                            value.id +
-                            '">' +
-                            value.name +
-                            "</option>"
+                                value.id +
+                                '">' +
+                                value.name +
+                                "</option>",
                         );
                     });
                 } else {
@@ -1007,7 +1023,7 @@ let ReportStock = {
         newTr
             .find("td#action")
             .html(
-                `<button type="button" onclick="ReportStock.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`
+                `<button type="button" onclick="ReportStock.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`,
             );
         table.after(newTr);
     },
@@ -1025,7 +1041,7 @@ let ReportStock = {
     addFile: (elm) => {
         // Buat uploader secara dinamis
         var uploader = $(
-            `<input type="file" id="file" accept="image/*;capture=camera" />`
+            `<input type="file" id="file" accept="image/*;capture=camera" />`,
         );
         var src_foto = $(`input#file`);
 
@@ -1042,13 +1058,13 @@ let ReportStock = {
                 var filename = files.name;
                 var data_from_file = filename.split(".");
                 var type_file = $.trim(
-                    data_from_file[data_from_file.length - 1]
+                    data_from_file[data_from_file.length - 1],
                 ).toLowerCase();
 
                 // Cek jika format file sesuai
                 if (
                     ["jpg", "jpeg", "png", "pdf", "heic", "HEIC"].includes(
-                        type_file
+                        type_file,
                     )
                 ) {
                     reader.onload = function (event) {
@@ -1062,7 +1078,7 @@ let ReportStock = {
                     // Jika format tidak sesuai
                     message.sweetError(
                         "Gagal",
-                        "Format file salah, hanya bisa jpg, jpeg, png, heic dan pdf"
+                        "Format file salah, hanya bisa jpg, jpeg, png, heic dan pdf",
                     );
                 }
             }
@@ -1087,7 +1103,7 @@ let ReportStock = {
                 },
                 function (error) {
                     console.error("Error getting location:", error);
-                }
+                },
             );
         } else {
             console.error("Geolocation is not supported by this browser.");
@@ -1111,56 +1127,56 @@ function newexportaction(e, dt, button, config) {
                     e,
                     dt,
                     button,
-                    config
+                    config,
                 );
             } else if (button[0].className.indexOf("buttons-excel") >= 0) {
                 $.fn.dataTable.ext.buttons.excelHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.excelHtml5.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    )
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      )
                     : $.fn.dataTable.ext.buttons.excelFlash.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    );
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      );
             } else if (button[0].className.indexOf("buttons-csv") >= 0) {
                 $.fn.dataTable.ext.buttons.csvHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.csvHtml5.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    )
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      )
                     : $.fn.dataTable.ext.buttons.csvFlash.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    );
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      );
             } else if (button[0].className.indexOf("buttons-pdf") >= 0) {
                 $.fn.dataTable.ext.buttons.pdfHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.pdfHtml5.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    )
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      )
                     : $.fn.dataTable.ext.buttons.pdfFlash.action.call(
-                        self,
-                        e,
-                        dt,
-                        button,
-                        config
-                    );
+                          self,
+                          e,
+                          dt,
+                          button,
+                          config,
+                      );
             } else if (button[0].className.indexOf("buttons-print") >= 0) {
                 $.fn.dataTable.ext.buttons.print.action(e, dt, button, config);
             }
