@@ -5,7 +5,7 @@ namespace App\Http\Controllers\web\report;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class ReportStockController extends Controller
+class ReportVisitController extends Controller
 {
     public $akses_menu = [];
 
@@ -18,7 +18,7 @@ class ReportStockController extends Controller
     public function getHeaderCss()
     {
         return array(
-            'js-1' => asset('assets/js/controllers/report/report_stock.js'),
+            'js-1' => asset('assets/js/controllers/report/report_visit.js'),
             'js-2' => asset('assets/js/controllers/notification.js'),
         );
     }
@@ -35,7 +35,7 @@ class ReportStockController extends Controller
 
     public function getTitle()
     {
-        return "Report Stock + SCD";
+        return "Report Detail Kunjungan";
     }
 
     public function index(Request $request)
@@ -45,7 +45,7 @@ class ReportStockController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        $view = view('web.report_stock.index', $data);
+        $view = view('web.report_visit.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();

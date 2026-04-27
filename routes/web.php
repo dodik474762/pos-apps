@@ -44,6 +44,7 @@ use App\Http\Controllers\api\Transaction\SessionsController as TransactionSessio
 use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVendorBillController;
 use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
+use App\Http\Controllers\api\report\ReportVisitController as ReportReportVisitController;
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -92,6 +93,7 @@ use App\Http\Controllers\web\Transaction\SessionsController;
 use App\Http\Controllers\web\Transaction\VendorBillController;
 use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use App\Http\Controllers\web\report\ReportStockController;
+use App\Http\Controllers\web\report\ReportVisitController;
 use App\Http\Controllers\web\Transaction\TerimaUangController;
 use Illuminate\Support\Facades\Route;
 
@@ -308,6 +310,7 @@ Route::get('transaksi/adjustment_stock/add', [ProductAdjustmentStockController::
 Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController::class, 'ubah']);
 
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
+Route::get('report/report_visit', [ReportVisitController::class, 'index']);
 
 /*API */
 
@@ -660,4 +663,6 @@ Route::post('api/transaksi/adjustment_stock/showDataProduct', [TransactionProduc
 Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProductAdjustmentStockController::class, 'getDataProduct']);
 
 Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
+
+Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
 /*API */
