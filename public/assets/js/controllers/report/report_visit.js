@@ -1077,6 +1077,179 @@ let ReportVisit = {
             console.error("Geolocation is not supported by this browser.");
         }
     },
+
+    getDataSummary: async () => {
+        let tableData = $("table#table-data-summary");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 3,
+            },
+            order: [[1, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(ReportVisit.moduleApi()) + `getDataSummary`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportVisit.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportVisit_Summary",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    // No
+                    data: null,
+                    title: "No",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    // Salesman
+                    data: "salesman_name",
+                    title: "Salesman",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    // Tanggal
+                    data: "so_date",
+                    title: "Tanggal",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    // Jam Berangkat (dari presence)
+                    data: "jam_berangkat",
+                    title: "Jam Berangkat",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Jam Kembali (check_out_time terakhir)
+                    data: "jam_kembali",
+                    title: "Jam Kembali",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Waktu Jual = total SUM check_in - check_out semua outlet
+                    data: "waktu_jual",
+                    title: "Waktu Jual",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Rata-rata lama transaksi per outlet
+                    data: "avg_lama_transaksi",
+                    title: "Rata-Rata Lama Transaksi per Outlet",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Lama di Jalan = Total Keluar Kantor - Waktu Jual
+                    data: "lama_di_jalan",
+                    title: "Lama di Jalan",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Total Keluar Kantor = Jam Kembali - Jam Berangkat
+                    data: "total_keluar_kantor",
+                    title: "Total Keluar Kantor",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? "-"}</strong>`;
+                    },
+                },
+                {
+                    // Total Call Keseluruhan
+                    data: "total_call",
+                    title: "Total Call Keseluruhan",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+                {
+                    // Total Call Sesuai PJP
+                    data: "total_call_pjp",
+                    title: "Total Call Sesuai PJP",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+                {
+                    // Total Call Extra Call
+                    data: "total_call_extra",
+                    title: "Total Call Extra Call",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+            ],
+        });
+
+        // Tombol filter tanggal
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
 };
 
 // untuk export all data
@@ -1168,4 +1341,5 @@ $(function () {
     ReportVisit.setSelect2();
     ReportVisit.getLocation();
     ReportVisit.getData();
+    ReportVisit.getDataSummary();
 });

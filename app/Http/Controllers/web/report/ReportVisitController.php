@@ -38,6 +38,11 @@ class ReportVisitController extends Controller
         return "Report Detail Kunjungan";
     }
 
+    public function getTitleSummary()
+    {
+        return "Report Summary Kunjungan";
+    }
+
     public function index(Request $request)
     {
         $data = $request->all();
@@ -48,6 +53,22 @@ class ReportVisitController extends Controller
         $view = view('web.report_visit.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
+    public function summary(Request $request)
+    {
+        $data = $request->all();
+        $data['data'] = [];
+        $data['title'] = $this->getTitleSummary();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = $this->akses_menu;
+        $view = view('web.report_visit.summary_visit', $data);
+        $put['title_content'] = $this->getTitleSummary();
+        $put['title_top'] = $this->getTitleSummary();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();

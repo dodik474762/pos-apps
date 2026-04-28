@@ -311,6 +311,7 @@ Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController:
 
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
+Route::get('report/summary_visit', [ReportVisitController::class, 'summary']);
 
 /*API */
 
@@ -665,4 +666,5 @@ Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProduct
 Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
 
 Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
+Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitController::class, 'getDataSummary']);
 /*API */
