@@ -11,6 +11,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SalesPlanImport;
+use App\Models\Transaction\DailyVisit;
+use App\Models\Transaction\DailyVisitCustomer;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -446,6 +448,40 @@ class SalesPlanController extends Controller
         $route = $this->getDailyVisits($salesman, $today);
         $datadb = $route;
 
+        $message = '';
+        DB::beginTransaction();
+        try {
+            $exist = DailyVisit::where('users', $salesman)->where('date_visit', $today->format('Y-m-d'))->first();
+            $daily = empty($exist) ? new DailyVisit() : $exist;
+            $daily->users = $salesman;
+            $daily->date_visit = $today->format('Y-m-d');
+            $daily->total_visit = count($datadb);
+            $daily->cicle_type = count($datadb) > 0 ? $datadb[0]->visit_circle_code : '-';
+            $daily->status = 'draft';
+            $daily->save();
+            $dailyId = $daily->id;
+
+            if (!empty($datadb)) {
+                DailyVisitCustomer::where('daily_visit', $dailyId)->delete();
+                foreach ($datadb as $key => $value) {
+                    $dailyDtl = new DailyVisitCustomer();
+                    $dailyDtl->daily_visit = $dailyId;
+                    $dailyDtl->customer = $value->customer_id;
+                    $dailyDtl->cicle_type = $value->visit_circle_code;
+                    $dailyDtl->type_route = $value->pjp_status;
+                    $dailyDtl->status = $value->outlet_status;
+                    $dailyDtl->save();
+                }
+            }
+
+            DB::commit();
+            $message = 'Success Download';
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $message = 'Error Download ' . $th->getMessage();
+        }
+
 
         $result['is_valid'] = empty($datadb) ? false : true;
         $result['data'] = $datadb;
@@ -454,6 +490,7 @@ class SalesPlanController extends Controller
             'day_of_week' => $dayNow,
             'iso_week' => $weekNow,
             'date' => $today->format('Y-m-d'),
+            'message' => $message
         ];
 
         return response()->json($result);
@@ -545,10 +582,8 @@ class SalesPlanController extends Controller
                                 $qq->where('spd.visit_circle', 16)
                                     ->whereRaw('? = 1', [$weekOfMonth]);
                             });
-
                         });
                 });
-
             })
             ->select(
                 'sph.*',
@@ -632,7 +667,7 @@ class SalesPlanController extends Controller
             ->unique()
             ->values()
             ->toArray();
-        
+
         $idCustomer = collect($rows)
             ->pluck('customer_code')
             ->unique()
@@ -644,7 +679,7 @@ class SalesPlanController extends Controller
             ->get()
             ->keyBy('term_id')
             ->toArray();
-       
+
         $masterCustomer = DB::table('customer')
             ->whereIn('code', $idCustomer)
             ->get()
@@ -693,10 +728,10 @@ class SalesPlanController extends Controller
                 $cust_id = isset($masterCustomer[$item['customer_code']]->id) ? $masterCustomer[$item['customer_code']]->id : 0;
                 $item['visit_type'] = isset($masterCircle[$item['id_circle_kunjungan']]->id) ? $masterCircle[$item['id_circle_kunjungan']]->id : 0;
                 $itemVisit = $item['visit_type'];
-                if($item['visit_type'] == '13'){
+                if ($item['visit_type'] == '13') {
                     $itemVisit = '14';
                 }
-                if($item['visit_type'] == '14'){
+                if ($item['visit_type'] == '14') {
                     $itemVisit = '13';
                 }
 
