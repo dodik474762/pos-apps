@@ -1109,6 +1109,152 @@ let ReportStock = {
             console.error("Geolocation is not supported by this browser.");
         }
     },
+
+    getDataStok: async () => {
+        let tableData = $("table#table-stock-product");
+
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(ReportStock.moduleApi()) + `getDataStock`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportStock.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportStock",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "product_code",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "Kode Produk",
+                    render: function (data, type, row) {
+                        return row.product_code;
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "Nama Produk",
+                },
+                {
+                    data: "principal",
+                    title: "Nama Principal",
+                },
+                {
+                    data: "uom_product",
+                    title: "UoM",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_masuk_ctn",
+                    title: "CTN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_masuk_pcs",
+                    title: "PCS",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_keluar_ctn",
+                    title: "CTN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_keluar_pcs",
+                    title: "PCS",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_keluar_pcs",
+                    title: "CTN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return "0";
+                    },
+                },
+                {
+                    data: "stok_tersedia_pcs",
+                    title: "PCS",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "0";
+                    },
+                },
+            ],
+        });
+
+        // Tombol filter tanggal
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
 };
 
 // untuk export all data
@@ -1200,4 +1346,5 @@ $(function () {
     ReportStock.setSelect2();
     ReportStock.getLocation();
     ReportStock.getData();
+    ReportStock.getDataStok();
 });

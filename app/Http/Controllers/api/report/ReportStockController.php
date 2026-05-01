@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\report;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction\ProductStockMove;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -249,6 +250,180 @@ class ReportStockController extends Controller
             $value->stock_scd               = number_format($value->stock_scd, 2, ',', '.');
             $value->stock_scd_and_intransit = number_format($value->stock_scd_and_intransit, 2, ',', '.');
             $value->hari_kerja              = 25;
+            $resultdb[] = $value;
+        }
+
+        $data['data'] = $resultdb;
+        $data['draw'] = $_POST['draw'];
+
+        $query = DB::getQueryLog();
+        return json_encode($data);
+    }
+
+    public function getDataStock()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+
+        $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
+
+        $datadb = ProductStockMove::from('product_stock_move as m')
+            ->select([
+                'm.product',
+                'm.warehouse',
+                'p.code as product_code',
+                'p.name as product_name',
+                'w.name as warehouse_name',
+                'u_large.name as unit_large_name',
+                'u_small.name as unit_small_name',
+                'pu_large.nilai_konversi_terkecil as konversi_large',
+                'pu_small.nilai_konversi_terkecil as konversi_small',
+                'v.nama_vendor as principal',
+
+                // total_masuk dalam satuan LARGE (CTN)
+                DB::raw('FLOOR(
+            SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in ELSE 0 END)
+            / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+        ) as total_masuk_ctn'),
+
+                // sisa total_masuk dalam satuan SMALL (PCS) — sisanya setelah dibagi CTN
+                DB::raw('MOD(
+            SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in ELSE 0 END),
+            NULLIF(pu_large.nilai_konversi_terkecil, 0)
+        ) / NULLIF(pu_small.nilai_konversi_terkecil, 0) as total_masuk_pcs'),
+
+                // total_keluar dalam satuan LARGE (CTN)
+                DB::raw('FLOOR(
+            SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_out ELSE 0 END)
+            / NULLIF(pu_large.nilai_konversi_terkecil, 0)
+        ) as total_keluar_ctn'),
+
+                // sisa total_keluar dalam satuan SMALL (PCS)
+                DB::raw('MOD(
+            SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_out ELSE 0 END),
+            NULLIF(pu_large.nilai_konversi_terkecil, 0)
+        ) / NULLIF(pu_small.nilai_konversi_terkecil, 0) as total_keluar_pcs'),
+
+                // stok_tersedia murni dalam PCS (satuan terkecil)
+                DB::raw('ROUND(
+            SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+            / NULLIF(pu_small.nilai_konversi_terkecil, 0)
+        ) as stok_tersedia_pcs'),
+            ])
+            ->with(['products.uomFromLarge.units'])
+            ->join('product as p', 'p.id', 'm.product')
+            ->join('warehouse as w', 'w.id', 'm.warehouse')
+            ->join('unit as u', 'u.id', 'm.unit')
+            ->leftJoin('vendor as v', 'p.vendor', 'v.id')
+
+            // Join LARGE
+            ->join('product_uom as pu_large', function ($q) {
+                return $q->on('pu_large.product', 'm.product')
+                    ->where('pu_large.state', 'large')
+                    ->whereNull('pu_large.deleted');
+            })
+            ->join('unit as u_large', 'u_large.id', 'pu_large.unit_tujuan')
+
+            // Join SMALL
+            ->join('product_uom as pu_small', function ($q) {
+                return $q->on('pu_small.product', 'm.product')
+                    ->where('pu_small.state', 'small')
+                    ->whereNull('pu_small.deleted');
+            })
+            ->join('unit as u_small', 'u_small.id', 'pu_small.unit_tujuan')
+
+            ->whereDate('m.created_at', '<=', $tanggal)
+            ->groupBy(
+                'm.product',
+                'm.warehouse',
+                'p.code',
+                'p.name',
+                'w.name',
+                'v.nama_vendor',
+                'pu_large.nilai_konversi_terkecil',
+                'u_large.name',
+                'pu_small.nilai_konversi_terkecil',
+                'u_small.name'
+            )
+            ->orderBy('p.name')
+            ->orderBy('u_large.name');
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.product', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('m.warehouse', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('m.move_type', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.code', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+
+            if (isset($_POST['order'][0]['column'])) {
+                switch ($_POST['order'][0]['column']) {
+                    case 0:
+                        $datadb->orderBy('m.product', $_POST['order'][0]['dir']);
+                        break;
+                    case 1:
+                        $datadb->orderBy('m.warehouse', $_POST['order'][0]['dir']);
+                        break;
+                    case 2:
+                        $datadb->orderBy('m.unit', $_POST['order'][0]['dir']);
+                        break;
+                    case 3:
+                        $datadb->orderByRaw('total_masuk ' . $_POST['order'][0]['dir']);
+                        break;
+                    case 4:
+                        $datadb->orderByRaw('total_keluar ' . $_POST['order'][0]['dir']);
+                        break;
+                    case 5:
+                        $datadb->orderByRaw('stok_tersedia ' . $_POST['order'][0]['dir']);
+                        break;
+                    default:
+                        $datadb->orderBy('m.product', 'asc');
+                        break;
+                }
+            }
+
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+
+        $resultdb = [];
+        $datadb = $datadb->get()->toArray();
+
+        foreach ($datadb as &$value) {
+            // Format: "5 CTN 3 PCS"
+            $value['total_masuk_display']  = $value['total_masuk_ctn'] . ' ' . $value['unit_large_name']
+                . ' ' . $value['total_masuk_pcs'] . ' ' . $value['unit_small_name'];
+
+            $value['total_keluar_display'] = $value['total_keluar_ctn'] . ' ' . $value['unit_large_name']
+                . ' ' . $value['total_keluar_pcs'] . ' ' . $value['unit_small_name'];
+
+            // Stok tersedia murni PCS
+            $value['stok_tersedia'] = number_format($value['stok_tersedia_pcs'], 0, ',', '.')
+                . ' ' . $value['unit_small_name'];
+
+            // UOM string
+            $uoms = collect($value['products']['uom_from_large'] ?? [])
+                ->sortByDesc('level')
+                ->pluck('units.name')
+                ->filter()
+                ->values();
+            $value['uom_product'] = $uoms->implode('-');
+
             $resultdb[] = $value;
         }
 

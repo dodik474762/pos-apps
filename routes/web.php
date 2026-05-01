@@ -664,6 +664,7 @@ Route::post('api/transaksi/adjustment_stock/showDataProduct', [TransactionProduc
 Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProductAdjustmentStockController::class, 'getDataProduct']);
 
 Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
+Route::post('api/report/report_stock/getDataStock', [ApiReportStockController::class, 'getDataStock']);
 
 Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
 Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitController::class, 'getDataSummary']);

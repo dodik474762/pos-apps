@@ -69,6 +69,12 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                 <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-stok-product" href="#stock-product"
+                                        role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Stock Product
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -116,6 +122,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="tab-pane" id="stock-product">
+                                    @include('web.report_stock.stock_product')
                                 </div>
                             </div>
                         </div>
