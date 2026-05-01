@@ -57,21 +57,21 @@ let PackingList = {
         window.location.href = url.base_url(PackingList.module()) + "addAll";
     },
 
-     getPostItemChecked: () => {
+    getPostItemChecked: () => {
         const checkboxs = $("input.checkbox-so");
         let result = [];
 
         checkboxs.each((index, elm) => {
             const $check = $(elm);
-            if($check.is(':checked')){
-                const td = $(elm).closest('td');
-                const $row = td.closest('tr');
-    
+            if ($check.is(":checked")) {
+                const td = $(elm).closest("td");
+                const $row = td.closest("tr");
+
                 result.push({
-                    id: td.find('a').attr('data_id') || null,
+                    id: td.find("a").attr("data_id") || null,
                     so_detail_id: null,
                     product_id: null,
-                    qty:  0,
+                    qty: 0,
                     uom: null,
                     note: "",
                     remove: 0,
@@ -136,9 +136,9 @@ let PackingList = {
             expedition_name: $("#expedition_name").val() || null,
             remarks: $("#remarks").val() || null,
 
-            do_list: PackingList.getPostDo(),      // 🔥 DO LIST
-            details: PackingList.getPostItem(),    // 🔥 ITEM LIST
-            items_checked: PackingList.getPostItemChecked()
+            do_list: PackingList.getPostDo(), // 🔥 DO LIST
+            details: PackingList.getPostItem(), // 🔥 ITEM LIST
+            items_checked: PackingList.getPostItemChecked(),
         };
 
         return data;
@@ -294,7 +294,7 @@ let PackingList = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -337,27 +337,32 @@ let PackingList = {
                 {
                     data: "status",
                     render: function (data, type, row) {
-                        if(data){
+                        if (data) {
                             return data;
                         }
 
-                        return 'Menunggu Konfirmasi Pengiriman';
-                    }
+                        return "Menunggu Konfirmasi Pengiriman";
+                    },
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            PackingList.module()
+                            PackingList.module(),
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                PackingList.module()
+                                PackingList.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            html += `<a href='${url.base_url(
+                                PackingList.module(),
+                            )}cetakSj?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "PENDING") {
@@ -370,12 +375,12 @@ let PackingList = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -389,10 +394,10 @@ let PackingList = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -448,7 +453,7 @@ let PackingList = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -491,24 +496,24 @@ let PackingList = {
                 {
                     data: "status",
                     render: function (data, type, row) {
-                        if(data){
+                        if (data) {
                             return data;
                         }
 
-                        return 'Menunggu Konfirmasi Pickup';
-                    }
+                        return "Menunggu Konfirmasi Pickup";
+                    },
                 },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            PackingList.modulePr()
+                            PackingList.modulePr(),
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                PackingList.modulePr()
+                                PackingList.modulePr(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -524,12 +529,12 @@ let PackingList = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -543,10 +548,10 @@ let PackingList = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -579,14 +584,17 @@ let PackingList = {
 
     cancelPl: (elm, e) => {
         e.preventDefault();
-        const status = $(elm).attr('status');
+        const status = $(elm).attr("status");
         let allow = false;
-        if(status == 'NOT DELIVERED'){
+        if (status == "NOT DELIVERED") {
             allow = true;
         }
 
-        if(allow == false){
-            message.sweetError('Informasi', 'Packing List Sudah Tidak Bisa Dibatalkan');
+        if (allow == false) {
+            message.sweetError(
+                "Informasi",
+                "Packing List Sudah Tidak Bisa Dibatalkan",
+            );
             return;
         }
         let params = {};
@@ -611,7 +619,6 @@ let PackingList = {
                 message.closeLoading();
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
-
             },
         });
     },
@@ -671,7 +678,10 @@ let PackingList = {
             success: function (resp) {
                 message.closeLoading();
                 if (resp.is_valid) {
-                    message.sweetSuccess("Informasi", "Data Berhasil Dibatalkan");
+                    message.sweetSuccess(
+                        "Informasi",
+                        "Data Berhasil Dibatalkan",
+                    );
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
@@ -721,7 +731,7 @@ let PackingList = {
         if (payment_method == "") {
             message.sweetError(
                 "Informasi",
-                "Pilih Payment Method Terlebih Dahulu"
+                "Pilih Payment Method Terlebih Dahulu",
             );
             return;
         }
@@ -760,7 +770,7 @@ let PackingList = {
         if (payment_method == "") {
             message.sweetError(
                 "Informasi",
-                "Pilih Payment Method Terlebih Dahulu"
+                "Pilih Payment Method Terlebih Dahulu",
             );
             return;
         }
@@ -821,7 +831,7 @@ let PackingList = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -911,7 +921,7 @@ let PackingList = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -983,9 +993,12 @@ let PackingList = {
 
     generateCheckedDO: () => {
         const checkboxes = $("input.checkbox-so:checked");
-        
+
         if (checkboxes.length === 0) {
-            message.sweetError("Informasi", "Pilih minimal satu DO terlebih dahulu");
+            message.sweetError(
+                "Informasi",
+                "Pilih minimal satu DO terlebih dahulu",
+            );
             return;
         }
 
@@ -1117,7 +1130,9 @@ let PackingList = {
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(PackingList.modulePrApi()) + "getSRDetailConfirmed",
+            url:
+                url.base_url(PackingList.modulePrApi()) +
+                "getSRDetailConfirmed",
             headers: {
                 "X-CSRF-TOKEN": PackingList.csrf_token(),
             },
@@ -1246,7 +1261,7 @@ let PackingList = {
                 const id = $(elm).attr("data_id");
                 const discount_type = $(elm).attr("discount_type");
                 const discount_value = isNaN(
-                    parseFloat($(elm).attr("discount_value"))
+                    parseFloat($(elm).attr("discount_value")),
                 )
                     ? 0
                     : parseFloat($(elm).attr("discount_value"));
@@ -1347,7 +1362,7 @@ let PackingList = {
             UOM_CONVERSION,
             productId,
             satuanId,
-            qty
+            qty,
         );
 
         // Cari data diskon yang cocok
@@ -1357,13 +1372,13 @@ let PackingList = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = PackingList.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             return (
@@ -1383,7 +1398,7 @@ let PackingList = {
             if (applicable.discount_type === "percent") {
                 discPercentInput.val(applicable.discount_value);
                 discAmountInput.val(
-                    (price * qty * applicable.discount_value) / 100
+                    (price * qty * applicable.discount_value) / 100,
                 );
             } else {
                 discPercentInput.val(0);
@@ -1407,13 +1422,13 @@ let PackingList = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = PackingList.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             const isApplicable =
@@ -1472,7 +1487,7 @@ let PackingList = {
 
     convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
         const uom = UOM_CONVERSIONS.find(
-            (u) => u.product_id == productId && u.unit_id == satuanId
+            (u) => u.product_id == productId && u.unit_id == satuanId,
         );
         if (!uom) return qty; // fallback jika tidak ditemukan
         return qty * uom.conversion;
@@ -1529,7 +1544,7 @@ let PackingList = {
             resultProduct = resultProduct.filter(
                 (value, index, self) =>
                     index ===
-                    self.findIndex((t) => t.product_id === value.product_id)
+                    self.findIndex((t) => t.product_id === value.product_id),
             );
 
             // 3️⃣ Loop per product_id
@@ -1540,17 +1555,17 @@ let PackingList = {
                 PackingList.showDiscountProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 PackingList.showDiscountFreeProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 PackingList.showQtySmallestProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
             });
         }

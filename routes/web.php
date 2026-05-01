@@ -287,6 +287,7 @@ Route::get('transaksi/packing_list', [PackingListController::class, 'index']);
 Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])->name('packing-list-add');
 Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');
 Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');
+Route::get('transaksi/packing_list/cetakSj', [PackingListController::class, 'cetakSj'])->name('packing-list-print-sj');
 
 Route::get('transaksi/packing_list_pr', [PackingListController::class, 'index_sr']);
 Route::get('transaksi/packing_list_pr/add', [PackingListController::class, 'add_sr'])->name('packing-list-sr-add');

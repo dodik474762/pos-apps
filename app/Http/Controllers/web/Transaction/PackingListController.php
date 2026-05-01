@@ -453,4 +453,119 @@ class PackingListController extends Controller
 
         return $pdf->stream('PL-' . $data->payment_code . '.pdf');
     }
+
+    public function cetakSj(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data = PackingList::where('id', $data['id'])->first();
+        if ($data->sj_number == '') {
+            $data->sj_number = str_replace('PL', 'SJ', $data->packing_list_no);
+            $data->sj_date = date('Y-m-d H:i:s');
+            $data->sj_by = session('user_id');
+            $data->save();
+        }
+        // echo '<pre>';
+        // print_r($data);die;
+        $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
+            ->select([
+                'packing_list_do.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'doh.do_number',
+                'doh.do_date',
+                'sih.invoice_number',
+                'sih.total_amount',
+                'sih.amount_paid',
+                'kel.name as kelurahan'
+            ])
+            ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'soh.id')
+                    ->whereNull('sih.deleted');
+            })
+            ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
+            // ->where('doh.do_number', 'DO11250004')
+            ->get();
+        // echo '<pre>';
+        // print_r($details);die;
+        $doIds = $details->pluck('delivery_order_id')->toArray();
+        $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
+            ->select([
+                'packing_list_detail.*',
+                'doh.do_number',
+            ])
+            ->with(['product', 'deliveryDetail'])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
+            ->where('packing_list_detail.packing_list_id', $data->id)
+            ->get();
+
+        $grouped = collect($packingListDetail)->groupBy('product_id')->toArray();
+        $groupedItem = [];
+        foreach ($grouped as $key => $value) {
+            $items = $value;
+            $totalInSmallQty = 0;
+            $remark = '';
+            $groupByItemUom = collect($items)->groupBy('delivery_detail.uom');
+            $uomIds = $groupByItemUom->keys()->toArray();
+            $units = DB::table('unit')->whereIn('id', $uomIds)->get();
+
+            foreach ($items as $v) {
+                $remark .= $v['remark'] . ' / ';
+                $delivery_detail = $v['delivery_detail'];
+                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed']);
+                $qtyProductInSmall = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $v['qty_packed'] : 0;
+                $totalInSmallQty += $qtyProductInSmall;
+            }
+
+            $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
+            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
+
+            $qtyOriginal = $largestUnit['qty_in_largest_unit'];
+            $qtyLarges = ceil($qtyOriginal);
+
+            $isAssembly = ($qtyOriginal != floor($qtyOriginal));
+
+            $groupedUom = [];
+            $assemblysItem = [];
+            foreach ($groupByItemUom->toArray() as $key_uom => $u) {
+                $items = $u;
+                $qty = collect($items)->sum('qty_packed');
+                $unit_name = collect($units)->where('id', $key_uom)->first();
+                $groupedUom[] = [
+                    'unit' => $key_uom,
+                    'units' => $unit_name,
+                    'qty' => $qty,
+                ];
+                $assemblysItem[] = $qty . ' ' . $unit_name->name;
+            }
+
+
+            $groupedItem[] = [
+                'product_id' => $key,
+                'product_code' => $items[0]['product']['code'],
+                'product_name' => $items[0]['product']['name'],
+                'remarks' => $remark,
+                'conversion' => $largestUnit,
+                'assembly' => $isAssembly,
+                'groupedUom' => $groupedUom,
+                'assembly_name' => implode('/', $assemblysItem)
+            ];
+        }
+        $qr = '';
+
+
+
+        // $productSatuan = ProductUom::where('product', '1')->get()->toArray();
+
+        // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
+
+        $pdf = Pdf::loadView('web.packing_list.print.sj-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SJ-' . $data->payment_code . '.pdf');
+    }
 }
