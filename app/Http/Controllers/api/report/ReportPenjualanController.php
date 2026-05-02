@@ -118,11 +118,11 @@ class ReportPenjualanController extends Controller
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereDate('m.so_date', '=', $tanggal)
-            ->where('m.id', '1588')
+            // ->where('m.id', '1588')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
-            ->orderBy('usr.name', 'asc')
-            ->orderBy('m.check_in_time', 'asc');
+            ->orderBy('m.salesman', 'asc')
+            ->orderBy('m.so_number', 'asc');
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
