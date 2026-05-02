@@ -149,6 +149,8 @@ class PackingListController extends Controller
                 'c.code as currency_code',
                 'soh.so_number',
                 'soh.so_date',
+                'sih.invoice_number',
+                'sih.invoice_date',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')

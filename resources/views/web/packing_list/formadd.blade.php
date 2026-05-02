@@ -108,7 +108,7 @@
                     <div class="d-flex justify-content-between">
                         <h5>Delivery Orders</h5>
                         <button type="button" class="btn btn-primary btn-sm"
-                                onclick="PackingList.showModalDO()">Tambah DO</button>
+                                onclick="PackingList.showModalDO()">Tambah Faktur</button>
                     </div>
 
                     <div class="table-responsive mt-2">

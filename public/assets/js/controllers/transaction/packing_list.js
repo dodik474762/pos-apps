@@ -863,6 +863,12 @@ let PackingList = {
                     data: "do_date",
                 },
                 {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
                     data: "customer_code",
                 },
                 {

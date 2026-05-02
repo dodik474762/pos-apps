@@ -21,6 +21,8 @@
                               <th>No</th>
                               <th>DO Number</th>
                               <th>Tanggal DO</th>
+                              <th>No. Faktur</th>
+                              <th>Tanggal Faktur</th>
                               <th>Kode Customer</th>
                               <th>Nama Customer</th>
                               <th>Alamat</th>
@@ -32,7 +34,7 @@
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="10">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="12">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>
