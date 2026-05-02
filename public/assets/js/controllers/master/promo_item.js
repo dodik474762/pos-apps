@@ -51,7 +51,7 @@ let PromoItem = {
         newTr
             .find("td#action")
             .html(
-                `<button type="button" onclick="PromoItem.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`
+                `<button type="button" onclick="PromoItem.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`,
             );
         table.after(newTr);
     },
@@ -69,7 +69,7 @@ let PromoItem = {
         newTr
             .find("td#action")
             .html(
-                `<button type="button" onclick="PromoItem.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`
+                `<button type="button" onclick="PromoItem.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`,
             );
         table.after(newTr);
     },
@@ -129,10 +129,11 @@ let PromoItem = {
             max_mix: $("#max_mix").val(),
             sub_channel_outlet: $("#sub_channel_outlet").val(),
             channel_outlet: $("#channel_outlet").val(),
-            kelipatan: $("#kelipatan").is(':checked') ? 1 : 0,
-            potong_grand_total: $("#potong_grand_total").is(':checked') ? 1 : 0,
+            kelipatan: $("#kelipatan").is(":checked") ? 1 : 0,
+            potong_grand_total: $("#potong_grand_total").is(":checked") ? 1 : 0,
             additional_disc: $("#additional_disc").val(),
             additional_disc_type: $("#additional_disc_type").val(),
+            beban: $("#beban").val(),
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
         };
@@ -208,7 +209,7 @@ let PromoItem = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -239,7 +240,7 @@ let PromoItem = {
                         var html = "";
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                PromoItem.module()
+                                PromoItem.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -253,12 +254,12 @@ let PromoItem = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -272,10 +273,10 @@ let PromoItem = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -395,7 +396,7 @@ let PromoItem = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -482,7 +483,7 @@ let PromoItem = {
         });
     },
 
-     getDataProduct: () => {
+    getDataProduct: () => {
         let tableData = $("table#table-data-modal");
         var data = tableData.DataTable({
             processing: true,
@@ -503,11 +504,13 @@ let PromoItem = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
-                url: url.base_url(PromoItem.moduleProductApi()) + `getDataProduct`,
+                url:
+                    url.base_url(PromoItem.moduleProductApi()) +
+                    `getDataProduct`,
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": PromoItem.csrf_token(),
@@ -548,7 +551,7 @@ let PromoItem = {
         });
     },
 
-     pilihDataProduct: (elm, e) => {
+    pilihDataProduct: (elm, e) => {
         e.preventDefault();
         let produk_name = $(elm).attr("produk_name");
         let produk_id = $(elm).attr("produk_id");
@@ -558,7 +561,15 @@ let PromoItem = {
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(product_uom_id+"//"+produk_id+ "//" + produk_name+"//"+unit_name);
+            .val(
+                product_uom_id +
+                    "//" +
+                    produk_id +
+                    "//" +
+                    produk_name +
+                    "//" +
+                    unit_name,
+            );
         $("button.btn-close").trigger("click");
     },
 };

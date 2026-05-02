@@ -137,7 +137,16 @@
                                             {{ strtoupper($item) }}</option>
                                     @endforeach
                                 </select>
-                            </div>                               
+                            </div>       
+                              <div class="mb-3">
+                                <label class="form-label">Dibebankan untuk</label>
+                                <select id="beban" name="beban" class="form-control required" error="Disc Tipe">
+                                    @foreach ($list_beban as $item)
+                                        <option value="{{ $item }}" {{ isset($data->beban) ? ($data->beban == $item ? 'selected' : '') : '' }}>
+                                            {{ strtoupper($item) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>                           
                             <div class="mb-3">
                                 <br/>
                                 <br/>

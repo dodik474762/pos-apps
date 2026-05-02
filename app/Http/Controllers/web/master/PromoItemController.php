@@ -58,20 +58,30 @@ class PromoItemController extends Controller
         return view('web.template.main', $put);
     }
 
-     public function getChannel(){
+    public function getChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getSubChannel(){
+
+    public function getSubChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'SUB_CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'SUB_CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
+    }
+
+    public function getListBeban()
+    {
+        return [
+            'PRINCIPAL',
+            'DISTRIBUTOR'
+        ];
     }
 
     public function add()
@@ -89,6 +99,7 @@ class PromoItemController extends Controller
         $data['routing_reminder_item'] = [];
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
+        $data['list_beban'] = $this->getListBeban();
         $view = view('web.promo_item.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -110,6 +121,7 @@ class PromoItemController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
+        $data['list_beban'] = $this->getListBeban();
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
