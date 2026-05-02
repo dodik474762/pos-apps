@@ -103,6 +103,11 @@ class ReportPenjualanController extends Controller
                     ->whereNull('sod.deleted');
             })
             ->join('product as p', 'p.id', 'sod.product_id')
+            ->join('sales_invoice_detail as sid', function ($q) {
+                return $q->on('sid.so_detail_id', 'sod.id')
+                    ->whereNull('sid.deleted');
+            })
+            ->join('sales_invoice_header as sih', 'sih.id', 'sid.invoice_id')
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
@@ -112,11 +117,6 @@ class ReportPenjualanController extends Controller
                     ->on('dv.users', 'm.salesman')
                     ->whereNull('dv.deleted');
             })
-            ->leftJoin('sales_invoice_detail as sid', function ($q) {
-                return $q->on('sid.so_detail_id', 'sod.id')
-                    ->whereNull('sid.deleted');
-            })
-            ->leftJoin('sales_invoice_header as sih', 'sih.id', 'sid.invoice_id')
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereDate('m.so_date', '=', $tanggal)
