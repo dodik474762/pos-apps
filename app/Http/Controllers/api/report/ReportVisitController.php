@@ -150,6 +150,7 @@ class ReportVisitController extends Controller
                 'usr.name as salesman_name',
                 'm.so_date',
                 'pr.start_date as jam_berangkat',
+                'dv.total_visit',
                 DB::raw('MAX(m.check_out_time) as jam_kembali'),
                 // Waktu Jual = check_in pertama s/d check_out terakhir
                 DB::raw('SEC_TO_TIME(
@@ -197,9 +198,14 @@ class ReportVisitController extends Controller
                 $join->on('pr.creator', '=', 'm.salesman')
                     ->whereDate('pr.presence_date', '=', $tanggal);
             })
+            ->leftJoin('daily_visit as dv', function ($q) {
+                return $q->on('dv.date_visit', 'm.so_date')
+                    ->on('dv.users', 'm.salesman')
+                    ->whereNull('dv.deleted');
+            })
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereNull('m.deleted')
-            ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date')
+            ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit')
             ->orderBy('usr.name', 'asc');
 
         if (isset($_POST)) {

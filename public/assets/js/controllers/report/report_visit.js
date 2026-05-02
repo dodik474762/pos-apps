@@ -1208,9 +1208,9 @@ let ReportVisit = {
                     },
                 },
                 {
-                    // Total Call Keseluruhan
-                    data: "total_call",
-                    title: "Total Call Keseluruhan",
+                    // Total Call Sesuai PJP
+                    data: "total_visit",
+                    title: "Total Target Call",
                     className: "text-center",
                     render: function (data, type, row) {
                         return `<strong>${data ?? 0}</strong>`;
@@ -1220,6 +1220,15 @@ let ReportVisit = {
                     // Total Call Sesuai PJP
                     data: "total_call_pjp",
                     title: "Total Call Sesuai PJP",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return `<strong>${data ?? 0}</strong>`;
+                    },
+                },
+                {
+                    // Total Call Keseluruhan
+                    data: "total_call",
+                    title: "Total Call Keseluruhan",
                     className: "text-center",
                     render: function (data, type, row) {
                         return `<strong>${data ?? 0}</strong>`;
