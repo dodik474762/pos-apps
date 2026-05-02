@@ -259,6 +259,12 @@
         <tr>
             <td class="text-center">
                 <br><br><br>
+                <strong>Diterima Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>
+            <td class="text-center">
+                <br><br><br>
                 <strong>Disetujui Oleh</strong>
                 <br><br><br>
                 (__________________)
