@@ -174,6 +174,8 @@ class PackingListController extends Controller
                 $datadb->where(function ($query) use ($keyword) {
                     $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.invoice_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');

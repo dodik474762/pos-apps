@@ -25,7 +25,7 @@ class DeliveryOrderController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -44,12 +44,12 @@ class DeliveryOrderController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('so.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -85,11 +85,16 @@ class DeliveryOrderController extends Controller
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
-                'cc.address'
+                'cc.address',
+                'sih.invoice_number',
+                'sih.invoice_date',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
+            })
             ->whereNull('m.deleted')
             // ->where('m.id', '991')
             ->whereIn('m.status', ['draft', 'partial', 'submited'])
@@ -100,10 +105,12 @@ class DeliveryOrderController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -170,14 +177,14 @@ class DeliveryOrderController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -206,7 +213,7 @@ class DeliveryOrderController extends Controller
         $data = $request->all();
         $userId = session('user_id');
         $result = ['is_valid' => false];
-        
+
         // echo '<pre>';
         // print_r($data);die;
         DB::beginTransaction();
@@ -278,10 +285,16 @@ class DeliveryOrderController extends Controller
                 $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item['qty'] : 0;
 
                 $item['product'] = $item['product_id'];
-                stockUpdate($hdrId,
-                $data['warehouse_id'],
-                $item['product_id'],
-                $productUomLevel1->unit_tujuan, $qtyBaseUnit, $item, 'min', 'delivery_order');
+                stockUpdate(
+                    $hdrId,
+                    $data['warehouse_id'],
+                    $item['product_id'],
+                    $productUomLevel1->unit_tujuan,
+                    $qtyBaseUnit,
+                    $item,
+                    'min',
+                    'delivery_order'
+                );
             }
 
             $total_item = collect($data['items'])->where('remove', 0)->count();
@@ -319,33 +332,34 @@ class DeliveryOrderController extends Controller
         return response()->json($result);
     }
 
-    public function generate(Request $request){
+    public function generate(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         $userId = session('user_id');
 
         DB::beginTransaction();
         try {
-            if(empty($data['items_checked'])){
+            if (empty($data['items_checked'])) {
                 DB::rollBack();
                 $result['message'] = 'Tidak ada item SO dipilih';
                 return response()->json($result);
             }
 
             $soIds = collect($data['items_checked'])->pluck('id')->toArray();
-            
-            $so = SalesOrderHeader::whereIn('sales_order_headers.id', $soIds)
-            ->select(['sales_order_headers.*'])
-            ->with(['items'])
-            ->get();
 
-            if(empty($so)){
+            $so = SalesOrderHeader::whereIn('sales_order_headers.id', $soIds)
+                ->select(['sales_order_headers.*'])
+                ->with(['items'])
+                ->get();
+
+            if (empty($so)) {
                 DB::rollBack();
                 $result['message'] = 'SO Tidak Ditemukan';
                 return response()->json($result);
             }
 
-            foreach ($so as $key => $value) {                
+            foreach ($so as $key => $value) {
                 // === HEADER ===
                 $header = new DeliveryOrderHeader();
                 $header->do_number = generateNoDO(); // misal helper
@@ -385,10 +399,16 @@ class DeliveryOrderController extends Controller
                     $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item->qty : 0;
 
                     $pushItem['product'] = $item->product_id;
-                    stockUpdate($hdrId,
-                    $data['warehouse_id'],
-                    $item->product_id,
-                    $productUomLevel1->unit_tujuan, $qtyBaseUnit, $pushItem, 'min', 'delivery_order');
+                    stockUpdate(
+                        $hdrId,
+                        $data['warehouse_id'],
+                        $item->product_id,
+                        $productUomLevel1->unit_tujuan,
+                        $qtyBaseUnit,
+                        $pushItem,
+                        'min',
+                        'delivery_order'
+                    );
                     $totalQty += $item->qty;
                 }
 
@@ -458,10 +478,16 @@ class DeliveryOrderController extends Controller
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $value['product'] = $item->product_id;
-                stockUpdate($data['id'],
-                $wh_id,
-                $item->product_id,
-                $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'cancel_delivery_order');
+                stockUpdate(
+                    $data['id'],
+                    $wh_id,
+                    $item->product_id,
+                    $productUomLevel1->unit_tujuan,
+                    $qtyBaseUnit,
+                    $value,
+                    'add',
+                    'cancel_delivery_order'
+                );
             }
 
             DeliveryOrderStatusLog::where('do_id', $data['id'])->delete();
@@ -484,7 +510,7 @@ class DeliveryOrderController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'so.so_number',
@@ -513,19 +539,20 @@ class DeliveryOrderController extends Controller
         return view('web.delivery_order.modal.dataso', $data);
     }
 
-    public function getSoDetail(Request $request){
+    public function getSoDetail(Request $request)
+    {
         $data = $request->all();
         $datadb = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['so_id'])
-        ->select([
-            'sales_order_details.*',
-            'u.name as unit_name',
-            'p.code as product_code',
-            'p.name as product_name'
-        ])
-        ->join('product as p', 'p.id', 'sales_order_details.product_id')
-        ->join('unit as u', 'u.id', 'sales_order_details.unit')
-        ->whereNull('sales_order_details.deleted')
-        ->get();
+            ->select([
+                'sales_order_details.*',
+                'u.name as unit_name',
+                'p.code as product_code',
+                'p.name as product_name'
+            ])
+            ->join('product as p', 'p.id', 'sales_order_details.product_id')
+            ->join('unit as u', 'u.id', 'sales_order_details.unit')
+            ->whereNull('sales_order_details.deleted')
+            ->get();
 
         $data['data'] = $datadb;
 

@@ -55,22 +55,22 @@ let DeliveryOrder = {
 
         return result;
     },
-    
+
     getPostItemChecked: () => {
         const checkboxs = $("input.checkbox-so");
         let result = [];
 
         checkboxs.each((index, elm) => {
             const $check = $(elm);
-            if($check.is(':checked')){
-                const td = $(elm).closest('td');
-                const $row = td.closest('tr');
-    
+            if ($check.is(":checked")) {
+                const td = $(elm).closest("td");
+                const $row = td.closest("tr");
+
                 result.push({
-                    id: td.find('a').attr('data_id') || null,
+                    id: td.find("a").attr("data_id") || null,
                     so_detail_id: null,
                     product_id: null,
-                    qty:  0,
+                    qty: 0,
                     uom: null,
                     note: "",
                     remove: 0,
@@ -90,7 +90,7 @@ let DeliveryOrder = {
             customer_id: $("#customer_id").val() || null,
             warehouse_id: $("#warehouse_id").val() || null,
             items: DeliveryOrder.getPostItem(),
-            items_checked: DeliveryOrder.getPostItemChecked()
+            items_checked: DeliveryOrder.getPostItemChecked(),
         };
 
         return data;
@@ -134,7 +134,7 @@ let DeliveryOrder = {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }
     },
-    
+
     generate: (elm) => {
         let params = DeliveryOrder.getPostInput();
         $.ajax({
@@ -197,7 +197,7 @@ let DeliveryOrder = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -244,13 +244,13 @@ let DeliveryOrder = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            DeliveryOrder.module()
+                            DeliveryOrder.module(),
                         )}cetak?id=${data}' data_id="${
                             row.id
                         }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                DeliveryOrder.module()
+                                DeliveryOrder.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -266,12 +266,12 @@ let DeliveryOrder = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -285,10 +285,10 @@ let DeliveryOrder = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -404,7 +404,7 @@ let DeliveryOrder = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -431,6 +431,12 @@ let DeliveryOrder = {
                 },
                 {
                     data: "so_date",
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
                 },
                 {
                     data: "nama_customer",
@@ -466,7 +472,7 @@ let DeliveryOrder = {
 
         $("#customer_id").val(customer + "//" + nama_customer);
         $("#so_number").val(so_number);
-        $("#so_number").attr('data_id',data_id);
+        $("#so_number").attr("data_id", data_id);
 
         $("button.btn-close").trigger("click");
 
@@ -617,7 +623,7 @@ let DeliveryOrder = {
                 const id = $(elm).attr("data_id");
                 const discount_type = $(elm).attr("discount_type");
                 const discount_value = isNaN(
-                    parseFloat($(elm).attr("discount_value"))
+                    parseFloat($(elm).attr("discount_value")),
                 )
                     ? 0
                     : parseFloat($(elm).attr("discount_value"));
@@ -718,7 +724,7 @@ let DeliveryOrder = {
             UOM_CONVERSION,
             productId,
             satuanId,
-            qty
+            qty,
         );
 
         // Cari data diskon yang cocok
@@ -728,13 +734,13 @@ let DeliveryOrder = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = DeliveryOrder.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             return (
@@ -754,7 +760,7 @@ let DeliveryOrder = {
             if (applicable.discount_type === "percent") {
                 discPercentInput.val(applicable.discount_value);
                 discAmountInput.val(
-                    (price * qty * applicable.discount_value) / 100
+                    (price * qty * applicable.discount_value) / 100,
                 );
             } else {
                 discPercentInput.val(0);
@@ -778,13 +784,13 @@ let DeliveryOrder = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = DeliveryOrder.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             const isApplicable =
@@ -843,7 +849,7 @@ let DeliveryOrder = {
 
     convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
         const uom = UOM_CONVERSIONS.find(
-            (u) => u.product_id == productId && u.unit_id == satuanId
+            (u) => u.product_id == productId && u.unit_id == satuanId,
         );
         if (!uom) return qty; // fallback jika tidak ditemukan
         return qty * uom.conversion;
@@ -900,7 +906,7 @@ let DeliveryOrder = {
             resultProduct = resultProduct.filter(
                 (value, index, self) =>
                     index ===
-                    self.findIndex((t) => t.product_id === value.product_id)
+                    self.findIndex((t) => t.product_id === value.product_id),
             );
 
             // 3️⃣ Loop per product_id
@@ -911,17 +917,17 @@ let DeliveryOrder = {
                 DeliveryOrder.showDiscountProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 DeliveryOrder.showDiscountFreeProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
                 DeliveryOrder.showQtySmallestProduct(
                     [product_id],
                     [product_name],
-                    [unit_id]
+                    [unit_id],
                 );
             });
         }

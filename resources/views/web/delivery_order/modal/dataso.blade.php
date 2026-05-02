@@ -4,7 +4,7 @@
      <div class="modal-dialog modal-xl">
          <div class="modal-content">
              <div class="modal-header">
-                 <h5 class="modal-title">Data So Belum Dikirim</h5>
+                 <h5 class="modal-title">Data Faktur Belum Dikirim</h5>
                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
              </div>
              <div class="modal-body">
@@ -21,7 +21,9 @@
                             <tr>
                               <th>No</th>
                               <th>So Number</th>
-                              <th>So Date</th>
+                              <th>Tanggal So</th>
+                              <th>No. Faktur</th>
+                              <th>Tanggal Faktur</th>
                               <th>Customer</th>
                               <th>Address</th>
                               <th>Status</th>
@@ -30,7 +32,7 @@
                           </thead>
                           <tbody>
                             <tr>
-                                <td class="text-center" colspan="7">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="9">Tidak ada data ditemukan</td>
                             </tr>
                           </tbody>
                      </table>

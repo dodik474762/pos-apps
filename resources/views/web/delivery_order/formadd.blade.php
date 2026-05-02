@@ -51,7 +51,7 @@
                             </div>
 
                              <div class="mb-3">
-                                <label class="form-label">Sales Order</label>
+                                <label class="form-label">Faktur</label>
                                 <div class="input-group">
                                     <button type="button" class="btn btn-outline-primary"
                                             onclick="DeliveryOrder.showModalSO(this)">
@@ -60,7 +60,7 @@
                                     <input disabled type="text" id="so_number" class="form-control required"
                                         value="{{ $data->so_number ?? '' }}"
                                         data_id="{{ $data->so_id ?? '' }}"
-                                        error="Sales Order">
+                                        error="Faktur">
                                 </div>
                             </div>
 
