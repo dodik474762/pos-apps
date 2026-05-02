@@ -35,40 +35,41 @@ let SalesPlan = {
         window.location.href = url.base_url(SalesPlan.module()) + "add";
     },
 
-       // Ambil data dari tabel detail (Plan Details)
+    // Ambil data dari tabel detail (Plan Details)
     getPostItem: () => {
-    const table = $("table#table-items tbody tr.input");
-    let result = [];
+        const table = $("table#table-items tbody tr.input");
+        let result = [];
 
-    table.each((index, elm) => {
-        const $row = $(elm);
+        table.each((index, elm) => {
+            const $row = $(elm);
+            // hanya push jika data_id kosong
+            if ($row.attr("data_id") !== "") return;
 
-        result.push({
-            id: $row.attr("data_id") || null,
+            result.push({
+                id: $row.attr("data_id") || null,
 
-            customer_id: $row.find("#customer_id").attr("data_id") || null,
-            customer_name: $row.find("#customer_id").val() || "",
+                customer_id: $row.find("#customer_id").attr("data_id") || null,
+                customer_name: $row.find("#customer_id").val() || "",
 
-            visit_type: $row.find("#visit_type").val() || "",
+                visit_type: $row.find("#visit_type").val() || "",
 
-            visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
-            visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
-            visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
-            visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
-            visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
-            visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
-            visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
+                visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
+                visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
+                visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
+                visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
+                visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
+                visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
+                visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
 
-            note: $row.find("#note").val() || "",
-            type: $row.find("#type").val() || "PERMANEN",
+                note: $row.find("#note").val() || "",
+                type: $row.find("#type").val() || "PERMANEN",
 
-            remove: $row.hasClass("remove") ? 1 : 0
+                remove: $row.hasClass("remove") ? 1 : 0,
+            });
         });
-    });
 
-    return result;
-},
-
+        return result;
+    },
 
     // Ambil data utama dari header form
     getPostInput: () => {
@@ -79,22 +80,21 @@ let SalesPlan = {
             period_month: $("#period_month").val() || "",
             salesman: $("#salesman").val() || "",
             description: $("#description").val() || "",
-            items: SalesPlan.getPostItem()
+            items: SalesPlan.getPostItem(),
         };
 
         return data;
     },
 
-
-     submitImport: (elm, e) => {
-            e.preventDefault();
-            let form = $(elm).closest("div.row");
-            if (validation.runWithElement(form)) {
-                $("form#form-product").submit();
-            } else {
-                message.sweetError("Informasi", "Data Belum Lengkap");
-            }
-        },
+    submitImport: (elm, e) => {
+        e.preventDefault();
+        let form = $(elm).closest("div.row");
+        if (validation.runWithElement(form)) {
+            $("form#form-product").submit();
+        } else {
+            message.sweetError("Informasi", "Data Belum Lengkap");
+        }
+    },
 
     submit: (elm, e) => {
         e.preventDefault();
@@ -164,7 +164,7 @@ let SalesPlan = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -218,7 +218,7 @@ let SalesPlan = {
                         let html = "";
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                SalesPlan.module()
+                                SalesPlan.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -234,12 +234,12 @@ let SalesPlan = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -253,10 +253,10 @@ let SalesPlan = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -412,7 +412,7 @@ let SalesPlan = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -487,7 +487,7 @@ let SalesPlan = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -682,7 +682,7 @@ let SalesPlan = {
                 const id = $(elm).attr("data_id");
                 const discount_type = $(elm).attr("discount_type");
                 const discount_value = isNaN(
-                    parseFloat($(elm).attr("discount_value"))
+                    parseFloat($(elm).attr("discount_value")),
                 )
                     ? 0
                     : parseFloat($(elm).attr("discount_value"));
@@ -783,7 +783,7 @@ let SalesPlan = {
             UOM_CONVERSION,
             productId,
             satuanId,
-            qty
+            qty,
         );
 
         // Cari data diskon yang cocok
@@ -793,13 +793,13 @@ let SalesPlan = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = SalesPlan.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             return (
@@ -819,7 +819,7 @@ let SalesPlan = {
             if (applicable.discount_type === "percent") {
                 discPercentInput.val(applicable.discount_value);
                 discAmountInput.val(
-                    (price * qty * applicable.discount_value) / 100
+                    (price * qty * applicable.discount_value) / 100,
                 );
             } else {
                 discPercentInput.val(0);
@@ -843,13 +843,13 @@ let SalesPlan = {
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.min_qty
+                d.min_qty,
             );
             const maxSmall = SalesPlan.convertToSmallest(
                 UOM_CONVERSION,
                 d.product_id,
                 d.unit_id,
-                d.max_qty
+                d.max_qty,
             );
 
             const isApplicable =
@@ -908,7 +908,7 @@ let SalesPlan = {
 
     convertToSmallest: (UOM_CONVERSIONS, productId, satuanId, qty) => {
         const uom = UOM_CONVERSIONS.find(
-            (u) => u.product_id == productId && u.unit_id == satuanId
+            (u) => u.product_id == productId && u.unit_id == satuanId,
         );
         if (!uom) return qty; // fallback jika tidak ditemukan
         return qty * uom.conversion;

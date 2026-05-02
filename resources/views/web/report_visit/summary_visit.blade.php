@@ -97,8 +97,9 @@
                                                     <th>Rata - Rata Lama Transaksi per Outlet</th>
                                                     <th>Lama di Jalan</th>
                                                     <th>Total Keluar Kantor</th>
-                                                    <th>Total Call Keseluruhan</th>
+                                                    <th>Total Target </th>
                                                     <th>Total Call Sesuai PJP</th>
+                                                    <th>Total Call Keseluruhan</th>                                                    
                                                     <th>Total Call Extra Call</th>
                                                 </tr>
                                             </thead>
