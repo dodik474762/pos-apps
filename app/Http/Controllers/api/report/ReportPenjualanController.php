@@ -50,47 +50,49 @@ class ReportPenjualanController extends Controller
                 DB::raw('YEAR(m.so_date) as year'),
                 'sih.invoice_number',
                 DB::raw("
-            (
-                SELECT
-                    CASE uom_count.total_level
-                        WHEN 4 THEN
-                            CONCAT(
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) / uom_l4.nilai_konversi_terkecil), '.',
-                                FLOOR(((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
-                                FLOOR(((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
-                            )
-                        WHEN 3 THEN
-                            CONCAT(
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
-                                FLOOR(((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
-                            )
-                        WHEN 2 THEN
-                            CONCAT(
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                                FLOOR((sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
-                            )
-                        ELSE
-                            CAST(FLOOR(sod.qty * uom_used.nilai_konversi_terkecil) AS CHAR)
-                    END
-                FROM product_uom uom_used
-                JOIN (
-                    SELECT product, COUNT(*) as total_level
-                    FROM product_uom
-                    WHERE product = sod.product_id AND deleted IS NULL
-                    GROUP BY product
-                ) uom_count ON uom_count.product = sod.product_id
-                JOIN product_uom uom_l1 ON uom_l1.product = sod.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
-                LEFT JOIN product_uom uom_l2 ON uom_l2.product = sod.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
-                LEFT JOIN product_uom uom_l3 ON uom_l3.product = sod.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
-                LEFT JOIN product_uom uom_l4 ON uom_l4.product = sod.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
-                WHERE uom_used.unit_tujuan = sod.unit
-                  AND uom_used.product = sod.product_id
-                  AND uom_used.deleted IS NULL
-                LIMIT 1
-            ) as qty_sold
-        "),
+    (
+        SELECT
+            CASE uom_count.total_level
+                WHEN 4 THEN
+                    CONCAT(
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l4.nilai_konversi_terkecil), '.',
+                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                    )
+                WHEN 3 THEN
+                    CONCAT(
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                    )
+                WHEN 2 THEN
+                    CONCAT(
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                    )
+                ELSE
+                    CAST(FLOOR(inner_sod.qty * uom_used.nilai_konversi_terkecil) AS CHAR)
+            END
+        FROM sales_order_details inner_sod
+        JOIN product_uom uom_used
+            ON uom_used.unit_tujuan = inner_sod.unit
+            AND uom_used.product = inner_sod.product_id
+            AND uom_used.deleted IS NULL
+        JOIN (
+            SELECT product, COUNT(*) as total_level
+            FROM product_uom
+            WHERE deleted IS NULL
+            GROUP BY product
+        ) uom_count ON uom_count.product = inner_sod.product_id
+        JOIN product_uom uom_l1 ON uom_l1.product = inner_sod.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
+        LEFT JOIN product_uom uom_l2 ON uom_l2.product = inner_sod.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
+        LEFT JOIN product_uom uom_l3 ON uom_l3.product = inner_sod.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
+        LEFT JOIN product_uom uom_l4 ON uom_l4.product = inner_sod.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
+        WHERE inner_sod.id = sod.id
+        LIMIT 1
+    ) as qty_sold
+"),
                 'ppi.beban',
                 'sop.discount_amount',                                               // 👈 total discount dari promo
                 DB::raw('IFNULL(sop.discount_amount / NULLIF((SELECT COUNT(sod2.qty) FROM sales_order_details sod2 WHERE sod2.sales_order_id = m.id AND sod2.deleted IS NULL), 0), 0) as prorate_discount'),
