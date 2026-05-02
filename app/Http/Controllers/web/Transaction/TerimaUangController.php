@@ -202,7 +202,7 @@ class TerimaUangController extends Controller
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
             ->whereIn('cc.id', $customers)
-            ->whereRaw('(m.total_amount - COALESCE(spd.allocated_amount, 0) - COALESCE(rpd.amount_paid, 0)) > 0')
+            // ->whereRaw('(m.total_amount - COALESCE(spd.allocated_amount, 0) - COALESCE(rpd.amount_paid, 0)) > 0')
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
         if ($type == 'salesman') {
@@ -234,7 +234,8 @@ class TerimaUangController extends Controller
         $qr = '';
 
         // echo '<pre>';
-        // print_r($invoices);die;
+        // print_r($invoices);
+        // die;
 
         $tanggal_rute = $data['tanggal'];
         $pdf = Pdf::loadView('web.terima_uang.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))

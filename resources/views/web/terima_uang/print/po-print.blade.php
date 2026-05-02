@@ -182,7 +182,7 @@
             </td>
             <td class="text-center">
                 <br><br><br>
-                <strong>Disetujui Oleh</strong>
+                <strong>Direview Oleh</strong>
                 <br><br><br>
                 (__________________)
             </td>
