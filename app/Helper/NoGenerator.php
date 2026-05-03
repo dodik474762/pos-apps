@@ -8,11 +8,13 @@ use App\Models\Master\Customer;
 use App\Models\Master\DocumentTransaction;
 use App\Models\Master\PricePNBP;
 use App\Models\Master\ProductUom;
+use App\Models\Master\ProductUomPrice;
 use App\Models\Master\RoutingPermission;
 use App\Models\Master\RoutingReminder;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
 use App\Models\Transaction\GeneralLedger;
+use App\Models\Transaction\ProductUomCost;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesReturnDtl;
@@ -1074,6 +1076,32 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         ->where('warehouse', $warehouseId)
         ->first();
 
+    $product_uom_large = ProductUom::whereNull('deleted')
+        ->where('product', $value['product'])
+        ->where('state', 'large')
+        ->first();
+
+    $sell_price     = 0;
+    $purchase_price = 0;
+
+    if ($product_uom_large) {
+        $product_price = ProductUomPrice::where('product', $value['product'])
+            ->where('unit', $product_uom_large->unit_tujuan)
+            ->where('date_start', '<=', date('Y-m-d'))
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $product_cost = ProductUomCost::where('product', $value['product'])
+            ->where('unit_id', $product_uom_large->unit_tujuan)
+            ->where('date_start', '<=', date('Y-m-d'))
+            ->where('is_active', '1')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $sell_price     = $product_price->price  ?? 0;
+        $purchase_price = $product_cost->cost    ?? 0;
+    }
+
     if ($stock) {
         // Update qty existing
         DB::table('product_stock')
@@ -1102,7 +1130,8 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         'qty_out' => $type == 'add' ? 0 : $convertedQty,
         'move_type' => $move_type,
         'reference_id' => $reference_id,
-        'price' => $value['price'] ?? 0,
+        'price' => $sell_price,
+        'purchase_price' => $purchase_price,
         'created_at' => now(),
     ]);
 }
