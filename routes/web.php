@@ -27,6 +27,7 @@ use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\api\report\ReportPenjualanController as ReportReportPenjualanController;
+use App\Http\Controllers\api\report\ReportPiutangController as ReportReportPiutangController;
 use App\Http\Controllers\api\Transaction\CreditNoteController as TransactionCreditNoteController;
 use App\Http\Controllers\api\Transaction\DeliveryOrderController as TransactionDeliveryOrderController;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
@@ -76,6 +77,7 @@ use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\report\ReportPenjualanController;
+use App\Http\Controllers\web\report\ReportPiutangController;
 use App\Http\Controllers\web\Transaction\CreditNoteController;
 use App\Http\Controllers\web\Transaction\DeliveryOrderController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
@@ -316,6 +318,7 @@ Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
 Route::get('report/summary_visit', [ReportVisitController::class, 'summary']);
 Route::get('report/report_penjualan', [ReportPenjualanController::class, 'index']);
+Route::get('report/report_piutang', [ReportPiutangController::class, 'index']);
 
 /*API */
 
@@ -673,4 +676,5 @@ Route::post('api/report/report_stock/getDataStock', [ApiReportStockController::c
 Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
 Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitController::class, 'getDataSummary']);
 Route::post('api/report/report_penjualan/getData', [ReportReportPenjualanController::class, 'getData']);
+Route::post('api/report/report_piutang/getData', [ReportReportPiutangController::class, 'getData']);
 /*API */
