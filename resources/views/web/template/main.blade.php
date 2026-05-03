@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="{{ asset('main_template/assets/libs/cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css') }}">
     <link rel="stylesheet" href="{{ asset('main_template/assets/libs/cdn.datatables.net/fixedheader/css/fixedColumns.dataTables.min.css') }}">
     <link rel="stylesheet" href="{{ asset('main_template/assets/libs/cdn.datatables.net/fixedheader/css/fixedHeader.dataTables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('main_template/assets/libs/cdn.datatables.net/1.11.5/css/rowgroup.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('main_template/assets/libs/cdn.jsdelivr.net/npm/flatpicker/flatpicker.css') }}">
 
     <!-- jsvectormap css -->
@@ -150,6 +151,7 @@
     <!--datatable js-->
     <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/1.11.5/js/rowgroup.min.js') }}"></script>
     <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js') }}"></script>
     <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js') }}"></script>
     <script src="{{ asset('main_template/assets/libs/cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js') }}"></script>

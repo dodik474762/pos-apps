@@ -1,3 +1,12 @@
+<style>
+    tr.dtrg-group td.group-salesman-header {
+        background-color: #405189 !important;
+        color: #ffffff !important;
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+</style>
+
 @if (isset($akses->report_penjualan))
     @if ($akses->report_penjualan->view == 1)
         <input type="hidden" id="update" value="{{ $akses->report_penjualan->update }}">
@@ -47,9 +56,17 @@
                                             placeholder="Select date">
                                     </div>
                                 </div>
+                                 <div class="col-xxl-1 col-sm-4">
+                                    <div>
+                                        <select name="select-option-report" id="select-option-report" class="form-control">
+                                            <option value="PENJUALAN">PENJUALAN</option>
+                                            <option value="PENJUALAN PER PENJUAL">PENJUALAN PER PENJUAL</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="ReportPenjualan.getData();"> <i
+                                        <button type="button" class="btn btn-primary w-100" onclick="ReportPenjualan.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -67,6 +84,12 @@
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All" href="#list-data"
                                         role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-penjual" href="#report-per-penjual"
+                                        role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Penjual
                                     </a>
                                 </li>
                             </ul>
@@ -135,6 +158,10 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="tab-pane" id="report-per-penjual">
+                                    @include('web.report_penjualan.report_per_penjual')
                                 </div>
                             </div>
                         </div>

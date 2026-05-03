@@ -10,6 +10,10 @@ let ReportPenjualan = {
         return "api/" + ReportPenjualan.module();
     },
 
+    modulePiutangApi: () => {
+        return "api/report/report_piutang";
+    },
+
     csrf_token: () => {
         return $('meta[name="csrf-token"]').attr("content");
     },
@@ -1457,6 +1461,360 @@ let ReportPenjualan = {
                 "form-select form-select-sm",
             ));
     },
+
+    getDataPerPenjual: async () => {
+        let tableData = $("table#table-data-per-penjual");
+
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPenjualan.modulePiutangApi()) +
+                    `getData`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.types = "per-penjual";
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    text: "Excel",
+                    className: "btn btn-success btn-sm",
+                    action: function (e, dt, button, config) {
+                        // Ambil semua data langsung dari server via AJAX
+                        $.ajax({
+                            url:
+                                url.base_url(
+                                    ReportPenjualan.modulePiutangApi(),
+                                ) + "getData",
+                            type: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
+                            },
+                            dataType: "JSON",
+                            data: {
+                                tanggal: $("#filter-tanggal").val(),
+                                types: "per-penjual",
+                                start: 0,
+                                length: 99999, // ambil semua
+                            },
+                            success: function (resp) {
+                                var tableRows = resp.data;
+                                console.log("resp", tableRows);
+
+                                if (!tableRows || tableRows.length === 0) {
+                                    alert("Tidak ada data untuk di-export.");
+                                    return;
+                                }
+
+                                // Group by salesman_name
+                                var grouped = {};
+                                var order = [];
+                                tableRows.forEach(function (row) {
+                                    var key =
+                                        row.salesman_name ||
+                                        "(Tidak Ada Salesman)";
+                                    if (!grouped[key]) {
+                                        grouped[key] = [];
+                                        order.push(key);
+                                    }
+                                    grouped[key].push(row);
+                                });
+
+                                // Susun rows untuk Excel
+                                var excelRows = [];
+
+                                // Header kolom
+                                excelRows.push([
+                                    "NO",
+                                    "NO FAKTUR",
+                                    "TANGGAL FAKTUR",
+                                    "KODE CUSTOMER",
+                                    "NAMA CUSTOMER",
+                                    "KECAMATAN",
+                                    "KABUPATEN",
+                                    "TOTAL PIUTANG",
+                                    "TOTAL DIBAYAR",
+                                    "SISA HUTANG",
+                                ]);
+
+                                order.forEach(function (salesman) {
+                                    var rows = grouped[salesman];
+                                    var subtotal = rows.reduce(function (
+                                        sum,
+                                        r,
+                                    ) {
+                                        return (
+                                            sum +
+                                            parseFloat(
+                                                r.outstanding_amount || 0,
+                                            )
+                                        );
+                                    }, 0);
+
+                                    // Baris header group salesman
+                                    excelRows.push([
+                                        salesman,
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        "",
+                                        subtotal,
+                                    ]);
+
+                                    // Baris data
+                                    rows.forEach(function (r, i) {
+                                        excelRows.push([
+                                            i + 1,
+                                            r.invoice_number ?? "",
+                                            r.invoice_date ?? "",
+                                            r.customer_code ?? "",
+                                            r.nama_customer ?? "",
+                                            r.kecamatan ?? "",
+                                            r.kabupaten ?? "",
+                                            parseFloat(r.total_amount || 0),
+                                            parseFloat(r.amount_paid || 0),
+                                            parseFloat(
+                                                r.outstanding_amount || 0,
+                                            ),
+                                        ]);
+                                    });
+                                });
+
+                                // ✅ Cek apakah XLSX tersedia, fallback ke $.fn.dataTable.ext jika tidak
+                                if (typeof XLSX !== "undefined") {
+                                    var wb = XLSX.utils.book_new();
+                                    var ws = XLSX.utils.aoa_to_sheet(excelRows);
+                                    ws["!cols"] = [
+                                        { wch: 5 },
+                                        { wch: 15 },
+                                        { wch: 15 },
+                                        { wch: 18 },
+                                        { wch: 25 },
+                                        { wch: 15 },
+                                        { wch: 20 },
+                                        { wch: 15 },
+                                        { wch: 15 },
+                                        { wch: 15 },
+                                    ];
+                                    XLSX.utils.book_append_sheet(
+                                        wb,
+                                        ws,
+                                        "Report Per Penjual",
+                                    );
+                                    XLSX.writeFile(
+                                        wb,
+                                        "ReportPenjualanPerPenjual.xlsx",
+                                    );
+                                } else {
+                                    // Fallback: pakai DataTables internal XLSX
+                                    var _XLSX = $.fn.dataTable.ext.buttons
+                                        .excelHtml5
+                                        ? window.JSZip
+                                        : null;
+
+                                    // Buat CSV sebagai fallback terakhir
+                                    var csvContent = excelRows
+                                        .map(function (row) {
+                                            return row
+                                                .map(function (cell) {
+                                                    var val = (cell ?? "")
+                                                        .toString()
+                                                        .replace(/"/g, '""');
+                                                    return '"' + val + '"';
+                                                })
+                                                .join(",");
+                                        })
+                                        .join("\n");
+
+                                    var blob = new Blob(
+                                        ["\uFEFF" + csvContent],
+                                        {
+                                            type: "text/csv;charset=utf-8;",
+                                        },
+                                    );
+                                    var link = document.createElement("a");
+                                    link.href = URL.createObjectURL(blob);
+                                    link.download =
+                                        "ReportPenjualanPerPenjual.csv";
+                                    link.click();
+                                }
+                            },
+                            error: function () {
+                                alert("Gagal mengambil data untuk export.");
+                            },
+                        });
+                    },
+                },
+            ],
+            // ✅ Tambah rowGroup
+            rowGroup: {
+                dataSrc: "salesman_name",
+                startRender: function (rows, group) {
+                    var subtotal = rows
+                        .data()
+                        .pluck("outstanding_amount")
+                        .reduce(function (a, b) {
+                            return parseFloat(a || 0) + parseFloat(b || 0);
+                        }, 0);
+
+                    var formatted = new Intl.NumberFormat("id-ID", {
+                        minimumFractionDigits: 2,
+                    }).format(subtotal);
+
+                    return $("<tr/>")
+                        .append(
+                            `<td colspan="9" class="group-salesman-header">
+                            <i class="mdi mdi-account me-1"></i>
+                            <strong>${group}</strong>
+                        </td>`,
+                        )
+                        .append(
+                            `<td class="text-end group-salesman-header">
+                            <strong>${formatted}</strong>
+                        </td>`,
+                        );
+                },
+            },
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NO FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "TANGGAL FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "KODE CUSTOMER",
+                },
+                {
+                    data: "nama_customer",
+                    title: "NAMA CUSTOMER",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kecamatan",
+                    title: "KECAMATAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kabupaten",
+                    title: "KABUPATEN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_amount",
+                    title: "TOTAL PIUTANG",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "amount_paid",
+                    title: "TOTAL DIBAYAR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "outstanding_amount",
+                    title: "SISA HUTANG",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                // ✅ Kolom salesman_name disembunyikan, hanya untuk grouping
+                {
+                    data: "salesman_name",
+                    title: "SALESMAN",
+                    visible: false,
+                },
+            ],
+        });
+
+        // Tombol filter tanggal
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
+
+    filter: () => {
+        const type = $("#select-option-report").val();
+        if (type == "PENJUALAN") {
+            ReportPenjualan.getData();
+        }
+        if (type == "PENJUALAN PER PENJUAL") {
+            ReportPenjualan.getDataPerPenjual();
+        }
+    },
 };
 
 // untuk export all data
@@ -1546,6 +1904,7 @@ function newexportaction(e, dt, button, config) {
 
 $(function () {
     ReportPenjualan.setSelect2();
-    ReportPenjualan.getLocation();
+    // ReportPenjualan.getLocation();
     ReportPenjualan.getData();
+    ReportPenjualan.getDataPerPenjual();
 });

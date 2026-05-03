@@ -14,9 +14,10 @@ class ReportPiutangController extends Controller
         date_default_timezone_set('Asia/Jakarta');
     }
 
-    public function getData()
+    public function getData(Request $request)
     {
         DB::enableQueryLog();
+        $data = $request->all();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -58,14 +59,27 @@ class ReportPiutangController extends Controller
                     ->on('dv.users', 'm.salesman')
                     ->whereNull('dv.deleted');
             })
-            ->whereDate('sih.invoice_date', '<=', $tanggal)
             // ->where('m.id', '1588')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->orderBy('m.salesman', 'asc')
-            ->having('outstanding_amount', '>', 0)
-            ->orderBy('c.code', 'asc')
-            ->orderBy('sih.invoice_date', 'asc');
+            ->having('outstanding_amount', '>', 0);
+
+        if (isset($data['types'])) {
+            if ($data['types'] == 'per-penjual') {
+                $datadb->whereDate('sih.invoice_date', '=', $tanggal)
+                    ->whereNotNull('usr.name')
+                    ->orderBy('usr.name', 'asc')
+                    ->orderBy('c.code', 'asc')
+                    ->orderBy('sih.invoice_date', 'asc');
+            } else {
+                $datadb->whereDate('sih.invoice_date', '<=', $tanggal)->orderBy('c.code', 'asc')
+                    ->orderBy('sih.invoice_date', 'asc');;
+            }
+        } else {
+            $datadb->whereDate('sih.invoice_date', '<=', $tanggal)->orderBy('c.code', 'asc')
+                ->orderBy('sih.invoice_date', 'asc');;
+        }
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -135,7 +149,7 @@ class ReportPiutangController extends Controller
         }
 
         $data['data'] = $resultdb;
-        $data['draw'] = $_POST['draw'];
+        $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
 
         $query = DB::getQueryLog();
         return json_encode($data);
