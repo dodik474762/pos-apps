@@ -1814,6 +1814,199 @@ let ReportPenjualan = {
         if (type == "PENJUALAN PER PENJUAL") {
             ReportPenjualan.getDataPerPenjual();
         }
+        if (type == "PENJUALAN PER BARANG") {
+            ReportPenjualan.getDataPerProduct();
+        }
+    },
+
+    getDataPerProduct: async () => {
+        let tableData = $("table#table-data-per-barang");
+
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPenjualan.moduleApi()) +
+                    `getDataPenjualanPerProduct`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPenjualanPerProduct",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NO FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "TANGGAL FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "NAMA SALESMAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "KODE CUSTOMER",
+                },
+                {
+                    data: "nama_customer",
+                    title: "NAMA CUSTOMER",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kecamatan",
+                    title: "KECAMATAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kabupaten",
+                    title: "KABUPATEN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "KODE PRODUK",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "NAMA PRODUK",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "category_product",
+                    title: "KATEGORI BARANG",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "qty",
+                    title: "KUANTITAS",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "unit_jual",
+                    title: "SATUAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "price",
+                    title: "HARGA",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "subtotal",
+                    title: "TOTAL HARGA",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "sku_name",
+                    title: "NAMA KATEGORI PELANGGAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "channel_outlet",
+                    title: "CHANNEL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+            ],
+        });
+
+        // Tombol filter tanggal
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
     },
 };
 
@@ -1907,4 +2100,5 @@ $(function () {
     // ReportPenjualan.getLocation();
     ReportPenjualan.getData();
     ReportPenjualan.getDataPerPenjual();
+    ReportPenjualan.getDataPerProduct();
 });

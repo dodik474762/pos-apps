@@ -61,6 +61,7 @@
                                         <select name="select-option-report" id="select-option-report" class="form-control">
                                             <option value="PENJUALAN">PENJUALAN</option>
                                             <option value="PENJUALAN PER PENJUAL">PENJUALAN PER PENJUAL</option>
+                                            <option value="PENJUALAN PER BARANG">PENJUALAN PER BARANG</option>
                                         </select>
                                     </div>
                                 </div>
@@ -90,6 +91,12 @@
                                     <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-penjual" href="#report-per-penjual"
                                         role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Penjual
+                                    </a>
+                                </li>
+                                 <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-barang" href="#report-per-barang"
+                                        role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Barang
                                     </a>
                                 </li>
                             </ul>
@@ -162,6 +169,10 @@
 
                                 <div class="tab-pane" id="report-per-penjual">
                                     @include('web.report_penjualan.report_per_penjual')
+                                </div>
+
+                                 <div class="tab-pane" id="report-per-barang">
+                                    @include('web.report_penjualan.report_per_barang')
                                 </div>
                             </div>
                         </div>
