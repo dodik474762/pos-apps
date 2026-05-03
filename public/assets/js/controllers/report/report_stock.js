@@ -1255,6 +1255,160 @@ let ReportStock = {
                 "form-select form-select-sm",
             ));
     },
+
+    getDataStokDetail: async () => {
+        let tableData = $("table#table-stock-product-detail");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 5, // No, Kode, Nama, Principal, UoM
+            },
+            order: [[2, "asc"]], // default order by Nama Produk
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportStock.moduleApi()) +
+                    `getDataStockDetail`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportStock.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportStock",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    // No
+                    data: "product_code",
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    // Kode Produk
+                    data: "product_code",
+                    render: function (data, type, row) {
+                        return row.product_code ?? "";
+                    },
+                },
+                {
+                    // Nama Produk
+                    data: "product_name",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    // Nama Principal
+                    data: "principal",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    // UoM
+                    data: "uom_product",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    // CARTON (level 4)
+                    data: "qty_ctn",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data ?? "0";
+                    },
+                },
+                {
+                    // RENCENG (level 2)
+                    data: "qty_rtg",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data ?? "0";
+                    },
+                },
+                {
+                    // PACK (level 3)
+                    data: "qty_pck",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data ?? "0";
+                    },
+                },
+                {
+                    // PCS (level 1)
+                    data: "qty_pcs",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data ?? "0";
+                    },
+                },
+            ],
+        });
+
+        // Tombol filter tanggal
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        data.buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)");
+
+        $(".dataTables_length select").addClass("form-select form-select-sm");
+    },
+
+    filter: () => {
+        const type = $("#select-option-report").val();
+        if (type == "SCD") {
+            ReportStock.getData();
+        }
+        if (type == "OPNAME") {
+            ReportStock.getDataStok();
+        }
+        if (type == "PRODUK") {
+            ReportStock.getDataStokDetail();
+        }
+    },
 };
 
 // untuk export all data
@@ -1347,4 +1501,5 @@ $(function () {
     ReportStock.getLocation();
     ReportStock.getData();
     ReportStock.getDataStok();
+    ReportStock.getDataStokDetail();
 });

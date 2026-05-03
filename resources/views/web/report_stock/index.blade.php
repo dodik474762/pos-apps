@@ -47,9 +47,18 @@
                                             placeholder="Select date">
                                     </div>
                                 </div>
+                                    <div class="col-xxl-1 col-sm-4">
+                                    <div>
+                                        <select name="select-option-report" id="select-option-report" class="form-control">
+                                            <option value="SCD">SCD</option>
+                                            <option value="OPNAME">OPNAME</option>
+                                            <option value="PRODUK">PRODUK</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="ReportStock.getData();"> <i
+                                        <button type="button" class="btn btn-primary w-100" onclick="ReportStock.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -71,6 +80,12 @@
                                 </li>
                                  <li class="nav-item">
                                     <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-stok-product" href="#stock-product"
+                                        role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Stock Product Opname
+                                    </a>
+                                </li>
+                                  <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-stok-product-detail" href="#stock-product-detail"
                                         role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Stock Product
                                     </a>
@@ -125,6 +140,9 @@
                                 </div>
                                 <div class="tab-pane" id="stock-product">
                                     @include('web.report_stock.stock_product')
+                                </div>
+                                <div class="tab-pane" id="stock-product-detail">
+                                    @include('web.report_stock.stock_product_detail')
                                 </div>
                             </div>
                         </div>
