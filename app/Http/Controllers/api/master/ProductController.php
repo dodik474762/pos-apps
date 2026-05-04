@@ -47,10 +47,12 @@ class ProductController extends Controller
                 'pt.type',
                 'u.name as unit_name',
                 'v.nama_vendor',
+                'prin.nama_vendor as nama_principal',
                 DB::raw('COALESCE(ps.stock,0) as stock')
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
+            ->leftJoin('vendor as prin', 'prin.id', '=', 'v.parent')
             ->leftJoinSub($stock, 'ps', function ($join) {
                 $join->on('ps.product', '=', 'm.id');
             })
@@ -69,6 +71,8 @@ class ProductController extends Controller
                     $query->orWhere('m.sku_name', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.category', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('prin.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.sub_brand', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
                 });
             }
@@ -160,15 +164,15 @@ class ProductController extends Controller
         $data['recordsFiltered'] = 0;
         try {
             $productIds = [];
-            if(isset($data['user_id'])){
+            if (isset($data['user_id'])) {
                 $users = DB::table('users')->where('id', $data['user_id'])->first();
                 $karyawan = DB::table('karyawan')->where('nik', $users->nik)->first();
                 $karyawanId = $karyawan->id;
                 $productIds = DB::table('karyawan_has_product')
-                ->where('karyawan', $karyawanId)
-                ->pluck('product')
-                ->toArray();
-            }            
+                    ->where('karyawan', $karyawanId)
+                    ->pluck('product')
+                    ->toArray();
+            }
 
             $datadb = DB::table($this->getTableName() . ' as m')
                 ->select([
@@ -347,6 +351,9 @@ class ProductController extends Controller
 
         // ambil data excel (BELUM masuk DB)
         $rows = $import->rows;
+        // echo '<pre>';
+        // print_r($rows);
+        // die;
 
         // $groupByIdProduct = collect($rows)
         //     // ->where('kode_produk_new_sistem', '63')
@@ -355,7 +362,7 @@ class ProductController extends Controller
         //     ->map(function ($items) {
 
         //         $totalItem = $items->count(); // panjang array
-    
+
         //         return [
         //             'total_item' => $totalItem,
         //             'items' => $items->reverse()->values(),
@@ -365,10 +372,10 @@ class ProductController extends Controller
 
         $groupByIdProduct = collect($rows)
             ->filter(function ($row) {
-                return !empty($row['kode_produk_principle']);
+                return !empty($row['nama_barang']);
             })
             // ->where('kode_produk_principle', '1018261')
-            ->groupBy('kode_produk_principle')
+            ->groupBy('nama_barang')
             ->map(function ($items) {
 
                 $totalItem = $items->count(); // panjang array
@@ -380,12 +387,14 @@ class ProductController extends Controller
             })
             ->toArray();
         // echo '<pre>';
-        // print_r($groupByIdProduct);die;
+        // print_r($groupByIdProduct);
+        // die;
 
         $vendors = DB::table('vendor')->whereNull('deleted')->get()->toArray();
         $vendorGrouped = collect($vendors)->groupBy('nama_vendor')->toArray();
         // echo '<pre>';
-        // print_r($vendorGrouped);die;
+        // print_r($vendorGrouped);
+        // die;
 
         $result['is_valid'] = false;
         $result['message'] = 'Error';
@@ -393,15 +402,16 @@ class ProductController extends Controller
         try {
             $productRowsImport = 0;
             $failImported = 0;
+            $counter = 1;
             foreach ($groupByIdProduct as $key => $group) {
                 try {
-                        // proses setiap group
+                    // proses setiap group
                     $productId = $key;
                     $total_item = $group['total_item'];
                     $items = $group['items'];
 
                     $prod = new Product();
-                    $prod->code = $key;
+                    $prod->code = $group['items'][0]['kode_produk_principle'] == '' ? 'P26MAY-' . ($counter++) : $group['items'][0]['kode_produk_principle'];
                     $prod->name = $group['items'][0]['nama_barang'];
                     $prod->product_type = 1;
                     $prod->unit = $group['items'][0]['id_satuan'];
@@ -411,6 +421,7 @@ class ProductController extends Controller
                     $prod->type_retur = 'RETUR';
                     $prod->sku_name = $group['items'][0]['sku_name'];
                     $prod->category = $group['items'][0]['kategori_barang_sku'];
+                    $prod->sub_brand = $group['items'][0]['sub_brand_name'];
                     $prod->save();
                     $productId = $prod->id;
 
@@ -542,6 +553,10 @@ class ProductController extends Controller
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
                         }
+
+                        $productUpdate = Product::find($productId);
+                        $productUpdate->vendor = $vendorId;
+                        $productUpdate->save();
                     }
 
                     if ($total_item == 3) {
@@ -647,6 +662,10 @@ class ProductController extends Controller
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
                         }
+
+                        $productUpdate = Product::find($productId);
+                        $productUpdate->vendor = $vendorId;
+                        $productUpdate->save();
                     }
 
                     if ($total_item == 2) {
@@ -681,7 +700,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_terkecil['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_kecil;
-                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->date_start = '2026-05-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -703,7 +722,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_besar['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_besar;
-                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->date_start = '2026-05-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -728,6 +747,10 @@ class ProductController extends Controller
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
                         }
+
+                        $productUpdate = Product::find($productId);
+                        $productUpdate->vendor = $vendorId;
+                        $productUpdate->save();
                     }
 
                     if ($total_item == 1) {
@@ -783,6 +806,9 @@ class ProductController extends Controller
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
                         }
+                        $productUpdate = Product::find($productId);
+                        $productUpdate->vendor = $vendorId;
+                        $productUpdate->save();
                     }
                 } catch (\Throwable $th) {
                     $failImported += 1;
@@ -791,13 +817,13 @@ class ProductController extends Controller
                     // $result['data'] = $group;
                     // $result['message'] = 'Error ' . $th->getMessage();
                     // return response()->json($result);
-                }               
-                
+                }
+
                 $productRowsImport++;
             }
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Success ' . $productRowsImport . ' Imported dan Failed Imported '.$failImported;
+            $result['message'] = 'Success ' . $productRowsImport . ' Imported dan Failed Imported ' . $failImported;
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = 'Error ' . $th->getMessage();
@@ -950,7 +976,7 @@ class ProductController extends Controller
     //                                     'konversi'=> $data['nilai_konversi_terkecil'][$x],
     //                                 ];
     //                             }
-                                
+
     //                             $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
     //                             // echo '<pre>';
     //                             // print_r($pricingApply);die;
@@ -1306,7 +1332,6 @@ class ProductController extends Controller
                         }
 
                         $product_uom_price->save();
-
                     } else {
                         // ── NON-RETAIL ──
                         if (!isset($data['price_uom'][$i])) {
@@ -1371,7 +1396,6 @@ class ProductController extends Controller
                                 }
                                 $sub->save();
                             }
-
                         } else {
                             // UPDATE existing — langsung update harga yang diinput saja
                             $product_uom_price->product     = $data['id'];
@@ -1398,7 +1422,6 @@ class ProductController extends Controller
                         }
                     }
                 }
-
             } else {
                 // Tidak ada uom_id dari input — pakai pricingApply dari harga_satuan_besar (RETAIL)
                 if (!empty($pricingApply)) {
@@ -1489,7 +1512,6 @@ class ProductController extends Controller
             DB::commit();
             $result['is_valid'] = true;
             $result['message']  = 'Data berhasil disimpan';
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
@@ -1680,18 +1702,20 @@ class ProductController extends Controller
         return $datadb;
     }
 
-    public function getChannel(){
+    public function getChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getSubChannel(){
+
+    public function getSubChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'SUB_CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'SUB_CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }

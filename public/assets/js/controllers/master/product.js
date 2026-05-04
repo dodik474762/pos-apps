@@ -92,7 +92,7 @@ let Product = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -118,10 +118,16 @@ let Product = {
                     data: "nama_vendor",
                 },
                 {
+                    data: "nama_principal",
+                },
+                {
                     data: "category",
                 },
                 {
                     data: "sku_name",
+                },
+                {
+                    data: "sub_brand",
                 },
                 {
                     data: "model_number",
@@ -134,20 +140,20 @@ let Product = {
                 },
                 {
                     data: "type",
-                },                
+                },
                 {
                     data: "stock",
                 },
                 {
                     data: "unit_name",
-                },                
+                },
                 {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
-                                Product.module()
+                                Product.module(),
                             )}ubah?id=${data}' data_id="${
                                 row.id
                             }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
@@ -161,12 +167,12 @@ let Product = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -180,10 +186,10 @@ let Product = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -250,7 +256,7 @@ let Product = {
     addFile: (elm) => {
         // Buat uploader secara dinamis
         var uploader = $(
-            `<input type="file" id="file" accept="image/*;capture=camera" />`
+            `<input type="file" id="file" accept="image/*;capture=camera" />`,
         );
         var src_foto = $(`input#file`);
 
@@ -268,7 +274,7 @@ let Product = {
                 var filename = files.name;
                 var data_from_file = filename.split(".");
                 var type_file = $.trim(
-                    data_from_file[data_from_file.length - 1]
+                    data_from_file[data_from_file.length - 1],
                 ).toLowerCase();
                 const sizeFiles = files.size / 1024 / 1024; // in MB
 
@@ -293,7 +299,7 @@ let Product = {
                     // Jika format tidak sesuai
                     message.sweetError(
                         "Gagal",
-                        "Format file salah, hanya bisa jpg, jpeg, png, dan pdf"
+                        "Format file salah, hanya bisa jpg, jpeg, png, dan pdf",
                     );
                 }
             }
@@ -533,7 +539,7 @@ let Product = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -606,7 +612,7 @@ let Product = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -672,8 +678,11 @@ let Product = {
         $(elmChoose)
             .closest("div")
             .find("input")
-            .val(product_uom_id+"//"+produk_id+ "//" + produk_name);
-        $(elmChoose).closest('tr').find('input#product_free_unit').val(unit+"//"+unit_name);
+            .val(product_uom_id + "//" + produk_id + "//" + produk_name);
+        $(elmChoose)
+            .closest("tr")
+            .find("input#product_free_unit")
+            .val(unit + "//" + unit_name);
         $("button.btn-close").trigger("click");
     },
 

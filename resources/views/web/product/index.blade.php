@@ -95,9 +95,11 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>Vendor</th>
                                                     <th>Principal</th>
-                                                    <th>Kategori</th>
-                                                    <th>SKU Name</th>
+                                                    <th>Kategori Barang</th>
+                                                    <th>Brand</th>
+                                                    <th>Sub Brand</th>
                                                     <th>Kode Principal</th>
                                                     <th>Kode</th>
                                                     <th>Product</th>

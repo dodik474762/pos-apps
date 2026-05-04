@@ -69,13 +69,14 @@ class ProductController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getStock($product = 0){
+    public function getStock($product = 0)
+    {
         $datadb = DB::table('product_stock as ps')
-        ->select(['ps.*', 'u.name as unit_name', 'w.name as warehouse_name'])
-        ->join('unit as u', 'u.id', 'ps.unit')
-        ->join('warehouse as w', 'w.id', 'ps.warehouse')
-        ->where('ps.product', $product)
-        ->get();
+            ->select(['ps.*', 'u.name as unit_name', 'w.name as warehouse_name'])
+            ->join('unit as u', 'u.id', 'ps.unit')
+            ->join('warehouse as w', 'w.id', 'ps.warehouse')
+            ->where('ps.product', $product)
+            ->get();
 
         $result = [];
         foreach ($datadb as $key => $value) {
@@ -87,17 +88,19 @@ class ProductController extends Controller
         return $result;
     }
 
-    public function getCostProduct($product = 0){
+    public function getCostProduct($product = 0)
+    {
         $datadb = DB::table('product_uom_cost as ps')
-        ->select(['ps.*', 'u.name as unit_name', 'v.nama_vendor'])
-        ->join('unit as u', 'u.id', 'ps.unit_id')
-        ->join('vendor as v', 'v.id', 'ps.vendor')
-        ->where('ps.product', $product)
-        ->get();
+            ->select(['ps.*', 'u.name as unit_name', 'v.nama_vendor'])
+            ->join('unit as u', 'u.id', 'ps.unit_id')
+            ->join('vendor as v', 'v.id', 'ps.vendor')
+            ->where('ps.product', $product)
+            ->get();
         return $datadb;
     }
 
-    public function getListVendor(){
+    public function getListVendor()
+    {
         $datadb = DB::table('vendor')->whereNull('deleted')->get();
         return $datadb;
     }
@@ -209,18 +212,20 @@ class ProductController extends Controller
         return $result_satuan;
     }
 
-     public function getChannel(){
+    public function getChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getSubChannel(){
+
+    public function getSubChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'SUB_CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'SUB_CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
@@ -296,9 +301,9 @@ class ProductController extends Controller
                 'puo.price as harga_jual'
             ])
             ->join('product_uom as pu', 'pu.product', 'p.id')
-            ->join('product_uom_price as puo', function($q){
+            ->join('product_uom_price as puo', function ($q) {
                 return $q->on('puo.product', 'p.id')
-                ->on('puo.unit', 'pu.unit_tujuan');
+                    ->on('puo.unit', 'pu.unit_tujuan');
             })
             ->whereNull('pu.deleted')
             ->where('p.id', '>=', 180)
