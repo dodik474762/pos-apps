@@ -2358,55 +2358,49 @@ class SalesOrderController extends Controller
     public function stockSubmit(Request $request)
     {
         $data = json_decode($request->input('data'), true);
-        // $files_outlet = $request->file('files_outlet');
         $users_id = $data['user_id'];
 
         $result['is_valid'] = false;
         $result['message'] = '';
-        DB::beginTransaction();
-        try {
 
-            $dir = 'berkas/document/stock_customer/';
-            $dir .= date('Y') . '/' . date('m');
+        // === HANDLE FILE DI LUAR TRANSAKSI ===
+        $dbpathlampOutlet = null;
+        $fileOutletName = null;
+
+        if ($request->hasFile('files_outlet')) {
+            $dir = 'berkas/document/stock_customer/' . date('Y') . '/' . date('m');
             $pathlamp = public_path() . '/' . $dir . '/';
-            // Create the directory if it doesn't exist
+
             if (!File::isDirectory($pathlamp)) {
                 File::makeDirectory($pathlamp, 0777, true, true);
             }
 
-            // $fileOutletName = 'outlet_' . time() . '.jpg';
+            $files_outlet = $request->file('files_outlet');
+            $fileOutletName = 'outlet_' . time() . '.' . $files_outlet->getClientOriginalExtension();
+            $files_outlet->move(public_path($dir), $fileOutletName);
 
-            // $path = $files_outlet->move(public_path($dir), $fileOutletName);
-            // $dbpathlampOutlet = '/' . $dir . '/';
-            $dbpathlampOutlet = null;
-            $fileOutletName = null;
+            $dbpathlampOutlet = '/' . $dir . '/';
+        }
 
-            if ($request->hasFile('files_outlet')) {
-                $files_outlet = $request->file('files_outlet');
+        // === TRANSAKSI DB SAJA ===
+        DB::beginTransaction();
+        try {
+            $fotoPath = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
 
-                $fileOutletName = 'outlet_' . time() . '.' . $files_outlet->getClientOriginalExtension();
-                $files_outlet->move(public_path($dir), $fileOutletName);
-
-                $dbpathlampOutlet = '/' . $dir . '/';
-            }
-
-            if (isset($data['toko_tutup'])) {
-                if ($data['toko_tutup'] == '1') {
-                    $detail = new StockCustomer();
-                    $detail->customer = $data['customer'];
-                    $detail->product_id = 44;
-                    $detail->qty = 0;
-                    $detail->unit = 1;
-                    $detail->unit_price = 0;
-                    $detail->discount_type = null;
-                    $detail->is_free_good = 0;
-                    $detail->status = 'draft';
-                    $detail->created_by = $users_id;
-                    // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
-                    $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
-                    $detail->toko_tutup = $data['toko_tutup'];
-                    $detail->save();
-                }
+            if (isset($data['toko_tutup']) && $data['toko_tutup'] == '1') {
+                $detail = new StockCustomer();
+                $detail->customer = $data['customer'];
+                $detail->product_id = 44;
+                $detail->qty = 0;
+                $detail->unit = 1;
+                $detail->unit_price = 0;
+                $detail->discount_type = null;
+                $detail->is_free_good = 0;
+                $detail->status = 'draft';
+                $detail->created_by = $users_id;
+                $detail->foto_path = $fotoPath;
+                $detail->toko_tutup = $data['toko_tutup'];
+                $detail->save();
             }
 
             foreach ($data['details'] as $item) {
@@ -2424,8 +2418,7 @@ class SalesOrderController extends Controller
                 $detail->is_free_good = 0;
                 $detail->status = 'draft';
                 $detail->created_by = $users_id;
-                // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
-                $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
+                $detail->foto_path = $fotoPath;
                 $detail->save();
             }
 
@@ -2433,13 +2426,104 @@ class SalesOrderController extends Controller
             $result['message'] = 'Success';
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
-            //throw $th;
             DB::rollBack();
+
+            // Hapus file yang sudah terupload jika DB gagal
+            if ($fileOutletName && file_exists(public_path($dbpathlampOutlet . $fileOutletName))) {
+                unlink(public_path($dbpathlampOutlet . $fileOutletName));
+            }
+
             $result['message'] = $th->getMessage();
         }
 
         return response()->json($result);
     }
+
+    // public function stockSubmit(Request $request)
+    // {
+    //     $data = json_decode($request->input('data'), true);
+    //     // $files_outlet = $request->file('files_outlet');
+    //     $users_id = $data['user_id'];
+
+    //     $result['is_valid'] = false;
+    //     $result['message'] = '';
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $dir = 'berkas/document/stock_customer/';
+    //         $dir .= date('Y') . '/' . date('m');
+    //         $pathlamp = public_path() . '/' . $dir . '/';
+    //         // Create the directory if it doesn't exist
+    //         if (!File::isDirectory($pathlamp)) {
+    //             File::makeDirectory($pathlamp, 0777, true, true);
+    //         }
+
+    //         // $fileOutletName = 'outlet_' . time() . '.jpg';
+
+    //         // $path = $files_outlet->move(public_path($dir), $fileOutletName);
+    //         // $dbpathlampOutlet = '/' . $dir . '/';
+    //         $dbpathlampOutlet = null;
+    //         $fileOutletName = null;
+
+    //         if ($request->hasFile('files_outlet')) {
+    //             $files_outlet = $request->file('files_outlet');
+
+    //             $fileOutletName = 'outlet_' . time() . '.' . $files_outlet->getClientOriginalExtension();
+    //             $files_outlet->move(public_path($dir), $fileOutletName);
+
+    //             $dbpathlampOutlet = '/' . $dir . '/';
+    //         }
+
+    //         if (isset($data['toko_tutup'])) {
+    //             if ($data['toko_tutup'] == '1') {
+    //                 $detail = new StockCustomer();
+    //                 $detail->customer = $data['customer'];
+    //                 $detail->product_id = 44;
+    //                 $detail->qty = 0;
+    //                 $detail->unit = 1;
+    //                 $detail->unit_price = 0;
+    //                 $detail->discount_type = null;
+    //                 $detail->is_free_good = 0;
+    //                 $detail->status = 'draft';
+    //                 $detail->created_by = $users_id;
+    //                 // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+    //                 $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
+    //                 $detail->toko_tutup = $data['toko_tutup'];
+    //                 $detail->save();
+    //             }
+    //         }
+
+    //         foreach ($data['details'] as $item) {
+    //             [$products, $product_unit] = explode(':', $item['product_id']);
+    //             $products = explode('/', $products);
+    //             $product_unit = explode('/', $product_unit);
+
+    //             $detail = new StockCustomer();
+    //             $detail->customer = $data['customer'];
+    //             $detail->product_id = trim($products[0]);
+    //             $detail->qty = $item['qty'];
+    //             $detail->unit = trim($product_unit[0]);
+    //             $detail->unit_price = trim($product_unit[1]);
+    //             $detail->discount_type = null;
+    //             $detail->is_free_good = 0;
+    //             $detail->status = 'draft';
+    //             $detail->created_by = $users_id;
+    //             // $detail->foto_path = $dbpathlampOutlet . $fileOutletName;
+    //             $detail->foto_path = $fileOutletName ? $dbpathlampOutlet . $fileOutletName : null;
+    //             $detail->save();
+    //         }
+
+    //         DB::commit();
+    //         $result['message'] = 'Success';
+    //         $result['is_valid'] = true;
+    //     } catch (\Throwable $th) {
+    //         //throw $th;
+    //         DB::rollBack();
+    //         $result['message'] = $th->getMessage();
+    //     }
+
+    //     return response()->json($result);
+    // }
 
     public function getAllSalesNotInvoice($date = '', $state = '')
     {
