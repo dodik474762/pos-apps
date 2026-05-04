@@ -2547,7 +2547,7 @@ class SalesOrderController extends Controller
             $header->invoice_number = generateNoSI(); // misal helper
             $header->created_by = $userId;
             $header->warehouse_id = 1;
-            $header->status = 'POSTED';
+            $header->status = 'DRAFT';
 
             $subtotal = $data['total_amount'];
 
@@ -2617,6 +2617,7 @@ class SalesOrderController extends Controller
 
             $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
             $header->discount_amount = $discountHeaderSo;
+            $header->total_amount = $subtotal - $discountHeaderSo; // fix di sini
             $header->save();
 
             $currency = $so->currency;
