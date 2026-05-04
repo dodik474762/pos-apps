@@ -15,6 +15,8 @@ use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\Unit;
+use App\Models\Transaction\ProductAdjustmentStock;
+use App\Models\Transaction\ProductAdjustmentStockDtl;
 use App\Models\Transaction\ProductUomCost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -351,6 +353,8 @@ class ProductController extends Controller
 
         // ambil data excel (BELUM masuk DB)
         $rows = $import->rows;
+        return $this->submit_stock($rows);
+        die;
         // echo '<pre>';
         // print_r($rows);
         // die;
@@ -833,327 +837,62 @@ class ProductController extends Controller
         return response()->json($result);
     }
 
-    // public function submit(Request $request)
-    // {
-    //     $data = $request->all();
-    //     // echo '<pre>';
-    //     // print_r($data);die;
-    //     $user = session()->all();
 
-    //     $result['is_valid'] = false;
-    //     DB::beginTransaction();
-    //     try {
-    //         //code...
-    //         // New file directory
-    //         $dir = 'berkas/document/product/';
-    //         $dir .= date('Y') . '/' . date('m');
-    //         $pathlamp = public_path() . '/' . $dir . '/';
-    //         // Create the directory if it doesn't exist
-    //         if (!File::isDirectory($pathlamp)) {
-    //             File::makeDirectory($pathlamp, 0777, true, true);
-    //         }
-    //         /*file leave */
-    //         // Gunakan nama file yang diposting
-    //         $fileName = empty($data['file']) ? '' : $data['file']->getClientOriginalName();
-    //         if (!empty($data['file'])) {
-    //             $files = $data['file'];
-    //             $files->move($pathlamp, $fileName);
-    //         }
+    public function submit_stock($items)
+    {
+        $imported = 0;
+        DB::beginTransaction();
+        try {
+            $adjs = new ProductAdjustmentStock();
+            $adjs->code = 'ADJMAY2026';
+            $adjs->remarks = 'IMPORTED';
+            $adjs->warehouse = 1;
+            $adjs->save();
+            $adjsId = $adjs->id;
 
-    //         $dbpathlamp = '/' . $dir . '/';
+            foreach ($items as $key => $value) {
+                $product_code = $value['product_code'];
+                $product = Product::where('code', $product_code)->first();
+                $konversi_in_pcs = str_replace(',', '', trim($value['konversi_in_pcs']));
 
-    //         $roles = $data['id'] == '' ? new Product() : Product::find($data['id']);
-    //         if ($data['id'] == '') {
-    //             $roles->code = generateCodeProduct();
-    //             $roles->creator = session('user_id');
-    //         }
-    //         $roles->name = $data['name'];
-    //         $roles->model_number = $data['model_number'];
-    //         $roles->product_type = $data['product_type'];
-    //         $roles->remarks = $data['remarks'];
-    //         $roles->vendor = $data['vendor'];
-    //         $roles->tax_sale = $data['tax_id'];
-    //         $roles->type_tax = $data['type_tax'];
-    //         $roles->type_retur = $data['type_retur'];
-    //         $roles->files = !empty($data['file']) ? $fileName : $roles->files;
-    //         $roles->path_files = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
-    //         $roles->save();
+                $unit = 9;
+                $warehouse = 1;
+                $productId = $product->id;
+                $item['product'] = $productId;
 
-    //         if ($data['id'] != '') {
-    //             $roles = new ProductLog();
-    //             $roles->product = $data['id'];
-    //             $roles->name = $data['name'];
-    //             $roles->model_number = $data['model_number'];
-    //             $roles->product_type = $data['product_type'];
-    //             $roles->remarks = $data['remarks'];
-    //             $roles->files = isset($fileName) ? $fileName : $roles->files;
-    //             $roles->path_files = isset($dbpathlamp) ? $dbpathlamp : $roles->path_files;
-    //             $roles->creator = session('user_id');
-    //             $roles->save();
-    //         }
+                $adjDtl = new ProductAdjustmentStockDtl();
+                $adjDtl->header_id = $adjsId;
+                $adjDtl->product = $productId;
+                $adjDtl->unit = $unit;
+                $adjDtl->warehouse = $warehouse;
+                $adjDtl->qty = $konversi_in_pcs;
+                $adjDtl->save();
 
-    //         $unit_dasar_id = 0;
-    //         $pricingApply = [];
-    //         if (isset($data['unit_dasar'])) {
-    //             if (!empty($data['unit_dasar'])) {
-    //                 for ($i = 0; $i < count($data['unit_dasar']); $i++) {
-    //                     if ($i == 0) {
-    //                         $unit_dasar_id = $data['unit_dasar'][$i];
-    //                     }
-    //                     $product_uom = isset($data['level_id'][$i]) ? ProductUom::find($data['level_id'][$i]) : new ProductUom();
-    //                     $product_uom->product = $data['id'];
-    //                     $product_uom->unit_dasar = $data['unit_dasar'][$i];
-    //                     $product_uom->unit_tujuan = $data['unit_tujuan'][$i];
-    //                     $product_uom->nilai_konversi = $data['nilai_konversi'][$i];
-    //                     $product_uom->nilai_konversi_terkecil = $data['nilai_konversi_terkecil'][$i];
-    //                     $product_uom->level = $i + 1;
-    //                     if ($i == 0) {
-    //                         $product_uom->state = 'small';
-    //                     }
-    //                     if ($i == count($data['unit_dasar']) - 1) {
-    //                         $product_uom->state = 'large';
-    //                     }
+                stockUpdate(
+                    $adjsId,
+                    $warehouse,
+                    $productId,
+                    $unit,
+                    $konversi_in_pcs,
+                    $item,
+                    'add',
+                    'adjustment stock'
+                );
 
-    //                     if (isset($data['harga_satuan_besar'])) {
-    //                         $pricingApply[] = [
-    //                             'price' => $data['harga_satuan_besar'] / $data['nilai_konversi_terkecil'][$i],
-    //                             'unit_tujuan' => $data['unit_tujuan'][$i]
-    //                         ];
-    //                     }
-    //                     $product_uom->save();
-    //                 }
-    //             }
-    //         }
+                $imported += 1;
+            }
 
-    //         // echo '<pre>';
-    //         // print_r($data);die;
-    //         $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Success ' . $imported . ' Imported dan Failed Imported 0';
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = 'Error ' . $imported . ' ' . $th->getMessage();
+        }
 
-    //         if ($unit_dasar_id != 0) {
-    //             $update = Product::find($data['id']);
-    //             $update->unit = $unit_dasar_id;
-    //             $update->save();
-    //         }
-
-    //         $indexPrice = 0;
-    //         if (isset($data['uom_id'])) {
-    //             if (!empty($data['uom_id'])) {
-    //                 for ($i = 0; $i < count($data['uom_id']); $i++) {
-    //                     $product_uom_price = isset($data['price_uom'][$i]) ? ProductUomPrice::find($data['price_uom'][$i]) : new ProductUomPrice();
-    //                     if($product_uom_price->type == 'RETAIL'){
-    //                         $product_uom_price->product = $data['id'];
-    //                         $product_uom_price->unit = $data['uom_id'][$i];
-    //                         $product_uom_price->price_list = $data['type_price'][$i];
-    //                         // $product_uom_price->price = $data['price'][$i];
-    //                         $product_uom_price->price = $pricingApply[$i]['price'];
-    //                         $product_uom_price->date_start = $data['date_start'][$i];
-    //                         $product_uom_price->min_qty = $data['min_qty'][$i];
-    //                         $product_uom_price->max_qty = $data['max_qty'][$i];
-    //                         if ($data['customer'][$i] != '') {
-    //                             list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
-    //                             $product_uom_price->customer = $id_cust;
-    //                             $product_uom_price->customer_name = $name_cust;
-
-    //                             /*cek customer sudah setup pricel level */
-    //                             $cust = Customer::find($id_cust);
-    //                             if ($cust->price_list != '') {
-    //                                 $result['message'] = 'Customer sudah setup pricelist';
-    //                                 return response()->json($result);
-    //                             }
-    //                             /*cek customer sudah setup pricel level */
-    //                         }
-    //                         $product_uom_price->save();
-    //                     }else{                            
-
-    //                         //conversi
-    //                         if(!isset($data['price_uom'][$i])){
-    //                             $pricingApply = [];
-    //                             for ($x = 0; $x < count($data['unit_dasar']); $x++) {
-    //                                 $pricingApply[] = [
-    //                                     'price' => $data['price'][$i] / $data['nilai_konversi_terkecil'][$x],
-    //                                     'unit_dasar' => $data['unit_dasar'][$x],
-    //                                     'unit_tujuan' => $data['unit_tujuan'][$x],
-    //                                     'konversi'=> $data['nilai_konversi_terkecil'][$x],
-    //                                 ];
-    //                             }
-
-    //                             $pricingApply = empty($pricingApply) ? [] : array_reverse($pricingApply);
-    //                             // echo '<pre>';
-    //                             // print_r($pricingApply);die;
-
-    //                             $product_uom_price = new ProductUomPrice();
-    //                             $product_uom_price->product = $data['id'];
-    //                             $product_uom_price->unit = $data['uom_id'][$i];
-    //                             $product_uom_price->price_list = $data['type_price'][$i];
-    //                             $product_uom_price->price = $data['price'][$i];
-    //                             $product_uom_price->date_start = $data['date_start'][$i];
-    //                             $product_uom_price->min_qty = $data['min_qty'][$i];
-    //                             $product_uom_price->max_qty = $data['max_qty'][$i];
-    //                             $product_uom_price->channel = $data['channel'][$i];
-    //                             $product_uom_price->sub_channel = $data['sub_channel'][$i];
-    //                             if ($data['customer'][$i] != '') {
-    //                                 list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
-    //                                 $product_uom_price->customer = $id_cust;
-    //                                 $product_uom_price->customer_name = $name_cust;
-
-    //                                 /*cek customer sudah setup pricel level */
-    //                                 $cust = Customer::find($id_cust);
-    //                                 if ($cust->price_list != '') {
-    //                                     $result['message'] = 'Customer sudah setup pricelist';
-    //                                     return response()->json($result);
-    //                                 }
-    //                                 /*cek customer sudah setup pricel level */
-    //                             }
-    //                             $product_uom_price->save();
-
-    //                             foreach ($pricingApply as $key => $value) {
-    //                                 if($key != count($pricingApply)-1){
-    //                                     $product_uom_price = new ProductUomPrice();
-    //                                     $product_uom_price->product = $data['id'];
-    //                                     $product_uom_price->unit = $value['unit_dasar'];
-    //                                     $product_uom_price->price_list = $data['type_price'][$i];
-    //                                     $product_uom_price->price = $value['price'];
-    //                                     $product_uom_price->date_start = $data['date_start'][$i];
-    //                                     $product_uom_price->min_qty = $data['min_qty'][$i];
-    //                                     $product_uom_price->max_qty = $data['max_qty'][$i];
-    //                                     $product_uom_price->channel = $data['channel'][$i];
-    //                                     $product_uom_price->sub_channel = $data['sub_channel'][$i];
-    //                                     if ($data['customer'][$i] != '') {
-    //                                         list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
-    //                                         $product_uom_price->customer = $id_cust;
-    //                                         $product_uom_price->customer_name = $name_cust;
-
-    //                                         /*cek customer sudah setup pricel level */
-    //                                         $cust = Customer::find($id_cust);
-    //                                         if ($cust->price_list != '') {
-    //                                             $result['message'] = 'Customer sudah setup pricelist';
-    //                                             return response()->json($result);
-    //                                         }
-    //                                         /*cek customer sudah setup pricel level */
-    //                                     }
-    //                                     $product_uom_price->save();
-    //                                 }                                    
-    //                             } 
-    //                         }else{
-    //                             $product_uom_price->product = $data['id'];
-    //                             $product_uom_price->unit = $data['uom_id'][$i];
-    //                             $product_uom_price->price_list = $data['type_price'][$i];
-    //                             $product_uom_price->price = $data['price'][$i];
-    //                             $product_uom_price->date_start = $data['date_start'][$i];
-    //                             $product_uom_price->min_qty = $data['min_qty'][$i];
-    //                             $product_uom_price->max_qty = $data['max_qty'][$i];
-    //                             $product_uom_price->channel = $data['channel'][$i];
-    //                             $product_uom_price->sub_channel = $data['sub_channel'][$i];
-    //                             if ($data['customer'][$i] != '') {
-    //                                 list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
-    //                                 $product_uom_price->customer = $id_cust;
-    //                                 $product_uom_price->customer_name = $name_cust;
-
-    //                                 /*cek customer sudah setup pricel level */
-    //                                 $cust = Customer::find($id_cust);
-    //                                 if ($cust->price_list != '') {
-    //                                     $result['message'] = 'Customer sudah setup pricelist';
-    //                                     return response()->json($result);
-    //                                 }
-    //                                 /*cek customer sudah setup pricel level */
-    //                             }
-    //                             $product_uom_price->save();
-    //                         }                                                 
-    //                     }
-    //                 }
-    //             }
-    //         } else {
-    //             if (!empty($pricingApply)) {
-    //                 for ($i = 0; $i < count($data['unit_dasar']); $i++) {
-    //                     $product_uom_price = new ProductUomPrice();
-    //                     $product_uom_price->product = $data['id'];
-    //                     $product_uom_price->unit = $data['unit_tujuan'][$i];
-    //                     $product_uom_price->price_list = 2;
-    //                     $product_uom_price->price = $pricingApply[$i]['price'];
-    //                     $product_uom_price->date_start = date('Y-m-d');
-    //                     $product_uom_price->min_qty = 1;
-    //                     $product_uom_price->max_qty = 99999;
-    //                     $product_uom_price->type = 'RETAIL';
-    //                     $product_uom_price->save();
-    //                 }
-    //             }
-    //         }
-
-    //         if (isset($data['uom_disc_id'])) {
-    //             if (!empty($data['uom_disc_id'])) {
-    //                 for ($i = 0; $i < count($data['uom_disc_id']); $i++) {
-    //                     $product_disc_strata = isset($data['disc_strata_id'][$i]) ? ProductDisc::find($data['disc_strata_id'][$i]) : new ProductDisc();
-    //                     $product_disc_strata->product = $data['id'];
-    //                     $product_disc_strata->unit = $data['uom_disc_id'][$i];
-    //                     $product_disc_strata->min_qty = $data['min_disc_qty'][$i];
-    //                     $product_disc_strata->max_qty = $data['max_disc_qty'][$i];
-    //                     $product_disc_strata->discount_type = $data['disc_type'][$i];
-    //                     $product_disc_strata->discount_value = $data['disc_value'][$i];
-    //                     $product_disc_strata->date_start = $data['date_start_disc'][$i];
-    //                     if ($data['customer_disc'][$i] != '') {
-    //                         list($id_cust, $name_cust) = explode('//', $data['customer_disc'][$i]);
-    //                         $product_disc_strata->customer = $id_cust;
-    //                         $product_disc_strata->customer_name = $name_cust;
-    //                     }
-    //                     if ($data['customer_category'][$i] != '') {
-    //                         $product_disc_strata->customer_category = $data['customer_category'][$i];
-    //                     }
-    //                     if (!isset($data['disc_strata_id'][$i])) {
-    //                         $product_disc_strata->created_by = $user['user_id'];
-    //                     }
-    //                     $product_disc_strata->save();
-    //                 }
-    //             }
-    //         }
-
-    //         if (isset($data['uom_disc_free_id'])) {
-    //             if (!empty($data['uom_disc_free_id'])) {
-    //                 for ($i = 0; $i < count($data['uom_disc_free_id']); $i++) {
-    //                     list($product_uom, $product, $product_name) = explode('//', $data['product_free'][$i]);
-    //                     list($unit, $unit_name) = explode('//', $data['product_free_unit'][$i]);
-    //                     $product_disc_free = isset($data['disc_free_id'][$i]) ? ProductFreeGood::find($data['disc_free_id'][$i]) : new ProductFreeGood();
-    //                     $product_disc_free->product = $data['id'];
-    //                     $product_disc_free->unit = $data['uom_disc_free_id'][$i];
-    //                     $product_disc_free->min_qty = $data['min_free_qty'][$i];
-    //                     $product_disc_free->max_qty = $data['max_free_qty'][$i];
-    //                     $product_disc_free->product_uom = $product_uom;
-    //                     $product_disc_free->free_product = $product;
-    //                     $product_disc_free->product_name = $product_name;
-    //                     $product_disc_free->free_unit = $unit;
-    //                     $product_disc_free->free_qty = $data['free_qty'][$i];
-    //                     $product_disc_free->unit_name = $unit_name;
-    //                     $product_disc_free->date_start = $data['date_start_free'][$i];
-    //                     if ($data['customer_disc_free'][$i] != '') {
-    //                         list($id_cust, $name_cust) = explode('//', $data['customer_disc_free'][$i]);
-    //                         $product_disc_free->customer = $id_cust;
-    //                         $product_disc_free->customer_name = $name_cust;
-    //                     }
-    //                     if ($data['customer_category_free'][$i] != '') {
-    //                         $product_disc_free->customer_category = $data['customer_category_free'][$i];
-    //                     }
-    //                     if (!isset($data['disc_free_id'][$i])) {
-    //                         $product_disc_free->created_by = $user['user_id'];
-    //                     }
-    //                     $product_disc_free->save();
-    //                 }
-    //             }
-    //         }
-
-    //         DB::commit();
-    //         $result['is_valid'] = true;
-    //         $result['message'] = 'Data berhasil disimpan';
-    //     } catch (\Throwable $th) {
-    //         //throw $th;
-    //         $result['message'] = $th->getMessage();
-    //         DB::rollBack();
-    //     }
-    //     if ($result['is_valid']) {
-    //         return redirect()->action([MasterProductController::class, 'index'], ['success' => $result['message']]);
-    //     } else {
-    //         return redirect()->action([MasterProductController::class, 'index'], ['error' => $result['message']]);
-    //     }
-    //     // return response()->json($result);
-    // }
+        return response()->json($result);
+    }
 
     public function submit(Request $request)
     {

@@ -206,14 +206,14 @@ let SalesOrder = {
                 {
                     data: "total_amount",
                     render: function (data, type, row) {
-                        if (type === 'display' || type === 'filter') {
-                            return new Intl.NumberFormat('id-ID', {
+                        if (type === "display" || type === "filter") {
+                            return new Intl.NumberFormat("id-ID", {
                                 minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
+                                maximumFractionDigits: 2,
                             }).format(data);
                         }
                         return data;
-                    }
+                    },
                 },
                 {
                     data: "currency_code",
@@ -229,16 +229,21 @@ let SalesOrder = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             SalesOrder.module(),
-                        )}cetak?id=${data}' data_id="${row.id
-                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${
+                            row.id
+                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesOrder.module(),
-                            )}ubah?id=${data}' data_id="${row.id
-                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${
+                                row.id
+                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "draft") {
+                            if (
+                                row.status == "draft" ||
+                                row.status == "submited"
+                            ) {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
@@ -464,7 +469,7 @@ let SalesOrder = {
                 [25, 50, 100],
             ],
             search: {
-                search: lastProductSearchKeyword
+                search: lastProductSearchKeyword,
             },
             // lengthChange: !1,
             language: {
@@ -547,7 +552,7 @@ let SalesOrder = {
             ],
         });
 
-        data.on('search.dt', function () {
+        data.on("search.dt", function () {
             lastProductSearchKeyword = data.search();
         });
     },
@@ -567,7 +572,6 @@ let SalesOrder = {
         const params = {
             product_id: produk_id,
         };
-
 
         $.ajax({
             type: "POST",
@@ -603,10 +607,11 @@ let SalesOrder = {
 
         let qty = 1;
         if (elm) {
-            qty = parseFloat($(elm).closest("tr").find(".qty-input").val()) || 1;
+            qty =
+                parseFloat($(elm).closest("tr").find(".qty-input").val()) || 1;
         }
 
-        console.log('row chooce', row);
+        console.log("row chooce", row);
         // const row = _selectedProductRows[index];
         // if (!row) return;
 
@@ -625,24 +630,32 @@ let SalesOrder = {
         let tax_rate = row.tax_rate;
         let tax_type = row.type_tax;
 
-        $(elmChoose).closest("div").find("input")
+        $(elmChoose)
+            .closest("div")
+            .find("input")
             .val(product_uom_id + "//" + produk_id + "//" + produk_name)
             .attr("data_id", produk_id)
             .attr("tax", tax)
             .attr("tax_type", tax_type)
             .attr("tax_rate", tax_rate);
 
-        $(elmChoose).closest("tr").find("td#unit")
+        $(elmChoose)
+            .closest("tr")
+            .find("td#unit")
             .text(unit_name)
             .attr("data_id", unit);
 
-        $(elmChoose).closest("tr").find("#unit_price")
+        $(elmChoose)
+            .closest("tr")
+            .find("#unit_price")
             .attr("price", price)
             .attr("data_id", price_id)
-            .val(new Intl.NumberFormat("id-ID", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(price));
+            .val(
+                new Intl.NumberFormat("id-ID", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                }).format(price),
+            );
 
         $(elmChoose).closest("tr").find("#qty").val(qty);
 
@@ -656,7 +669,12 @@ let SalesOrder = {
         // Callback ke pilih product lagi di baris baru
         setTimeout(() => {
             SalesOrder.addRow();
-            let newElm = $("table#table-items").find("tbody").find("tr.input:last").find("input#product").closest("div").find("button");
+            let newElm = $("table#table-items")
+                .find("tbody")
+                .find("tr.input:last")
+                .find("input#product")
+                .closest("div")
+                .find("button");
             SalesOrder.showDataProduct(newElm[0] || newElm);
         }, 800);
     },
@@ -1276,11 +1294,11 @@ let SalesOrder = {
                     } else {
                         const promoMaxSmall = promoHeader.max_qty
                             ? SalesOrder.convertToSmallest(
-                                UOM_CONVERSION,
-                                productId,
-                                promoHeader.unit_id,
-                                promoHeader.max_qty,
-                            )
+                                  UOM_CONVERSION,
+                                  productId,
+                                  promoHeader.unit_id,
+                                  promoHeader.max_qty,
+                              )
                             : Infinity;
                         if (
                             qtySmallestAllProduct >= promoMinSmall &&
@@ -1539,11 +1557,11 @@ let SalesOrder = {
                         } else {
                             const promoMaxSmall = promoHeader.max_qty
                                 ? SalesOrder.convertToSmallest(
-                                    UOM_CONVERSION,
-                                    productId,
-                                    promoHeader.unit_id,
-                                    promoHeader.max_qty,
-                                )
+                                      UOM_CONVERSION,
+                                      productId,
+                                      promoHeader.unit_id,
+                                      promoHeader.max_qty,
+                                  )
                                 : Infinity;
 
                             if (
@@ -1582,8 +1600,8 @@ let SalesOrder = {
                         kelipatanSmall == 0
                             ? 1
                             : Math.floor(
-                                qtySmallestAllProduct / kelipatanSmall,
-                            );
+                                  qtySmallestAllProduct / kelipatanSmall,
+                              );
                     pengaliFix =
                         pengali == 1
                             ? 1
@@ -1759,8 +1777,8 @@ let SalesOrder = {
                         const exists =
                             tr.next(
                                 'tr.freegood[data-free-for="' +
-                                productId +
-                                '"]',
+                                    productId +
+                                    '"]',
                             ).length > 0;
 
                         if (!exists) {
@@ -1915,7 +1933,8 @@ let SalesOrder = {
                 const qty = parseFloat($(this).find("#qty").val()) || 0;
                 const productId = $(this).find("#product").attr("data_id");
                 const satuanId = $(this).find("td#unit").attr("data_id");
-                const unit_price = parseFloat($(this).find("#unit_price").attr('price')) || 0;
+                const unit_price =
+                    parseFloat($(this).find("#unit_price").attr("price")) || 0;
 
                 if (pid) {
                     result.push({
@@ -1923,7 +1942,7 @@ let SalesOrder = {
                         product_name: $(this).find("#product").val(),
                         qty: qty,
                         unit_id: satuanId,
-                        unit_price: unit_price
+                        unit_price: unit_price,
                     });
                 }
             });
@@ -2073,7 +2092,9 @@ let SalesOrder = {
 
         const top = $(elm).find("option:selected").attr("top");
         channel_outlet = $(elm).find("option:selected").attr("channel_outlet");
-        sub_channel_outlet = $(elm).find("option:selected").attr("sub_channel_outlet");
+        sub_channel_outlet = $(elm)
+            .find("option:selected")
+            .attr("sub_channel_outlet");
         $("#payment_term").val(top);
 
         const customerId = $(elm).val();
@@ -2230,7 +2251,7 @@ let SalesOrder = {
         });
     },
 
-    checkDiscount: (elm, e, state = 'check') => {
+    checkDiscount: (elm, e, state = "check") => {
         e.preventDefault();
         const customerId = $("#customer_id").val();
         if (!customerId) {
@@ -2279,8 +2300,10 @@ let SalesOrder = {
                 // ========================
                 const savedFreeGoodIds = {};
                 $("table#table-items tbody tr.freegood").each(function () {
-                    const freeFor = $(this).data("free-for");         // product_id induk
-                    const freeProductId = $(this).find("#product").attr("data_id"); // product_id free good
+                    const freeFor = $(this).data("free-for"); // product_id induk
+                    const freeProductId = $(this)
+                        .find("#product")
+                        .attr("data_id"); // product_id free good
                     const dataId = $(this).attr("data_id") || null;
                     if (freeFor && freeProductId) {
                         const key = freeFor + "_" + freeProductId;
@@ -2293,10 +2316,15 @@ let SalesOrder = {
                 // RESET DULU SEMUA BARIS
                 // ========================
                 $("table#table-items tbody tr.freegood").remove();
-                $("table#table-items tbody tr.input").not(".freegood").each(function () {
-                    $(this).find("#disc_percent").val("0");
-                    $(this).find("#disc_amount").val("0").attr("amount", "0");
-                });
+                $("table#table-items tbody tr.input")
+                    .not(".freegood")
+                    .each(function () {
+                        $(this).find("#disc_percent").val("0");
+                        $(this)
+                            .find("#disc_amount")
+                            .val("0")
+                            .attr("amount", "0");
+                    });
 
                 // Reset discount header
                 $("#discount_percent_header").val("0");
@@ -2308,61 +2336,112 @@ let SalesOrder = {
                 if (data.result_items && data.result_items.length > 0) {
                     data.result_items.forEach((promo) => {
                         promo.items.forEach((item) => {
-                            $("table#table-items tbody tr.input").not(".freegood").each(function () {
-                                const rowProductId = $(this).find("#product").attr("data_id");
-                                if (rowProductId != item.product_id) return;
+                            $("table#table-items tbody tr.input")
+                                .not(".freegood")
+                                .each(function () {
+                                    const rowProductId = $(this)
+                                        .find("#product")
+                                        .attr("data_id");
+                                    if (rowProductId != item.product_id) return;
 
-                                const tr = $(this);
-                                const price = item.price;
-                                const qty = item.qty;
-                                const discAmount = item.discountAmount ?? 0;
-                                const discPercent = item.discountPercent ?? 0;
-                                const subtotal = (price * qty) - discAmount;
-                                const taxRate = parseFloat(tr.find("#product").attr("tax_rate")) || 0;
+                                    const tr = $(this);
+                                    const price = item.price;
+                                    const qty = item.qty;
+                                    const discAmount = item.discountAmount ?? 0;
+                                    const discPercent =
+                                        item.discountPercent ?? 0;
+                                    const subtotal = price * qty - discAmount;
+                                    const taxRate =
+                                        parseFloat(
+                                            tr
+                                                .find("#product")
+                                                .attr("tax_rate"),
+                                        ) || 0;
 
-                                const taxAmount = subtotal - subtotal / (1 + taxRate / 100);
+                                    const taxAmount =
+                                        subtotal -
+                                        subtotal / (1 + taxRate / 100);
 
-                                if (promo.discount_type === "price") {
-                                    tr.find("#unit_price").val(
-                                        new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price)
-                                    );
-                                    tr.find("#unit_price").attr("price", price);
-                                }
+                                    if (promo.discount_type === "price") {
+                                        tr.find("#unit_price").val(
+                                            new Intl.NumberFormat("id-ID", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(price),
+                                        );
+                                        tr.find("#unit_price").attr(
+                                            "price",
+                                            price,
+                                        );
+                                    }
 
-                                tr.find("#disc_percent").val(discPercent);
-                                tr.find("#disc_amount").val(
-                                    new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(discAmount)
-                                ).attr("amount", discAmount);
+                                    tr.find("#disc_percent").val(discPercent);
+                                    tr.find("#disc_amount")
+                                        .val(
+                                            new Intl.NumberFormat("id-ID", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(discAmount),
+                                        )
+                                        .attr("amount", discAmount);
 
-                                tr.find("#subtotal").val(
-                                    new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(subtotal)
-                                ).attr("subtotal", subtotal.toFixed(2));
+                                    tr.find("#subtotal")
+                                        .val(
+                                            new Intl.NumberFormat("id-ID", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(subtotal),
+                                        )
+                                        .attr("subtotal", subtotal.toFixed(2));
 
-                                tr.find("#tax_amount").val(
-                                    new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(taxAmount)
-                                ).attr("amount", taxAmount);
-                            });
+                                    tr.find("#tax_amount")
+                                        .val(
+                                            new Intl.NumberFormat("id-ID", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(taxAmount),
+                                        )
+                                        .attr("amount", taxAmount);
+                                });
                         });
 
                         // ========================
                         // FREE GOODS
                         // ========================
-                        if (promo.discount_free && promo.discount_free.length > 0) {
+                        if (
+                            promo.discount_free &&
+                            promo.discount_free.length > 0
+                        ) {
                             promo.discount_free.forEach((free) => {
-                                $("table#table-items tbody tr.input").not(".freegood").each(function () {
-                                    const rowProductId = $(this).find("#product").attr("data_id");
-                                    const freeFor = promo.items[0]?.product_id;
-                                    if (rowProductId != freeFor) return;
+                                $("table#table-items tbody tr.input")
+                                    .not(".freegood")
+                                    .each(function () {
+                                        const rowProductId = $(this)
+                                            .find("#product")
+                                            .attr("data_id");
+                                        const freeFor =
+                                            promo.items[0]?.product_id;
+                                        if (rowProductId != freeFor) return;
 
-                                    const tr = $(this);
-                                    const exists = tr.next('tr.freegood[data-free-for="' + freeFor + '"]').length > 0;
-                                    if (!exists) {
-                                        // Ambil data_id lama jika mode edit
-                                        const savedKey = free.product_id + "_" + free.product_id;
-                                        console.log('savedKey', savedKey);
-                                        const existingDataId = savedFreeGoodIds[savedKey] || "";
+                                        const tr = $(this);
+                                        const exists =
+                                            tr.next(
+                                                'tr.freegood[data-free-for="' +
+                                                    freeFor +
+                                                    '"]',
+                                            ).length > 0;
+                                        if (!exists) {
+                                            // Ambil data_id lama jika mode edit
+                                            const savedKey =
+                                                free.product_id +
+                                                "_" +
+                                                free.product_id;
+                                            console.log("savedKey", savedKey);
+                                            const existingDataId =
+                                                savedFreeGoodIds[savedKey] ||
+                                                "";
 
-                                        const freeRow = `
+                                            const freeRow = `
                                     <tr class="input freegood" data-free-for="${freeFor}" data_id="${existingDataId}">
                                     <td>
                                         <div class="input-group">
@@ -2370,7 +2449,7 @@ let SalesOrder = {
                                         <input disabled type="text" id="product" class="form-control"
                                             tax="0" tax_amount="0" tax_type="" tax_rate="0"
                                             data_id="${free.product_id}"
-                                            value="${free.product_name || 'Free Product'}">
+                                            value="${free.product_name || "Free Product"}">
                                         </div>
                                     </td>
                                     <td id="unit" data_id="${free.unit}">${free.unit_name || ""}</td>
@@ -2387,9 +2466,9 @@ let SalesOrder = {
                                     </td>
                                     </tr>
                                     `;
-                                        tr.after(freeRow);
-                                    }
-                                });
+                                            tr.after(freeRow);
+                                        }
+                                    });
                             });
                         }
                     });
@@ -2398,46 +2477,70 @@ let SalesOrder = {
                 // ========================
                 // KALKULASI MANUAL UNTUK BARIS YANG TIDAK KENA PROMO
                 // ========================
-                $("table#table-items tbody tr.input").not(".freegood").each(function () {
-                    const tr = $(this);
-                    const productId = tr.find("#product").attr("data_id");
-                    if (!productId) return;
+                $("table#table-items tbody tr.input")
+                    .not(".freegood")
+                    .each(function () {
+                        const tr = $(this);
+                        const productId = tr.find("#product").attr("data_id");
+                        if (!productId) return;
 
-                    let sudahKenaPromo = false;
-                    if (data.result_items && data.result_items.length > 0) {
-                        data.result_items.forEach((promo) => {
-                            promo.items.forEach((item) => {
-                                if (item.product_id == productId) {
-                                    sudahKenaPromo = true;
-                                }
+                        let sudahKenaPromo = false;
+                        if (data.result_items && data.result_items.length > 0) {
+                            data.result_items.forEach((promo) => {
+                                promo.items.forEach((item) => {
+                                    if (item.product_id == productId) {
+                                        sudahKenaPromo = true;
+                                    }
+                                });
                             });
-                        });
-                    }
-
-                    if (!sudahKenaPromo) {
-                        const price = parseFloat(tr.find("#unit_price").attr("price")) || 0;
-                        const qty = parseFloat(tr.find("#qty").val()) || 0;
-                        const discAmount = parseFloat(tr.find("#disc_amount").attr("amount")) || 0;
-                        const subtotal = (price * qty) - discAmount;
-                        const taxRate = parseFloat(tr.find("#product").attr("tax_rate")) || 0;
-                        const typeTax = tr.find("#product").attr("tax_type");
-
-                        let taxAmount = 0;
-                        if (typeTax == "include") {
-                            taxAmount = subtotal - subtotal / (1 + taxRate / 100);
-                        } else {
-                            taxAmount = subtotal * (taxRate / 100);
                         }
 
-                        tr.find("#subtotal").val(
-                            new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(subtotal)
-                        ).attr("subtotal", subtotal.toFixed(2));
+                        if (!sudahKenaPromo) {
+                            const price =
+                                parseFloat(
+                                    tr.find("#unit_price").attr("price"),
+                                ) || 0;
+                            const qty = parseFloat(tr.find("#qty").val()) || 0;
+                            const discAmount =
+                                parseFloat(
+                                    tr.find("#disc_amount").attr("amount"),
+                                ) || 0;
+                            const subtotal = price * qty - discAmount;
+                            const taxRate =
+                                parseFloat(
+                                    tr.find("#product").attr("tax_rate"),
+                                ) || 0;
+                            const typeTax = tr
+                                .find("#product")
+                                .attr("tax_type");
 
-                        tr.find("#tax_amount").val(
-                            new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(taxAmount)
-                        ).attr("amount", taxAmount);
-                    }
-                });
+                            let taxAmount = 0;
+                            if (typeTax == "include") {
+                                taxAmount =
+                                    subtotal - subtotal / (1 + taxRate / 100);
+                            } else {
+                                taxAmount = subtotal * (taxRate / 100);
+                            }
+
+                            tr.find("#subtotal")
+                                .val(
+                                    new Intl.NumberFormat("id-ID", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    }).format(subtotal),
+                                )
+                                .attr("subtotal", subtotal.toFixed(2));
+
+                            tr.find("#tax_amount")
+                                .val(
+                                    new Intl.NumberFormat("id-ID", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    }).format(taxAmount),
+                                )
+                                .attr("amount", taxAmount);
+                        }
+                    });
 
                 // ========================
                 // APPLY DISCOUNT HEADER
@@ -2451,9 +2554,14 @@ let SalesOrder = {
                     });
 
                     $("#discount_percent_header").val(totalDiscPercent);
-                    $("#discount_amount_header").val(
-                        new Intl.NumberFormat("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalDiscAmount)
-                    ).attr("amount", totalDiscAmount);
+                    $("#discount_amount_header")
+                        .val(
+                            new Intl.NumberFormat("id-ID", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            }).format(totalDiscAmount),
+                        )
+                        .attr("amount", totalDiscAmount);
                 }
 
                 // ========================
@@ -2461,7 +2569,7 @@ let SalesOrder = {
                 // ========================
                 SalesOrder.hitungSummaryAll();
 
-                if (state == 'save') {
+                if (state == "save") {
                     SalesOrder.submit(elm, e);
                 }
             },

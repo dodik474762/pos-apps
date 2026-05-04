@@ -874,7 +874,7 @@ class SalesOrderController extends Controller
         try {
             // code...
             $menu = SalesOrderHeader::find($data['id']);
-            if ($menu->status != 'draft') {
+            if ($menu->status != 'draft' && $menu->status != 'submited') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
 
