@@ -269,7 +269,7 @@ class SalesInvoiceController extends Controller
         $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
         $tax = DB::table('tax')->where('id', $so->tax_id ?? 1)->first();
-        $ppn_val = '';
+        $ppn_val = 11;
         if (!empty($tax)) {
             $ppn_val = number_format($tax->rate, 0, ',', '.');
         }
@@ -315,7 +315,7 @@ class SalesInvoiceController extends Controller
 
             $so = $data['do_id'] != '' ? $data->do->so : $data->so;
             $so_id = $so ? $so->id : null;
-            $ppn_val = '';
+            $ppn_val = 11;
 
             if ($so_id) {
                 $data->promo_item = DB::table('sales_order_promo_item as sopi')

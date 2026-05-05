@@ -621,8 +621,10 @@ class SalesInvoiceController extends Controller
             }
 
             // Update Delivery Order
-            $do->status = 'DRAFT';
-            $do->save();
+            if (!empty($do)) {
+                $do->status = 'DRAFT';
+                $do->save();
+            }
 
             // Hapus log status DO
             $log = DeliveryOrderStatusLog::where('do_id', $menu->do_id)
