@@ -268,7 +268,7 @@ class SalesInvoiceController extends Controller
         $salesman = Karyawan::where('id', $so->salesman)->first();
         $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
 
-        $tax = DB::table('tax')->where('id', $so->tax_id)->first();
+        $tax = DB::table('tax')->where('id', $so->tax_id ?? 1)->first();
         $ppn_val = '';
         if (!empty($tax)) {
             $ppn_val = number_format($tax->rate, 0, ',', '.');

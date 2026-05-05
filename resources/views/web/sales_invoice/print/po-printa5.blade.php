@@ -127,7 +127,7 @@
     </thead>
     <tbody>
         @php
-    $taxRate = $ppn_val ?? 11;
+    // $taxRate = $ppn_val ?? 11;
 
     $totalDpp = 0;
     $totalPpn = 0;
@@ -135,14 +135,18 @@
 
         @foreach ($data->items as $i => $item)
              @php
-        $subtotal = $item->subtotal; // include PPN
-        $dpp = $subtotal / (1 + $taxRate / 100);
-        $ppn = $subtotal - $dpp;
-        $hargaExcl = $item->price / (1 + $taxRate / 100);
+                $subtotal = (float) $item->subtotal;
+                $price    = (float) $item->price;
+                $taxRate  = (float) ($ppn_val ?? 11);
 
-        $totalDpp += $dpp;
-        $totalPpn += $ppn;
-    @endphp
+
+                $dpp = $subtotal / (1 + $taxRate / 100);
+                $ppn = $subtotal - $dpp;
+                $hargaExcl = $price / (1 + $taxRate / 100);
+
+                $totalDpp += $dpp;
+                $totalPpn += $ppn;
+            @endphp
           <tr>
     <td class="text-center">{{ $i + 1 }}</td>
     <td>{{ $item->products->name ?? '-' }}</td>
@@ -177,7 +181,7 @@
 </tr>
        @foreach($promo as $v)
     @php
-        $taxRate = $ppn_val ?? 11;
+        $taxRate  = (float) ($ppn_val ?? 11);
 
         // nilai promo masih include PPN
         $promoInclude = $v->total_potongan;
