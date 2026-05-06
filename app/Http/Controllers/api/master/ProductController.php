@@ -353,8 +353,8 @@ class ProductController extends Controller
 
         // ambil data excel (BELUM masuk DB)
         $rows = $import->rows;
-        return $this->submit_stock($rows);
-        die;
+        // return $this->submit_stock($rows);
+        // die;
         // echo '<pre>';
         // print_r($rows);
         // die;
@@ -599,7 +599,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_terkecil['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_kecil;
-                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -619,7 +619,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_menengah['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_tengah;
-                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -641,7 +641,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_besar['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_besar;
-                        $productPrice->date_start = '2026-01-01';
+                        $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -661,7 +661,7 @@ class ProductController extends Controller
                             $productCost->unit_id = $satuan_besar['id_satuan'];
                             $productCost->cost = $harga_beli_non_ppn_besar;
                             $productCost->vendor = $vendorId;
-                            $productCost->date_start = '2026-01-01';
+                            $productCost->date_start = '2026-05-06';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
@@ -704,7 +704,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_terkecil['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_kecil;
-                        $productPrice->date_start = '2026-05-01';
+                        $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -726,7 +726,7 @@ class ProductController extends Controller
                         $productPrice->unit = $satuan_besar['id_satuan'];
                         $productPrice->price_list = 2;
                         $productPrice->price = $harga_jual_non_ppn_besar;
-                        $productPrice->date_start = '2026-05-01';
+                        $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
                         $productPrice->save();
@@ -746,7 +746,7 @@ class ProductController extends Controller
                             $productCost->unit_id = $satuan_besar['id_satuan'];
                             $productCost->cost = $harga_beli_non_ppn_besar;
                             $productCost->vendor = $vendorId;
-                            $productCost->date_start = '2026-01-01';
+                            $productCost->date_start = '2026-05-06';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
                             $productCost->save();
