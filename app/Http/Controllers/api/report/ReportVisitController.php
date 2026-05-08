@@ -38,20 +38,29 @@ class ReportVisitController extends Controller
                 'm.status',
                 'm.platform',
                 'pr.start_date as absen_time',
-                DB::raw('SEC_TO_TIME(
-    GREATEST(
-        TIMESTAMPDIFF(MINUTE,
-            COALESCE(
-                LAG(m.check_out_time) OVER (
-                    PARTITION BY m.salesman 
-                    ORDER BY m.check_in_time
-                ),
-                CONCAT(DATE(m.so_date), " 08:00:00")
-            ),
-            m.check_in_time
-        ),
-    0)
-) as lama_di_jalan')
+                DB::raw("
+            SEC_TO_TIME(
+                GREATEST(
+                    TIMESTAMPDIFF(
+                        SECOND,
+                        COALESCE(
+                            (
+                                SELECT prev.check_out_time
+                                FROM sales_order_headers AS prev
+                                WHERE prev.salesman = m.salesman
+                                  AND DATE(prev.so_date) = DATE(m.so_date)
+                                  AND prev.check_in_time < m.check_in_time
+                                  AND prev.deleted IS NULL
+                                ORDER BY prev.check_in_time DESC
+                                LIMIT 1
+                            ),
+                            pr.start_date  -- fallback: jam absen jika kunjungan pertama
+                        ),
+                        m.check_in_time
+                    ),
+                0 )
+            ) AS lama_di_jalan
+        "),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
@@ -59,6 +68,8 @@ class ReportVisitController extends Controller
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereDate('pr.presence_date', '=', $tanggal)
             ->whereNull('m.deleted')
+            ->where('usr.username', 'SLS-001')
+            // ->where('c.code', 'CUST.01087')
             ->orderBy('usr.name', 'asc')
             ->orderBy('m.check_in_time', 'asc');
 
