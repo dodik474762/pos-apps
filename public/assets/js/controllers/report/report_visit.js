@@ -1259,6 +1259,11 @@ let ReportVisit = {
                 "form-select form-select-sm",
             ));
     },
+
+    filter: () => {
+        ReportVisit.getData();
+        ReportVisit.getDataSummary();
+    },
 };
 
 // untuk export all data

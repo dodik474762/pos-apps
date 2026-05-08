@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="ReportVisit.getData();"> <i
+                                        <button type="button" class="btn btn-primary w-100" onclick="ReportVisit.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -67,6 +67,12 @@
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All" href="#list-data"
                                         role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="nav-summary-kunjungan" href="#summary-kunjungan"
+                                        role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Summary Kunjungan
                                     </a>
                                 </li>
                             </ul>
@@ -112,6 +118,10 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="tab-pane" id="summary-kunjungan">
+                                    @include('web.report_visit.table_summary_visit')
                                 </div>
                             </div>
                         </div>
