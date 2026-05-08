@@ -440,6 +440,7 @@ class SalesPlanController extends Controller
         $today = Carbon::now('Asia/Jakarta')->startOfDay();
         $data = $request->all();
 
+
         $weekNow = $today->isoWeek();
         $dayNow = strtolower($today->format('D'));
         $weekOfMonth = $this->weekOfMonth($today);
@@ -447,6 +448,10 @@ class SalesPlanController extends Controller
         $salesman = isset($data['salesman']) ? $data['salesman'] : 1;
         $route = $this->getDailyVisits($salesman, $today);
         $datadb = $route;
+
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
 
         $message = '';
         DB::beginTransaction();

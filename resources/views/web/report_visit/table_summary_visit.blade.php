@@ -15,6 +15,7 @@
         <th>Total Call Sesuai PJP</th>
         <th>Total Call Keseluruhan</th>                                                    
         <th>Total Call Extra Call</th>
+        <th>Achievement</th>
     </tr>
 </thead>
 <tbody class="list">

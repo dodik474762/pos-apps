@@ -163,45 +163,76 @@ class ReportVisitController extends Controller
                 'pr.start_date as jam_berangkat',
                 'dv.total_visit',
                 DB::raw('MAX(m.check_out_time) as jam_kembali'),
-                // Waktu Jual = check_in pertama s/d check_out terakhir
+
+                // Waktu Jual = SUM durasi di setiap outlet (check_in s/d check_out tiap outlet)
                 DB::raw('SEC_TO_TIME(
-            GREATEST(
-                TIMESTAMPDIFF(SECOND, MIN(m.check_in_time), MAX(m.check_out_time)),
-            0)
-        ) as waktu_jual'),
+                GREATEST(
+                    SUM(
+                        GREATEST(
+                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
+                        0)
+                    ),
+                0)
+            ) as waktu_jual'),
+
                 // Rata-rata lama transaksi per outlet
                 DB::raw('TIME_FORMAT(
-    SEC_TO_TIME(
-        AVG(
-            GREATEST(
-                TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
-            0)
-        )
-    ),
-"%H:%i") as avg_lama_transaksi'),
-                // Lama di Jalan = Total Keluar Kantor - Waktu Jual
-                DB::raw('TIME_FORMAT(
-    SEC_TO_TIME(
-        GREATEST(
-            TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time))
-            - TIMESTAMPDIFF(SECOND, MIN(m.check_in_time), MAX(m.check_out_time)),
-        0)
-    ),
-"%H:%i") as lama_di_jalan'),
-                // Total Keluar Kantor = Jam Berangkat (absen) s/d check_out terakhir
+                SEC_TO_TIME(
+                    AVG(
+                        GREATEST(
+                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
+                        0)
+                    )
+                ),
+            "%H:%i:%s") as avg_lama_transaksi'),
+
+                // Lama di Jalan = Total Keluar Kantor - Waktu Jual (SUM tiap outlet)
                 DB::raw('SEC_TO_TIME(
-            GREATEST(
-                TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time)),
-            0)
-        ) as total_keluar_kantor'),
+                GREATEST(
+                    TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time))
+                    - SUM(
+                        GREATEST(
+                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
+                        0)
+                    ),
+                0)
+            ) as lama_di_jalan'),
+
+                // Total Keluar Kantor = dari jam absen s/d check_out terakhir
+                DB::raw('SEC_TO_TIME(
+                GREATEST(
+                    TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time)),
+                0)
+            ) as total_keluar_kantor'),
+
                 DB::raw('COUNT(m.id) as total_call'),
-                // Total Call Sesuai PJP (remarks bukan dari list extra)
-                DB::raw('SUM(CASE WHEN m.remarks NOT IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
-    OR m.remarks IS NULL 
-    THEN 1 ELSE 0 END) as total_call_pjp'),
-                // Total Call Extra Call (remarks dari list)
-                DB::raw('SUM(CASE WHEN m.remarks IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
-    THEN 1 ELSE 0 END) as total_call_extra'),
+
+                // // Total Call Sesuai PJP
+                // DB::raw('SUM(CASE 
+                // WHEN m.remarks NOT IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
+                // OR m.remarks IS NULL 
+                // THEN 1 ELSE 0 END) as total_call_pjp'),
+
+                // // Total Call Extra Call
+                // DB::raw('SUM(CASE 
+                // WHEN m.remarks IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
+                // THEN 1 ELSE 0 END) as total_call_extra'),
+
+                // CALL SESUAI PJP
+                DB::raw('SUM(
+                CASE
+                    WHEN dvd.customer IS NOT NULL THEN 1
+                    ELSE 0
+                END
+            ) as total_call_pjp'),
+
+                // CALL DI LUAR PJP
+                DB::raw('SUM(
+                CASE
+                    WHEN dvd.customer IS NULL THEN 1
+                    ELSE 0
+                END
+            ) as total_call_extra'),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
@@ -214,6 +245,12 @@ class ReportVisitController extends Controller
                     ->on('dv.users', 'm.salesman')
                     ->whereNull('dv.deleted');
             })
+            // JOIN DETAIL PJP
+            ->leftJoin('daily_visit_customer as dvd', function ($join) {
+                $join->on('dvd.daily_visit', '=', 'dv.id')
+                    ->on('dvd.customer', '=', 'm.customer_id');
+            })
+            // ->where('usr.username', 'SLS-001')
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereNull('m.deleted')
             ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit')

@@ -1243,6 +1243,24 @@ let ReportVisit = {
                         return `<strong>${data ?? 0}</strong>`;
                     },
                 },
+                {
+                    // Achievement %
+                    data: null,
+                    title: "Achievement",
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        let target = parseFloat(row.total_visit ?? 0);
+                        let actual = parseFloat(row.total_call_pjp ?? 0);
+
+                        if (target <= 0) {
+                            return `<strong>0%</strong>`;
+                        }
+
+                        let achievement = ((actual / target) * 100).toFixed(2);
+
+                        return `<strong>${achievement}%</strong>`;
+                    },
+                },
             ],
         });
 
