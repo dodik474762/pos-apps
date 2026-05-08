@@ -1,3 +1,10 @@
+<style>
+    .bg-orange {
+        background-color: #fd7e14 !important;
+        color: #fff !important;
+    }
+</style>
+
 @if (isset($akses->report_piutang))
     @if ($akses->report_piutang->view == 1)
         <input type="hidden" id="update" value="{{ $akses->report_piutang->update }}">
@@ -103,6 +110,8 @@
                                                     <th>TOTAL PIUTANG</th>
                                                     <th>TOTAL DIBAYAR</th>
                                                     <th>SISA HUTANG</th>
+                                                    <th>OVERDUE</th>
+                                                    <th>CLUSTER OVERDUE</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

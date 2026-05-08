@@ -339,6 +339,33 @@ let ReportPiutang = {
                         return data;
                     },
                 },
+                {
+                    data: "overdue",
+                    title: "OVERDUE",
+                    render: function (data, type, row) {
+                        let label =
+                            data > 0
+                                ? `<span class="badge bg-danger">${data} Hari</span>`
+                                : `<span class="badge bg-success">0</span>`;
+                        return label;
+                    },
+                },
+                {
+                    data: "cluster_overdue",
+                    title: "CLUSTER OVERDUE",
+                    render: function (data, type, row) {
+                        let colorMap = {
+                            "Belum Jatuh Tempo": "bg-success",
+                            "0-3 Hari": "bg-warning text-dark",
+                            "4-6 Hari": "bg-warning text-dark",
+                            "7-14 Hari": "bg-orange", // custom, lihat catatan
+                            "15-20 Hari": "bg-danger",
+                            "21 Hari ke Atas": "bg-dark",
+                        };
+                        let cls = colorMap[data] ?? "bg-secondary";
+                        return `<span class="badge ${cls}">${data ?? "-"}</span>`;
+                    },
+                },
             ],
         });
 

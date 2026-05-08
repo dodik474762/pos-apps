@@ -43,6 +43,17 @@ class ReportPiutangController extends Controller
                 'dv.cicle_type',
                 DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
                 DB::raw('DATEDIFF(CURDATE(), sih.invoice_date) AS umur_faktur'),
+                DB::raw('DATEDIFF(CURDATE(), sih.due_date) AS overdue'),
+                DB::raw('
+                    CASE
+                        WHEN DATEDIFF(CURDATE(), sih.due_date) <= 0 THEN "Belum Jatuh Tempo"
+                        WHEN DATEDIFF(CURDATE(), sih.due_date) BETWEEN 1 AND 3 THEN "0-3 Hari"
+                        WHEN DATEDIFF(CURDATE(), sih.due_date) BETWEEN 4 AND 6 THEN "4-6 Hari"
+                        WHEN DATEDIFF(CURDATE(), sih.due_date) BETWEEN 7 AND 14 THEN "7-14 Hari"
+                        WHEN DATEDIFF(CURDATE(), sih.due_date) BETWEEN 15 AND 20 THEN "15-20 Hari"
+                        ELSE "21 Hari ke Atas"
+                    END AS cluster_overdue
+                '),
                 'sih.invoice_date',
                 'sih.due_date',
                 'sih.total_amount',
