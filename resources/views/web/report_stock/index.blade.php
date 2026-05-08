@@ -122,7 +122,7 @@
                                                     <th>Hari Kerja</th>
                                                     <th>Avg Omset Per Day</th>
                                                     <th>SCD Stock</th>
-                                                    <th>SCD Stock + Instransit</th>
+                                                    <th>SCD Stock + Instransit</th>                                                    
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

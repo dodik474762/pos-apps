@@ -8,11 +8,13 @@
                 <th rowspan="2">Nama Principal</th>
                 <th rowspan="2">UoM</th>
                 <th colspan="4" class="text-center">Perhitungan Total Stok Gudang</th>
+                <th rowspan="2">Harga (Ctn)</th>
+                <th rowspan="2">Total</th>
             </tr>
             <tr>
                 <td>CARTON</td>
-                <td>RENCENG</td>
                 <td>PACK</td>
+                <td>RENCENG</td>                
                 <td>PCS</td>
             </tr>
         </thead>

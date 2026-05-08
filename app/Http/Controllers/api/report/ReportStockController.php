@@ -469,6 +469,7 @@ class ReportStockController extends Controller
                 DB::raw('ROUND(
                 SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
             ) as stok_tersedia_raw'),
+                'm.price'
             ])
             ->with(['products.uomFromLarge.units'])
             ->join('product as p', 'p.id', 'm.product')
@@ -509,7 +510,7 @@ class ReportStockController extends Controller
             ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
 
             ->whereDate('m.created_at', '<=', $tanggal)
-            // ->where('p.id', '699')
+            // ->where('p.id', '56')
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -525,6 +526,7 @@ class ReportStockController extends Controller
                 'u_rtg.name',
                 'pu_pcs.nilai_konversi_terkecil',
                 'u_pcs.name',
+                'm.price'
             )
             ->orderBy('p.name');
 
@@ -575,74 +577,224 @@ class ReportStockController extends Controller
         // die;
 
         foreach ($datadb as &$value) {
+
             $stok_raw = (int) ($value['stok_tersedia_raw'] ?? 0);
+            $price = (float) ($value['price'] ?? 0);
 
-            $konversi_ctn = (int) ($value['konversi_ctn'] ?? 0); // level 4
-            $konversi_pck = (int) ($value['konversi_pck'] ?? 0); // level 3
-            $konversi_rtg = (int) ($value['konversi_rtg'] ?? 0); // level 2
-            // level 1 (PCS) tidak perlu konversi, langsung sisa akhir
+            /*
+    |--------------------------------------------------------------------------
+    | BUILD LEVEL SATUAN DINAMIS
+    |--------------------------------------------------------------------------
+    */
 
-            // Cek keberadaan tiap level
-            $has_ctn = $konversi_ctn > 0;
-            $has_rtg = $konversi_rtg > 0;
-            $has_pck = $konversi_pck > 0;
+            $levels = collect([
+                [
+                    'alias'     => 'ctn',
+                    'level'     => 4,
+                    'unit_name' => $value['unit_ctn_name'] ?? null,
+                    'konversi'  => (int) ($value['konversi_ctn'] ?? 0),
+                ],
+                [
+                    'alias'     => 'pck',
+                    'level'     => 3,
+                    'unit_name' => $value['unit_pck_name'] ?? null,
+                    'konversi'  => (int) ($value['konversi_pck'] ?? 0),
+                ],
+                [
+                    'alias'     => 'rtg',
+                    'level'     => 2,
+                    'unit_name' => $value['unit_rtg_name'] ?? null,
+                    'konversi'  => (int) ($value['konversi_rtg'] ?? 0),
+                ],
+                [
+                    'alias'     => 'pcs',
+                    'level'     => 1,
+                    'unit_name' => $value['unit_pcs_name'] ?? null,
+                    'konversi'  => (int) ($value['konversi_pcs'] ?? 0),
+                ],
+            ])
+                ->filter(function ($item) {
+                    return $item['konversi'] > 0;
+                })
+                ->sortByDesc('konversi')
+                ->values();
 
-            // Reset semua qty
+            /*
+    |--------------------------------------------------------------------------
+    | RESET QTY
+    |--------------------------------------------------------------------------
+    */
+
             $value['qty_ctn'] = 0;
-            $value['qty_rtg'] = 0;
             $value['qty_pck'] = 0;
+            $value['qty_rtg'] = 0;
             $value['qty_pcs'] = 0;
+
+            /*
+    |--------------------------------------------------------------------------
+    | TOTAL LEVEL TERSEDIA
+    |--------------------------------------------------------------------------
+    */
+
+            $totalLevel = $levels->count();
 
             $sisa = $stok_raw;
 
-            if ($has_ctn && $has_rtg && $has_pck) {
-                $value['qty_ctn'] = intdiv($sisa, $konversi_ctn);
-                $sisa = $sisa % $konversi_ctn;
+            /*
+    |--------------------------------------------------------------------------
+    | 4 LEVEL
+    |--------------------------------------------------------------------------
+    | CTN - PCK - RTG - PCS
+    |--------------------------------------------------------------------------
+    */
 
-                $value['qty_rtg'] = intdiv($sisa, $konversi_rtg);
-                $sisa = $sisa % $konversi_rtg;
+            if ($totalLevel == 4) {
 
-                $value['qty_pck'] = intdiv($sisa, $konversi_pck);
-                $sisa = $sisa % $konversi_pck;
+                $lvl1 = $levels[0];
+                $lvl2 = $levels[1];
+                $lvl3 = $levels[2];
+                $lvl4 = $levels[3];
 
-                $value['qty_pcs'] = $sisa;
-            } elseif ($has_ctn && $has_rtg && !$has_pck) {
-                $value['qty_ctn'] = intdiv($sisa, $konversi_ctn);
-                $sisa = $sisa % $konversi_ctn;
+                // CTN
+                $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+                $sisa = $sisa % $lvl1['konversi'];
 
-                $value['qty_rtg'] = intdiv($sisa, $konversi_rtg);
-                $sisa = $sisa % $konversi_rtg;
+                // PCK
+                // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
+                // $sisa = $sisa % $lvl2['konversi'];
 
-                $value['qty_pcs'] = $sisa;
-            } elseif ($has_ctn && $has_pck && !$has_rtg) {
-                $value['qty_ctn'] = intdiv($sisa, $konversi_ctn);
-                $sisa = $sisa % $konversi_ctn;
+                $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
+                $sisa = $sisa % $lvl2['konversi'];
 
-                $value['qty_pck'] = intdiv($sisa, $konversi_pck);
-                $sisa = $sisa % $konversi_pck;
+                // RTG
+                // $value['qty_rtg'] = intdiv($sisa, $lvl3['konversi']);
+                // $sisa = $sisa % $lvl3['konversi'];
+                $value['qty_rtg'] = intdiv($stok_raw, $lvl3['konversi']);
+                $sisa = $sisa % $lvl3['konversi'];
 
-                $value['qty_pcs'] = $sisa;
-            } elseif ($has_ctn && !$has_rtg && !$has_pck) {
-                $value['qty_ctn'] = intdiv($sisa, $konversi_ctn);
-                $sisa = $sisa % $konversi_ctn;
+                // PCS
+                // $value['qty_pcs'] = $sisa;
+                $value['qty_pcs'] = $stok_raw;
 
-                $value['qty_pcs'] = $sisa;
-            } elseif (!$has_ctn && $has_rtg && !$has_pck) {
-                $value['qty_ctn'] = intdiv($sisa, $konversi_rtg);
-                $sisa = $sisa % $konversi_rtg;
-
-                $value['qty_pcs'] = $sisa;
-            } else {
-                // Hanya PCS
-                $value['qty_pcs'] = $sisa;
+                // overwrite nama unit
+                $value['unit_ctn_name'] = $lvl1['unit_name'];
+                $value['unit_pck_name'] = $lvl2['unit_name'];
+                $value['unit_rtg_name'] = $lvl3['unit_name'];
+                $value['unit_pcs_name'] = $lvl4['unit_name'];
             }
 
-            // UOM string: urut dari terbesar ke terkecil
+            /*
+    |--------------------------------------------------------------------------
+    | 3 LEVEL
+    |--------------------------------------------------------------------------
+    | terbesar = CTN
+    | tengah = PCK
+    | kecil = PCS
+    |--------------------------------------------------------------------------
+    */ elseif ($totalLevel == 3) {
+
+                $lvl1 = $levels[0];
+                $lvl2 = $levels[1];
+                $lvl3 = $levels[2];
+
+                // CTN
+                $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+                $sisa = $sisa % $lvl1['konversi'];
+
+
+                // PCK
+                // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
+                // $sisa = $sisa % $lvl2['konversi'];
+                $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
+                $sisa = $sisa % $lvl2['konversi'];
+
+                // PCS
+                // $value['qty_pcs'] = $sisa;
+                $value['qty_pcs'] = $stok_raw;
+
+                // overwrite nama unit
+                $value['unit_ctn_name'] = $lvl1['unit_name'];
+                $value['unit_pck_name'] = $lvl2['unit_name'];
+                $value['unit_pcs_name'] = $lvl3['unit_name'];
+            }
+
+            /*
+    |--------------------------------------------------------------------------
+    | 2 LEVEL
+    |--------------------------------------------------------------------------
+    | terbesar = CTN
+    | kecil = PCS
+    |--------------------------------------------------------------------------
+    */ elseif ($totalLevel == 2) {
+
+                $lvl1 = $levels[0];
+                $lvl2 = $levels[1];
+
+                // CTN
+                $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+                $sisa = $sisa % $lvl1['konversi'];
+
+                // PCS
+                // $value['qty_pcs'] = $sisa;
+                $value['qty_pcs'] = $stok_raw;
+
+                // overwrite nama unit
+                $value['unit_ctn_name'] = $lvl1['unit_name'];
+                $value['unit_pcs_name'] = $lvl2['unit_name'];
+            }
+
+            /*
+    |--------------------------------------------------------------------------
+    | 1 LEVEL
+    |--------------------------------------------------------------------------
+    */ elseif ($totalLevel == 1) {
+
+                $lvl1 = $levels[0];
+
+                $value['qty_pcs'] = $stok_raw;
+
+                // overwrite nama unit
+                $value['unit_pcs_name'] = $lvl1['unit_name'];
+            }
+
+            /*
+    |--------------------------------------------------------------------------
+    | TOTAL HARGA
+    |--------------------------------------------------------------------------
+    | price diasumsikan harga satuan terbesar
+    |--------------------------------------------------------------------------
+    */
+
+            $largestLevel = $levels->first();
+
+            $harga_per_pcs = 0;
+
+            if (
+                $largestLevel &&
+                $largestLevel['konversi'] > 0
+            ) {
+
+                $harga_per_pcs =
+                    $price / $largestLevel['konversi'];
+            }
+
+            $value['total_harga'] = round(
+                $harga_per_pcs * $stok_raw,
+                2
+            );
+
+            /*
+    |--------------------------------------------------------------------------
+    | FORMAT UOM PRODUCT
+    |--------------------------------------------------------------------------
+    */
+
             $uoms = collect($value['products']['uom_from_large'] ?? [])
                 ->sortByDesc('level')
                 ->pluck('units.name')
                 ->filter()
                 ->values();
+
             $value['uom_product'] = $uoms->implode('-');
 
             $resultdb[] = $value;

@@ -229,7 +229,7 @@ let ReportStock = {
             buttons: [
                 {
                     extend: "excel",
-                    filename: "ReportStock",
+                    filename: "ReportStockScd",
                     action: newexportaction,
                 },
             ],
@@ -1303,7 +1303,7 @@ let ReportStock = {
             buttons: [
                 {
                     extend: "excel",
-                    filename: "ReportStock",
+                    filename: "ReportStockProductDetail",
                     action: newexportaction,
                 },
             ],
@@ -1356,8 +1356,8 @@ let ReportStock = {
                     },
                 },
                 {
-                    // RENCENG (level 2)
-                    data: "qty_rtg",
+                    // PACK (level 3)
+                    data: "qty_pck",
                     className: "text-end",
                     orderable: false,
                     render: function (data, type, row) {
@@ -1365,8 +1365,8 @@ let ReportStock = {
                     },
                 },
                 {
-                    // PACK (level 3)
-                    data: "qty_pck",
+                    // RENCENG (level 2)
+                    data: "qty_rtg",
                     className: "text-end",
                     orderable: false,
                     render: function (data, type, row) {
@@ -1380,6 +1380,30 @@ let ReportStock = {
                     orderable: false,
                     render: function (data, type, row) {
                         return data ?? "0";
+                    },
+                },
+
+                {
+                    // Price
+                    data: "price",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        let nominal = parseFloat(data ?? 0);
+
+                        return `${formatNumber(nominal)}`;
+                    },
+                },
+
+                {
+                    // Total Price
+                    data: "total_harga",
+                    className: "text-end",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        let nominal = parseFloat(data ?? 0);
+
+                        return `${formatNumber(nominal)}`;
                     },
                 },
             ],
@@ -1495,6 +1519,16 @@ function newexportaction(e, dt, button, config) {
     // Requery the server with the new one-time export settings
     dt.ajax.reload();
 }
+
+const formatRupiah = new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 0,
+});
+
+const formatNumber = (num) => {
+    return parseFloat(num || 0)
+        .toFixed(0)
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
 
 $(function () {
     ReportStock.setSelect2();
