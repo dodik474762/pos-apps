@@ -68,7 +68,7 @@ class ReportVisitController extends Controller
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereDate('pr.presence_date', '=', $tanggal)
             ->whereNull('m.deleted')
-            ->where('usr.username', 'SLS-001')
+            // ->where('usr.username', 'SLS-001')
             // ->where('c.code', 'CUST.01087')
             ->orderBy('usr.name', 'asc')
             ->orderBy('m.check_in_time', 'asc');
