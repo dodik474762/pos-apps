@@ -70,16 +70,17 @@ class DashboardController extends Controller
     public function getListGroupKaryawan()
     {
         $data = DB::table('karyawan_group as kg')->whereNull('kg.deleted')
-        ->select(['kg.*', 'dic.keterangan as group_name'])
-        ->join('karyawan as kry', 'kry.id', '=', 'kg.karyawan')
-        ->join('dictionary as dic', 'dic.term_id', '=', 'kg.group')
-        ->join('users as usr', 'usr.nik', '=', 'kry.nik')
-        ->where('usr.id', session('user_id'))
-        ->get()->toArray();
+            ->select(['kg.*', 'dic.keterangan as group_name'])
+            ->join('karyawan as kry', 'kry.id', '=', 'kg.karyawan')
+            ->join('dictionary as dic', 'dic.term_id', '=', 'kg.group')
+            ->join('users as usr', 'usr.nik', '=', 'kry.nik')
+            ->where('usr.id', session('user_id'))
+            ->get()->toArray();
         return $data;
     }
 
-    public function getSummaryPO($year = ''){
+    public function getSummaryPO($year = '')
+    {
         $year = ($year == '') ? date('Y') : $year;
 
         $totalPO = DB::table('purchase_order')
@@ -95,7 +96,8 @@ class DashboardController extends Controller
         ];
     }
 
-    public function getSummarySO($year = ''){
+    public function getSummarySO($year = '')
+    {
         $year = ($year == '') ? date('Y') : $year;
 
         $totalSales = DB::table('sales_order_headers')
@@ -112,7 +114,8 @@ class DashboardController extends Controller
         ];
     }
 
-    public function getSummaryInvoice($year = ''){
+    public function getSummaryInvoice($year = '')
+    {
         $year = ($year == '') ? date('Y') : $year;
 
         $outstandingReceivable = DB::table('sales_invoice_header')
@@ -131,7 +134,8 @@ class DashboardController extends Controller
         ];
     }
 
-    public function getInvoiceOutstanding(Request $request){
+    public function getInvoiceOutstanding(Request $request)
+    {
         $data = $request->all();
         $year = isset($data['year']) ? $data['year'] : date('Y');
 
@@ -150,7 +154,7 @@ class DashboardController extends Controller
             'c.code as customer_code',
             'c.nama_customer'
         ])
-        ->join('customer as c', 'c.id', '=', 'sih.customer_id');
+            ->join('customer as c', 'c.id', '=', 'sih.customer_id');
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -194,7 +198,8 @@ class DashboardController extends Controller
         return response()->json($data);
     }
 
-    public function getGrafikPenjualan(Request $request){
+    public function getGrafikPenjualan(Request $request)
+    {
         $data = $request->all();
         $year = isset($data['year']) ? $data['year'] : date('Y');
         $resultStatusSo = [];
@@ -212,7 +217,7 @@ class DashboardController extends Controller
         $resultsStatusSoCancel = [];
         for ($i = 1; $i < 13; $i++) {
             $month = $i < 10 ? '0' . $i : $i;
-              $total = DB::table('sales_order_headers')
+            $total = DB::table('sales_order_headers')
                 ->whereNotNull('sales_order_headers.deleted')
                 ->where(function ($q) use ($year, $month) {
                     return $q->where('sales_order_headers.created_at', 'like', '%' . $year . '-' . $month . '%');
@@ -228,7 +233,7 @@ class DashboardController extends Controller
         return response()->json($result);
     }
 
-     public function getMapVisit(Request $request)
+    public function getMapVisit(Request $request)
     {
         DB::enableQueryLog();
         $data = $request->all();
@@ -236,21 +241,21 @@ class DashboardController extends Controller
         $salesman = $data['salesman'];
 
         $result['is_valid'] = true;
-        $datadb =DB::table('sales_order_headers as soh')
-        ->select([
-            'soh.*',
-            'c.code as customer_code',
-            'c.nama_customer',
-        ])
-        ->join('customer as c', 'c.id', '=', 'soh.customer_id')            
+        $datadb = DB::table('sales_order_headers as soh')
+            ->select([
+                'soh.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+            ])
+            ->join('customer as c', 'c.id', '=', 'soh.customer_id')
             ->where('soh.platform', 'mobile')
             ->whereNull('soh.deleted');
-        if($salesman != ''){            
+        if ($salesman != '') {
             $datadb->where('soh.salesman', $salesman);
         }
-        if($date_visit != ''){
+        if ($date_visit != '') {
             $datadb->where('soh.so_date', $date_visit);
-        }else{
+        } else {
             $datadb->whereYear('soh.so_date', date('Y'));
         }
 
@@ -265,5 +270,4 @@ class DashboardController extends Controller
         $result['query'] = DB::getQueryLog();
         return response()->json($result);
     }
-
 }

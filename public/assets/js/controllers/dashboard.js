@@ -78,7 +78,7 @@ let Dashboard = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -127,12 +127,12 @@ let Dashboard = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -146,10 +146,10 @@ let Dashboard = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     getDataInvoiceOutstanding: async () => {
@@ -177,7 +177,7 @@ let Dashboard = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -239,12 +239,12 @@ let Dashboard = {
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -258,10 +258,10 @@ let Dashboard = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     getGrafikPenjualan: (elm) => {
@@ -303,17 +303,17 @@ let Dashboard = {
                     var t = e.replace(" ", "");
                     return -1 === t.indexOf(",")
                         ? getComputedStyle(
-                              document.documentElement
+                              document.documentElement,
                           ).getPropertyValue(t) || t
                         : 2 == (e = e.split(",")).length
-                        ? "rgba(" +
-                          getComputedStyle(
-                              document.documentElement
-                          ).getPropertyValue(e[0]) +
-                          "," +
-                          e[1] +
-                          ")"
-                        : t;
+                          ? "rgba(" +
+                            getComputedStyle(
+                                document.documentElement,
+                            ).getPropertyValue(e[0]) +
+                            "," +
+                            e[1] +
+                            ")"
+                          : t;
                 });
         }
     },
@@ -404,7 +404,7 @@ let Dashboard = {
 
         const chart = new ApexCharts(
             document.querySelector("#penjualan_chart"),
-            options
+            options,
         ).render();
     },
 
@@ -483,20 +483,20 @@ let Dashboard = {
                 keterangan = `
                     <div style="">
                         <img src="${
-                            content_.photo_path
+                            content_.checkin_path
                         }" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
                     </div>
                     SO Number : <b>${content_.so_number}</b> <br>
                     Visit Date : <b>${content_.so_date ?? ""}</b> <br>
                     Amount IDR : <b>${content_.total_amount}</b> <br>
                     Customer : <b>${content_.customer_code} - ${
-                    content_.nama_customer
-                }</b> <br>
+                        content_.nama_customer
+                    }</b> <br>
                     Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${
                         content_.latitude
                     },${content_.longitude}" target="_blank">${
-                    content_.latitude
-                }, ${content_.longitude}</a></b> <br>
+                        content_.latitude
+                    }, ${content_.longitude}</a></b> <br>
                 `;
             }
 
@@ -511,7 +511,7 @@ let Dashboard = {
                         parseFloat(element.latitude),
                         parseFloat(element.longitude),
                     ],
-                    { customId: element.id, icon: myIconMarkerOutlet }
+                    { customId: element.id, icon: myIconMarkerOutlet },
                 ).bindPopup(keterangan);
                 markers.push(markerOutlet);
             }
@@ -519,7 +519,7 @@ let Dashboard = {
             index_++;
             map.setView(
                 [parseFloat(element.latitude), parseFloat(element.longitude)],
-                12
+                12,
             );
         });
 
@@ -532,7 +532,7 @@ let Dashboard = {
     mapVisitInit: () => {
         map = L.map("map", { scrollWheelZoom: false }).setView(
             [-4.286684, 112.338392],
-            6
+            6,
         ); // , maxZoom: 10
         L.tileLayer(
             "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaXRwcm9ncmFtbWVybXRzIiwiYSI6ImNsaGp6anByMDBtc3gza3VwNjRwNWk2N2sifQ.aaXm2ry5dSHPlmfNSCkr9w",
@@ -544,7 +544,7 @@ let Dashboard = {
                 id: "mapbox/streets-v11",
                 tileSize: 512,
                 zoomOffset: -1,
-            }
+            },
         ).addTo(map);
 
         setTimeout(() => {
