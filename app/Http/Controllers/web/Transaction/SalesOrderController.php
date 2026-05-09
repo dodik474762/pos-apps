@@ -228,6 +228,7 @@ class SalesOrderController extends Controller
     public function getAllSalesNotInvoice($date = '', $state = '')
     {
         $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+
         $datadb = DB::table('sales_order_headers as m')
             ->select([
                 'm.*',
@@ -247,13 +248,27 @@ class SalesOrderController extends Controller
             ->where('m.total_amount', '>', 0)
             ->where('m.so_date', $date)
             ->whereNull('m.deleted')
+            // Jika ada dobel customer + tanggal + total, ambil ID terbesar (terbaru)
+            ->whereRaw('m.id = (
+            SELECT MAX(sub.id)
+            FROM sales_order_headers sub
+            LEFT JOIN sales_invoice_header sih2
+                ON sih2.sales_order = sub.id
+                AND sih2.deleted IS NULL
+            WHERE sub.customer_id  = m.customer_id
+              AND sub.so_date      = m.so_date
+              AND sub.total_amount = m.total_amount
+              AND sub.deleted      IS NULL
+              AND sih2.id          IS NULL
+              AND sub.status       IN (\'draft\', \'submited\')
+        )')
             ->orderBy('m.id', 'desc');
+
         if ($state == '') {
+            // tambahkan filter state jika diperlukan
         }
 
-        $datadb = $datadb->get();
-
-        return $datadb;
+        return $datadb->get();
     }
 
     public function generateAll(Request $request)

@@ -170,7 +170,8 @@ class SalesOrderController extends Controller
         $result = ['is_valid' => false];
 
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
 
         DB::beginTransaction();
         try {
