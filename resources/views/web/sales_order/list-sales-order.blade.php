@@ -82,7 +82,7 @@
                                                         <td>{{ $item->so_number }}</td>
                                                         <td>{{ $item->so_date }}</td>
                                                         <td>{{ $item->nama_customer }}</td>
-                                                        <td>{{ $item->total_amount }}</td>
+                                                        <td>{{ $item->total_amount - $item->discount_amount }}</td>
                                                         <td>{{ $item->currency_code }}</td>
                                                         <td>{{ $item->created_by_name }}</td>
                                                         <td>{{ $item->status }}</td>

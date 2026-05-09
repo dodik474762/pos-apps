@@ -51,6 +51,7 @@ class SalesOrderController extends Controller
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
+                DB::raw('(m.total_amount - COALESCE(m.discount_amount, 0)) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')

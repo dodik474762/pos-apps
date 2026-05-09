@@ -204,7 +204,7 @@ let SalesOrder = {
                     data: "nama_customer",
                 },
                 {
-                    data: "total_amount",
+                    data: "net_total",
                     render: function (data, type, row) {
                         if (type === "display" || type === "filter") {
                             return new Intl.NumberFormat("id-ID", {
