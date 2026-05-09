@@ -206,13 +206,20 @@ let SalesOrder = {
                 {
                     data: "net_total",
                     render: function (data, type, row) {
+                        let value = parseFloat(data ?? 0);
+
+                        if (isNaN(value)) {
+                            value = 0;
+                        }
+
                         if (type === "display" || type === "filter") {
                             return new Intl.NumberFormat("id-ID", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
-                            }).format(data);
+                            }).format(value);
                         }
-                        return data;
+
+                        return value;
                     },
                 },
                 {
