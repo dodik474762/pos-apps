@@ -120,9 +120,29 @@ let Dashboard = {
                 },
                 {
                     data: "status",
+                    render: function (data) {
+                        const map = {
+                            confirmed: "success",
+                            completed: "success",
+                            submited: "info",
+                            draft: "warning",
+                            cancelled: "danger",
+                        };
+                        const color = map[data] || "secondary";
+                        return `<span class="badge bg-${color}-subtle text-${color} text-capitalize">${data}</span>`;
+                    },
                 },
                 {
                     data: "platform",
+                    render: function (data) {
+                        const icon =
+                            data === "mobile"
+                                ? "ri-smartphone-line"
+                                : "ri-computer-line";
+                        const color =
+                            data === "mobile" ? "text-info" : "text-muted";
+                        return `<i class="${icon} ${color} fs-16" title="${data}"></i>`;
+                    },
                 },
             ],
         });
