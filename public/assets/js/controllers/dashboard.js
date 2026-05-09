@@ -533,9 +533,16 @@ let Dashboard = {
         map = L.map("map", { scrollWheelZoom: false }).setView(
             [-4.286684, 112.338392],
             6,
-        ); // , maxZoom: 10
+        );
+
+        // Ambil token dari meta tag, bukan hardcode
+        const mapboxToken = document.querySelector(
+            'meta[name="mapbox-token"]',
+        ).content;
+
         L.tileLayer(
-            "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaXRwcm9ncmFtbWVybXRzIiwiYSI6ImNsaGp6anByMDBtc3gza3VwNjRwNWk2N2sifQ.aaXm2ry5dSHPlmfNSCkr9w",
+            "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=" +
+                mapboxToken,
             {
                 maxZoom: 18,
                 attribution:

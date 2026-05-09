@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="{{ isset($title_top) ? $title_top : 'POS APPS' }}" name="description" />
     <meta content="Dodik Rismawan Affrudin" name="author" />
+    <meta name="mapbox-token" content="{{ config('services.mapbox.token') }}">
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('main_template/assets/images/favicon.ico') }}">
 
