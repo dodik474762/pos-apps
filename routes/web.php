@@ -372,6 +372,7 @@ Route::post('api/master/unit/confirmDelete', [MasterUnitController::class, 'conf
 
 Route::post('api/master/product/getData', [MasterProductController::class, 'getData']);
 Route::post('api/master/product/submit', [MasterProductController::class, 'submit']);
+Route::post('api/master/product/updatePrice', [MasterProductController::class, 'updatePrice']);
 Route::post('api/master/product/submit_import', [MasterProductController::class, 'submit_import']);
 Route::post('api/master/product/delete', [MasterProductController::class, 'delete']);
 Route::post('api/master/product/confirmDelete', [MasterProductController::class, 'confirmDelete']);

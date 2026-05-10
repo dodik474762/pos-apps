@@ -1558,4 +1558,29 @@ class ProductController extends Controller
         $data = $request->all();
         return view('web.product.modal.dataproductchooce', $data);
     }
+
+    public function updatePrice(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+            DB::commit();
+
+            $update = ProductUomPrice::find($data['id']);
+            $update->price = $data['price'];
+            $update->save();
+
+
+            $result['is_valid'] = true;
+            $result['message'] = 'Success';
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
 }

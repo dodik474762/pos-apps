@@ -841,6 +841,88 @@ let Product = {
             },
         });
     },
+
+    editPrice: (elm, e) => {
+        e.preventDefault();
+        const data_id = $(elm).closest("tr").attr("data_id");
+        const currentPrice = $(elm)
+            .closest(".input-group")
+            .find("input[name='price[]']")
+            .val();
+
+        Swal.fire({
+            title: "Edit Harga",
+            html: `
+            <div class="mb-3 text-start">
+                <label class="form-label fw-semibold">Harga Baru</label>
+                <input type="number" id="swal-input-price" class="form-control"
+                    placeholder="Masukkan harga baru" value="${currentPrice}" min="0">
+            </div>
+        `,
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: '<i class="bx bx-save"></i> Simpan',
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#3b7ddd",
+            cancelButtonColor: "#6c757d",
+            focusConfirm: false,
+            preConfirm: () => {
+                const price = document.getElementById("swal-input-price").value;
+                if (!price || isNaN(price) || Number(price) < 0) {
+                    Swal.showValidationMessage(
+                        "Harga tidak valid, masukkan angka yang benar",
+                    );
+                    return false;
+                }
+                return price;
+            },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Product.updatePrice(elm, data_id, result.value);
+            }
+        });
+    },
+
+    updatePrice: (elm, id, price) => {
+        let params = {
+            id: id,
+            price: price,
+            product: $("input#id").val(),
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "updatePrice",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Menyimpan harga...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal menyimpan harga");
+            },
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    // Update nilai input di baris yang sama tanpa reload
+                    $(elm)
+                        .closest(".input-group")
+                        .find("input[name='price[]']")
+                        .val(price);
+                    message.sweetSuccess(
+                        "Informasi",
+                        "Harga berhasil diperbarui",
+                    );
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {

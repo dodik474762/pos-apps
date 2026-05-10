@@ -104,8 +104,16 @@
                                     error="Max Qty" min="1" value="{{ $v->max_qty ?? 1 }}">
                             </td>
                             <td>
-                                <input type="number" {{ $v->type == 'RETAIL' ? 'readonly' : '' }} id="price" name="price[]" class="form-control required"
-                                    error="Harga" value="{{ $v->price }}">
+                                <div class="input-group">
+                                    <input type="number" {{ $v->type == 'RETAIL' ? 'readonly' : '' }} id="price" name="price[]" class="form-control required"
+                                        error="Harga" value="{{ $v->price }}">
+                                    <button class="btn btn-outline-warning" type="button"
+                                        onclick="Product.editPrice(this, event)"
+                                        data_id="{{ $v->id }}"
+                                        title="Edit Harga">
+                                        <i class="bx bx-edit-alt"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td>
                                 <input type="date" id="date_start" name="date_start[]" class="form-control required"
