@@ -935,6 +935,10 @@ class ProductController extends Controller
             $roles->tax_sale    = $data['tax_id'];
             $roles->type_tax    = $data['type_tax'];
             $roles->type_retur  = $data['type_retur'];
+            $roles->principal  = $data['principal'];
+            $roles->sku_name  = $data['sku_name'];
+            $roles->category  = $data['category'];
+            $roles->sub_brand  = $data['sub_brand'];
             $roles->files       = !empty($data['file']) ? $fileName : $roles->files;
             $roles->path_files  = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
             $roles->save();

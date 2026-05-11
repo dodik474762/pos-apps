@@ -81,8 +81,22 @@
                             <div class="mb-3">
                                 <label>Principal</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Principal' id="vendor" name="vendor">
+                                    <select class="form-control select2 required" error='Principal' id="principal" name="principal">
                                         <option value="">-- Principal --</option>
+                                        @foreach ($vendors as $item)
+                                            <option value="{{ $item->id }}"
+                                                {{ isset($data->principal) ? ($data->principal == $item->id ? 'selected' : '') : '' }}>
+                                                {{ $item->nama_vendor }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                             <div class="mb-3">
+                                <label>Vendor</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Principal' id="vendor" name="vendor">
+                                        <option value="">-- Vendor --</option>
                                         @foreach ($vendors as $item)
                                             <option value="{{ $item->id }}"
                                                 {{ isset($data->vendor) ? ($data->vendor == $item->id ? 'selected' : '') : '' }}>
@@ -91,6 +105,7 @@
                                     </select>
                                 </div>
                             </div>
+
                             <div class="mb-3">
                                 <label>Tax Tipe</label>
                                 <div>
@@ -135,6 +150,33 @@
                                         value="{{ isset($data->id) ? $data->files : '' }}">
                                     <input type="hidden" name="files" id="files"
                                         value="{{ isset($data->id) ? $data->id : '' }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Nama SKU</label>
+                                <div>
+                                    <input type="text" id="sku_name" name="sku_name" class="form-control required" error="Nama SKU"
+                                        placeholder="Nama SKU"
+                                        value="{{ isset($data->sku_name) ? $data->sku_name : '' }}">
+                                </div>
+                            </div>
+
+                             <div class="mb-3">
+                                <label>Kategori SKU</label>
+                                <div>
+                                    <input type="text" id="category" name="category" class="form-control required" error="Kategori SKU"
+                                        placeholder="Kategori SKU"
+                                        value="{{ isset($data->category) ? $data->category : '' }}">
+                                </div>
+                            </div>
+
+                             <div class="mb-3">
+                                <label>Sub Brand</label>
+                                <div>
+                                    <input type="text" id="sub_brand" name="sub_brand" class="form-control" error="Sub Brand"
+                                        placeholder="Sub Brand"
+                                        value="{{ isset($data->sub_brand) ? $data->sub_brand : '' }}">
                                 </div>
                             </div>
 
