@@ -54,7 +54,8 @@ class ProductController extends Controller
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
-            ->leftJoin('vendor as prin', 'prin.id', '=', 'v.parent')
+            // ->leftJoin('vendor as prin', 'prin.id', '=', 'v.parent')
+            ->leftJoin('vendor as prin', 'prin.id', '=', 'm.principal')
             ->leftJoinSub($stock, 'ps', function ($join) {
                 $join->on('ps.product', '=', 'm.id');
             })
