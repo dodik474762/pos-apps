@@ -134,6 +134,7 @@ let PromoItem = {
             additional_disc: $("#additional_disc").val(),
             additional_disc_type: $("#additional_disc_type").val(),
             beban: $("#beban").val(),
+            kategori_disc: $("#kategori_disc").val(),
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
         };
@@ -233,6 +234,9 @@ let PromoItem = {
                 },
                 {
                     data: "promo_name",
+                },
+                {
+                    data: "kategori_disc",
                 },
                 {
                     data: "id",

@@ -84,6 +84,7 @@
                                                 <tr class="text-uppercase">
                                                     <th class="sort" data-sort="id">No</th>
                                                     <th class="sort">Nama Promo</th>
+                                                    <th class="sort">Kategori</th>
                                                     <th class="sort" data-sort="action">Action</th>
                                                 </tr>
                                             </thead>
