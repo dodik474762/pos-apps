@@ -187,14 +187,39 @@ class SalesOrderController extends Controller
                 ]);
             }
 
+            $customersId = $data['customer_id'];
 
-            /*CALCULATE PROMO ITEM */
-            $items = collect($data['items'])->filter(function ($item) {
-                return empty($item['free_for']);
-            });
+
+            $items = collect($data['items'])
+                ->filter(function ($item) {
+                    return empty($item['free_for']); // filter dulu
+                })
+                ->map(function ($item) use ($customersId) {
+                    $params['customer'] = $customersId;
+                    $params['product_id'] = $item['product_id'];
+                    $customers = $this->checkDataPriceCustomer($params);
+                    $item['has_channel_price'] = $customers['has_channel_price'];
+
+                    if (!empty($customers) && $customers['has_channel_price']) {
+                        $channel_price = collect($customers['channel_price'])
+                            ->where('unit', $item['unit_id'])
+                            ->first();
+
+                        if (empty($channel_price)) {
+                            // handle error, tapi ingat map() tidak bisa return response di sini
+                            // sebaiknya throw exception atau set flag
+                            throw new \Exception('Channel Price Tidak ditemukan ' . $item['product_id']);
+                        }
+
+                        $item['price'] = $channel_price->price; // ✅ override, lalu return
+                    }
+
+                    return $item; // ✅ wajib return $item di map()
+                });
 
             // echo '<pre>';
-            // print_r($items);die;
+            // print_r($items);
+            // die;
             $productIds = $items->pluck('product_id')->toArray();
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $data['customer_id']);
@@ -239,7 +264,7 @@ class SalesOrderController extends Controller
             // === DETAIL ===
             $detailIdMap = []; // map product_id => detail_id untuk keperluan promo item
 
-            foreach ($data['items'] as $item) {
+            foreach ($items as $item) {
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesOrderDetail::find($item['id']);
@@ -262,6 +287,7 @@ class SalesOrderController extends Controller
                 $detail = empty($item['id'])
                     ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
+                $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
 
                 // Cek promo per item
                 $promoItemFound = null;
@@ -939,11 +965,30 @@ class SalesOrderController extends Controller
                 [$products, $product_unit] = explode(':', $i['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
+
+                $params['customer'] = $customersId;
+                $params['product_id'] = $products[0];
+                $customers_channel = $this->checkDataPriceCustomer($params);
+
+                if (!empty($customers_channel)) {
+                    if ($customers_channel['has_channel_price']) {
+                        $channel_price = collect($customers_channel['channel_price'])->where('unit', $product_unit[0])->first();
+                        if (empty($channel_price)) {
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Channel Price Tidak ditemukan ' . $products[0];
+                            return response()->json($result);
+                        }
+
+                        $product_unit[1] = $channel_price->price;
+                    }
+                }
+
                 $items[] = [
                     'product_id' => $products[0],
                     'unit_id' => $product_unit[0],
                     'qty' => $i['qty'],
-                    'price' => doubleval(trim($product_unit[1]))
+                    'price' => doubleval(trim($product_unit[1])),
+                    'has_channel_price' => $customers_channel['has_channel_price']
                 ];
                 $productIds[] = $products[0];
             }
@@ -1012,12 +1057,21 @@ class SalesOrderController extends Controller
                     return response()->json(['is_valid' => false, 'message' => 'Product UOM Price tidak ditemukan']);
                 }
 
+                $channel_price = collect($items)->where('product_id', trim($products[0]))
+                    ->where('unit_id', trim($product_unit[0]))->first();
+                $price = doubleval(trim($product_unit[1]));
+                $has_channel_price = 0;
+                if (!empty($channel_price)) {
+                    $has_channel_price = $channel_price['has_channel_price'];
+                    $price = $channel_price['price'];
+                }
+
                 $params['product_id'] = trim($products[0]);
                 $params['produk_id'] = trim($products[0]);
                 $params['unit'] = trim($product_unit[0]);
                 $params['customer'] = $customersId;
                 $params['customer_id'] = $customersId;
-                $params['price'] = doubleval(trim($product_unit[1]));
+                $params['price'] = $price;
                 $params['today'] = $data['so_date'];
                 $params['qty'] = $item['qty'];
                 $calculateDisc = $this->calculateDisc($params);
@@ -1048,12 +1102,13 @@ class SalesOrderController extends Controller
                 $detail->product_id = trim($products[0]);
                 $detail->qty = $item['qty'];
                 $detail->unit = trim($product_unit[0]);
-                $detail->unit_price = doubleval(trim($product_unit[1]));
+                $detail->unit_price = $price;
                 $detail->discount_type = $calculateDisc['disc_percent'] == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $calculateDisc['disc_percent'];
                 $detail->discount_amount = $calculateDisc['disc_amount'];
                 $detail->subtotal = $calculateDisc['subtotal'];
                 $detail->is_free_good = 0;
+                $detail->has_channel_price = $has_channel_price;
                 $detail->status = 'draft';
 
                 if (isset($item['taxAmount'])) {
@@ -1298,9 +1353,34 @@ class SalesOrderController extends Controller
         return view('web.product.modal.dataproductorder', $data);
     }
 
+    public function checkDataPriceCustomer($params)
+    {
+        $customer = Customer::where('id', $params['customer'])->first();
+
+        $channelPrice = ProductUomPrice::where('channel', $customer->channel_outlet)
+            ->where('product', $params['product_id'])
+            ->where('sub_channel', $customer->sub_channel_outlet)->get();
+        return [
+            'customer' => $customer,
+            'channel_price' => $channelPrice,
+            'has_channel_price' => $channelPrice->isNotEmpty(),
+        ];
+    }
+
     public function pilihProdukDulu(Request $request)
     {
         $data = $request->all();
+        $customers = $this->checkDataPriceCustomer($data);
+
+        $channel_outlet = 'RETAIL UMUM';
+        $sub_channel_outlet = 'RT-RETAIL UMUM';
+        if (!empty($customers)) {
+            if ($customers['has_channel_price']) {
+                $channel_outlet = $customers['customer']->channel_outlet;
+                $sub_channel_outlet = $customers['customer']->sub_channel_outlet;
+            }
+        }
+
         $datadb =  DB::table('product as m')
             ->select([
                 'm.*',
@@ -1329,7 +1409,7 @@ class SalesOrderController extends Controller
             ->join('unit as u', 'u.id', '=', 'm.unit')
             ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
-            ->leftJoin('product_uom_price as pup', function ($join) {
+            ->leftJoin('product_uom_price as pup', function ($join) use ($channel_outlet, $sub_channel_outlet) {
                 $join->on('pup.product', '=', 'm.id')
                     ->on('pup.unit', '=', 'pu.unit_tujuan')
                     ->whereNull('pup.deleted')
@@ -1337,7 +1417,9 @@ class SalesOrderController extends Controller
                         $query->whereNull('pup.date_end')
                             ->orWhere('pup.date_end', '>=', now());
                     })
-                    ->where('pup.date_start', '<=', now());
+                    ->where('pup.date_start', '<=', now())
+                    ->where('pup.channel', $channel_outlet)
+                    ->where('pup.sub_channel', $sub_channel_outlet);
             })
             ->whereNull('m.deleted')
             ->where('m.id', $data['product_id'])->get();
@@ -2502,8 +2584,10 @@ class SalesOrderController extends Controller
                         $query->whereNull('pup.date_end')
                             ->orWhere('pup.date_end', '>=', now());
                     })
-                    ->where('pup.date_start', '<=', now());
+                    ->where('pup.date_start', '<=', now())
+                    ->where('pup.channel', 'RETAIL UMUM');
             })
+            // ->where('m.id', 573)
             ->whereNull('m.deleted');
 
         // if (isset($data['customer'])) {
@@ -3093,11 +3177,30 @@ class SalesOrderController extends Controller
                 [$products, $product_unit] = explode(':', $i['product_id']);
                 $products = explode('/', $products);
                 $product_unit = explode('/', $product_unit);
+
+                $params['customer'] = $customersId;
+                $params['product_id'] = $products[0];
+                $customers = $this->checkDataPriceCustomer($params);
+
+                if (!empty($customers)) {
+                    if ($customers['has_channel_price']) {
+                        $channel_price = collect($customers['channel_price'])->where('unit', $product_unit[0])->first();
+                        if (empty($channel_price)) {
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Channel Price Tidak ditemukan ' . $products[0];
+                            return response()->json($result);
+                        }
+
+                        $product_unit[1] = $channel_price->price;
+                    }
+                }
+
                 $items[] = [
                     'product_id' => $products[0],
                     'unit_id' => $product_unit[0],
                     'qty' => $i['qty'],
-                    'price' => doubleval(trim($product_unit[1]))
+                    'price' => doubleval(trim($product_unit[1])),
+                    'has_channel_price' => $customers['has_channel_price']
                 ];
                 $productIds[] = $products[0];
             }
@@ -3124,17 +3227,38 @@ class SalesOrderController extends Controller
         $result['message'] = '';
 
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
 
         try {
+            $data['customer'] = $customersId;
             foreach ($data['details'] as $i) {
                 $products = $i['product_id'];
                 $product_unit = $i['unit_id'];
+
+                $params['customer'] = $customersId;
+                $params['product_id'] = $products;
+                $customers = $this->checkDataPriceCustomer($params);
+
+                if (!empty($customers)) {
+                    if ($customers['has_channel_price']) {
+                        $channel_price = collect($customers['channel_price'])->where('unit', $i['unit_id'])->first();
+                        if (empty($channel_price)) {
+                            $result['is_valid'] = false;
+                            $result['message'] = 'Channel Price Tidak ditemukan ' . $i['product_id'];
+                            return response()->json($result);
+                        }
+
+                        $i['unit_price'] = $channel_price->price;
+                    }
+                }
+
                 $items[] = [
                     'product_id' => $products,
                     'unit_id' => $product_unit,
                     'qty' => $i['qty'],
-                    'price' => doubleval(trim($i['unit_price']))
+                    'price' => doubleval(trim($i['unit_price'])),
+                    'has_channel_price' => $customers['has_channel_price']
                 ];
                 $productIds[] = $products;
             }

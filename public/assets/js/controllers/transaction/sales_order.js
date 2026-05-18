@@ -578,6 +578,7 @@ let SalesOrder = {
         const produk_id = $(elm).attr("produk_id");
         const params = {
             product_id: produk_id,
+            customer: $("#customer_id").val(),
         };
 
         $.ajax({
