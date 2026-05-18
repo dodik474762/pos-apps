@@ -128,6 +128,17 @@
                                     </select>
                                 </div>
                             </div> 
+                             <div class="mb-3">
+                                <label>Kategori Disc</label>
+                                 <div>
+                                    <select name="" id="kategori_disc" class="form-control required" error="Kategori Disc" onchange="Customer.changeCreditLimit(this)">
+                                        <option value="">PILIH</option>
+                                        @foreach ($list_kategori as $item)
+                                            <option value="{{ $item }}" {{ isset($data->kategori_disc) ? ($data->kategori_disc == $item ? 'selected' : '') : '' }}>{{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label">Tambahan Discount Type</label>
                                 <select id="additional_disc_type" name="additional_disc_type" class="form-control" error="Tambahan Discount Type">

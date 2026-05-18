@@ -87,6 +87,7 @@ class PromoItemController extends Controller
             $roles->additional_disc_type = $data['additional_disc_type'];
             $roles->additional_disc = $data['additional_disc'];
             $roles->beban = $data['beban'];
+            $roles->kategori_disc = $data['kategori_disc'];
             $roles->unit = $unitsId;
             $roles->save();
             $headerId = $roles->id;

@@ -84,6 +84,15 @@ class PromoItemController extends Controller
         ];
     }
 
+    public function getListKategoriDisc()
+    {
+        return [
+            'DISC STRATA',
+            'DISC CHANNEL',
+            'DISC PROMO'
+        ];
+    }
+
     public function add()
     {
         $data['data'] = [];
@@ -100,6 +109,7 @@ class PromoItemController extends Controller
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
         $data['list_beban'] = $this->getListBeban();
+        $data['list_kategori'] = $this->getListKategoriDisc();
         $view = view('web.promo_item.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -135,6 +145,7 @@ class PromoItemController extends Controller
         // print_r($data['promo_item']);die;
         $data['product_free'] = DB::table('product_promo_item_detail_free')->where('product_promo_item_detail_free.product_promo_item', $data['id'])
             ->select(['product_promo_item_detail_free.*'])->get()->toArray();
+        $data['list_kategori'] = $this->getListKategoriDisc();
         $view = view('web.promo_item.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
