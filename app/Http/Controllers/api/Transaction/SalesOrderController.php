@@ -1488,6 +1488,7 @@ class SalesOrderController extends Controller
             ->with(['promoProducts', 'promoFree'])
             ->whereIn('product_promo_item.id', $promoIds)
             ->orderBy('product_promo_item.min_mix', 'desc')
+            ->orderBy('product_promo_item.min_qty', 'asc') // ✅ tambahkan ini
             ->orderBy('product_promo_item.id')
             ->get();
         return $datadb;
@@ -1668,7 +1669,7 @@ class SalesOrderController extends Controller
         $discountHeader = [];
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
-        // =============================
+        // =============================        
         foreach ($promoHeaders as $promo) {
             if ($promo->potong_grand_total != 1)
                 continue; // skip yang bukan grand total
@@ -2237,6 +2238,10 @@ class SalesOrderController extends Controller
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
         // =============================
+
+        // Pisahkan promo berdasarkan kategori_disc
+        // Untuk kategori yang sama (DISC STRATA), ambil yang terakhir applicable saja
+        $appliedKategoriDisc = []; // track kategori_disc yang sudah dipakai
         foreach ($promoHeaders as $promo) {
             if ($promo->potong_grand_total != 1)
                 continue; // skip yang bukan grand total
@@ -2300,6 +2305,24 @@ class SalesOrderController extends Controller
             if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo))
                 continue;
 
+            // ✅ Jika kategori_disc ini sudah ada yang applicable sebelumnya, skip yang lama
+            // Karena promo diurutkan dari yang terkecil ke terbesar (min_qty asc),
+            // maka yang terakhir applicable adalah yang paling besar range-nya
+            $kategoriDisc = $promo->kategori_disc ?? 'DEFAULT';
+            // Hapus entry lama jika kategori_disc sama
+            if (!empty($kategoriDisc) && isset($appliedKategoriDisc[$kategoriDisc])) {
+                // Remove dari discountHeader
+                $discountHeader = array_filter($discountHeader, function ($dh) use ($appliedKategoriDisc, $kategoriDisc) {
+                    return $dh['promo_id'] != $appliedKategoriDisc[$kategoriDisc];
+                });
+                $discountHeader = array_values($discountHeader);
+                // Reset grandTotalRunning ke before-nya
+                $grandTotalRunning = $grandTotalAfterItemDisc;
+                foreach ($discountHeader as $dh) {
+                    $grandTotalRunning -= $dh['discount_amount'];
+                }
+            }
+
             // Hitung grand total semua items
             $grandTotalAllItems = 0;
             foreach ($items as $item) {
@@ -2341,6 +2364,9 @@ class SalesOrderController extends Controller
                 'promo_id' => $promo->id,
                 'promo_name' => $promo->promo_name
             ];
+
+            // Track kategori_disc yang sudah dipakai
+            $appliedKategoriDisc[$kategoriDisc] = $promo->id;
 
             // break; // promo grand total pertama yang applicable langsung break
         }
@@ -3264,6 +3290,9 @@ class SalesOrderController extends Controller
             }
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
+            // echo '<pre>';
+            // print_r($calculatePromo);
+            // die;
 
             $result['is_valid'] = true;
             $result['data'] = $calculatePromo;
