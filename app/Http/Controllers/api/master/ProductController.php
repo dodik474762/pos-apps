@@ -14,6 +14,7 @@ use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductLog;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
+use App\Models\Master\ProductUomPriceLog;
 use App\Models\Master\Unit;
 use App\Models\Transaction\ProductAdjustmentStock;
 use App\Models\Transaction\ProductAdjustmentStockDtl;
@@ -1577,11 +1578,100 @@ class ProductController extends Controller
             $update->price = $data['price'];
             $update->save();
 
+            $uomPrice = new ProductUomPriceLog();
+            $uomPrice->product = $data['id'];
+            $uomPrice->unit = $update->unit;
+            $uomPrice->channel = $update->channel;
+            $uomPrice->sub_channel = $update->sub_channel;
+            $uomPrice->price_list = 2;
+            $uomPrice->price = $data['price'];
+            $uomPrice->date_start = date('Y-m-d');
+            $uomPrice->min_qty = $update->min_qty;
+            $uomPrice->max_qty = $update->max_qty;
+            $uomPrice->type_transaction = $update->type_transaction;
+            $uomPrice->created_by = session('user_id');
+            $uomPrice->save();
+
 
             $result['is_valid'] = true;
             $result['message'] = 'Success';
         } catch (\Throwable $th) {
             //throw $th;
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    public function updateHargaRetail(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        $product_uom = ProductUom::whereNull('deleted')
+            ->where('product', $data['id'])
+            ->orderBy('level')
+            ->get();
+
+        DB::beginTransaction();
+        try {
+            // Ambil nilai_konversi_terkecil dari satuan TERBESAR (level tertinggi)
+            $konversi_terbesar = $product_uom->max('nilai_konversi_terkecil'); // = 12
+
+            foreach ($product_uom as $uom) {
+                // Harga per satuan = price / konversi_terbesar * konversi_satuan_ini
+                $harga_satuan = ($data['price'] / $konversi_terbesar) * $uom->nilai_konversi_terkecil;
+                // Carton : (300.000 / 12) * 12 = 300.000 ✅
+                // Pcs    : (300.000 / 12) * 1  = 25.000  ✅
+
+                $uomPrice = ProductUomPrice::where('product', $data['id'])
+                    ->whereNull('deleted')
+                    ->where('unit', $uom->unit_tujuan)
+                    ->where('date_start', '<=', date('Y-m-d'))
+                    ->where('channel', 'RETAIL UMUM')
+                    ->where('sub_channel', 'RT-RETAIL UMUM')
+                    ->orderBy('date_start', 'desc')
+                    ->first();
+
+                if ($uomPrice) {
+                    $uomPrice->price = $harga_satuan;
+                    $uomPrice->save();
+                } else {
+                    $uomPrice = new ProductUomPrice();
+                    $uomPrice->product = $data['id'];
+                    $uomPrice->unit = $uom->unit_tujuan;
+                    $uomPrice->channel = 'RETAIL UMUM';
+                    $uomPrice->sub_channel = 'RT-RETAIL UMUM';
+                    $uomPrice->price_list = 2;
+                    $uomPrice->price = $harga_satuan;
+                    $uomPrice->date_start = date('Y-m-d');
+                    $uomPrice->min_qty = 1;
+                    $uomPrice->max_qty = 99999;
+                    $uomPrice->type_transaction = 'qty';
+                    $uomPrice->save();
+                }
+
+                $uomPrice = new ProductUomPriceLog();
+                $uomPrice->product = $data['id'];
+                $uomPrice->unit = $uom->unit_tujuan;
+                $uomPrice->channel = 'RETAIL UMUM';
+                $uomPrice->sub_channel = 'RT-RETAIL UMUM';
+                $uomPrice->price_list = 2;
+                $uomPrice->price = $harga_satuan;
+                $uomPrice->date_start = date('Y-m-d');
+                $uomPrice->min_qty = 1;
+                $uomPrice->max_qty = 99999;
+                $uomPrice->type_transaction = 'qty';
+                $uomPrice->created_by = session('user_id');
+                $uomPrice->save();
+            }
+
+            DB::commit();
+
+            $result['is_valid'] = true;
+            $result['message'] = 'Success';
+        } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = $th->getMessage();
         }

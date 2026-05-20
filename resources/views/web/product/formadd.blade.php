@@ -187,6 +187,9 @@
                                         <input type="text" id="harga_satuan_besar" name="harga_satuan_besar" class="form-control required" error="Harga"
                                             placeholder="Harga"
                                             value="{{  count($product_prices) > 0 ? $product_prices[count($product_prices)-1]->price : ''  }}">
+                                            <div style="margin-top: 5px;">
+                                                <button class="btn btn-primary" onclick="Product.updateHargaRetail(this, event)">Update Harga Retail</button>
+                                            </div>
                                     </div>
                                 </div>
                              @endif

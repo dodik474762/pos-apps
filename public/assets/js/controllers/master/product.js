@@ -923,6 +923,47 @@ let Product = {
             },
         });
     },
+
+    updateHargaRetail: (elm, e) => {
+        e.preventDefault();
+        let params = {
+            id: $("#id").val(),
+            price: $("#harga_satuan_besar").val(),
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(Product.moduleApi()) + "updateHargaRetail",
+            headers: {
+                "X-CSRF-TOKEN": Product.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Menyimpan harga...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal menyimpan harga");
+            },
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    // Update nilai input di baris yang sama tanpa reload
+                    message.sweetSuccess(
+                        "Informasi",
+                        "Harga berhasil diperbarui",
+                    );
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
 };
 
 $(function () {
