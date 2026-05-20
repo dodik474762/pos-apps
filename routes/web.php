@@ -375,6 +375,7 @@ Route::post('api/master/product/submit', [MasterProductController::class, 'submi
 Route::post('api/master/product/updatePrice', [MasterProductController::class, 'updatePrice']);
 Route::post('api/master/product/updateHargaRetail', [MasterProductController::class, 'updateHargaRetail']);
 Route::post('api/master/product/submit_import', [MasterProductController::class, 'submit_import']);
+Route::post('api/master/product/submit_import_customer', [MasterProductController::class, 'submit_import_customer']);
 Route::post('api/master/product/delete', [MasterProductController::class, 'delete']);
 Route::post('api/master/product/confirmDelete', [MasterProductController::class, 'confirmDelete']);
 Route::post('api/master/product/addItemLevel', [MasterProductController::class, 'addItemLevel']);

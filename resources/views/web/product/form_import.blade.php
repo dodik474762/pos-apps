@@ -25,7 +25,8 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-body">
-                <form action="{{ url('/api/master/product/submit_import') }}" method="POST" enctype="multipart/form-data" id="form-product">
+                {{-- <form action="{{ url('/api/master/product/submit_import') }}" method="POST" enctype="multipart/form-data" id="form-product"> --}}
+                    <form action="{{ url('/api/master/product/submit_import_customer') }}" method="POST" enctype="multipart/form-data" id="form-product">
                      @csrf
                     <input type="hidden" id="id" name="id" value="{{ isset($id) ? $id : '' }}">
                     <div class="row">

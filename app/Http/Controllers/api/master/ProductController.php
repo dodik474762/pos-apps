@@ -1678,4 +1678,130 @@ class ProductController extends Controller
 
         return response()->json($result);
     }
+
+    public function submit_import_customer(Request $request)
+    {
+        $data = $request->all();
+        // validasi file
+        $validator = Validator::make($request->all(), [
+            'file' => [
+                'required',
+                'file',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['csv', 'xlsx', 'xls'])) {
+                        $fail('File harus berformat CSV, XLSX, atau XLS.');
+                    }
+                }
+            ]
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'File tidak valid',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // ambil file
+        $file = $request->file('file');
+
+        // nama file
+        // $filename = time() . '_' . $file->getClientOriginalName();
+
+        // // simpan ke storage/app/import
+        // $path = $file->storeAs('import', $filename);
+
+
+        $import = new ProductImport();
+
+        Excel::import($import, $file);
+
+        // ambil data excel (BELUM masuk DB)
+        $rows = $import->rows;
+        // echo '<pre>';
+        // print_r($rows);
+        // die;
+
+        $result['is_valid'] = false;
+        $result['message'] = 'Error';
+        DB::beginTransaction();
+        try {
+            $productRowsImport = 0;
+            $failImported = 0;
+            $counter = 1;
+            foreach ($rows as $key => $group) {
+                try {
+                    // proses setiap group
+                    $group['saldo_awal_per_tanggal'] = empty($group['saldo_awal_per_tanggal']) ? date('d') . '/' . date('m') . '/' . date('Y') : $group['saldo_awal_per_tanggal'];
+                    list($day, $month, $year) = explode('/', $group['saldo_awal_per_tanggal']);
+                    $group['saldo_awal_per_tanggal'] = $year . '-' . $month . '-' . $day;
+
+                    $customer = new Customer();
+                    $customer->nama_customer = $group['nama_custumer'];
+                    $customer->pic = '-';
+                    $customer->office_contact = $group['handphone'];
+                    $customer->phone = $group['handphone'];
+                    $customer->email = '-';
+                    $customer->address = $group['alamat_2'];
+                    $customer->kota = $group['id_kabupatenkota'];
+                    $customer->provinsi = 34;
+                    $customer->npwp = '-';
+                    $customer->currency = $group['mata_uang_utama'];
+                    $customer->customer_category = 1;
+                    $customer->code = $group['customer_code'];
+                    $customer->credit_limit = $group['credit_limit'];
+                    $customer->payment_terms = $group['term_of_payment'];
+                    $customer->no_ktp = '-';
+                    $customer->kecamatan = $group['id_kecamatan'];
+                    $customer->kelurahan = $group['id_kelurahan'];
+                    $customer->reference_number = 'IMPORT' . date('Ymd');
+                    $customer->max_retur = 0;
+                    $customer->latitude = str_replace('*', '', $group['latitude']);
+                    $customer->longitude = str_replace('*', '', $group['longitude']);
+                    $customer->pasar = $group['id_pasar'];
+                    $customer->address_penagihan = $group['alamat_penagihan'];
+                    $customer->address_pengiriman = $group['alamat_pengiriman'];
+                    $customer->branch = 1;
+                    $customer->nama_wajib_pajak = $group['nama_wajib_pajak'];
+                    $customer->no_pkp = 0;
+                    $customer->detail_transaksi = $group['detail_transaksi'];
+                    $customer->jenis_dokumen = $group['jenis_dokumen'];
+                    $customer->address_pajak = $group['alamat_pajak'];
+                    $customer->saldo_awal = $group['saldo_awal'];
+                    $customer->saldo_awal_per_tgl = $group['saldo_awal_per_tanggal'];
+                    $customer->no_faktur_saldo = $group['no_faktur_saldo'];
+                    $customer->cabang_saldo = $group['cabang_saldo'];
+                    $customer->status_outlet = $group['status_outlet'];
+                    $customer->location_outlet = $group['location_outlet'];
+                    $customer->market_segment = $group['market_segment'];
+                    $customer->channel_outlet = $group['channel_outlet'];
+                    $customer->sub_channel_outlet = $group['sub_channel_outlet'];
+                    if ($group['invoice_limit'] > 0) {
+                        $customer->min_invoice = $group['invoice_limit'];
+                    }
+                    $customer->save();
+                } catch (\Throwable $th) {
+                    $failImported += 1;
+                    DB::rollBack();
+                    $result['is_valid'] = false;
+                    $result['data'] = $group;
+                    $result['message'] = 'Error ' . $th->getMessage();
+                    return response()->json($result);
+                }
+
+                $productRowsImport++;
+            }
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Success ' . $productRowsImport . ' Imported dan Failed Imported ' . $failImported;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = 'Error ' . $th->getMessage();
+        }
+
+
+        return response()->json($result);
+    }
 }
