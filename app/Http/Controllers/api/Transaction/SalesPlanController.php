@@ -474,7 +474,7 @@ class SalesPlanController extends Controller
                     $dailyDtl->customer = $value->customer_id;
                     $dailyDtl->cicle_type = $value->visit_circle_code;
                     $dailyDtl->type_route = $value->pjp_status;
-                    $dailyDtl->status = $value->outlet_status;
+                    $dailyDtl->status = $value->category;
                     $dailyDtl->save();
                 }
             }
@@ -706,6 +706,11 @@ class SalesPlanController extends Controller
             return response()->json($result);
         }
 
+        // echo '<pre>';
+        // print_r($rows);
+        // // print_r($users);
+        // die;
+
         DB::beginTransaction();
         try {
             $productRowsImport = 0;
@@ -741,7 +746,8 @@ class SalesPlanController extends Controller
                 }
 
                 // echo '<pre>';
-                // print_r($item['visit_type']);die;
+                // print_r($item['visit_type']);
+                // die;
 
                 $detail->header_id = $hdrId;
                 $detail->customer_id = $cust_id;
@@ -753,7 +759,7 @@ class SalesPlanController extends Controller
                 $detail->visit_fri = $item['jumat'] == 'Y' ? 1 : 0;
                 $detail->visit_sat = $item['sabtu'] == 'Y' ? 1 : 0;
                 $detail->visit_sun = $item['minggu'] == 'Y' ? 1 : 0;
-                $detail->note = 'IMPORT';
+                $detail->note = 'IMPORT' . date('Ymd');
                 $detail->pjp_status = $item['status_pjp'];
                 if ($item['status_pjp'] == 'EXTRA CALL') {
                     $detail->date_extra_call = date('Y-m-d');
