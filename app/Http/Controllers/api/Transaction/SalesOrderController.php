@@ -1373,7 +1373,7 @@ class SalesOrderController extends Controller
         $customers = $this->checkDataPriceCustomer($data);
 
         $channel_outlet = 'RETAIL UMUM';
-        $sub_channel_outlet = 'RT-RETAIL UMUM';
+        $sub_channel_outlet = '';
         if (!empty($customers)) {
             if ($customers['has_channel_price']) {
                 $channel_outlet = $customers['customer']->channel_outlet;
@@ -1418,8 +1418,8 @@ class SalesOrderController extends Controller
                             ->orWhere('pup.date_end', '>=', now());
                     })
                     ->where('pup.date_start', '<=', now())
-                    ->where('pup.channel', $channel_outlet)
-                    ->where('pup.sub_channel', $sub_channel_outlet);
+                    ->where('pup.channel', $channel_outlet);
+                // ->where('pup.sub_channel', $sub_channel_outlet);
             })
             ->whereNull('m.deleted')
             ->where('m.id', $data['product_id'])->get();
