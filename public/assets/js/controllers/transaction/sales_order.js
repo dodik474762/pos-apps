@@ -236,15 +236,13 @@ let SalesOrder = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             SalesOrder.module(),
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesOrder.module(),
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (
@@ -579,6 +577,7 @@ let SalesOrder = {
         const params = {
             product_id: produk_id,
             customer: $("#customer_id").val(),
+            salesman: $("#salesman").val()
         };
 
         $.ajax({
@@ -1302,11 +1301,11 @@ let SalesOrder = {
                     } else {
                         const promoMaxSmall = promoHeader.max_qty
                             ? SalesOrder.convertToSmallest(
-                                  UOM_CONVERSION,
-                                  productId,
-                                  promoHeader.unit_id,
-                                  promoHeader.max_qty,
-                              )
+                                UOM_CONVERSION,
+                                productId,
+                                promoHeader.unit_id,
+                                promoHeader.max_qty,
+                            )
                             : Infinity;
                         if (
                             qtySmallestAllProduct >= promoMinSmall &&
@@ -1565,11 +1564,11 @@ let SalesOrder = {
                         } else {
                             const promoMaxSmall = promoHeader.max_qty
                                 ? SalesOrder.convertToSmallest(
-                                      UOM_CONVERSION,
-                                      productId,
-                                      promoHeader.unit_id,
-                                      promoHeader.max_qty,
-                                  )
+                                    UOM_CONVERSION,
+                                    productId,
+                                    promoHeader.unit_id,
+                                    promoHeader.max_qty,
+                                )
                                 : Infinity;
 
                             if (
@@ -1608,8 +1607,8 @@ let SalesOrder = {
                         kelipatanSmall == 0
                             ? 1
                             : Math.floor(
-                                  qtySmallestAllProduct / kelipatanSmall,
-                              );
+                                qtySmallestAllProduct / kelipatanSmall,
+                            );
                     pengaliFix =
                         pengali == 1
                             ? 1
@@ -1785,8 +1784,8 @@ let SalesOrder = {
                         const exists =
                             tr.next(
                                 'tr.freegood[data-free-for="' +
-                                    productId +
-                                    '"]',
+                                productId +
+                                '"]',
                             ).length > 0;
 
                         if (!exists) {
@@ -2276,6 +2275,7 @@ let SalesOrder = {
         const params = {
             customer_id: customerId,
             details: products,
+            salesman: $('#salesman').val()
         };
 
         $.ajax({
@@ -2435,8 +2435,8 @@ let SalesOrder = {
                                         const exists =
                                             tr.next(
                                                 'tr.freegood[data-free-for="' +
-                                                    freeFor +
-                                                    '"]',
+                                                freeFor +
+                                                '"]',
                                             ).length > 0;
                                         if (!exists) {
                                             // Ambil data_id lama jika mode edit

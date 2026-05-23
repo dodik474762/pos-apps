@@ -23,7 +23,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use App\Models\Master\MobileSession;
 use App\Models\Master\AccountMapping;
+use App\Models\Master\Karyawan;
+use App\Models\Master\KaryawanHasProduct;
 use App\Models\Master\Tax;
+use App\Models\Master\Users;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
 
@@ -443,15 +446,17 @@ class SalesOrderController extends Controller
                 ->filter(function ($item) {
                     return empty($item['free_for']);
                 })
-                ->map(function ($item) use ($customersId) {
+                ->map(function ($item) use ($customersId, $data) {
                     $params['customer']   = $customersId;
                     $params['product_id'] = $item['product_id'];
                     $customers            = $this->checkDataPriceCustomer($params);
+                    $item['has_channel_price'] = $customers['has_channel_price'];
 
                     $params['unit_id'] = $item['unit_id'];
                     $customer_produk = $this->checkCustomerProduct($params);
 
-                    $item['has_channel_price'] = $customers['has_channel_price'];
+                    $params['salesman'] = $data['salesman'];
+                    $sales_motoris = $this->checkPriceMotoris($params);
 
                     if (!empty($customers) && $customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])
@@ -468,6 +473,12 @@ class SalesOrderController extends Controller
                     if (!empty($customer_produk)) {
                         if ($customer_produk['has_customer_product']) {
                             $item['price'] = $customer_produk['customer_product'][0]->price;
+                        }
+                    }
+
+                    if (!empty($sales_motoris)) {
+                        if ($sales_motoris['has_motoris_price']) {
+                            $item['price'] = $sales_motoris['motoris'][0]->price;
                         }
                     }
 
@@ -1302,7 +1313,7 @@ class SalesOrderController extends Controller
                 ->filter(function ($item) {
                     return empty($item['free_for']);
                 })
-                ->map(function ($item) use ($customersId) {
+                ->map(function ($item) use ($customersId, $users_id) {
                     [$products, $product_unit] = explode(':', $item['product_id']);
                     $products     = explode('/', $products);
                     $product_unit = explode('/', $product_unit);
@@ -1313,6 +1324,9 @@ class SalesOrderController extends Controller
 
                     $params['unit_id'] = $product_unit[0];
                     $customer_produk = $this->checkCustomerProduct($params);
+
+                    $params['salesman'] = $users_id;
+                    $sales_motoris = $this->checkPriceMotoris($params);
 
                     $item['product_id'] = trim($products[0]);
                     $item['unit_id']    = trim($product_unit[0]);
@@ -1334,6 +1348,12 @@ class SalesOrderController extends Controller
                     if (!empty($customer_produk)) {
                         if ($customer_produk['has_customer_product']) {
                             $item['price'] = $customer_produk['customer_product'][0]->price;
+                        }
+                    }
+
+                    if (!empty($sales_motoris)) {
+                        if ($sales_motoris['has_motoris_price']) {
+                            $item['price'] = $sales_motoris['motoris'][0]->price;
                         }
                     }
 
@@ -1694,12 +1714,46 @@ class SalesOrderController extends Controller
         ];
     }
 
+    public function checkPriceMotoris($params)
+    {
+        $user = Users::where('id', $params['salesman'])->first();
+        $karyawan = Karyawan::where('nik', $user->nik)
+            ->whereNull('deleted')
+            ->first();
+
+        $motoris = KaryawanHasProduct::where('product', $params['product_id'])
+            ->where('karyawan', $karyawan->id)
+            ->whereNull('deleted');
+        $motoris = $motoris->first();
+
+        if (empty($motoris)) {
+            return [
+                'motoris' => [],
+                'has_motoris_price' => false,
+            ];
+        }
+
+        $pricing = ProductUomPrice::where('karyawan_has_product', $motoris->id)
+            ->whereNull('deleted');
+        if (isset($params['unit_id'])) {
+            $pricing->where('unit', $params['unit_id']);
+        }
+        $pricing = $pricing->get();
+
+        return [
+            'motoris' => $pricing,
+            'has_motoris_price' => $pricing->isNotEmpty()
+        ];
+    }
+
     public function pilihProdukDulu(Request $request)
     {
         $data = $request->all();
         $customers = $this->checkDataPriceCustomer($data);
 
         $customer_produk = $this->checkCustomerProduct($data);
+
+        $sales_motoris = $this->checkPriceMotoris($data);
 
         $channel_outlet = 'RETAIL UMUM';
         $sub_channel_outlet = '';
@@ -1714,6 +1768,12 @@ class SalesOrderController extends Controller
         if (!empty($customer_produk)) {
             if ($customer_produk['has_customer_product']) {
                 $idsPrices = collect($customer_produk['customer_product'])->pluck('id')->toArray();
+            }
+        }
+
+        if (!empty($sales_motoris)) {
+            if ($sales_motoris['has_motoris_price']) {
+                $idsPrices = collect($sales_motoris['motoris'])->pluck('id')->toArray();
             }
         }
 
@@ -3631,6 +3691,9 @@ class SalesOrderController extends Controller
                 $params['unit_id'] = $product_unit;
                 $customer_produk = $this->checkCustomerProduct($params);
 
+                $params['salesman'] = $data['salesman'];
+                $sales_motoris = $this->checkPriceMotoris($params);
+
                 if (!empty($customers)) {
                     if ($customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])->where('unit', $i['unit_id'])->first();
@@ -3647,6 +3710,12 @@ class SalesOrderController extends Controller
                 if (!empty($customer_produk)) {
                     if ($customer_produk['has_customer_product']) {
                         $i['unit_price'] = $customer_produk['customer_product'][0]->price;
+                    }
+                }
+
+                if (!empty($sales_motoris)) {
+                    if ($sales_motoris['has_motoris_price']) {
+                        $i['unit_price'] = $sales_motoris['motoris'][0]->price;
                     }
                 }
 
