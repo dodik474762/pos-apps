@@ -453,11 +453,11 @@ class SalesOrderController extends Controller
                     $item['has_channel_price'] = $customers['has_channel_price'];
 
                     $params['unit_id'] = $item['unit_id'];
-                    $customer_produk = $this->checkCustomerProduct($params);
+                    $customer_produk   = $this->checkCustomerProduct($params);
                     $item['has_customer_product'] = $customer_produk['has_customer_product'];
 
                     $params['salesman'] = $data['salesman'];
-                    $sales_motoris = $this->checkPriceMotoris($params);
+                    $sales_motoris      = $this->checkPriceMotoris($params);
                     $item['has_motoris_price'] = $sales_motoris['has_motoris_price'];
 
                     if (!empty($customers) && $customers['has_channel_price']) {
@@ -472,16 +472,12 @@ class SalesOrderController extends Controller
                         $item['price'] = $channel_price->price;
                     }
 
-                    if (!empty($customer_produk)) {
-                        if ($customer_produk['has_customer_product']) {
-                            $item['price'] = $customer_produk['customer_product'][0]->price;
-                        }
+                    if (!empty($customer_produk) && $customer_produk['has_customer_product']) {
+                        $item['price'] = $customer_produk['customer_product'][0]->price;
                     }
 
-                    if (!empty($sales_motoris)) {
-                        if ($sales_motoris['has_motoris_price']) {
-                            $item['price'] = $sales_motoris['motoris'][0]->price;
-                        }
+                    if (!empty($sales_motoris) && $sales_motoris['has_motoris_price']) {
+                        $item['price'] = $sales_motoris['motoris'][0]->price;
                     }
 
                     return $item;
@@ -579,7 +575,7 @@ class SalesOrderController extends Controller
                             $item['disc_percent'] = $promoItemFound['discountPercent'] ?? 0;
                             $item['disc_amount']  = $promoItemFound['discountAmount']  ?? 0;
                             $item['subtotal']     = ($item['price'] * $item['qty']) - $item['disc_amount'];
-                            $freeGoods = $promo['discount_free'] ?? [];
+                            $freeGoods            = $promo['discount_free'] ?? [];
                             break;
                         }
                     }
@@ -596,25 +592,25 @@ class SalesOrderController extends Controller
                     ? new SalesOrderDetail
                     : SalesOrderDetail::find($item['id']);
 
-                $detail->sales_order_id   = $hdrId;
-                $detail->product_id       = $item['product_id'];
-                $detail->qty              = $item['qty'];
-                $detail->unit             = $item['unit_id'];
-                $detail->unit_price       = $item['price'];
-                $detail->discount_type    = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
-                $detail->discount_percent = $item['disc_percent'] ?? 0;
-                $detail->discount_amount  = $item['disc_amount']  ?? 0;
-                $detail->tax              = in_array($item['tax']      ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
-                $detail->tax_rate         = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
-                $detail->tax_type         = $item['tax_type']  ?? 'include';
-                $detail->tax_amount       = $item['tax_amount'] ?? 0;
-                $detail->subtotal         = $item['subtotal'];
-                $detail->is_free_good     = $item['is_freegood'] ?? 0;
-                $detail->free_for         = $item['free_for']    ?? null;
-                $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
+                $detail->sales_order_id       = $hdrId;
+                $detail->product_id           = $item['product_id'];
+                $detail->qty                  = $item['qty'];
+                $detail->unit                 = $item['unit_id'];
+                $detail->unit_price           = $item['price'];
+                $detail->discount_type        = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
+                $detail->discount_percent     = $item['disc_percent'] ?? 0;
+                $detail->discount_amount      = $item['disc_amount']  ?? 0;
+                $detail->tax                  = in_array($item['tax']      ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+                $detail->tax_rate             = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+                $detail->tax_type             = $item['tax_type']   ?? 'include';
+                $detail->tax_amount           = $item['tax_amount'] ?? 0;
+                $detail->subtotal             = $item['subtotal'];
+                $detail->is_free_good         = $item['is_freegood'] ?? 0;
+                $detail->free_for             = $item['free_for']    ?? null;
+                $detail->has_channel_price    = $item['has_channel_price']    ? 1 : 0;
                 $detail->has_customer_product = $item['has_customer_product'] ? 1 : 0;
-                $detail->has_motoris_price = $item['has_motoris_price'] ? 1 : 0;
-                $detail->status           = $detail->status ?? 'draft';
+                $detail->has_motoris_price    = $item['has_motoris_price']    ? 1 : 0;
+                $detail->status               = $detail->status ?? 'draft';
                 $detail->save();
 
                 if (empty($item['is_freegood'])) {
@@ -628,60 +624,22 @@ class SalesOrderController extends Controller
                 // Free goods dari promo
                 if (!empty($freeGoods)) {
                     foreach ($freeGoods as $free) {
-                        $freeDetail = new SalesOrderDetail();
-                        $freeDetail->sales_order_id   = $hdrId;
-                        $freeDetail->product_id       = $free['product_id'];
-                        $freeDetail->qty              = $free['qty'];
-                        $freeDetail->unit             = $free['unit'];
-                        $freeDetail->unit_price       = 0;
-                        $freeDetail->discount_type    = 'nominal';
+                        $freeDetail                  = new SalesOrderDetail();
+                        $freeDetail->sales_order_id  = $hdrId;
+                        $freeDetail->product_id      = $free['product_id'];
+                        $freeDetail->qty             = $free['qty'];
+                        $freeDetail->unit            = $free['unit'];
+                        $freeDetail->unit_price      = 0;
+                        $freeDetail->discount_type   = 'nominal';
                         $freeDetail->discount_percent = 0;
-                        $freeDetail->discount_amount  = 0;
-                        $freeDetail->subtotal         = 0;
-                        $freeDetail->is_free_good     = 1;
-                        $freeDetail->free_for         = $item['product_id'];
-                        $freeDetail->status           = 'draft';
+                        $freeDetail->discount_amount = 0;
+                        $freeDetail->subtotal        = 0;
+                        $freeDetail->is_free_good    = 1;
+                        $freeDetail->free_for        = $item['product_id'];
+                        $freeDetail->status          = 'draft';
                         $freeDetail->save();
                     }
                 }
-            }
-
-            // =============================
-            // RECALC TAX JIKA ADA DISCOUNT HEADER
-            // =============================
-            $discAmountHeader = !empty($calculatePromo['discount_header'])
-                ? array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'))
-                : 0;
-
-            if ($discAmountHeader > 0) {
-                $details       = SalesOrderDetail::where('sales_order_id', $hdrId)->where('is_free_good', 0)->get();
-                $totalDPP      = $details->sum('subtotal');
-                $newTaxAmount  = 0;
-                $newGrandTotal = 0;
-
-                foreach ($details as $det) {
-                    $proporsi     = $totalDPP > 0 ? $det->subtotal / $totalDPP : 0;
-                    $discPorsi    = $discAmountHeader * $proporsi;
-                    $dppAfterDisc = $det->subtotal - $discPorsi;
-                    $detTaxRate   = $det->tax_rate ?? 0;
-                    $typeTax      = $det->tax_type ?? '';
-
-                    $taxAfterDisc = 0;
-                    if ($typeTax == 'include') {
-                        $taxAfterDisc   = $dppAfterDisc - $dppAfterDisc / (1 + $detTaxRate / 100);
-                        $newGrandTotal += $dppAfterDisc;
-                    } else {
-                        $taxAfterDisc   = $dppAfterDisc * ($detTaxRate / 100);
-                        $newGrandTotal += $dppAfterDisc + $taxAfterDisc;
-                    }
-
-                    $newTaxAmount   += $taxAfterDisc;
-                    $det->tax_amount = $taxAfterDisc;
-                    $det->save();
-                }
-
-                $grandTotal     = $newGrandTotal;
-                $totalTaxAmount = $newTaxAmount;
             }
 
             // =============================
@@ -707,12 +665,12 @@ class SalesOrderController extends Controller
 
             if (!empty($calculatePromo['discount_header'])) {
                 foreach ($calculatePromo['discount_header'] as $dh) {
-                    $salesPromo = new SalesOrderPromo();
-                    $salesPromo->sales_order_id   = $soId;
-                    $salesPromo->promo            = $dh['promo_id'];
-                    $salesPromo->promo_name       = $dh['promo_name'];
+                    $salesPromo                  = new SalesOrderPromo();
+                    $salesPromo->sales_order_id  = $soId;
+                    $salesPromo->promo           = $dh['promo_id'];
+                    $salesPromo->promo_name      = $dh['promo_name'];
                     $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
-                    $salesPromo->discount_amount  = $dh['discount_amount']  ?? 0;
+                    $salesPromo->discount_amount = $dh['discount_amount']   ?? 0;
                     $salesPromo->save();
                 }
             }
@@ -727,7 +685,7 @@ class SalesOrderController extends Controller
                         $discPercent = $promoItem['discountPercent'] ?? 0;
                         if ($discAmount == 0 && $discPercent == 0) continue;
 
-                        $salesPromoItem = new SalesOrderPromoItem();
+                        $salesPromoItem                        = new SalesOrderPromoItem();
                         $salesPromoItem->sales_order_id        = $soId;
                         $salesPromoItem->sales_order_detail_id = $detailId;
                         $salesPromoItem->promo                 = $promo['promo_id'];
