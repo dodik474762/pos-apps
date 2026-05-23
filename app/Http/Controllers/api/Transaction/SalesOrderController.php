@@ -454,9 +454,11 @@ class SalesOrderController extends Controller
 
                     $params['unit_id'] = $item['unit_id'];
                     $customer_produk = $this->checkCustomerProduct($params);
+                    $item['has_customer_product'] = $customer_produk['has_customer_product'];
 
                     $params['salesman'] = $data['salesman'];
                     $sales_motoris = $this->checkPriceMotoris($params);
+                    $item['has_motoris_price'] = $sales_motoris['has_motoris_price'];
 
                     if (!empty($customers) && $customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])
@@ -610,6 +612,8 @@ class SalesOrderController extends Controller
                 $detail->is_free_good     = $item['is_freegood'] ?? 0;
                 $detail->free_for         = $item['free_for']    ?? null;
                 $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
+                $detail->has_customer_product = $item['has_customer_product'] ? 1 : 0;
+                $detail->has_motoris_price = $item['has_motoris_price'] ? 1 : 0;
                 $detail->status           = $detail->status ?? 'draft';
                 $detail->save();
 
@@ -1324,9 +1328,11 @@ class SalesOrderController extends Controller
 
                     $params['unit_id'] = $product_unit[0];
                     $customer_produk = $this->checkCustomerProduct($params);
+                    $item['has_customer_product'] = $customer_produk['has_customer_product'];
 
                     $params['salesman'] = $users_id;
                     $sales_motoris = $this->checkPriceMotoris($params);
+                    $item['has_motoris_price'] = $sales_motoris['has_motoris_price'];
 
                     $item['product_id'] = trim($products[0]);
                     $item['unit_id']    = trim($product_unit[0]);
@@ -1448,6 +1454,8 @@ class SalesOrderController extends Controller
                 $detail->subtotal         = $item['subtotal'];
                 $detail->is_free_good     = 0;
                 $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
+                $detail->has_customer_product = $item['has_customer_product'] ? 1 : 0;
+                $detail->has_motoris_price = $item['has_motoris_price'] ? 1 : 0;
                 $detail->status           = 'draft';
 
                 if (isset($item['taxAmount'])) {
@@ -2085,7 +2093,7 @@ class SalesOrderController extends Controller
         $discountHeader = [];
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
-        // =============================        
+        // =============================
         foreach ($promoHeaders as $promo) {
             if ($promo->potong_grand_total != 1)
                 continue; // skip yang bukan grand total
