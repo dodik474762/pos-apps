@@ -252,6 +252,7 @@ class ProductController extends Controller
         $data['product_uoms'] = $this->getListProductUom($data['id']);
         $data['tipe_price'] = $this->getListPriceList();
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
+        $data['prices_retails'] = collect($data['product_prices'])->where('channel', 'RETAIL UMUM');
         $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['channels'] = $this->getChannel();
