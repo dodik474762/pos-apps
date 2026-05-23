@@ -193,7 +193,7 @@
                                     </div>
                                 </div>
                              @endif
-                            
+
                         </div>
 
                         @if (isset($id))
@@ -226,29 +226,31 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="">Harga Beli Produk</label>
-                                    <div class="table-responsive">
-                                        <table class="table table-nowrap align-middle table-sm" id="table-stock">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th style="width: 20%;">Satuan</th>
-                                                    <th style="width: 20%;">Harga</th>
-                                                    <th style="width: 30%;">Vendor</th>
-                                                    <th style="width: 15%;">Tanggal Mulai Berlaku</th>
-                                                    <th style="width: 15%;">Status</th>
-                                                </tr>
-                                            </thead>
-                                            @foreach ($product_costs as $item)
-                                                <tr>
-                                                    <td>{{ $item->unit_name }}</td>
-                                                    <td>{{ number_format($item->cost, 2, ',', '.') }}</td>
-                                                    <td>{{ $item->nama_vendor }}</td>
-                                                    <td>{{ $item->date_start }}</td>
-                                                    <td>{{ $item->is_active == 1 ? 'Aktif' : 'Tidak Aktif' }}</td>
-                                                </tr>
-                                            @endforeach
-                                        </table>
-                                    </div>
+                                    @if (strtolower($akses) == 'superadmin')
+                                        <label for="">Harga Beli Produk</label>
+                                        <div class="table-responsive">
+                                            <table class="table table-nowrap align-middle table-sm" id="table-stock">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 20%;">Satuan</th>
+                                                        <th style="width: 20%;">Harga</th>
+                                                        <th style="width: 30%;">Vendor</th>
+                                                        <th style="width: 15%;">Tanggal Mulai Berlaku</th>
+                                                        <th style="width: 15%;">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                @foreach ($product_costs as $item)
+                                                    <tr>
+                                                        <td>{{ $item->unit_name }}</td>
+                                                        <td>{{ number_format($item->cost, 2, ',', '.') }}</td>
+                                                        <td>{{ $item->nama_vendor }}</td>
+                                                        <td>{{ $item->date_start }}</td>
+                                                        <td>{{ $item->is_active == 1 ? 'Aktif' : 'Tidak Aktif' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </table>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endif

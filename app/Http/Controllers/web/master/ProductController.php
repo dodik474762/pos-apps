@@ -123,6 +123,7 @@ class ProductController extends Controller
         $data['product_stocks'] = [];
         $data['product_uoms'] = [];
         $data['product_prices'] = [];
+        $data['akses'] = session('akses');
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -261,6 +262,7 @@ class ProductController extends Controller
         $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
         $data['product_stocks'] = $this->getStock($data['id']);
         $data['product_costs'] = $this->getCostProduct($data['id']);
+        $data['akses'] = session('akses');
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
