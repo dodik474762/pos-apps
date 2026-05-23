@@ -133,6 +133,14 @@
 
                 // Cari promo item untuk produk ini
                 $promoItems = $promo_item->where('sales_order_detail_id', $item->id);
+
+                $harga_channel = "";
+                if($item->has_channel_price == 1){
+                    $harga_channel = " (Disc. Cnl)";
+                }
+                if($item->has_customer_product == 1){
+                    $harga_channel = " (Disc. Cust)";
+                }
             @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
@@ -155,7 +163,7 @@
                 </td>
                 <td>{{ $item->units->name ?? '-' }}</td>
                 <td class="text-center">{{ $item->qty }}</td>
-                <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }} {{ $harga_channel }}</td>
                 <td class="text-center">{{ $item->discount_percent }}</td>
                 <td class="text-right">{{ number_format($item->discount_amount, 0, ',', '.') }}</td>
                 <td class="text-center">{{ $item->free_for == '' ? '' : 'FREE GOOD' }}</td>
