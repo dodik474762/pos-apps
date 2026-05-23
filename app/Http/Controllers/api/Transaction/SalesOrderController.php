@@ -448,6 +448,9 @@ class SalesOrderController extends Controller
                     $params['product_id'] = $item['product_id'];
                     $customers            = $this->checkDataPriceCustomer($params);
 
+                    $params['unit_id'] = $item['unit_id'];
+                    $customer_produk = $this->checkCustomerProduct($params);
+
                     $item['has_channel_price'] = $customers['has_channel_price'];
 
                     if (!empty($customers) && $customers['has_channel_price']) {
@@ -460,6 +463,12 @@ class SalesOrderController extends Controller
                         }
 
                         $item['price'] = $channel_price->price;
+                    }
+
+                    if (!empty($customer_produk)) {
+                        if ($customer_produk['has_customer_product']) {
+                            $item['price'] = $customer_produk['customer_product'][0]->price;
+                        }
                     }
 
                     return $item;
@@ -1302,6 +1311,9 @@ class SalesOrderController extends Controller
                     $params['product_id'] = $products[0];
                     $customers_channel    = $this->checkDataPriceCustomer($params);
 
+                    $params['unit_id'] = $product_unit[0];
+                    $customer_produk = $this->checkCustomerProduct($params);
+
                     $item['product_id'] = trim($products[0]);
                     $item['unit_id']    = trim($product_unit[0]);
                     $item['price']      = doubleval(trim($product_unit[1]));
@@ -1317,6 +1329,12 @@ class SalesOrderController extends Controller
                         }
 
                         $item['price'] = $channel_price->price;
+                    }
+
+                    if (!empty($customer_produk)) {
+                        if ($customer_produk['has_customer_product']) {
+                            $item['price'] = $customer_produk['customer_product'][0]->price;
+                        }
                     }
 
                     return $item;
@@ -1651,7 +1669,8 @@ class SalesOrderController extends Controller
 
         $channelPrice = ProductUomPrice::where('channel', $customer->channel_outlet)
             ->where('product', $params['product_id'])
-            ->where('sub_channel', $customer->sub_channel_outlet)->get();
+            ->where('sub_channel', $customer->sub_channel_outlet)
+            ->get();
         return [
             'customer' => $customer,
             'channel_price' => $channelPrice,
@@ -1659,10 +1678,28 @@ class SalesOrderController extends Controller
         ];
     }
 
+    public function checkCustomerProduct($params)
+    {
+        $customerProduct = ProductUomPrice::where('customer', $params['customer'])
+            ->where('product', $params['product_id'])
+            ->whereNull('deleted');
+        if (isset($params['unit_id'])) {
+            $customerProduct->where('unit', $params['unit_id']);
+        }
+        $customerProduct = $customerProduct->get();
+
+        return [
+            'customer_product' => $customerProduct,
+            'has_customer_product' => $customerProduct->isNotEmpty(),
+        ];
+    }
+
     public function pilihProdukDulu(Request $request)
     {
         $data = $request->all();
         $customers = $this->checkDataPriceCustomer($data);
+
+        $customer_produk = $this->checkCustomerProduct($data);
 
         $channel_outlet = 'RETAIL UMUM';
         $sub_channel_outlet = '';
@@ -1672,6 +1709,17 @@ class SalesOrderController extends Controller
                 $sub_channel_outlet = $customers['customer']->sub_channel_outlet;
             }
         }
+
+        $idsPrices = [];
+        if (!empty($customer_produk)) {
+            if ($customer_produk['has_customer_product']) {
+                $idsPrices = collect($customer_produk['customer_product'])->pluck('id')->toArray();
+            }
+        }
+
+        // echo '<pre>';
+        // print_r($idsPrices);
+        // die;
 
         $datadb =  DB::table('product as m')
             ->select([
@@ -1701,7 +1749,23 @@ class SalesOrderController extends Controller
             ->join('unit as u', 'u.id', '=', 'm.unit')
             ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
-            ->leftJoin('product_uom_price as pup', function ($join) use ($channel_outlet, $sub_channel_outlet) {
+            ->whereNull('m.deleted')
+            ->where('m.id', $data['product_id']);
+
+        if (!empty($idsPrices)) {
+            $datadb->leftJoin('product_uom_price as pup', function ($join) use ($channel_outlet, $sub_channel_outlet) {
+                $join->on('pup.product', '=', 'm.id')
+                    ->on('pup.unit', '=', 'pu.unit_tujuan')
+                    ->whereNull('pup.deleted')
+                    ->where(function ($query) {
+                        $query->whereNull('pup.date_end')
+                            ->orWhere('pup.date_end', '>=', now());
+                    })
+                    ->where('pup.date_start', '<=', now());
+            });
+            $datadb->whereIn('pup.id', $idsPrices);
+        } else {
+            $datadb->leftJoin('product_uom_price as pup', function ($join) use ($channel_outlet, $sub_channel_outlet) {
                 $join->on('pup.product', '=', 'm.id')
                     ->on('pup.unit', '=', 'pu.unit_tujuan')
                     ->whereNull('pup.deleted')
@@ -1712,9 +1776,9 @@ class SalesOrderController extends Controller
                     ->where('pup.date_start', '<=', now())
                     ->where('pup.channel', $channel_outlet);
                 // ->where('pup.sub_channel', $sub_channel_outlet);
-            })
-            ->whereNull('m.deleted')
-            ->where('m.id', $data['product_id'])->get();
+            });
+        }
+        $datadb = $datadb->get();
         $data['products'] = $datadb;
 
         return view('web.sales_order.modal.dataproductsatuan', $data);
@@ -3487,9 +3551,6 @@ class SalesOrderController extends Controller
         $result['is_valid'] = false;
         $result['message'] = '';
 
-        // echo '<pre>';
-        // print_r($data);die;
-
         try {
             foreach ($data['details'] as $i) {
                 [$products, $product_unit] = explode(':', $i['product_id']);
@@ -3499,6 +3560,9 @@ class SalesOrderController extends Controller
                 $params['customer'] = $customersId;
                 $params['product_id'] = $products[0];
                 $customers = $this->checkDataPriceCustomer($params);
+
+                $params['unit_id'] = $product_unit[0];
+                $customer_produk = $this->checkCustomerProduct($params);
 
                 if (!empty($customers)) {
                     if ($customers['has_channel_price']) {
@@ -3510,6 +3574,12 @@ class SalesOrderController extends Controller
                         }
 
                         $product_unit[1] = $channel_price->price;
+                    }
+                }
+
+                if (!empty($customer_produk)) {
+                    if ($customer_produk['has_customer_product']) {
+                        $product_unit[1] = $customer_produk['customer_product'][0]->price;
                     }
                 }
 
@@ -3558,6 +3628,9 @@ class SalesOrderController extends Controller
                 $params['product_id'] = $products;
                 $customers = $this->checkDataPriceCustomer($params);
 
+                $params['unit_id'] = $product_unit;
+                $customer_produk = $this->checkCustomerProduct($params);
+
                 if (!empty($customers)) {
                     if ($customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])->where('unit', $i['unit_id'])->first();
@@ -3568,6 +3641,12 @@ class SalesOrderController extends Controller
                         }
 
                         $i['unit_price'] = $channel_price->price;
+                    }
+                }
+
+                if (!empty($customer_produk)) {
+                    if ($customer_produk['has_customer_product']) {
+                        $i['unit_price'] = $customer_produk['customer_product'][0]->price;
                     }
                 }
 
