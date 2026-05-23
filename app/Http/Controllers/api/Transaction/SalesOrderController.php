@@ -164,15 +164,263 @@ class SalesOrderController extends Controller
         return json_encode($data);
     }
 
+    // public function submit(Request $request)
+    // {
+    //     $data = $request->all();
+    //     $userId = session('user_id');
+    //     $result = ['is_valid' => false];
+
+    //     // echo '<pre>';
+    //     // print_r($data);
+    //     // die;
+
+    //     DB::beginTransaction();
+    //     try {
+    //         // Pastikan currency default ada
+    //         $currency = Currency::where('code', 'IDR')->first();
+    //         if (!$currency) {
+    //             DB::rollBack();
+
+    //             return response()->json([
+    //                 'is_valid' => false,
+    //                 'message' => 'Currency IDR tidak ditemukan',
+    //             ]);
+    //         }
+
+    //         $customersId = $data['customer_id'];
+
+
+    //         $items = collect($data['items'])
+    //             ->filter(function ($item) {
+    //                 return empty($item['free_for']); // filter dulu
+    //             })
+    //             ->map(function ($item) use ($customersId) {
+    //                 $params['customer'] = $customersId;
+    //                 $params['product_id'] = $item['product_id'];
+    //                 $customers = $this->checkDataPriceCustomer($params);
+    //                 $item['has_channel_price'] = $customers['has_channel_price'];
+
+    //                 if (!empty($customers) && $customers['has_channel_price']) {
+    //                     $channel_price = collect($customers['channel_price'])
+    //                         ->where('unit', $item['unit_id'])
+    //                         ->first();
+
+    //                     if (empty($channel_price)) {
+    //                         // handle error, tapi ingat map() tidak bisa return response di sini
+    //                         // sebaiknya throw exception atau set flag
+    //                         throw new \Exception('Channel Price Tidak ditemukan ' . $item['product_id']);
+    //                     }
+
+    //                     $item['price'] = $channel_price->price; // ✅ override, lalu return
+    //                 }
+
+    //                 return $item; // ✅ wajib return $item di map()
+    //             });
+
+    //         // echo '<pre>';
+    //         // print_r($items);
+    //         // die;
+    //         $productIds = $items->pluck('product_id')->toArray();
+    //         $promoItem = $this->getPromoItemAll($productIds);
+    //         $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $data['customer_id']);
+    //         /*CALCULATE PROMO ITEM */
+
+    //         // === HEADER ===
+    //         $platform = 'web';
+    //         $header = empty($data['id'])
+    //             ? new SalesOrderHeader
+    //             : SalesOrderHeader::find($data['id']);
+
+    //         if (empty($data['id'])) {
+    //             $header->so_number = generateNoSO(); // misal helper
+    //             $header->created_by = $userId;
+    //             $header->status = 'draft';
+    //         } else {
+    //             $platform = $header->platform;
+    //         }
+
+
+    //         $header->so_date = $data['so_date'];
+    //         $header->customer_id = $data['customer_id'];
+    //         $header->payment_term = $data['payment_term'] ?? null;
+    //         $header->salesman = $data['salesman'] ?? null;
+    //         $header->currency = $data['currency'];
+    //         $header->remarks = $data['remarks'] ?? null;
+    //         $header->total_amount = 0; // akan dihitung ulang di bawah
+    //         $header->platform = $platform; // akan dihitung ulang di bawah
+    //         $header->save();
+
+    //         $hdrId = $header->id;
+    //         // Hapus freegood lama
+    //         SalesOrderDetail::where('sales_order_id', $hdrId)
+    //             ->where('is_free_good', 1)
+    //             ->delete();
+
+    //         $grandTotal = 0;
+    //         $totalTaxAmount = 0;
+    //         $taxId = 0;
+    //         $taxRate = 0;
+
+    //         // === DETAIL ===
+    //         $detailIdMap = []; // map product_id => detail_id untuk keperluan promo item
+
+    //         foreach ($items as $item) {
+    //             if (!empty($item['remove']) && $item['remove'] == 1) {
+    //                 if (!empty($item['id'])) {
+    //                     $exist = SalesOrderDetail::find($item['id']);
+    //                     if ($exist && $exist->status !== 'draft') {
+    //                         DB::rollBack();
+    //                         return response()->json([
+    //                             'is_valid' => false,
+    //                             'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
+    //                         ]);
+    //                     }
+    //                     if ($exist) {
+    //                         $exist->deleted = now();
+    //                         $exist->deleted_by = $userId;
+    //                         $exist->save();
+    //                     }
+    //                 }
+    //                 continue;
+    //             }
+
+    //             $detail = empty($item['id'])
+    //                 ? new SalesOrderDetail
+    //                 : SalesOrderDetail::find($item['id']);
+    //             $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
+
+    //             // Cek promo per item
+    //             $promoItemFound = null;
+    //             $promoItemRef = null;
+    //             if (!empty($calculatePromo['result_items'])) {
+    //                 foreach ($calculatePromo['result_items'] as $promo) {
+    //                     $promoItemFound = collect($promo['items'])->where('product_id', $item['product_id'])->first();
+    //                     if (!empty($promoItemFound)) {
+    //                         $promoItemRef = $promo;
+    //                         if ($promo['discount_type'] == 'price') {
+    //                             $item['price'] = $promoItemFound['price'];
+    //                         }
+    //                         $item['disc_percent'] = $promoItemFound['discountPercent'] ?? 0;
+    //                         $item['disc_amount'] = $promoItemFound['discountAmount'] ?? 0;
+    //                         $subtotal = ($item['price'] * $item['qty']) - $item['disc_amount'];
+    //                         $item['subtotal'] = $subtotal;
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+
+
+    //             $detail->sales_order_id = $hdrId;
+    //             $detail->product_id = $item['product_id'];
+    //             $detail->qty = $item['qty'];
+    //             $detail->unit = $item['unit_id'];
+    //             $detail->unit_price = $item['price'];
+    //             $detail->discount_type = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
+    //             $detail->discount_percent = $item['disc_percent'] ?? 0;
+    //             $detail->discount_amount = $item['disc_amount'] ?? 0;
+    //             $detail->tax = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+    //             $detail->tax_rate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+    //             $detail->tax_type = $item['tax_type'] ?? 'include';
+    //             $detail->tax_amount = $item['tax_amount'] ?? 0;
+    //             $detail->subtotal = $item['subtotal'] ?? 0;
+    //             $detail->is_free_good = $item['is_freegood'] ?? 0;
+    //             $detail->free_for = $item['free_for'] ?? null;
+    //             $detail->status = $detail->status ?? 'draft';
+    //             $detail->save();
+
+    //             // Simpan map product_id => detail id
+    //             if (empty($item['is_freegood'])) {
+    //                 $detailIdMap[$item['product_id']] = $detail->id;
+    //                 $grandTotal += $item['subtotal'];
+    //                 $totalTaxAmount += $item['tax_amount'] ?? 0;
+    //                 $taxId = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+    //                 $taxRate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+    //             }
+    //         }
+
+    //         // Update total header
+    //         $header->total_amount = $grandTotal;
+    //         $header->tax_amount = $totalTaxAmount;
+    //         $header->tax_base = $taxRate;
+    //         $header->tax_id = $taxId;
+    //         if (!empty($data['id']) && $platform == 'mobile') {
+    //             $header->status = 'draft';
+    //         }
+
+    //         // Simpan discount header ke header
+    //         if (!empty($calculatePromo['discount_header'])) {
+    //             $lastHeader = end($calculatePromo['discount_header']);
+    //             $totalDiscAmount = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
+    //             $header->discount_amount = $totalDiscAmount;
+    //             $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
+    //         }
+    //         $header->save();
+    //         $soId = $header->id;
+
+
+    //         // ========================
+    //         // SIMPAN PROMO
+    //         // ========================
+    //         SalesOrderPromo::where('sales_order_id', $soId)->delete();
+    //         SalesOrderPromoItem::where('sales_order_id', $soId)->delete();
+    //         // Promo Header → sales_order_promo
+    //         if (!empty($calculatePromo['discount_header'])) {
+    //             foreach ($calculatePromo['discount_header'] as $dh) {
+    //                 $salesPromo = new SalesOrderPromo();
+    //                 $salesPromo->sales_order_id = $soId;
+    //                 $salesPromo->promo = $dh['promo_id'];
+    //                 $salesPromo->promo_name = $dh['promo_name'];
+    //                 $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
+    //                 $salesPromo->discount_amount = $dh['discount_amount'] ?? 0;
+    //                 $salesPromo->save();
+    //             }
+    //         }
+
+    //         // Promo Item → sales_order_promo_item
+    //         if (!empty($calculatePromo['result_items'])) {
+    //             foreach ($calculatePromo['result_items'] as $promo) {
+    //                 foreach ($promo['items'] as $promoItem) {
+    //                     $detailId = $detailIdMap[$promoItem['product_id']] ?? null;
+    //                     if (!$detailId) continue;
+
+    //                     $discAmount = $promoItem['discountAmount'] ?? 0;
+    //                     $discPercent = $promoItem['discountPercent'] ?? 0;
+
+    //                     // Skip jika tidak ada diskon
+    //                     if ($discAmount == 0 && $discPercent == 0) continue;
+
+    //                     $salesPromoItem = new SalesOrderPromoItem();
+    //                     $salesPromoItem->sales_order_id = $soId;
+    //                     $salesPromoItem->sales_order_detail_id = $detailId;
+    //                     $salesPromoItem->promo = $promo['promo_id'];
+    //                     $salesPromoItem->promo_name = $promo['promo_name'];
+    //                     $salesPromoItem->discount_percent = $discPercent;
+    //                     $salesPromoItem->discount_amount = $discAmount;
+    //                     $salesPromoItem->save();
+    //                 }
+    //             }
+    //         }
+
+
+
+    //         DB::commit();
+    //         $result['is_valid'] = true;
+    //         $result['message'] = 'Sales Order berhasil disimpan';
+    //         $result['so_id'] = $hdrId;
+    //     } catch (\Throwable $th) {
+    //         DB::rollBack();
+    //         $result['is_valid'] = false;
+    //         $result['message'] = $th->getMessage();
+    //     }
+
+    //     return response()->json($result);
+    // }
+
     public function submit(Request $request)
     {
-        $data = $request->all();
+        $data   = $request->all();
         $userId = session('user_id');
         $result = ['is_valid' => false];
-
-        // echo '<pre>';
-        // print_r($data);
-        // die;
 
         DB::beginTransaction();
         try {
@@ -180,24 +428,26 @@ class SalesOrderController extends Controller
             $currency = Currency::where('code', 'IDR')->first();
             if (!$currency) {
                 DB::rollBack();
-
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Currency IDR tidak ditemukan',
+                    'message'  => 'Currency IDR tidak ditemukan',
                 ]);
             }
 
             $customersId = $data['customer_id'];
 
-
+            // =============================
+            // PREPARE ITEMS
+            // =============================
             $items = collect($data['items'])
                 ->filter(function ($item) {
-                    return empty($item['free_for']); // filter dulu
+                    return empty($item['free_for']);
                 })
                 ->map(function ($item) use ($customersId) {
-                    $params['customer'] = $customersId;
+                    $params['customer']   = $customersId;
                     $params['product_id'] = $item['product_id'];
-                    $customers = $this->checkDataPriceCustomer($params);
+                    $customers            = $this->checkDataPriceCustomer($params);
+
                     $item['has_channel_price'] = $customers['has_channel_price'];
 
                     if (!empty($customers) && $customers['has_channel_price']) {
@@ -206,65 +456,73 @@ class SalesOrderController extends Controller
                             ->first();
 
                         if (empty($channel_price)) {
-                            // handle error, tapi ingat map() tidak bisa return response di sini
-                            // sebaiknya throw exception atau set flag
                             throw new \Exception('Channel Price Tidak ditemukan ' . $item['product_id']);
                         }
 
-                        $item['price'] = $channel_price->price; // ✅ override, lalu return
+                        $item['price'] = $channel_price->price;
                     }
 
-                    return $item; // ✅ wajib return $item di map()
+                    return $item;
                 });
 
-            // echo '<pre>';
-            // print_r($items);
-            // die;
-            $productIds = $items->pluck('product_id')->toArray();
-            $promoItem = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $data['customer_id']);
-            /*CALCULATE PROMO ITEM */
+            $productIds     = $items->pluck('product_id')->toArray();
+            $promoAll       = $this->getPromoItemAll($productIds);
+            $calculatePromo = $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
 
-            // === HEADER ===
+            // =============================
+            // HEADER
+            // =============================
             $platform = 'web';
-            $header = empty($data['id'])
+            $header   = empty($data['id'])
                 ? new SalesOrderHeader
                 : SalesOrderHeader::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->so_number = generateNoSO(); // misal helper
+                $header->so_number  = generateNoSO();
                 $header->created_by = $userId;
-                $header->status = 'draft';
+                $header->status     = 'draft';
             } else {
                 $platform = $header->platform;
             }
 
-
-            $header->so_date = $data['so_date'];
-            $header->customer_id = $data['customer_id'];
+            $header->so_date      = $data['so_date'];
+            $header->customer_id  = $data['customer_id'];
             $header->payment_term = $data['payment_term'] ?? null;
-            $header->salesman = $data['salesman'] ?? null;
-            $header->currency = $data['currency'];
-            $header->remarks = $data['remarks'] ?? null;
-            $header->total_amount = 0; // akan dihitung ulang di bawah
-            $header->platform = $platform; // akan dihitung ulang di bawah
-            $header->save();
+            $header->salesman     = $data['salesman']     ?? null;
+            $header->currency     = $data['currency'];
+            $header->remarks      = $data['remarks']      ?? null;
+            $header->total_amount = 0;
+            $header->platform     = $platform;
 
+            if (!empty($calculatePromo['discount_header'])) {
+                $totalDiscAmount          = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
+                $lastHeader               = end($calculatePromo['discount_header']);
+                $header->discount_amount  = $totalDiscAmount;
+                $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
+            } else {
+                $header->discount_amount  = 0;
+                $header->discount_percent = 0;
+            }
+
+            $header->save();
             $hdrId = $header->id;
+
             // Hapus freegood lama
             SalesOrderDetail::where('sales_order_id', $hdrId)
                 ->where('is_free_good', 1)
                 ->delete();
 
-            $grandTotal = 0;
+            $grandTotal     = 0;
             $totalTaxAmount = 0;
-            $taxId = 0;
-            $taxRate = 0;
+            $taxId          = 0;
+            $taxRate        = 0;
+            $detailIdMap    = [];
 
-            // === DETAIL ===
-            $detailIdMap = []; // map product_id => detail_id untuk keperluan promo item
-
+            // =============================
+            // DETAIL
+            // =============================
             foreach ($items as $item) {
+                // Handle item yang di-remove
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesOrderDetail::find($item['id']);
@@ -272,11 +530,11 @@ class SalesOrderController extends Controller
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
+                                'message'  => 'Tidak dapat dihapus karena status sudah bukan draft',
                             ]);
                         }
                         if ($exist) {
-                            $exist->deleted = now();
+                            $exist->deleted    = now();
                             $exist->deleted_by = $userId;
                             $exist->save();
                         }
@@ -284,133 +542,187 @@ class SalesOrderController extends Controller
                     continue;
                 }
 
-                $detail = empty($item['id'])
-                    ? new SalesOrderDetail
-                    : SalesOrderDetail::find($item['id']);
-                $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
-
                 // Cek promo per item
-                $promoItemFound = null;
-                $promoItemRef = null;
+                $freeGoods = [];
                 if (!empty($calculatePromo['result_items'])) {
                     foreach ($calculatePromo['result_items'] as $promo) {
-                        $promoItemFound = collect($promo['items'])->where('product_id', $item['product_id'])->first();
+                        $promoItemFound = collect($promo['items'])
+                            ->where('product_id', $item['product_id'])
+                            ->first();
+
                         if (!empty($promoItemFound)) {
-                            $promoItemRef = $promo;
                             if ($promo['discount_type'] == 'price') {
-                                $item['price'] = $promoItemFound['price'];
+                                $item['price'] = doubleval($promoItemFound['price']);
                             }
                             $item['disc_percent'] = $promoItemFound['discountPercent'] ?? 0;
-                            $item['disc_amount'] = $promoItemFound['discountAmount'] ?? 0;
-                            $subtotal = ($item['price'] * $item['qty']) - $item['disc_amount'];
-                            $item['subtotal'] = $subtotal;
+                            $item['disc_amount']  = $promoItemFound['discountAmount']  ?? 0;
+                            $item['subtotal']     = ($item['price'] * $item['qty']) - $item['disc_amount'];
+                            $freeGoods = $promo['discount_free'] ?? [];
                             break;
                         }
                     }
                 }
 
+                // Jika tidak ada promo, hitung subtotal di server (tidak percaya nilai dari frontend)
+                if (!isset($item['subtotal']) || empty($calculatePromo['result_items'])) {
+                    $item['disc_percent'] = 0;
+                    $item['disc_amount']  = 0;
+                    $item['subtotal']     = $item['price'] * $item['qty'];
+                }
 
-                $detail->sales_order_id = $hdrId;
-                $detail->product_id = $item['product_id'];
-                $detail->qty = $item['qty'];
-                $detail->unit = $item['unit_id'];
-                $detail->unit_price = $item['price'];
-                $detail->discount_type = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
+                $detail = empty($item['id'])
+                    ? new SalesOrderDetail
+                    : SalesOrderDetail::find($item['id']);
+
+                $detail->sales_order_id   = $hdrId;
+                $detail->product_id       = $item['product_id'];
+                $detail->qty              = $item['qty'];
+                $detail->unit             = $item['unit_id'];
+                $detail->unit_price       = $item['price'];
+                $detail->discount_type    = ($item['disc_percent'] ?? 0) == 0 ? 'nominal' : 'percent';
                 $detail->discount_percent = $item['disc_percent'] ?? 0;
-                $detail->discount_amount = $item['disc_amount'] ?? 0;
-                $detail->tax = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
-                $detail->tax_rate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
-                $detail->tax_type = $item['tax_type'] ?? 'include';
-                $detail->tax_amount = $item['tax_amount'] ?? 0;
-                $detail->subtotal = $item['subtotal'] ?? 0;
-                $detail->is_free_good = $item['is_freegood'] ?? 0;
-                $detail->free_for = $item['free_for'] ?? null;
-                $detail->status = $detail->status ?? 'draft';
+                $detail->discount_amount  = $item['disc_amount']  ?? 0;
+                $detail->tax              = in_array($item['tax']      ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+                $detail->tax_rate         = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+                $detail->tax_type         = $item['tax_type']  ?? 'include';
+                $detail->tax_amount       = $item['tax_amount'] ?? 0;
+                $detail->subtotal         = $item['subtotal'];
+                $detail->is_free_good     = $item['is_freegood'] ?? 0;
+                $detail->free_for         = $item['free_for']    ?? null;
+                $detail->has_channel_price = $item['has_channel_price'] ? 1 : 0;
+                $detail->status           = $detail->status ?? 'draft';
                 $detail->save();
 
-                // Simpan map product_id => detail id
                 if (empty($item['is_freegood'])) {
                     $detailIdMap[$item['product_id']] = $detail->id;
-                    $grandTotal += $item['subtotal'];
+                    $grandTotal     += $item['subtotal'];
                     $totalTaxAmount += $item['tax_amount'] ?? 0;
-                    $taxId = in_array($item['tax'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
+                    $taxId   = in_array($item['tax']      ?? null, [null, 'null', ''], true) ? 0 : $item['tax'];
                     $taxRate = in_array($item['tax_rate'] ?? null, [null, 'null', ''], true) ? 0 : $item['tax_rate'];
+                }
+
+                // Free goods dari promo
+                if (!empty($freeGoods)) {
+                    foreach ($freeGoods as $free) {
+                        $freeDetail = new SalesOrderDetail();
+                        $freeDetail->sales_order_id   = $hdrId;
+                        $freeDetail->product_id       = $free['product_id'];
+                        $freeDetail->qty              = $free['qty'];
+                        $freeDetail->unit             = $free['unit'];
+                        $freeDetail->unit_price       = 0;
+                        $freeDetail->discount_type    = 'nominal';
+                        $freeDetail->discount_percent = 0;
+                        $freeDetail->discount_amount  = 0;
+                        $freeDetail->subtotal         = 0;
+                        $freeDetail->is_free_good     = 1;
+                        $freeDetail->free_for         = $item['product_id'];
+                        $freeDetail->status           = 'draft';
+                        $freeDetail->save();
+                    }
                 }
             }
 
-            // Update total header
+            // =============================
+            // RECALC TAX JIKA ADA DISCOUNT HEADER
+            // =============================
+            $discAmountHeader = !empty($calculatePromo['discount_header'])
+                ? array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'))
+                : 0;
+
+            if ($discAmountHeader > 0) {
+                $details       = SalesOrderDetail::where('sales_order_id', $hdrId)->where('is_free_good', 0)->get();
+                $totalDPP      = $details->sum('subtotal');
+                $newTaxAmount  = 0;
+                $newGrandTotal = 0;
+
+                foreach ($details as $det) {
+                    $proporsi     = $totalDPP > 0 ? $det->subtotal / $totalDPP : 0;
+                    $discPorsi    = $discAmountHeader * $proporsi;
+                    $dppAfterDisc = $det->subtotal - $discPorsi;
+                    $detTaxRate   = $det->tax_rate ?? 0;
+                    $typeTax      = $det->tax_type ?? '';
+
+                    $taxAfterDisc = 0;
+                    if ($typeTax == 'include') {
+                        $taxAfterDisc   = $dppAfterDisc - $dppAfterDisc / (1 + $detTaxRate / 100);
+                        $newGrandTotal += $dppAfterDisc;
+                    } else {
+                        $taxAfterDisc   = $dppAfterDisc * ($detTaxRate / 100);
+                        $newGrandTotal += $dppAfterDisc + $taxAfterDisc;
+                    }
+
+                    $newTaxAmount   += $taxAfterDisc;
+                    $det->tax_amount = $taxAfterDisc;
+                    $det->save();
+                }
+
+                $grandTotal     = $newGrandTotal;
+                $totalTaxAmount = $newTaxAmount;
+            }
+
+            // =============================
+            // UPDATE TOTAL HEADER
+            // =============================
             $header->total_amount = $grandTotal;
-            $header->tax_amount = $totalTaxAmount;
-            $header->tax_base = $taxRate;
-            $header->tax_id = $taxId;
+            $header->tax_amount   = $totalTaxAmount;
+            $header->tax_base     = $taxRate;
+            $header->tax_id       = $taxId;
+
             if (!empty($data['id']) && $platform == 'mobile') {
                 $header->status = 'draft';
             }
 
-            // Simpan discount header ke header
-            if (!empty($calculatePromo['discount_header'])) {
-                $lastHeader = end($calculatePromo['discount_header']);
-                $totalDiscAmount = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
-                $header->discount_amount = $totalDiscAmount;
-                $header->discount_percent = $lastHeader['discount_percent'] ?? 0;
-            }
             $header->save();
             $soId = $header->id;
 
-
-            // ========================
+            // =============================
             // SIMPAN PROMO
-            // ========================
+            // =============================
             SalesOrderPromo::where('sales_order_id', $soId)->delete();
             SalesOrderPromoItem::where('sales_order_id', $soId)->delete();
-            // Promo Header → sales_order_promo
+
             if (!empty($calculatePromo['discount_header'])) {
                 foreach ($calculatePromo['discount_header'] as $dh) {
                     $salesPromo = new SalesOrderPromo();
-                    $salesPromo->sales_order_id = $soId;
-                    $salesPromo->promo = $dh['promo_id'];
-                    $salesPromo->promo_name = $dh['promo_name'];
+                    $salesPromo->sales_order_id   = $soId;
+                    $salesPromo->promo            = $dh['promo_id'];
+                    $salesPromo->promo_name       = $dh['promo_name'];
                     $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
-                    $salesPromo->discount_amount = $dh['discount_amount'] ?? 0;
+                    $salesPromo->discount_amount  = $dh['discount_amount']  ?? 0;
                     $salesPromo->save();
                 }
             }
 
-            // Promo Item → sales_order_promo_item
             if (!empty($calculatePromo['result_items'])) {
                 foreach ($calculatePromo['result_items'] as $promo) {
                     foreach ($promo['items'] as $promoItem) {
-                        $detailId = $detailIdMap[$promoItem['product_id']] ?? null;
+                        $detailId    = $detailIdMap[$promoItem['product_id']] ?? null;
                         if (!$detailId) continue;
 
-                        $discAmount = $promoItem['discountAmount'] ?? 0;
+                        $discAmount  = $promoItem['discountAmount']  ?? 0;
                         $discPercent = $promoItem['discountPercent'] ?? 0;
-
-                        // Skip jika tidak ada diskon
                         if ($discAmount == 0 && $discPercent == 0) continue;
 
                         $salesPromoItem = new SalesOrderPromoItem();
-                        $salesPromoItem->sales_order_id = $soId;
+                        $salesPromoItem->sales_order_id        = $soId;
                         $salesPromoItem->sales_order_detail_id = $detailId;
-                        $salesPromoItem->promo = $promo['promo_id'];
-                        $salesPromoItem->promo_name = $promo['promo_name'];
-                        $salesPromoItem->discount_percent = $discPercent;
-                        $salesPromoItem->discount_amount = $discAmount;
+                        $salesPromoItem->promo                 = $promo['promo_id'];
+                        $salesPromoItem->promo_name            = $promo['promo_name'];
+                        $salesPromoItem->discount_percent      = $discPercent;
+                        $salesPromoItem->discount_amount       = $discAmount;
                         $salesPromoItem->save();
                     }
                 }
             }
 
-
-
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Sales Order berhasil disimpan';
-            $result['so_id'] = $hdrId;
+            $result['message']  = 'Sales Order berhasil disimpan';
+            $result['so_id']    = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['is_valid'] = false;
-            $result['message'] = $th->getMessage();
+            $result['message']  = $th->getMessage();
         }
 
         return response()->json($result);
