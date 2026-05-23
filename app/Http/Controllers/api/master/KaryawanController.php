@@ -239,6 +239,8 @@ class KaryawanController extends Controller
             //code...
             KaryawanHasProduct::where('id', $data['id'])->delete();
 
+            ProductUomPrice::where('karyawan_has_product', $data['id'])->delete();
+
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
