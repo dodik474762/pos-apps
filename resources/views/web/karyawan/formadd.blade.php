@@ -325,13 +325,18 @@
                         <option value="">-- Pilih Product --</option>
                         @isset($products)
                             @foreach ($products as $product)
-                                <option value="{{ $product->id }}" data-nama="{{ $product->name }}">
-                                    {{ $product->code }} - {{ $product->name }} - {{ $product->sku_name }} - {{ $product->nama_vendor }}
+                                <option value="{{ $product->id }}" data-nama="{{ $product->name }}" data-harga-satuan-besar="{{ $product->harga_satuan_besar }}">
+                                    {{ $product->code }} - {{ $product->name }} - {{ $product->sku_name }} - {{ $product->nama_vendor }} (Rp {{ number_format($product->harga_satuan_besar ?? 0, 0, ',', '.') }})
                                 </option>
                             @endforeach
                         @endisset
                     </select>
                     <div class="invalid-feedback">Nama product wajib dipilih.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Harga Satuan Terbesar</label>
+                    <input type="text" class="form-control" id="modal-product-harga-satuan-besar" placeholder="Rp 0">
                 </div>
             </div>
 
@@ -349,3 +354,40 @@
     </div>
 </div>
 <!-- end Modal Add Product -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ !== 'undefined') {
+            $('#modal-product-item').on('change', function() {
+                var selected = $(this).find('option:selected');
+                var harga = selected.attr('data-harga-satuan-besar');
+                if (harga !== undefined && harga !== null && harga !== '') {
+                    var formatted = new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(harga);
+                    $('#modal-product-harga-satuan-besar').val(formatted);
+                } else {
+                    $('#modal-product-harga-satuan-besar').val('');
+                }
+            });
+
+            $('#modal-product-harga-satuan-besar').on('input', function() {
+                var val = $(this).val().replace(/[^0-9]/g, '');
+                if (val !== '') {
+                    var formatted = new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(val);
+                    $(this).val(formatted);
+                } else {
+                    $(this).val('');
+                }
+            });
+        }
+    });
+</script>

@@ -109,8 +109,23 @@ class KaryawanController extends Controller
 
     public function getAllProduct(){
         $datadb = DB::table('product as p')->whereNull('p.deleted')
-        ->select(['p.*', 'v.nama_vendor'])
+        ->select([
+            'p.*',
+            'v.nama_vendor',
+            'pup.price as harga_satuan_besar'
+        ])
         ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+        ->leftJoin('product_uom as pu', function($join) {
+            $join->on('pu.product', '=', 'p.id')
+                 ->where('pu.state', '=', 'large')
+                 ->whereNull('pu.deleted');
+        })
+        ->leftJoin('product_uom_price as pup', function($join) {
+            $join->on('pup.product', '=', 'p.id')
+                 ->on('pup.unit', '=', 'pu.unit_tujuan')
+                 ->where('pup.price_list', '=', 2)
+                 ->whereNull('pup.deleted');
+        })
         ->get();
         return $datadb;
     }

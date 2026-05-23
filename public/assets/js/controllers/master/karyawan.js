@@ -355,7 +355,8 @@ let Karyawan = {
     saveProduct:(elm,e)=>{
         const params = {
             id: $('#id').val(),
-            product: $('#modal-product-item').val()
+            product: $('#modal-product-item').val(),
+            harga_satuan_besar: $('#modal-product-harga-satuan-besar').val()
         };
         $.ajax({
             type: "POST",

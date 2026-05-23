@@ -1392,3 +1392,16 @@ function getMaxReturKaryawan($karyawan = 0)
 
     return true;
 }
+
+function sanitizeDecimal($value): float
+{
+    // Hapus NBSP (\xC2\xA0 / \u00a0), spasi biasa, titik ribuan, dan karakter non-numerik
+    // kecuali minus dan koma/titik desimal
+    $clean = preg_replace('/[\x{00A0}\x{202F}\x{2009}\s]/u', '', (string) $value);
+    // Jika format ribuan pakai titik (1.000.000) → hapus titik ribuan
+    // Jika desimal pakai koma (1.500,50) → ganti koma jadi titik
+    $clean = preg_replace('/\.(?=\d{3}(?:[.,]|$))/', '', $clean);
+    $clean = str_replace(',', '.', $clean);
+
+    return doubleval($clean);
+}
