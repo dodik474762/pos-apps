@@ -74,6 +74,24 @@ let PromoItem = {
         table.after(newTr);
     },
 
+    addSyaratItem: (elm, e) => {
+        e.preventDefault();
+        let table = $(elm)
+            .closest("div")
+            .find("table#table-routing-syarat")
+            .find("tbody")
+            .find("tr.input:last");
+        let newTr = table.clone();
+        newTr.find("input").val("");
+        newTr.attr("data_id", "");
+        newTr
+            .find("td#action")
+            .html(
+                `<button type="button" onclick="PromoItem.deleteItem(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`,
+            );
+        table.after(newTr);
+    },
+
     deleteItem: (elm) => {
         let data_id = $(elm).closest("tr").attr("data_id");
         if (data_id == "") {
@@ -115,6 +133,24 @@ let PromoItem = {
         return result;
     },
 
+    getPostSyaratItem: () => {
+        let data = $("table#table-routing-syarat")
+            .find("tbody")
+            .find("tr.input");
+        let result = [];
+        data.each((index, elm) => {
+            result.push({
+                id: $(elm).attr("data_id"),
+                product: $(elm).find("input#product").val(),
+                qty: $(elm).find("input#qty").val(),
+                nominal: $(elm).find("input#nominal").val(),
+                remove: $(elm).hasClass("remove") ? 1 : 0,
+            });
+        });
+
+        return result;
+    },
+
     getPostInput: () => {
         let data = {
             id: $("input#id").val(),
@@ -137,6 +173,7 @@ let PromoItem = {
             kategori_disc: $("#kategori_disc").val(),
             promo_item: PromoItem.getPostItem(),
             free_product: PromoItem.getPostFreeItem(),
+            product_syarat: PromoItem.getPostSyaratItem(),
         };
 
         return data;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\PromoItem;
 use App\Models\Master\PromoItemProduct;
 use App\Models\Master\PromoItemProductFree;
+use App\Models\Master\PromoItemProductSyarat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -60,7 +61,8 @@ class PromoItemController extends Controller
     {
         $data = $request->all();
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -134,6 +136,32 @@ class PromoItemController extends Controller
                     } else {
                         if ($value['id'] != '') {
                             PromoItemProductFree::where('id', $value['id'])->delete();
+                        }
+                    }
+                }
+            }
+
+            PromoItemProductSyarat::where('product_promo_item', $headerId)->delete();
+            if (isset($data['product_syarat'])) {
+                foreach ($data['product_syarat'] as $key => $value) {
+                    if ($value['remove'] != '1') {
+                        if ($value['product'] != '') {
+                            list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
+                            $units = DB::table('unit')->where('name', $unit_name)->first();
+                            $unitsId = $units->id;
+
+                            $items = new PromoItemProductSyarat();
+                            $items->product_promo_item = $headerId;
+                            $items->product = $product_id;
+                            $items->unit = $unitsId;
+                            $items->qty = $value['qty'] ? $value['qty'] : 0;
+                            $items->nominal = $value['nominal'] ? $value['nominal'] : 0;
+                            $items->product_uom = $product_uom;
+                            $items->save();
+                        }
+                    } else {
+                        if ($value['id'] != '') {
+                            PromoItemProductSyarat::where('id', $value['id'])->delete();
                         }
                     }
                 }
