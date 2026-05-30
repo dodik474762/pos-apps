@@ -1830,7 +1830,7 @@ class SalesOrderController extends Controller
     public function getPromoHeader($promoIds = [])
     {
         $datadb = ProductPromoItem::select('product_promo_item.*')
-            ->with(['promoProducts', 'promoFree', 'promoSyarat'])
+            ->with(['promoProducts', 'promoFree'])
             ->whereIn('product_promo_item.id', $promoIds)
             ->orderBy('product_promo_item.min_mix', 'desc')
             ->orderBy('product_promo_item.min_qty', 'asc') // ✅ tambahkan ini
@@ -2363,40 +2363,6 @@ class SalesOrderController extends Controller
                 }
             }
 
-            // =============================
-            // CEK DISKON SYARAT
-            // =============================
-            if ($promo->kategori_disc == 'DISC SYARAT' && count($promo->promoSyarat) > 0) {
-                $syaratMet = true;
-                foreach ($promo->promoSyarat as $syarat) {
-                    $itemQtySmallest = 0;
-                    $itemNominal = 0;
-                    $valItems = collect($items)->where('product_id', $syarat->product)->all();
-                    foreach ($valItems as $vi) {
-                        $qtyBaseItem = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
-                        $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
-                        $itemNominal += $vi['price'] * $vi['qty'];
-                    }
-
-                    $qtyBaseUnit = getSmallestUnitV2($syarat->product, $syarat->unit, 1);
-                    $syaratMinQtySmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty : 0;
-
-                    if ($syarat->qty > 0 && $itemQtySmallest < $syaratMinQtySmallest) {
-                        $syaratMet = false;
-                        break;
-                    }
-
-                    if ($syarat->nominal > 0 && $itemNominal < $syarat->nominal) {
-                        $syaratMet = false;
-                        break;
-                    }
-                }
-                
-                if (!$syaratMet) {
-                    continue;
-                }
-            }
-
             $promoProduc = $promo->promoProducts
                 ->pluck('product')->toArray();
 
@@ -2630,40 +2596,6 @@ class SalesOrderController extends Controller
                 $subChannelMatch = empty($promo->sub_channel_outlet) || $promo->sub_channel_outlet == $sub_channel_outlet;
                 if (!$channelMatch || !$subChannelMatch)
                     continue;
-            }
-
-            // =============================
-            // CEK DISKON SYARAT
-            // =============================
-            if ($promo->kategori_disc == 'DISC SYARAT' && count($promo->promoSyarat) > 0) {
-                $syaratMet = true;
-                foreach ($promo->promoSyarat as $syarat) {
-                    $itemQtySmallest = 0;
-                    $itemNominal = 0;
-                    $valItems = collect($items)->where('product_id', $syarat->product)->all();
-                    foreach ($valItems as $vi) {
-                        $qtyBaseItem = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
-                        $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
-                        $itemNominal += $vi['price'] * $vi['qty'];
-                    }
-
-                    $qtyBaseUnit = getSmallestUnitV2($syarat->product, $syarat->unit, 1);
-                    $syaratMinQtySmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty : 0;
-
-                    if ($syarat->qty > 0 && $itemQtySmallest < $syaratMinQtySmallest) {
-                        $syaratMet = false;
-                        break;
-                    }
-
-                    if ($syarat->nominal > 0 && $itemNominal < $syarat->nominal) {
-                        $syaratMet = false;
-                        break;
-                    }
-                }
-                
-                if (!$syaratMet) {
-                    continue;
-                }
             }
 
             $promoProduc = $promo->promoProducts->pluck('product')->toArray();

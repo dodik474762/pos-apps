@@ -15,4 +15,8 @@ class ProductPromoItem extends Model
     public function promoFree(){
         return $this->hasMany(ProductPromoItemFree::class, 'product_promo_item', 'id');
     }
+
+    public function promoSyarat(){
+        return $this->hasMany(ProductPromoItemSyarat::class, 'product_promo_item', 'id');
+    }
 }
