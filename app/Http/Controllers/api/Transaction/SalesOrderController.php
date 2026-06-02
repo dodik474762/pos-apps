@@ -1971,7 +1971,6 @@ class SalesOrderController extends Controller
         // Jika bukan kelipatan, cek range min-max
         $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->max_qty);
         $maxQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->max_qty : PHP_INT_MAX;
-
         return $totalQty >= $minQtyPromoSmallest && $totalQty <= $maxQtyPromoSmallest;
     }
 
@@ -2375,28 +2374,54 @@ class SalesOrderController extends Controller
             // CEK DISKON SYARAT
             // =============================
             if ($promo->kategori_disc == 'DISC SYARAT' && count($promo->promoSyarat) > 0) {
-                $syaratMet = true;
+                $syaratMet = false;
+
                 foreach ($promo->promoSyarat as $syarat) {
+
                     $itemQtySmallest = 0;
                     $itemNominal = 0;
-                    $valItems = collect($items)->where('product_id', $syarat->product)->all();
+
+                    $valItems = collect($items)
+                        ->where('product_id', $syarat->product)
+                        ->all();
+
                     foreach ($valItems as $vi) {
-                        $qtyBaseItem = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
-                        $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
+                        $qtyBaseItem = getSmallestUnitV2(
+                            $vi['product_id'],
+                            $vi['unit_id'],
+                            1
+                        );
+
+                        $itemQtySmallest += !empty($qtyBaseItem)
+                            ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty']
+                            : 0;
+
                         $itemNominal += $vi['price'] * $vi['qty'];
                     }
 
-                    $qtyBaseUnit = getSmallestUnitV2($syarat->product, $syarat->unit, 1);
-                    $syaratMinQtySmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty : 0;
+                    $qtyBaseUnit = getSmallestUnitV2(
+                        $syarat->product,
+                        $syarat->unit,
+                        1
+                    );
 
-                    if ($syarat->qty > 0 && $itemQtySmallest < $syaratMinQtySmallest) {
-                        $syaratMet = false;
-                        break;
-                    }
+                    $syaratMinQtySmallest = !empty($qtyBaseUnit)
+                        ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty
+                        : 0;
 
-                    if ($syarat->nominal > 0 && $itemNominal < $syarat->nominal) {
-                        $syaratMet = false;
-                        break;
+                    $qtyOk = (
+                        $syarat->qty <= 0 ||
+                        $itemQtySmallest >= $syaratMinQtySmallest
+                    );
+
+                    $nominalOk = (
+                        $syarat->nominal <= 0 ||
+                        $itemNominal >= $syarat->nominal
+                    );
+
+                    if ($qtyOk && $nominalOk) {
+                        $syaratMet = true;
+                        break; // cukup satu syarat yang memenuhi
                     }
                 }
 
@@ -2696,6 +2721,10 @@ class SalesOrderController extends Controller
         // Pisahkan promo berdasarkan kategori_disc
         // Untuk kategori yang sama (DISC STRATA), ambil yang terakhir applicable saja
         $appliedKategoriDisc = []; // track kategori_disc yang sudah dipakai
+        // echo '<pre>';
+        // print_r($promoHeaders->toArray());
+        // die;
+
         foreach ($promoHeaders as $promo) {
             if ($promo->potong_grand_total != 1)
                 continue; // skip yang bukan grand total
@@ -2711,30 +2740,38 @@ class SalesOrderController extends Controller
             // CEK DISKON SYARAT
             // =============================
             if ($promo->kategori_disc == 'DISC SYARAT' && count($promo->promoSyarat) > 0) {
-                $syaratMet = true;
+
+                $qtySummaryCart = 0;
+
                 foreach ($promo->promoSyarat as $syarat) {
+
                     $itemQtySmallest = 0;
-                    $itemNominal = 0;
-                    $valItems = collect($items)->where('product_id', $syarat->product)->all();
+
+                    $valItems = collect($items)
+                        ->where('product_id', $syarat->product)
+                        ->all();
+
                     foreach ($valItems as $vi) {
-                        $qtyBaseItem = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
-                        $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
-                        $itemNominal += $vi['price'] * $vi['qty'];
+
+                        $qtyBaseItem = getSmallestUnitV2(
+                            $vi['product_id'],
+                            $vi['unit_id'],
+                            1
+                        );
+
+                        $itemQtySmallest += !empty($qtyBaseItem)
+                            ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty']
+                            : 0;
                     }
 
-                    $qtyBaseUnit = getSmallestUnitV2($syarat->product, $syarat->unit, 1);
-                    $syaratMinQtySmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty : 0;
-
-                    if ($syarat->qty > 0 && $itemQtySmallest < $syaratMinQtySmallest) {
-                        $syaratMet = false;
-                        break;
-                    }
-
-                    if ($syarat->nominal > 0 && $itemNominal < $syarat->nominal) {
-                        $syaratMet = false;
-                        break;
-                    }
+                    $qtySummaryCart += $itemQtySmallest;
                 }
+
+                $qtyTargetSummary = collect($promo->promoSyarat)
+                    ->max('qty');
+
+                $syaratMet =
+                    ($qtySummaryCart >= $qtyTargetSummary);
 
                 if (!$syaratMet) {
                     continue;
@@ -2742,6 +2779,9 @@ class SalesOrderController extends Controller
             }
 
             $promoProduc = $promo->promoProducts->pluck('product')->toArray();
+            // echo '<pre>';
+            // print_r($promoProduc);
+            // die;
 
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
@@ -2760,6 +2800,7 @@ class SalesOrderController extends Controller
 
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
+
             if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo))
                 continue;
 
@@ -2770,6 +2811,10 @@ class SalesOrderController extends Controller
                     $itemsValue[] = $vi;
                 }
             }
+
+            // echo '<pre>';
+            // print_r($itemsValue);
+            // die;
 
             $rawSubtotal = 0;
             foreach ($itemsValue as $v) {
@@ -2791,7 +2836,7 @@ class SalesOrderController extends Controller
                 }
             }
             // echo '<pre>';
-            // print_r($totalPromoAplicable);
+            // print_r($itemsValue);
             // die;
 
             if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo))
@@ -3879,7 +3924,7 @@ class SalesOrderController extends Controller
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
             // echo '<pre>';
-            // print_r($calculatePromo);
+            // print_r($promoItem);
             // die;
 
             $result['is_valid'] = true;
