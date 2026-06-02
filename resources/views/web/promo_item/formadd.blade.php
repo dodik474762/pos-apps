@@ -191,6 +191,9 @@
                                 <input type="checkbox" id="potong_grand_total"
                                     {{ isset($data->potong_grand_total) ? ($data->potong_grand_total == '1' ? 'checked' : '') : '' }}>
                                 Potong Grand Total
+                                <input type="checkbox" id="potong_per_qty"
+                                    {{ isset($data->potong_per_qty) ? ($data->potong_per_qty == '1' ? 'checked' : '') : '' }}>
+                                Potong Per Qty
                             </div>
                         </div>
                     </div>

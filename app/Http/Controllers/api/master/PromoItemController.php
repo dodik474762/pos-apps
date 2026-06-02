@@ -84,6 +84,7 @@ class PromoItemController extends Controller
             $roles->max_mix = $data['max_mix'];
             $roles->kelipatan = $data['kelipatan'];
             $roles->potong_grand_total = $data['potong_grand_total'];
+            $roles->potong_per_qty = $data['potong_per_qty'];
             $roles->channel_outlet = $data['channel_outlet'];
             $roles->sub_channel_outlet = $data['sub_channel_outlet'];
             $roles->additional_disc_type = $data['additional_disc_type'];
