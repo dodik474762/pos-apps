@@ -3616,6 +3616,9 @@ class SalesOrderController extends Controller
                 $params['customer'] = $customersId;
                 $params['product_id'] = $products;
                 $customers = $this->checkDataPriceCustomer($params);
+                // echo '<pre>';
+                // print_r($customers);
+                // die;
 
                 $params['unit_id'] = $product_unit;
                 $customer_produk = $this->checkCustomerProduct($params);

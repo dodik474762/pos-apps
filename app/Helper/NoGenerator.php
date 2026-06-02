@@ -1025,6 +1025,9 @@ function getLargestUnit($productId, $fromUnitId, $qty = 1)
         ->whereNull('deleted')
         ->orderBy('level')
         ->get();
+    // echo '<pre>';
+    // print_r($data_product_uom);
+    // die;
 
     if ($data_product_uom->isEmpty()) {
         return [

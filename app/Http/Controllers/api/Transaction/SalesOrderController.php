@@ -2342,6 +2342,10 @@ class SalesOrderController extends Controller
         $discountHeader = [];
         $grandTotalAfterItemDisc = 0; // ← akan diisi setelah Loop 2
         foreach ($promoHeaders as $promo) {
+            // echo '<pre>';
+            // print_r($promo);
+            // die;
+
             // =============================
             // FILTER CHANNEL OUTLET
             // =============================
@@ -2362,6 +2366,10 @@ class SalesOrderController extends Controller
                     continue; // skip promo ini
                 }
             }
+
+            // echo '<pre>';
+            // print_r($promo);
+            // die;
 
             // =============================
             // CEK DISKON SYARAT
@@ -2391,7 +2399,7 @@ class SalesOrderController extends Controller
                         break;
                     }
                 }
-                
+
                 if (!$syaratMet) {
                     continue;
                 }
@@ -2399,6 +2407,9 @@ class SalesOrderController extends Controller
 
             $promoProduc = $promo->promoProducts
                 ->pluck('product')->toArray();
+            // echo '<pre>';
+            // print_r($promoProduc);
+            // die;
 
             //match kan dulu total promo bundle itemnya;
             $mixTotalPromo = 0;
@@ -2413,7 +2424,8 @@ class SalesOrderController extends Controller
             }
 
             // echo '<pre>';
-            // print_r($mixTotalPromo);die;
+            // print_r($mixTotalPromo);
+            // die;
 
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
@@ -2478,6 +2490,9 @@ class SalesOrderController extends Controller
             $discountPercent = 0;
             $discountAmounts = 0;
             $grandTotal = 0;
+            // echo '<pre>';
+            // print_r($itemsValue);
+            // die;
 
             // Hitung diskon
             // Jika promo mix (max_mix > 1), diskon hanya diterapkan ke 1 produk saja
@@ -2497,10 +2512,29 @@ class SalesOrderController extends Controller
 
                         // Potong per qty: diskon percent dikalikan qty unit terkecil
                         if ($promo->potong_per_qty == 1) {
+                            $promoUnitId = $promo->promoProducts[0]->unit;
+                            $productUom = ProductUom::where('product', $v['product_id'])
+                                ->where('unit_tujuan', $promoUnitId)
+                                ->whereNull('deleted')
+                                ->first();
+
                             $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                             $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
-                            $discountAmount = ($v['price'] * $itemQtySmallest)
-                                * ($discountPercent / 100);
+                            $totalQtyLargest = 0;
+                            if ($productUom->state == 'large') {
+                                $productUomLarge = ProductUom::where('product', $v['product_id'])
+                                    ->where('state', 'large')
+                                    ->whereNull('deleted')
+                                    ->first();
+                                $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+                            }
+                            if ($productUom->state == 'large') {
+                                $discountAmount = ($v['price'] * $totalQtyLargest)
+                                    * ($discountPercent / 100);
+                            } else {
+                                $discountAmount = ($v['price'] * $itemQtySmallest)
+                                    * ($discountPercent / 100);
+                            }
                         }
 
                         $discountAmounts += $discountAmount;
@@ -2514,9 +2548,28 @@ class SalesOrderController extends Controller
 
                         // Potong per qty: diskon nominal dikalikan qty unit terkecil
                         if ($promo->potong_per_qty == 1) {
+                            $promoUnitId = $promo->promoProducts[0]->unit;
+                            $productUom = ProductUom::where('product', $v['product_id'])
+                                ->where('unit_tujuan', $promoUnitId)
+                                ->whereNull('deleted')
+                                ->first();
+
                             $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                             $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
-                            $discountAmount = $promo->discount_value * $itemQtySmallest;
+
+                            $totalQtyLargest = 0;
+                            if ($productUom->state == 'large') {
+                                $productUomLarge = ProductUom::where('product', $v['product_id'])
+                                    ->where('state', 'large')
+                                    ->whereNull('deleted')
+                                    ->first();
+                                $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+                            }
+                            if ($productUom->state == 'large') {
+                                $discountAmount = $promo->discount_value * $totalQtyLargest;
+                            } else {
+                                $discountAmount = $promo->discount_value * $itemQtySmallest;
+                            }
                         }
 
                         $discountAmounts += $discountAmount;
@@ -2601,7 +2654,8 @@ class SalesOrderController extends Controller
         }
 
         // echo '<pre>';
-        // print_r($resultItems);die;
+        // print_r($resultItems);
+        // die;
 
         // Tambahkan juga item yang tidak kena promo apapun
         // Akumulasi grand total setelah disc — termasuk item yang kena promo
@@ -2610,6 +2664,11 @@ class SalesOrderController extends Controller
                 $grandTotalAfterItemDisc += $ri['subtotal'];
             }
         }
+
+        // echo '<pre>';
+        // print_r($items);
+        // die;
+
         // Tambah item yang tidak kena promo apapun
         foreach ($items as $item) {
             $productInPromo = false;
@@ -2624,7 +2683,6 @@ class SalesOrderController extends Controller
                 $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
             }
         }
-
 
         // =============================
         // LOOP 1: PROMO POTONG GRAND TOTAL
@@ -2677,7 +2735,7 @@ class SalesOrderController extends Controller
                         break;
                     }
                 }
-                
+
                 if (!$syaratMet) {
                     continue;
                 }
@@ -2697,7 +2755,8 @@ class SalesOrderController extends Controller
             }
 
             // echo '<pre>';
-            // print_r($itemsHasDiscount);die;
+            // print_r($itemsHasDiscount);
+            // die;
 
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
@@ -2731,6 +2790,9 @@ class SalesOrderController extends Controller
                     $totalPromoAplicable += 1;
                 }
             }
+            // echo '<pre>';
+            // print_r($totalPromoAplicable);
+            // die;
 
             if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo))
                 continue;
@@ -2753,14 +2815,24 @@ class SalesOrderController extends Controller
                 }
             }
 
+            // echo '<pre>';
+            // print_r($appliedKategoriDisc);
+            // die;
+
             // Hitung grand total semua items
             $grandTotalAllItems = 0;
             foreach ($items as $item) {
                 $grandTotalAllItems += $item['price'] * $item['qty'];
             }
 
+            // echo '<pre>';
+            // print_r($grandTotalAllItems);
+            // die;
             $discAmountHeader = 0;
             $discPercentHeader = 0;
+            // echo '<pre>';
+            // print_r($promo);
+            // die;
 
             if ($promo->discount_type === 'percent') {
                 $discPercentHeader = $promo->discount_value;
@@ -2768,11 +2840,29 @@ class SalesOrderController extends Controller
 
                 // Potong per qty: diskon percent dikalikan total qty unit terkecil
                 if ($promo->potong_per_qty == 1) {
+                    $promoUnitId = $promo->promoProducts[0]->unit;
+                    $productUom = ProductUom::where('product', $itemsValue[0]['product_id'])
+                        ->where('unit_tujuan', $promoUnitId)
+                        ->whereNull('deleted')
+                        ->first();
+
                     $discAmountHeader = 0;
+                    $totalQtyLargest = 0;
                     foreach ($itemsValue as $v) {
                         $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                         $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
-                        $discAmountHeader += ($v['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
+                        if ($productUom->state == 'large') {
+                            $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
+                                ->where('state', 'large')
+                                ->whereNull('deleted')
+                                ->first();
+                            $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+                            if ($totalQtyLargest) {
+                                $discAmountHeader += ($v['price'] * $totalQtyLargest) * ($promo->discount_value / 100);
+                            }
+                        } else {
+                            $discAmountHeader += ($v['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
+                        }
                     }
                 }
             }
@@ -2782,14 +2872,34 @@ class SalesOrderController extends Controller
                 $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                 $discAmountHeader = $promo->discount_value * $multiplier;
 
+
                 // Potong per qty: diskon nominal dikalikan total qty unit terkecil
                 if ($promo->potong_per_qty == 1) {
+                    $promoUnitId = $promo->promoProducts[0]->unit;
+                    $productUom = ProductUom::where('product', $itemsValue[0]['product_id'])
+                        ->where('unit_tujuan', $promoUnitId)
+                        ->whereNull('deleted')
+                        ->first();
+
                     $totalQtySmallest = 0;
+                    $totalQtyLargest = 0;
                     foreach ($itemsValue as $v) {
                         $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                         $totalQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+                        if ($productUom->state == 'large') {
+                            $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
+                                ->where('state', 'large')
+                                ->whereNull('deleted')
+                                ->first();
+                            $totalQtyLargest += $totalQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+                        }
                     }
-                    $discAmountHeader = $promo->discount_value * $totalQtySmallest;
+
+                    if ($productUom->state == 'large') {
+                        $discAmountHeader = $promo->discount_value * $totalQtyLargest;
+                    } else {
+                        $discAmountHeader = $promo->discount_value * $totalQtySmallest;
+                    }
                 }
             }
 
