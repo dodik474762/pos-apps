@@ -2494,6 +2494,15 @@ class SalesOrderController extends Controller
                         $discountPercent = $promo->discount_value;
                         $discountAmount = ($v['price'] * $v['qty'])
                             * ($discountPercent / 100);
+
+                        // Potong per qty: diskon percent dikalikan qty unit terkecil
+                        if ($promo->potong_per_qty == 1) {
+                            $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+                            $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+                            $discountAmount = ($v['price'] * $itemQtySmallest)
+                                * ($discountPercent / 100);
+                        }
+
                         $discountAmounts += $discountAmount;
                     }
                     if ($promo->discount_type === 'nominal') {
@@ -2502,6 +2511,14 @@ class SalesOrderController extends Controller
                         $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
 
                         $discountAmount = $promo->discount_value * $multiplier;
+
+                        // Potong per qty: diskon nominal dikalikan qty unit terkecil
+                        if ($promo->potong_per_qty == 1) {
+                            $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+                            $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+                            $discountAmount = $promo->discount_value * $itemQtySmallest;
+                        }
+
                         $discountAmounts += $discountAmount;
                     }
                     if ($promo->discount_type == 'price') {
@@ -2748,12 +2765,32 @@ class SalesOrderController extends Controller
             if ($promo->discount_type === 'percent') {
                 $discPercentHeader = $promo->discount_value;
                 $discAmountHeader = $grandTotalRunning * ($promo->discount_value / 100); // ← pakai running after item disc
+
+                // Potong per qty: diskon percent dikalikan total qty unit terkecil
+                if ($promo->potong_per_qty == 1) {
+                    $discAmountHeader = 0;
+                    foreach ($itemsValue as $v) {
+                        $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+                        $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+                        $discAmountHeader += ($v['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
+                    }
+                }
             }
             if ($promo->discount_type === 'nominal') {
                 $qtyBaseUnit = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
                 $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
                 $multiplier = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                 $discAmountHeader = $promo->discount_value * $multiplier;
+
+                // Potong per qty: diskon nominal dikalikan total qty unit terkecil
+                if ($promo->potong_per_qty == 1) {
+                    $totalQtySmallest = 0;
+                    foreach ($itemsValue as $v) {
+                        $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+                        $totalQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+                    }
+                    $discAmountHeader = $promo->discount_value * $totalQtySmallest;
+                }
             }
 
             $grandTotalAfterMainDisc = $grandTotalRunning - $discAmountHeader;
