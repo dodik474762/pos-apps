@@ -2307,6 +2307,7 @@ let SalesOrder = {
                 // SIMPAN data_id FREEGOOD LAMA SEBELUM DIHAPUS
                 // ========================
                 const savedFreeGoodIds = {};
+                console.log("data", $("table#table-items tbody tr.freegood"), data.free_goods);
                 $("table#table-items tbody tr.freegood").each(function () {
                     const freeFor = $(this).data("free-for"); // product_id induk
                     const freeProductId = $(this)
@@ -2420,6 +2421,7 @@ let SalesOrder = {
                             promo.discount_free &&
                             promo.discount_free.length > 0
                         ) {
+                            console.log("free", promo.discount_free);
                             promo.discount_free.forEach((free) => {
                                 $("table#table-items tbody tr.input")
                                     .not(".freegood")

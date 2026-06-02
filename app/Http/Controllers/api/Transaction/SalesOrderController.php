@@ -486,6 +486,9 @@ class SalesOrderController extends Controller
             $productIds     = $items->pluck('product_id')->toArray();
             $promoAll       = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
+            // echo '<pre>';
+            // print_r($calculatePromo);
+            // die;
 
             // =============================
             // HEADER
@@ -539,6 +542,9 @@ class SalesOrderController extends Controller
             // =============================
             // DETAIL
             // =============================
+            // echo '<pre>';
+            // print_r($items);
+            // die;
             foreach ($items as $item) {
                 // Handle item yang di-remove
                 if (!empty($item['remove']) && $item['remove'] == 1) {
@@ -568,7 +574,11 @@ class SalesOrderController extends Controller
                             ->where('product_id', $item['product_id'])
                             ->first();
 
+
                         if (!empty($promoItemFound)) {
+                            // echo '<pre>';
+                            // print_r($promoItemFound);
+                            // die;
                             if ($promo['discount_type'] == 'price') {
                                 $item['price'] = doubleval($promoItemFound['price']);
                             }
@@ -576,10 +586,14 @@ class SalesOrderController extends Controller
                             $item['disc_amount']  = $promoItemFound['discountAmount']  ?? 0;
                             $item['subtotal']     = ($item['price'] * $item['qty']) - $item['disc_amount'];
                             $freeGoods            = $promo['discount_free'] ?? [];
-                            break;
+                            // break;
                         }
                     }
                 }
+
+                // echo '<pre>';
+                // print_r($promoItemFound);
+                // die;
 
                 // Jika tidak ada promo, hitung subtotal di server (tidak percaya nilai dari frontend)
                 if (!isset($item['subtotal']) || empty($calculatePromo['result_items'])) {
@@ -1387,7 +1401,7 @@ class SalesOrderController extends Controller
                             $item['disc_amount']  = $promoItemFound['discountAmount']  ?? 0;
                             $item['subtotal']     = ($item['price'] * $item['qty']) - $item['disc_amount'];
                             $freeGoods            = $promo['discount_free'] ?? [];
-                            break;
+                            // break;
                         }
                     }
                 }
@@ -2374,18 +2388,18 @@ class SalesOrderController extends Controller
             // CEK DISKON SYARAT
             // =============================
             if ($promo->kategori_disc == 'DISC SYARAT' && count($promo->promoSyarat) > 0) {
-                $syaratMet = false;
+                $qtySummaryCart = 0;
 
                 foreach ($promo->promoSyarat as $syarat) {
 
                     $itemQtySmallest = 0;
-                    $itemNominal = 0;
 
                     $valItems = collect($items)
                         ->where('product_id', $syarat->product)
                         ->all();
 
                     foreach ($valItems as $vi) {
+
                         $qtyBaseItem = getSmallestUnitV2(
                             $vi['product_id'],
                             $vi['unit_id'],
@@ -2395,35 +2409,16 @@ class SalesOrderController extends Controller
                         $itemQtySmallest += !empty($qtyBaseItem)
                             ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty']
                             : 0;
-
-                        $itemNominal += $vi['price'] * $vi['qty'];
                     }
 
-                    $qtyBaseUnit = getSmallestUnitV2(
-                        $syarat->product,
-                        $syarat->unit,
-                        1
-                    );
-
-                    $syaratMinQtySmallest = !empty($qtyBaseUnit)
-                        ? $qtyBaseUnit->nilai_konversi_terkecil * $syarat->qty
-                        : 0;
-
-                    $qtyOk = (
-                        $syarat->qty <= 0 ||
-                        $itemQtySmallest >= $syaratMinQtySmallest
-                    );
-
-                    $nominalOk = (
-                        $syarat->nominal <= 0 ||
-                        $itemNominal >= $syarat->nominal
-                    );
-
-                    if ($qtyOk && $nominalOk) {
-                        $syaratMet = true;
-                        break; // cukup satu syarat yang memenuhi
-                    }
+                    $qtySummaryCart += $itemQtySmallest;
                 }
+
+                $qtyTargetSummary = collect($promo->promoSyarat)
+                    ->max('qty');
+
+                $syaratMet =
+                    ($qtySummaryCart >= $qtyTargetSummary);
 
                 if (!$syaratMet) {
                     continue;
@@ -2657,6 +2652,8 @@ class SalesOrderController extends Controller
             }
 
             // Hitung free good
+            // echo $qtySmallestAllProduct;
+            // die;
             $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
             $freeGoods = array_merge(
                 $freeGoods,
@@ -2879,6 +2876,7 @@ class SalesOrderController extends Controller
             // print_r($promo);
             // die;
 
+            $itemsValueApplied = [];
             if ($promo->discount_type === 'percent') {
                 $discPercentHeader = $promo->discount_value;
                 $discAmountHeader = $grandTotalRunning * ($promo->discount_value / 100); // ← pakai running after item disc
@@ -2911,6 +2909,9 @@ class SalesOrderController extends Controller
                         $discAmountHeader += ($itemsValue[0]['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
                     }
                 }
+
+                // echo $discAmountHeader;
+                // die;
             }
             if ($promo->discount_type === 'nominal') {
                 $qtyBaseUnit = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
@@ -2965,13 +2966,37 @@ class SalesOrderController extends Controller
 
             $grandTotalRunning -= $discAmountHeader;
 
+            $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
+            $freeGoods = array_merge(
+                $freeGoods,
+                $discountFree
+            );
+
             $discountHeader[] = [
                 'discount_percent' => $discPercentHeader,
                 'discount_amount' => $discAmountHeader,
                 'grand_total_before' => $grandTotalRunning + $discAmountHeader,
                 'grand_total_after' => $grandTotalRunning,
                 'promo_id' => $promo->id,
-                'promo_name' => $promo->promo_name
+                'promo_name' => $promo->promo_name,
+                'discount_free' => $discountFree,
+            ];
+
+            if ($discAmountHeader > 0) {
+                foreach ($itemsValue as $key => $value) {
+                    $itemsValueApplied[$key] = $value;
+                }
+            }
+
+            $resultItems[] = [
+                'promo_id' => $promo->id,
+                'promo_name' => $promo->promo_name,
+                'items' => $itemsValueApplied,
+                'discount_type' => $promo->discount_type,
+                'discount_percent' => $discPercentHeader,
+                'discount_amount' => $discAmountHeader,
+                'grand_total' => $grandTotal,
+                'discount_free' => $discountFree
             ];
 
             // Track kategori_disc yang sudah dipakai
@@ -2981,7 +3006,7 @@ class SalesOrderController extends Controller
         }
 
         // echo '<pre>';
-        // print_r($discountHeader);
+        // print_r($resultItems);
         // die;
 
         return [
@@ -3924,7 +3949,7 @@ class SalesOrderController extends Controller
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
             // echo '<pre>';
-            // print_r($promoItem);
+            // print_r($calculatePromo);
             // die;
 
             $result['is_valid'] = true;
