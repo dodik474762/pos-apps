@@ -2851,18 +2851,19 @@ class SalesOrderController extends Controller
                     foreach ($itemsValue as $v) {
                         $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                         $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
-                        if ($productUom->state == 'large') {
-                            $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
-                                ->where('state', 'large')
-                                ->whereNull('deleted')
-                                ->first();
-                            $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
-                            if ($totalQtyLargest) {
-                                $discAmountHeader += ($v['price'] * $totalQtyLargest) * ($promo->discount_value / 100);
-                            }
-                        } else {
-                            $discAmountHeader += ($v['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
+                    }
+
+                    if ($productUom->state == 'large') {
+                        $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
+                            ->where('state', 'large')
+                            ->whereNull('deleted')
+                            ->first();
+                        $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+                        if ($totalQtyLargest) {
+                            $discAmountHeader += ($itemsValue[0]['price'] * $totalQtyLargest) * ($promo->discount_value / 100);
                         }
+                    } else {
+                        $discAmountHeader += ($itemsValue[0]['price'] * $itemQtySmallest) * ($promo->discount_value / 100);
                     }
                 }
             }
@@ -2880,19 +2881,22 @@ class SalesOrderController extends Controller
                         ->where('unit_tujuan', $promoUnitId)
                         ->whereNull('deleted')
                         ->first();
+                    // echo '<pre>';
+                    // print_r($productUom);
+                    // die;
 
                     $totalQtySmallest = 0;
                     $totalQtyLargest = 0;
                     foreach ($itemsValue as $v) {
                         $qtyBaseItem = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
                         $totalQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
-                        if ($productUom->state == 'large') {
-                            $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
-                                ->where('state', 'large')
-                                ->whereNull('deleted')
-                                ->first();
-                            $totalQtyLargest += $totalQtySmallest / $productUomLarge->nilai_konversi_terkecil;
-                        }
+                    }
+                    if ($productUom->state == 'large') {
+                        $productUomLarge = ProductUom::where('product', $itemsValue[0]['product_id'])
+                            ->where('state', 'large')
+                            ->whereNull('deleted')
+                            ->first();
+                        $totalQtyLargest += $totalQtySmallest / $productUomLarge->nilai_konversi_terkecil;
                     }
 
                     if ($productUom->state == 'large') {
