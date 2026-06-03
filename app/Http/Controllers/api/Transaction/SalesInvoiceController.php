@@ -337,7 +337,8 @@ class SalesInvoiceController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
 
         DB::beginTransaction();
         try {
@@ -457,22 +458,25 @@ class SalesInvoiceController extends Controller
 
             // === DETAIL ===
             $line_no = 1;
+            $batalItem = false;
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesInvoiceDtl::find($item['id']);
-                        if ($exist && $exist->status !== 'DRAFT') {
-                            DB::rollBack();
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
-                            ]);
-                        }
+                        // if ($exist && $exist->status !== 'DRAFT') {
+                        //     DB::rollBack();
+                        //     return response()->json([
+                        //         'is_valid' => false,
+                        //         'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
+                        //     ]);
+                        // }
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
                             $exist->save();
+
+                            $batalItem = true;
                         }
                     }
                     continue;
@@ -535,6 +539,16 @@ class SalesInvoiceController extends Controller
                 }
 
                 $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
+            }
+
+            if ($batalItem) {
+                if ($discountHeaderSo > 0) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Tidak dapat menghapus item karena sudah ada diskon, batalkan invoice terlebih dahulu'
+                    ]);
+                }
             }
 
             $header->subtotal = $subtotal;
