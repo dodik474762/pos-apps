@@ -244,7 +244,7 @@ let SalesInvoice = {
                 },
                 {
                     data: "total_amount",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,
@@ -254,9 +254,9 @@ let SalesInvoice = {
                         return data;
                     }
                 },
-                 {
+                {
                     data: "amount_paid",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,
@@ -268,7 +268,7 @@ let SalesInvoice = {
                 },
                 {
                     data: "amount_remaining",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,
@@ -311,6 +311,7 @@ let SalesInvoice = {
                 {
                     data: "id",
                     render: function (data, type, row) {
+                        const akses_session = $('#akses_session').val();
                         var html = `<a href='${url.base_url(
                             SalesInvoice.module()
                         )}cetak?id=${data}' data_id="${row.id
@@ -322,7 +323,7 @@ let SalesInvoice = {
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "DRAFT") {
+                            if (row.status == "DRAFT" || akses_session == "superadmin") {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
@@ -427,7 +428,7 @@ let SalesInvoice = {
                 },
                 {
                     data: "total_amount",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,
@@ -437,9 +438,9 @@ let SalesInvoice = {
                         return data;
                     }
                 },
-                   {
+                {
                     data: "amount_paid",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,
@@ -451,7 +452,7 @@ let SalesInvoice = {
                 },
                 {
                     data: "amount_remaining",
-                       render: function (data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
                             return new Intl.NumberFormat('id-ID', {
                                 minimumFractionDigits: 2,

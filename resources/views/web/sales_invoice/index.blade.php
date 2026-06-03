@@ -1,8 +1,8 @@
-
 @if (isset($akses->sales_invoice))
     @if ($akses->sales_invoice->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_invoice->update }}">
         <input type="hidden" id="delete" value="{{ $akses->sales_invoice->delete }}">
+        <input type="hidden" id="akses_session" value="{{ strtolower($akses_session) }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
@@ -37,7 +37,7 @@
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesInvoice.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create From SO</a>
-                                        
+
                                         <a type="button" class="btn btn-primary add-btn" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesInvoice.addFromDo(this, event)"><i
@@ -62,7 +62,9 @@
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this, '');"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            url="{{ route('sales-invoice-print-all') }}"
+                                            onclick="SalesInvoice.search(this, '');"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Print All Invoice
                                         </button>
@@ -71,7 +73,9 @@
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-invoice-print-all') }}" onclick="SalesInvoice.search(this, 'reprint');"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            url="{{ route('sales-invoice-print-all') }}"
+                                            onclick="SalesInvoice.search(this, 'reprint');"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Invoice Reprint
                                         </button>
@@ -88,13 +92,15 @@
                                 <li class="nav-item">
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="AllSO"
                                         href="#list-data" role="tab" aria-selected="true">
-                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from SO
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from
+                                        SO
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link All py-3" data-bs-toggle="tab" id="AllDO"
                                         href="#list-data-do" role="tab" aria-selected="true">
-                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from DO
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} from
+                                        DO
                                     </a>
                                 </li>
                             </ul>
@@ -137,7 +143,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="tab-pane" id="list-data-do">
                                     <div class="table-responsive table-card mb-1">
                                         <table class="table table-nowrap align-middle" id="table-data-do">

@@ -55,8 +55,7 @@ class SalesInvoiceController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        // echo '<pre>';
-        // print_r($data);die;
+        $data['akses_session'] = session('akses');
         $view = view('web.sales_invoice.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
