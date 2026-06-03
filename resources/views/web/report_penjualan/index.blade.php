@@ -50,15 +50,14 @@
                                 <!--end col-->
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <input type="date" class="form-control"
-                                            id="filter-tanggal"
-                                            value="{{ date('Y-m-d') }}"
-                                            placeholder="Select date">
+                                        <input type="date" class="form-control" id="filter-tanggal"
+                                            value="{{ date('Y-m-d') }}" placeholder="Select date">
                                     </div>
                                 </div>
-                                 <div class="col-xxl-1 col-sm-4">
+                                <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <select name="select-option-report" id="select-option-report" class="form-control">
+                                        <select name="select-option-report" id="select-option-report"
+                                            class="form-control">
                                             <option value="PENJUALAN">PENJUALAN</option>
                                             <option value="PENJUALAN PER PENJUAL">PENJUALAN PER PENJUAL</option>
                                             <option value="PENJUALAN PER BARANG">PENJUALAN PER BARANG</option>
@@ -67,7 +66,8 @@
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="ReportPenjualan.filter();"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            onclick="ReportPenjualan.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -82,20 +82,20 @@
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All" href="#list-data"
-                                        role="tab" aria-selected="true">
+                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
+                                        href="#list-data" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-penjual" href="#report-per-penjual"
-                                        role="tab" aria-selected="true">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-penjual"
+                                        href="#report-per-penjual" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Penjual
                                     </a>
                                 </li>
-                                 <li class="nav-item">
-                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-barang" href="#report-per-barang"
-                                        role="tab" aria-selected="true">
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-barang"
+                                        href="#report-per-barang" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Barang
                                     </a>
                                 </li>
@@ -127,6 +127,8 @@
                                                     <th>NAMA CUSTOMER</th>
                                                     <th>KECAMATAN</th>
                                                     <th>KABUPATEN/KOTA</th>
+                                                    <th>KELURAHAN</th>
+                                                    <th>ALAMAT</th>
                                                     <th>CHANNEL</th>
                                                     <th>KODE SALESMAN</th>
                                                     <th>NAMA SALESMAN</th>
@@ -171,7 +173,7 @@
                                     @include('web.report_penjualan.report_per_penjual')
                                 </div>
 
-                                 <div class="tab-pane" id="report-per-barang">
+                                <div class="tab-pane" id="report-per-barang">
                                     @include('web.report_penjualan.report_per_barang')
                                 </div>
                             </div>

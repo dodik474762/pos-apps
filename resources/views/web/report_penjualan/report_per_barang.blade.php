@@ -10,6 +10,8 @@
                 <th>NAMA CUSTOMER</th>
                 <th>KECAMATAN</th>
                 <th>KABUPATEN</th>
+                <th>KELURAHAN</th>
+                <th>ALAMAT</th>
                 <th>KODE PRODUK</th>
                 <th>NAMA BARANG</th>
                 <th>KATEGORI BARANG</th>
@@ -27,8 +29,7 @@
     <div class="noresult" style="display: none">
         <div class="text-center">
             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                colors="primary:#405189,secondary:#0ab39c"
-                style="width:75px;height:75px"></lord-icon>
+                colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
             <h5 class="mt-2">Sorry! No Result Found</h5>
         </div>
     </div>

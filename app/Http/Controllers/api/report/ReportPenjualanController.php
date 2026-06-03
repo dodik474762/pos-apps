@@ -42,6 +42,8 @@ class ReportPenjualanController extends Controller
                 'v.nama_vendor as principal',
                 'kec.name as kecamatan',
                 'kab.name as kabupaten',
+                'kel.name as kelurahan',
+                'c.address as alamat',
                 'dv.cicle_type',
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
                 DB::raw('DAY(m.so_date) as day'),
@@ -112,6 +114,7 @@ class ReportPenjualanController extends Controller
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
+            ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
             ->leftJoin('daily_visit as dv', function ($q) {
                 return $q->on('dv.date_visit', 'm.so_date')
                     ->on('dv.users', 'm.salesman')
@@ -231,6 +234,8 @@ class ReportPenjualanController extends Controller
                 'v.nama_vendor as principal',
                 'kec.name as kecamatan',
                 'kab.name as kabupaten',
+                'kel.name as kelurahan',
+                'c.address as alamat',
                 'dv.cicle_type',
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
                 DB::raw('DAY(m.so_date) as day'),
@@ -260,6 +265,7 @@ class ReportPenjualanController extends Controller
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
+            ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
             ->leftJoin('daily_visit as dv', function ($q) {
                 return $q->on('dv.date_visit', 'm.so_date')
                     ->on('dv.users', 'm.salesman')

@@ -301,6 +301,22 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "kelurahan",
+                    title: "KELURAHAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "alamat",
+                    title: "ALAMAT",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
                     data: "channel_outlet",
                     title: "CHANNEL",
                     className: "text-end",
@@ -1175,10 +1191,10 @@ let ReportPenjualan = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                                value.id +
-                                '">' +
-                                value.name +
-                                "</option>",
+                            value.id +
+                            '">' +
+                            value.name +
+                            "</option>",
                         );
                     });
                 } else {
@@ -1929,6 +1945,22 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "kelurahan",
+                    title: "KELURAHAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "alamat",
+                    title: "ALAMAT",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
                     data: "product_code",
                     title: "KODE PRODUK",
                     render: function (data, type, row) {
@@ -2031,51 +2063,51 @@ function newexportaction(e, dt, button, config) {
             } else if (button[0].className.indexOf("buttons-excel") >= 0) {
                 $.fn.dataTable.ext.buttons.excelHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.excelHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.excelFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-csv") >= 0) {
                 $.fn.dataTable.ext.buttons.csvHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.csvHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.csvFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-pdf") >= 0) {
                 $.fn.dataTable.ext.buttons.pdfHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.pdfHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.pdfFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-print") >= 0) {
                 $.fn.dataTable.ext.buttons.print.action(e, dt, button, config);
             }
