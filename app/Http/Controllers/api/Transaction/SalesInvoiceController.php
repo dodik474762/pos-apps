@@ -46,6 +46,12 @@ class SalesInvoiceController extends Controller
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
+            if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
+                $datadb->where('m.invoice_date', '>=', $_POST['start_date']);
+            }
+            if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
+                $datadb->where('m.invoice_date', '<=', $_POST['end_date']);
+            }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
@@ -104,6 +110,12 @@ class SalesInvoiceController extends Controller
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
+            if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
+                $datadb->where('m.invoice_date', '>=', $_POST['start_date']);
+            }
+            if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
+                $datadb->where('m.invoice_date', '<=', $_POST['end_date']);
+            }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];

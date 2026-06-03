@@ -208,6 +208,10 @@ let SalesInvoice = {
                 headers: {
                     "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
                 },
+                data: function(d) {
+                    d.start_date = $("#start_date").val();
+                    d.end_date = $("#end_date").val();
+                }
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -392,6 +396,10 @@ let SalesInvoice = {
                 headers: {
                     "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
                 },
+                data: function(d) {
+                    d.start_date = $("#start_date").val();
+                    d.end_date = $("#end_date").val();
+                }
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -1366,14 +1374,20 @@ let SalesInvoice = {
         }
     },
 
+    filterData: () => {
+        $("#table-data").DataTable().ajax.reload();
+        $("#table-data-do").DataTable().ajax.reload();
+    },
+
     search: (elm, state = '') => {
         const url = $(elm).attr("url");
-        const date = $("#filterDate").val();
-        if (date == "") {
-            message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
+        const start_date = $("#start_date").val();
+        const end_date = $("#end_date").val();
+        if (start_date == "" || end_date == "") {
+            message.sweetError("Informasi", "Pilih tanggal start dan end terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date + "&state=" + state;
+        window.location.href = url + "?start_date=" + start_date + "&end_date=" + end_date + "&state=" + state;
     },
 
     checkAll: (elm) => {

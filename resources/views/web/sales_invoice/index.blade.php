@@ -51,12 +51,30 @@
                         <form class="">
                             <div class="row g-3">
                                 <!--end col-->
-                                <div class="col-xxl-3 col-sm-4">
+                                <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <label for="">Date Invoice</label>
+                                        <label for="">Start Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="d M, Y" data-range-date="true" id="filterDate"
-                                            placeholder="Select date">
+                                            data-date-format="Y-m-d" id="start_date"
+                                            placeholder="Select start date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">End Date</label>
+                                        <input type="date" class="form-control" data-provider="flatpickr"
+                                            data-date-format="Y-m-d" id="end_date"
+                                            placeholder="Select end date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">&nbsp;</label>
+                                        <button type="button" class="btn btn-success w-100"
+                                            onclick="SalesInvoice.filterData();"> <i
+                                                class="ri-filter-fill me-1 align-bottom"></i>
+                                            Filter
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
