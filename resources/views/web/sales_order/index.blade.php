@@ -51,15 +51,33 @@
                         <form class="">
                             <div class="row g-3">
                                 <!--end col-->
-                                <div class="col-xxl-3 col-sm-4">
+                                <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <label for="">Date SO</label>
+                                        <label for="">Start Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="d M, Y" data-range-date="true" id="filterDate"
-                                            placeholder="Select date">
+                                            data-date-format="Y-m-d" id="start_date"
+                                            placeholder="Select start date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">End Date</label>
+                                        <input type="date" class="form-control" data-provider="flatpickr"
+                                            data-date-format="Y-m-d" id="end_date"
+                                            placeholder="Select end date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">&nbsp;</label>
+                                        <button type="button" class="btn btn-success w-100"
+                                            onclick="SalesOrder.filterData();"> <i
+                                                class="ri-filter-fill me-1 align-bottom"></i>
+                                            Filter
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-3 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
                                         <button type="button" class="btn btn-primary w-100" url="{{ route('sales-order-generate-all') }}" onclick="SalesOrder.search(this, '');"> <i
@@ -102,8 +120,26 @@
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
-                                        href="#list-data" role="tab" aria-selected="true">
+                                        href="#list-data" role="tab" aria-selected="true" onclick="SalesOrder.filterTab('all')">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="outstanding-so"
+                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('outstanding')">
+                                        <i class="ri-time-line me-1 align-bottom"></i> Outstanding SO
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="hanya-call"
+                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('call')">
+                                        <i class="ri-phone-line me-1 align-bottom"></i> Hanya Call
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="sudah-invoice"
+                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('invoiced')">
+                                        <i class="ri-check-line me-1 align-bottom"></i> Sudah Invoice
                                     </a>
                                 </li>
                             </ul>

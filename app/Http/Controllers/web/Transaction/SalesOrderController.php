@@ -225,9 +225,10 @@ class SalesOrderController extends Controller
         return $pdf->stream('SO-' . $data->so_number . '.pdf');
     }
 
-    public function getAllSalesNotInvoice($date = '', $state = '')
+    public function getAllSalesNotInvoice($start_date = '', $end_date = '', $state = '')
     {
-        $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+        $start_date = $start_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($start_date));
+        $end_date = $end_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($end_date));
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
@@ -246,7 +247,8 @@ class SalesOrderController extends Controller
             ->whereIn('m.status', ['draft', 'submited'])
             ->whereNull('sih.id')
             ->where('m.total_amount', '>', 0)
-            ->where('m.so_date', $date)
+            ->where('m.so_date', '>=', $start_date)
+            ->where('m.so_date', '<=', $end_date)
             ->whereNull('m.deleted')
             // Jika ada dobel customer + tanggal + total, ambil ID terbesar (terbaru)
             ->whereRaw('m.id = (
@@ -278,7 +280,7 @@ class SalesOrderController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        $data['sales_orders'] = $this->getAllSalesNotInvoice($data['tanggal'], $data['state']);
+        $data['sales_orders'] = $this->getAllSalesNotInvoice($data['start_date'], $data['end_date'], $data['state']);
         // echo '<pre>';
         // print_r($data);die;
         $view = view('web.sales_order.list-sales-order', $data);

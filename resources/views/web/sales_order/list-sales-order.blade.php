@@ -3,7 +3,8 @@
     @if ($akses->sales_order->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_order->update }}">
         <input type="hidden" id="delete" value="{{ $akses->sales_order->delete }}">
-        <input type="hidden" id="tanggal" value="{{ $tanggal }}">
+        <input type="hidden" id="start_date" value="{{ $start_date ?? '' }}">
+        <input type="hidden" id="end_date" value="{{ $end_date ?? '' }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>

@@ -7,6 +7,7 @@ let sub_channel_outlet = null;
 let _selectedProductRows = [];
 let lastProductSearchKeyword = "";
 let _suppressSalesmanChange = false;
+let currentTab = 'all';
 
 let SalesOrder = {
     module: () => {
@@ -181,6 +182,11 @@ let SalesOrder = {
                 headers: {
                     "X-CSRF-TOKEN": SalesOrder.csrf_token(),
                 },
+                data: function (d) {
+                    d.start_date = $("#start_date").val();
+                    d.end_date = $("#end_date").val();
+                    d.tab = currentTab;
+                }
             },
             deferRender: true,
             createdRow: function (row, data, dataIndex) {
@@ -415,13 +421,15 @@ let SalesOrder = {
     generateAll: (elm, e) => {
         e.preventDefault();
         let params = {};
-        const tanggal = $("#tanggal").val();
-        if (tanggal == "") {
-            message.sweetError("Informasi", "Pilih Tanggal");
+        const start_date = $("#start_date").val();
+        const end_date = $("#end_date").val();
+        if (start_date == "" || end_date == "") {
+            message.sweetError("Informasi", "Pilih Tanggal start dan end terlebih dahulu");
             return false;
         }
 
-        params.tanggal = tanggal;
+        params.start_date = start_date;
+        params.end_date = end_date;
 
         $.ajax({
             type: "POST",
@@ -454,6 +462,26 @@ let SalesOrder = {
                 }
             },
         });
+    },
+
+    filterTab: (tab) => {
+        currentTab = tab;
+        $("#table-data").DataTable().ajax.reload();
+    },
+
+    filterData: () => {
+        $("#table-data").DataTable().ajax.reload();
+    },
+
+    search: (elm, state = '') => {
+        const url = $(elm).attr("url");
+        const start_date = $("#start_date").val();
+        const end_date = $("#end_date").val();
+        if (start_date == "" || end_date == "") {
+            message.sweetError("Informasi", "Pilih tanggal start dan end terlebih dahulu");
+            return;
+        }
+        window.location.href = url + "?start_date=" + start_date + "&end_date=" + end_date + "&state=" + state;
     },
 
     getDataProduct: () => {
@@ -2243,12 +2271,13 @@ let SalesOrder = {
 
     search: (elm, state = "") => {
         const url = $(elm).attr("url");
-        const date = $("#filterDate").val();
-        if (date == "") {
-            message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
+        const start_date = $("#start_date").val();
+        const end_date = $("#end_date").val();
+        if (start_date == "" || end_date == "") {
+            message.sweetError("Informasi", "Pilih tanggal start dan end terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date + "&state=" + state;
+        window.location.href = url + "?start_date=" + start_date + "&end_date=" + end_date + "&state=" + state;
     },
 
     checkAll: (elm) => {

@@ -59,9 +59,25 @@ class SalesOrderController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
+            ->leftJoin('sales_invoice_header as sih', 'sih.sales_order', 'm.id')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
+            if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
+                $datadb->where('m.so_date', '>=', $_POST['start_date']);
+            }
+            if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
+                $datadb->where('m.so_date', '<=', $_POST['end_date']);
+            }
+            if (isset($_POST['tab'])) {
+                if ($_POST['tab'] == 'outstanding') {
+                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '>', 0);
+                } else if ($_POST['tab'] == 'call') {
+                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '<=', 0);
+                } else if ($_POST['tab'] == 'invoiced') {
+                    $datadb->whereNotNull('sih.sales_order');
+                }
+            }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
@@ -3615,9 +3631,10 @@ class SalesOrderController extends Controller
     //     return response()->json($result);
     // }
 
-    public function getAllSalesNotInvoice($date = '', $state = '')
+    public function getAllSalesNotInvoice($start_date = '', $end_date = '', $state = '')
     {
-        $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+        $start_date = $start_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($start_date));
+        $end_date = $end_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($end_date));
         $datadb = SalesOrderHeader::select([
             'sales_order_headers.*',
             'u.name as created_by_name',
@@ -3637,7 +3654,10 @@ class SalesOrderController extends Controller
             ->whereIn('sales_order_headers.status', ['draft', 'submited'])
             ->whereNull('sih.id')
             ->where('sales_order_headers.total_amount', '>', 0)
-            ->where('sales_order_headers.so_date', $date)
+            ->where(function ($q) use ($start_date, $end_date) {
+                $q->where('sales_order_headers.so_date', '>=', $start_date)
+                    ->where('sales_order_headers.so_date', '<=', $end_date);
+            })
             ->whereNull('sales_order_headers.deleted')
             ->orderBy('sales_order_headers.id', 'desc');
         if ($state == '') {
@@ -3653,7 +3673,7 @@ class SalesOrderController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
         try {
-            $sales_order = $this->getAllSalesNotInvoice($data['tanggal'], '');
+            $sales_order = $this->getAllSalesNotInvoice($data['start_date'], $data['end_date']);
             foreach ($sales_order as $v) {
                 $process = $this->saveInvoice($v);
             }
