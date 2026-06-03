@@ -52,6 +52,9 @@ class SalesInvoiceController extends Controller
             if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
                 $datadb->where('m.invoice_date', '<=', $_POST['end_date']);
             }
+            if (isset($_POST['belum_lunas']) && $_POST['belum_lunas'] == '1') {
+                $datadb->whereNotIn('m.status', ['PAID', 'CANCELLED', 'CANCELED', 'paid', 'cancelled', 'canceled']);
+            }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
@@ -115,6 +118,9 @@ class SalesInvoiceController extends Controller
             }
             if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
                 $datadb->where('m.invoice_date', '<=', $_POST['end_date']);
+            }
+            if (isset($_POST['belum_lunas']) && $_POST['belum_lunas'] == '1') {
+                $datadb->whereNotIn('m.status', ['PAID', 'CANCELLED', 'CANCELED', 'paid', 'cancelled', 'canceled']);
             }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {

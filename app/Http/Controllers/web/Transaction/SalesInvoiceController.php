@@ -66,7 +66,7 @@ class SalesInvoiceController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getAllInvoiceCetak($start_date = '', $end_date = '', $state = '')
+    public function getAllInvoiceCetak($start_date = '', $end_date = '', $state = '', $belum_lunas = '0')
     {
         $start_date = $start_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($start_date));
         $end_date = $end_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($end_date));
@@ -90,6 +90,10 @@ class SalesInvoiceController extends Controller
             ->where('m.invoice_date', '<=', $end_date)
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
+        
+        if ($belum_lunas == '1') {
+            $datadb->whereNotIn('m.status', ['PAID', 'CANCELLED', 'CANCELED', 'paid', 'cancelled', 'canceled']);
+        }
         if ($state == '') {
             $datadb->where(function ($q) {
                 return $q->where('m.reprint', 1)
@@ -109,7 +113,7 @@ class SalesInvoiceController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        $data['invoices'] = $this->getAllInvoiceCetak($data['start_date'], $data['end_date'], $data['state']);
+        $data['invoices'] = $this->getAllInvoiceCetak($data['start_date'], $data['end_date'], $data['state'], $data['belum_lunas'] ?? '0');
         // echo '<pre>';
         // print_r($data);die;
         $view = view('web.sales_invoice.cetakall', $data);

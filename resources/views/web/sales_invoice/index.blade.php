@@ -70,6 +70,17 @@
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="belum_lunas" value="1">
+                                            <label class="form-check-label" for="belum_lunas">
+                                                Belum Lunas
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <label for="">&nbsp;</label>
                                         <button type="button" class="btn btn-success w-100"
                                             onclick="SalesInvoice.filterData();"> <i
                                                 class="ri-filter-fill me-1 align-bottom"></i>
