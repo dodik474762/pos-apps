@@ -3707,7 +3707,7 @@ class SalesOrderController extends Controller
             }
 
             $tax_amount = collect($data['items'])->sum('tax_amount');
-            $data['tax'] = $data['tax'] == 0 ? 1 : $data['tax'];
+            $data['tax'] = $data['tax'] == 0 || $data['tax'] == 11 ? 1 : $data['tax'];
             $tax = Tax::find($data['tax']);
             if (empty($tax)) {
                 DB::rollBack();
