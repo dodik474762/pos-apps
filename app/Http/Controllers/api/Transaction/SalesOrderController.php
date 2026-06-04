@@ -59,7 +59,10 @@ class SalesOrderController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
-            ->leftJoin('sales_invoice_header as sih', 'sih.sales_order', 'm.id')
+            ->leftJoin('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'm.id')
+                    ->whereNull('sih.deleted');
+            })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
