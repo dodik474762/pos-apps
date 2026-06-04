@@ -90,7 +90,7 @@ class SalesInvoiceController extends Controller
             ->where('m.invoice_date', '<=', $end_date)
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
-        
+
         if ($belum_lunas == '1') {
             $datadb->whereNotIn('m.status', ['PAID', 'CANCELLED', 'CANCELED', 'paid', 'cancelled', 'canceled']);
         }
@@ -279,8 +279,9 @@ class SalesInvoiceController extends Controller
             $ppn_val = number_format($tax->rate, 0, ',', '.');
         }
 
-        $customPaper = [0, 0, 612.0, 792.0]; //Letter
-        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa5', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item', 'ppn_val'))
+        // $customPaper = [0, 0, 612.0, 792.0]; //Letter
+        $customPaper = 'A4'; //A4
+        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa4', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item', 'ppn_val'))
             ->setPaper($customPaper, 'portrait');
 
         return $pdf->stream('SI-' . $data->invoice_number . '.pdf');

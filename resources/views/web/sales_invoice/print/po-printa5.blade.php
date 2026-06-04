@@ -161,12 +161,12 @@
                     $ppn = $subtotal - $dpp;
                     $hargaExcl = $price / (1 + $taxRate / 100);
 
-                    $harga_channel = "";
-                    if($item->so_detail->has_channel_price == 1){
-                        $harga_channel = " (Disc. Cnl)";
+                    $harga_channel = '';
+                    if ($item->so_detail->has_channel_price == 1) {
+                        $harga_channel = ' (Disc. Cnl)';
                     }
-                    if($item->so_detail->has_customer_product == 1){
-                        $harga_channel = " (Disc. Cust)";
+                    if ($item->so_detail->has_customer_product == 1) {
+                        $harga_channel = ' (Disc. Cust)';
                     }
 
                     $totalDpp += $dpp;
