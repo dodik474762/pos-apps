@@ -395,25 +395,25 @@ class SalesInvoiceController extends Controller
 
             //cek jika ada tipe tax yang berbeda dalam 1 invoice
             if (count(array_unique(array_column($data['items'], 'type_tax'))) > 1) {
-                DB::rollBack();
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tipe Tax yang berbeda dalam 1 invoice.',
-                ]);
+                // DB::rollBack();
+                // return response()->json([
+                //     'is_valid' => false,
+                //     'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tipe Tax yang berbeda dalam 1 invoice.',
+                // ]);
             }
 
             //cek jika ada tax yang berbeda dalam 1 invoice
             if (count(array_unique(array_column($data['items'], 'tax'))) > 1) {
-                DB::rollBack();
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tax yang berbeda dalam 1 invoice.',
-                ]);
+                // DB::rollBack();
+                // return response()->json([
+                //     'is_valid' => false,
+                //     'message' => 'Tidak dapat menyimpan Sales Invoice dengan Tax yang berbeda dalam 1 invoice.',
+                // ]);
             }
 
             $tax_amount = collect($data['items'])->where('remove', 0)->sum('tax_amount');
 
-            $data['tax'] = $data['items'][0]['tax'];
+            $data['tax'] = $data['items'][0]['tax'] == '0' || $data['items'][0]['tax'] == '11' ? 1 : $data['items'][0]['tax'];
             $type_pajak = $data['items'][0]['type_tax'];
             $tax = Tax::find($data['tax']);
             if (empty($tax)) {
@@ -443,15 +443,16 @@ class SalesInvoiceController extends Controller
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
-            $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
-            if (!$policyCreateInvoice['status']) {
-                DB::rollBack();
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => $policyCreateInvoice['message']
-                ]);
+            if ($data['id'] == '') {
+                $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
+                if (!$policyCreateInvoice['status']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => $policyCreateInvoice['message']
+                    ]);
+                }
             }
-
 
 
             $data['total_amount'] = $subtotal;
@@ -514,7 +515,7 @@ class SalesInvoiceController extends Controller
                 $detail->subtotal = $item['subtotal'];
                 $detail->tax = $item['tax'];
                 $detail->tax_amount = $item['tax_amount'];
-                $detail->tax_rate = $item['tax_rate'];
+                $detail->tax_rate = $item['tax_rate'] == '11' ? 1 : $item['tax_rate'];
                 $detail->type_tax = $item['type_tax'];
                 $detail->line_no = $line_no++;
                 $detail->save();
