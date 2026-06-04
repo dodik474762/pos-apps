@@ -23,6 +23,8 @@ class ReportPiutangController extends Controller
         $data['recordsFiltered'] = 0;
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $date_start = $_POST['date_start'] ?? date('Y-m-d');
+        $date_end = $_POST['date_end'] ?? date('Y-m-d');
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -78,7 +80,7 @@ class ReportPiutangController extends Controller
 
         if (isset($data['types'])) {
             if ($data['types'] == 'per-penjual') {
-                $datadb->whereDate('sih.invoice_date', '=', $tanggal)
+                $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end])
                     ->whereNotNull('usr.name')
                     ->orderBy('usr.name', 'asc')
                     ->orderBy('c.code', 'asc')

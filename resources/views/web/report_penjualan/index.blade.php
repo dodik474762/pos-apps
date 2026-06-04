@@ -46,15 +46,24 @@
                     </div>
                     <div class="card-body border border-dashed border-end-0 border-start-0">
                         <form class="">
-                            <div class="row g-3">
+                            <div class="row g-3 align-items-end">
                                 <!--end col-->
-                                <div class="col-xxl-2 col-sm-4">
+                                <div class="col-xxl-2 col-sm-6 col-md-3">
+                                    <label class="form-label mb-1">Tanggal Mulai</label>
                                     <div>
-                                        <input type="date" class="form-control" id="filter-tanggal"
-                                            value="{{ date('Y-m-d') }}" placeholder="Select date">
+                                        <input type="date" class="form-control" id="filter-start-date"
+                                            value="{{ date('Y-m-d') }}" placeholder="Start date">
                                     </div>
                                 </div>
-                                <div class="col-xxl-1 col-sm-4">
+                                <div class="col-xxl-2 col-sm-6 col-md-3">
+                                    <label class="form-label mb-1">Tanggal Akhir</label>
+                                    <div>
+                                        <input type="date" class="form-control" id="filter-end-date"
+                                            value="{{ date('Y-m-d') }}" placeholder="End date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-6 col-md-3">
+                                    <label class="form-label mb-1">Tipe Report</label>
                                     <div>
                                         <select name="select-option-report" id="select-option-report"
                                             class="form-control">
@@ -64,7 +73,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-xxl-1 col-sm-4">
+                                <div class="col-xxl-1 col-sm-6 col-md-3">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"
                                             onclick="ReportPenjualan.filter();"> <i

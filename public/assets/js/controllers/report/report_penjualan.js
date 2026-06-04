@@ -225,7 +225,8 @@ let ReportPenjualan = {
                     "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                 },
             },
             deferRender: true,
@@ -1342,7 +1343,8 @@ let ReportPenjualan = {
                     "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val();
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                 },
             },
             deferRender: true,
@@ -1519,7 +1521,8 @@ let ReportPenjualan = {
                     "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                     d.types = "per-penjual";
                 },
             },
@@ -1542,7 +1545,8 @@ let ReportPenjualan = {
                             },
                             dataType: "JSON",
                             data: {
-                                tanggal: $("#filter-tanggal").val(),
+                                date_start: $("#filter-start-date").val(),
+                                date_end: $("#filter-end-date").val(),
                                 types: "per-penjual",
                                 start: 0,
                                 length: 99999, // ambil semua
@@ -1876,7 +1880,8 @@ let ReportPenjualan = {
                     "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                 },
             },
             deferRender: true,

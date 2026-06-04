@@ -21,7 +21,8 @@ class ReportPenjualanController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
 
-        $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $date_start = $_POST['date_start'] ?? date('Y-m-d');
+        $date_end   = $_POST['date_end']   ?? date('Y-m-d');
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -122,7 +123,7 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
-            ->whereDate('m.so_date', '=', $tanggal)
+            ->whereBetween('m.so_date', [$date_start, $date_end])
             // ->where('m.id', '1588')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
@@ -211,7 +212,8 @@ class ReportPenjualanController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
 
-        $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $date_start = $_POST['date_start'] ?? date('Y-m-d');
+        $date_end   = $_POST['date_end']   ?? date('Y-m-d');
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -273,7 +275,7 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
-            ->whereDate('sih.invoice_date', '=', $tanggal)
+            ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('m.id', '1588')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
