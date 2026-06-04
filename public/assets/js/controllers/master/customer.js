@@ -418,7 +418,7 @@ let Customer = {
             createdRow: function (row, data, dataIndex) {
                 // console.log('row', $(row));
             },
-            dom: "Bftrip",
+            dom: $('#akses_session').val() == 'superadmin' ? "Bftrip" : "-",
             buttons: [
                 {
                     extend: "excel",

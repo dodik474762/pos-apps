@@ -2,6 +2,7 @@
     @if ($akses->customer->view == 1)
         <input type="hidden" id="update" value="{{ $akses->customer->update }}">
         <input type="hidden" id="delete" value="{{ $akses->customer->delete }}">
+        <input type="hidden" id="akses_session" value="{{ strtolower($akses_session) }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>

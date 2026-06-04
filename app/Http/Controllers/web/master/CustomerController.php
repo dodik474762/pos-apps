@@ -15,7 +15,8 @@ class CustomerController extends Controller
 {
     //
     public $akses_menu = [];
-    public function __construct(){
+    public function __construct()
+    {
         date_default_timezone_set('Asia/Jakarta');
         $this->akses_menu = json_decode(session('akses_menu'));
     }
@@ -28,27 +29,33 @@ class CustomerController extends Controller
         );
     }
 
-    public function getTitleParent(){
+    public function getTitleParent()
+    {
         return "Data";
     }
 
-    public function getTitleParentAcc(){
+    public function getTitleParentAcc()
+    {
         return "Approval";
     }
 
-    public function getTableName(){
+    public function getTableName()
+    {
         return "";
     }
 
-    public function getTitle(){
+    public function getTitle()
+    {
         return "Customer";
     }
 
-    public function index(){
+    public function index()
+    {
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['akses_session'] = session('akses');
         // echo '<pre>';
         // print_r(session()->all());die;
         $view = view('web.customer.index', $data);
@@ -60,7 +67,8 @@ class CustomerController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function index_acc(){
+    public function index_acc()
+    {
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParentAcc();
@@ -76,40 +84,45 @@ class CustomerController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getTerms(){
+    public function getTerms()
+    {
         $datadb = DB::table('term_of_payment')->whereNull('deleted')
-        ->orderBy('nilai', 'asc')
-        ->get();
+            ->orderBy('nilai', 'asc')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getChannel(){
+
+    public function getChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
-    
-    public function getSubChannel(){
+
+    public function getSubChannel()
+    {
         $datadb = DB::table('dictionary')->whereNull('deleted')
-        ->where('context', 'SUB_CHANNEL_OUTLET')
-        ->get();
+            ->where('context', 'SUB_CHANNEL_OUTLET')
+            ->get();
 
         return $datadb;
     }
 
-    public function getPasar(){
+    public function getPasar()
+    {
         $datadb = DB::table('pasar')->whereNull('deleted')
-        ->get();
+            ->get();
 
         return $datadb;
     }
 
-    public function add(){
+    public function add()
+    {
         $data['data'] = [];
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
@@ -124,7 +137,7 @@ class CustomerController extends Controller
         $data['product_prices'] = [];
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -134,9 +147,9 @@ class CustomerController extends Controller
     public function getListProductUomPrice($customer)
     {
         $data = ProductUomPrice::where('product_uom_price.customer', $customer)
-        ->select(['product_uom_price.*', 'p.name as product_name', 'u.name as unit_name'])
-        ->join('product as p', 'p.id', 'product_uom_price.product')
-        ->join('unit as u', 'u.id', 'product_uom_price.unit')
+            ->select(['product_uom_price.*', 'p.name as product_name', 'u.name as unit_name'])
+            ->join('product as p', 'p.id', 'product_uom_price.product')
+            ->join('unit as u', 'u.id', 'product_uom_price.unit')
             ->orderBy('product_uom_price.id')
             ->get();
 
@@ -146,9 +159,9 @@ class CustomerController extends Controller
     public function getListProductStockKunjungan($customer)
     {
         $data = DB::table('stock_customer as sc')->where('sc.customer', $customer)
-        ->select(['sc.*', 'p.name as product_name', 'u.name as unit_name', 'p.code as product_code'])
-        ->join('product as p', 'p.id', 'sc.product_id')
-        ->join('unit as u', 'u.id', 'sc.unit')
+            ->select(['sc.*', 'p.name as product_name', 'u.name as unit_name', 'p.code as product_code'])
+            ->join('product as p', 'p.id', 'sc.product_id')
+            ->join('unit as u', 'u.id', 'sc.unit')
             ->orderBy('sc.id', 'desc')
             ->limit(100)
             ->get();
@@ -156,7 +169,8 @@ class CustomerController extends Controller
         return $data;
     }
 
-    public function ubah(Request $request){
+    public function ubah(Request $request)
+    {
         $api = new MasterCustomerController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
@@ -167,7 +181,7 @@ class CustomerController extends Controller
 
         $data['stock_customer'] = $this->getListProductStockKunjungan($data['id']);
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
@@ -176,14 +190,15 @@ class CustomerController extends Controller
         $data['tops'] = $this->getTerms();
         $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
     }
 
-    public function detail(Request $request){
+    public function detail(Request $request)
+    {
         $api = new MasterCustomerController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
@@ -192,21 +207,22 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
 
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
         $data['tops'] = $this->getTerms();
         $view = view('web.customer.detail', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
     }
 
-    public function getListPriceList(){
+    public function getListPriceList()
+    {
         $datadb = DB::table('price_list as pl')->whereNull('deleted')->get();
         return $datadb;
     }
