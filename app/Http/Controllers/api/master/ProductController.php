@@ -209,6 +209,7 @@ class ProductController extends Controller
                 ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
                 ->join('unit as u', 'u.id', 'pup.unit')
                 ->whereNull('m.deleted')
+                ->where('ps.qty', '>', 0)
                 ->orderBy('m.id', 'desc')
                 ->orderBy('pup.id', 'asc');
 
