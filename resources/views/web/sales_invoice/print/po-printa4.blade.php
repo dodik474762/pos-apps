@@ -17,7 +17,7 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 8.5pt;
+            font-size: 7pt;
             color: #000;
             margin: 0;
             padding: 0;
@@ -40,7 +40,7 @@
             width: 210mm;
             border-top: 1px dashed #555;
             text-align: center;
-            font-size: 6pt;
+            font-size: 5pt;
             color: #555;
             line-height: 0;
             height: 0;
@@ -78,12 +78,12 @@
         }
 
         .company-name {
-            font-size: 12pt;
+            font-size: 9pt;
             font-weight: bold;
         }
 
         .company-address {
-            font-size: 7pt;
+            font-size: 6pt;
             line-height: 1.3;
         }
 
@@ -92,7 +92,7 @@
             border: 1px solid #000;
             width: 120pt;
             min-width: 120pt;
-            font-size: 7.5pt;
+            font-size: 6pt;
         }
 
         .faktur-info-box table {
@@ -104,11 +104,11 @@
         .faktur-info-box td {
             border: 1px solid #000;
             padding: 1.5pt 2pt;
-            font-size: 7.5pt;
+            font-size: 6pt;
         }
 
         .faktur-title {
-            font-size: 10pt;
+            font-size: 7pt;
             font-weight: bold;
             text-align: center;
             border-bottom: 1px solid #000;
@@ -120,7 +120,7 @@
            INFO PELANGGAN
            ========================================= */
         .kepada-section {
-            font-size: 8pt;
+            font-size: 6pt;
             margin-bottom: 1mm;
             border-top: 1px solid #000;
             padding-top: 1mm;
@@ -133,7 +133,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1mm;
-            font-size: 7.5pt;
+            font-size: 6pt;
         }
 
         table.tabel-barang th,
@@ -173,7 +173,7 @@
             display: table-cell;
             vertical-align: top;
             width: 55%;
-            font-size: 7.5pt;
+            font-size: 6pt;
         }
 
         .footer-right {
@@ -185,7 +185,7 @@
         table.summary-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
+            font-size: 6pt;
         }
 
         table.summary-table td {
@@ -203,7 +203,7 @@
         .ttd-cell {
             display: table-cell;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 6pt;
             padding: 0 4pt;
         }
 
@@ -214,14 +214,14 @@
 
         /* Terbilang */
         .terbilang-row td {
-            font-size: 7pt;
+            font-size: 6pt;
             font-style: italic;
             border: 1px solid #000;
             padding: 1.5pt 3pt;
         }
 
         .bank-info {
-            font-size: 7pt;
+            font-size: 6pt;
             line-height: 1.4;
         }
     </style>
@@ -267,7 +267,7 @@
                 </td>
 
                 {{-- Kanan: judul + kotak info --}}
-                <td style="width:130pt; vertical-align:top; padding-left:4pt;">
+                <td style="width:160pt; vertical-align:top; padding-left:4pt;">
                     <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;">Faktur Penjualan
                     </div>
                     <table style="width:100%; border-collapse:collapse; font-size:7.5pt;">
@@ -282,6 +282,14 @@
                             </td>
                             <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
                                 <strong>{{ $data->invoice_number }}</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
+                                Tgl. Jatuh Tempo
+                            </td>
+                            <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
+                                <strong>{{ date('d/m/Y', strtotime($data->due_date)) }}</strong>
                             </td>
                         </tr>
                         <tr>
@@ -399,7 +407,12 @@
             <div class="footer-left">
                 <div style="display:table; width:100%;">
                     <div style="display:table-cell; text-align:center; font-size:7.5pt; width:50%;">
-                        Disiapkan Oleh<br><br><br>
+                        Dibuat Oleh<br><br><br>
+                        <div style="border-top:1px solid #000; margin: 0 8pt;"></div>
+                        <small>Tgl</small>
+                    </div>
+                    <div style="display:table-cell; text-align:center; font-size:7.5pt; width:50%;">
+                        Disetujui Oleh<br><br><br>
                         <div style="border-top:1px solid #000; margin: 0 8pt;"></div>
                         <small>Tgl</small>
                     </div>
