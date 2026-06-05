@@ -2368,6 +2368,35 @@ let SalesOrder = {
                 $("#discount_percent_header").val("0");
                 $("#discount_amount_header").val("0").attr("amount", "0");
 
+                const productDiscounts = {};
+
+                data.result_items.forEach((promo) => {
+                    promo.items.forEach((item) => {
+                        const productId = item.product_id;
+
+                        if (!productDiscounts[productId]) {
+                            productDiscounts[productId] = {
+                                amount: 0,
+                                percent: 0
+                            };
+                        }
+
+                        // diskon item
+                        productDiscounts[productId].amount +=
+                            Number(item.discountAmount || 0);
+
+                        productDiscounts[productId].percent +=
+                            Number(item.discountPercent || 0);
+
+                        // // diskon promo level
+                        // if (promo.potong_grand_total == 1) {
+                        //     productDiscounts[productId].amount +=
+                        //         Number(promo.discount_amount || 0);
+                        // }
+                    });
+                });
+                console.log(productDiscounts);
+
                 // ========================
                 // APPLY PROMO PER ITEM
                 // ========================
@@ -2385,9 +2414,29 @@ let SalesOrder = {
                                     const tr = $(this);
                                     const price = item.price;
                                     const qty = item.qty;
-                                    const discAmount = item.discountAmount ?? 0;
-                                    const discPercent =
-                                        item.discountPercent ?? 0;
+
+                                    const disc = productDiscounts[rowProductId];
+
+                                    if (!disc) return;
+
+                                    tr.find("#disc_percent").val(disc.percent);
+
+                                    tr.find("#disc_amount")
+                                        .val(
+                                            new Intl.NumberFormat("id-ID", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(disc.amount)
+                                        )
+                                        .attr("amount", disc.amount);
+
+                                    // const discAmount = item.discountAmount ?? 0;
+                                    const discAmount = disc.amount;
+
+                                    // const discPercent =
+                                    //     item.discountPercent ?? 0;
+                                    const discPercent = disc.percent;
+
                                     const subtotal = price * qty - discAmount;
                                     const taxRate =
                                         parseFloat(
@@ -2413,15 +2462,20 @@ let SalesOrder = {
                                         );
                                     }
 
-                                    tr.find("#disc_percent").val(discPercent);
-                                    tr.find("#disc_amount")
-                                        .val(
-                                            new Intl.NumberFormat("id-ID", {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            }).format(discAmount),
-                                        )
-                                        .attr("amount", discAmount);
+                                    if (discPercent !== undefined && discPercent !== null && discPercent !== 0) {
+                                        tr.find("#disc_percent").val(discPercent);
+                                    }
+
+                                    if (discAmount !== undefined && discAmount !== null && discAmount !== 0) {
+                                        tr.find("#disc_amount")
+                                            .val(
+                                                new Intl.NumberFormat("id-ID", {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                }).format(discAmount)
+                                            )
+                                            .attr("amount", discAmount);
+                                    }
 
                                     tr.find("#subtotal")
                                         .val(
@@ -2484,22 +2538,22 @@ let SalesOrder = {
                                     <tr class="input freegood" data-free-for="${freeFor}" data_id="${existingDataId}">
                                     <td>
                                         <div class="input-group">
-                                        <button class="btn btn-outline-secondary" type="button" disabled>Free</button>
-                                        <input disabled type="text" id="product" class="form-control"
+                                        <button class="btn btn-outline-secondary" type="button" readonly>Free</button>
+                                        <input readonly type="text" id="product" class="form-control"
                                             tax="0" tax_amount="0" tax_type="" tax_rate="0"
                                             data_id="${free.product_id}"
                                             value="${free.product_name || "Free Product"}">
                                         </div>
                                     </td>
                                     <td id="unit" data_id="${free.unit}">${free.unit_name || ""}</td>
-                                    <td><input type="number" class="form-control" id="qty" value="${free.qty}" disabled></td>
-                                    <td><input type="text" class="form-control" price="0" id="unit_price" value="0" disabled></td>
-                                    <td><input type="text" class="form-control" id="disc_percent" value="0" disabled></td>
-                                    <td><input type="text" class="form-control" amount="0" id="disc_amount" value="0" disabled></td>
-                                    <td><input disabled type="text" class="form-control" id="subtotal" subtotal="0" value="0"></td>
-                                    <td><input disabled type="text" class="form-control" amount="0" id="tax_amount" value="0"></td>
+                                    <td><input type="number" class="form-control" id="qty" value="${free.qty}" readonly></td>
+                                    <td><input type="text" class="form-control" price="0" id="unit_price" value="0" readonly></td>
+                                    <td><input type="text" class="form-control" id="disc_percent" value="0" readonly></td>
+                                    <td><input type="text" class="form-control" amount="0" id="disc_amount" value="0" readonly></td>
+                                    <td><input readonly type="text" class="form-control" id="subtotal" subtotal="0" value="0"></td>
+                                    <td><input readonly type="text" class="form-control" amount="0" id="tax_amount" value="0"></td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-sm btn-danger" disabled>
+                                        <button type="button" class="btn btn-sm btn-danger" readonly>
                                         <i class="bx bx-gift"></i>
                                         </button>
                                     </td>

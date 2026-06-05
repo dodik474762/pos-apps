@@ -1,4 +1,5 @@
-<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 <div id="content-modal-form"></div>
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 <input type="hidden" id="platform" value="{{ isset($data->platform) ? $data->platform : 'web' }}">
@@ -44,14 +45,16 @@
                                     value="{{ isset($data->so_date) ? $data->so_date : date('Y-m-d') }}">
                             </div>
 
-                              <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Customer</label>
-                                <select class="form-control select2 required" id="customer_id" error="Customer" onchange="SalesOrder.changeCustomer(this)">
+                                <select class="form-control select2 required" id="customer_id" error="Customer"
+                                    onchange="SalesOrder.changeCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
-                                        <option top="{{ $customer->top_value }}" channel_outlet="{{ $customer->channel_outlet }}"
-                                        sub_channel_outlet="{{ $customer->sub_channel_outlet }}"
-                                        value="{{ $customer->id }}"
+                                        <option top="{{ $customer->top_value }}"
+                                            channel_outlet="{{ $customer->channel_outlet }}"
+                                            sub_channel_outlet="{{ $customer->sub_channel_outlet }}"
+                                            value="{{ $customer->id }}"
                                             {{ isset($data->customer_id) && $data->customer_id == $customer->id ? 'selected' : '' }}>
                                             {{ $customer->code }} - {{ $customer->nama_customer }}
                                         </option>
@@ -59,14 +62,14 @@
                                 </select>
                             </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Salesman</label>
                                 <select class="form-control select2" id="salesman" error="Salesman"
-                                {{-- onchange="SalesOrder.getCustomer(this)" --}}
-                                >
+                                    {{-- onchange="SalesOrder.getCustomer(this)" --}}>
                                     <option value=""></option>
                                     @foreach ($salesmen as $s)
-                                        <option value="{{ $s->id }}" {{ (isset($data->salesman) && $data->salesman == $s->id ) || (isset($salesman) && $salesman == $s->id) ? 'selected' : '' }}>
+                                        <option value="{{ $s->id }}"
+                                            {{ (isset($data->salesman) && $data->salesman == $s->id) || (isset($salesman) && $salesman == $s->id) ? 'selected' : '' }}>
                                             {{ $s->name }}
                                         </option>
                                     @endforeach
@@ -75,7 +78,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Payment Term</label>
-                                <input disabled type="text" id="payment_term" class="form-control" placeholder="e.g. 30 days"
+                                <input disabled type="text" id="payment_term" class="form-control"
+                                    placeholder="e.g. 30 days"
                                     value="{{ isset($data->payment_term) ? $data->payment_term : '0' }}">
                             </div>
                         </div>
@@ -100,12 +104,14 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Disc (%)</label>
-                                <input disabled type="text" id="discount_percent_header" class="form-control" placeholder="Disc (%)"
+                                <input disabled type="text" id="discount_percent_header" class="form-control"
+                                    placeholder="Disc (%)"
                                     value="{{ isset($data->discount_percent) ? $data->discount_percent : '0' }}">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Disc (Rp)</label>
-                                <input disabled type="text" id="discount_amount_header" class="form-control" placeholder="Disc (%)"
+                                <input disabled type="text" id="discount_amount_header" class="form-control"
+                                    placeholder="Disc (%)"
                                     value="{{ isset($data->discount_amount) ? $data->discount_amount : '0' }}">
                             </div>
                         </div>
@@ -124,13 +130,10 @@
                                             <h5 class="mb-0">Foto Outlet</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <img
-                                                id="outlet-image-preview"
+                                            <img id="outlet-image-preview"
                                                 src="{{ isset($data->photo_path) ? asset($data->photo_path) : asset('assets/images/no-image.png') }}"
-                                                alt="Outlet Image"
-                                                class="img-fluid rounded mb-3"
-                                                style="max-height: 250px;"
-                                            >
+                                                alt="Outlet Image" class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;">
                                         </div>
                                     </div>
                                 </div>
@@ -142,19 +145,16 @@
                                             <h5 class="mb-0">Tanda Tangan Outlet</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <img
-                                                id="outlet-image-preview"
+                                            <img id="outlet-image-preview"
                                                 src="{{ isset($data->signature_path) ? asset($data->signature_path) : asset('assets/images/no-image.png') }}"
-                                                alt="Outlet Image"
-                                                class="img-fluid rounded mb-3"
-                                                style="max-height: 250px;"
-                                            >
+                                                alt="Outlet Image" class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                             <div class="row mb-4">
+                            <div class="row mb-4">
                                 <!-- Gambar Outlet -->
                                 <div class="col-lg-6">
                                     <div class="card h-100">
@@ -162,13 +162,10 @@
                                             <h5 class="mb-0">Foto Checkin</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <img
-                                                id="outlet-image-preview"
+                                            <img id="outlet-image-preview"
                                                 src="{{ isset($data->checkin_path) ? asset($data->checkin_path) : asset('assets/images/no-image.png') }}"
-                                                alt="Outlet Image"
-                                                class="img-fluid rounded mb-3"
-                                                style="max-height: 250px;"
-                                            >
+                                                alt="Outlet Image" class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;">
                                         </div>
                                     </div>
                                 </div>
@@ -180,13 +177,10 @@
                                             <h5 class="mb-0">Foto Dengan Pemilik Outlet</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <img
-                                                id="outlet-image-preview"
+                                            <img id="outlet-image-preview"
                                                 src="{{ isset($data->owner_path) ? asset($data->owner_path) : asset('assets/images/no-image.png') }}"
-                                                alt="Outlet Image"
-                                                class="img-fluid rounded mb-3"
-                                                style="max-height: 250px;"
-                                            >
+                                                alt="Outlet Image" class="img-fluid rounded mb-3"
+                                                style="max-height: 250px;">
                                         </div>
                                     </div>
                                 </div>
@@ -200,8 +194,9 @@
 
                     <ul class="nav nav-tabs" id="diskonTab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-barang" data-bs-toggle="tab" data-bs-target="#tab-pane-barang"
-                                type="button" role="tab" aria-controls="tab-pane-barang" aria-selected="true">
+                            <button class="nav-link active" id="tab-barang" data-bs-toggle="tab"
+                                data-bs-target="#tab-pane-barang" type="button" role="tab"
+                                aria-controls="tab-pane-barang" aria-selected="true">
                                 Barang
                             </button>
                         </li>
@@ -215,9 +210,11 @@
 
                     <div class="tab-content pt-3" id="barangTabContent">
                         <!-- Tab Diskon -->
-                        <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel" aria-labelledby="tab-barang">
-                            <button id="btn-check-disc" class="btn btn-small btn-primary" onclick="SalesOrder.checkDiscount(this, event)">Check Discount</button>
-                            <br/>
+                        <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel"
+                            aria-labelledby="tab-barang">
+                            <button id="btn-check-disc" class="btn btn-small btn-primary"
+                                onclick="SalesOrder.checkDiscount(this, event)">Check Discount</button>
+                            <br />
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="table-items">
                                     <thead class="table-light">
@@ -239,45 +236,88 @@
                                                 <tr class="input" data_id="">
                                                     <td>
                                                         <div class="input-group">
-                                                            <button class="btn btn-outline-primary" type="button" onclick="SalesOrder.showDataProduct(this)">Pilih</button>
-                                                            <input disabled type="text" class="form-control required" id="product" error="Product" value="">
+                                                            <button class="btn btn-outline-primary" type="button"
+                                                                onclick="SalesOrder.showDataProduct(this)">Pilih</button>
+                                                            <input readonly type="text"
+                                                                class="form-control required" id="product"
+                                                                error="Product" value="">
                                                         </div>
                                                     </td>
                                                     <td data_id="" id="unit"></td>
-                                                    <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.recalculateAllRows(this)"></td>
-                                                    <td><input type="text" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="text" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input type="text" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
-                                                    <td><input disabled type="text" class="form-control" id="tax_amount" value=""></td>
+                                                    <td><input type="number" class="form-control" id="qty"
+                                                            value="1" min="1"
+                                                            onkeyup="SalesOrder.recalculateAllRows(this)"></td>
+                                                    <td><input type="text" class="form-control" id="unit_price"
+                                                            data_id="" readonly value="0"
+                                                            onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="disc_percent"
+                                                            readonly value="0"
+                                                            onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input type="text" class="form-control" id="disc_amount"
+                                                            readonly value="0"
+                                                            onkeyup="SalesOrder.calcRow(this)"></td>
+                                                    <td><input readonly type="text" class="form-control"
+                                                            id="subtotal" value="0"></td>
+                                                    <td><input readonly type="text" class="form-control"
+                                                            id="tax_amount" value=""></td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="SalesOrder.removeRow(this)"><i
+                                                                class="bx bx-trash-alt"></i></button>
                                                     </td>
                                                 </tr>
                                             @else
                                                 @foreach ($data_item as $item)
-                                                    <tr {{ $item->is_free_good ? 'data-free-for='.$item->product_id : '' }} class="input {{ $item->is_free_good ? 'freegood' : '' }}" data_id="{{ $item->id }}">
+                                                    <tr {{ $item->is_free_good ? 'data-free-for=' . $item->product_id : '' }}
+                                                        class="input {{ $item->is_free_good ? 'freegood' : '' }}"
+                                                        data_id="{{ $item->id }}">
                                                         <td>
                                                             <div class="input-group">
-                                                                <button {{ $item->is_free_good ? 'disabled' : '' }} class="btn btn-outline-primary" type="button"
+                                                                <button {{ $item->is_free_good ? 'readonly' : '' }}
+                                                                    class="btn btn-outline-primary" type="button"
                                                                     onclick="SalesOrder.showDataProduct(this)">{{ $item->is_free_good ? 'Free' : 'Pilih' }}</button>
-                                                                <input disabled type="text" id="product" class="form-control required" error="Product"
+                                                                <input readonly type="text" id="product"
+                                                                    class="form-control required" error="Product"
                                                                     tax="{{ $item->tax }}"
                                                                     tax_rate="{{ $item->tax_rate }}"
                                                                     tax_amount="{{ $item->tax_amount }}"
                                                                     tax_type="{{ $item->tax_type }}"
-                                                                    value="{{ $item->product_name }}" data_id="{{ $item->product_id }}">
+                                                                    value="{{ $item->product_name }}"
+                                                                    data_id="{{ $item->product_id }}">
                                                             </div>
                                                         </td>
-                                                        <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
-                                                        <td><input type="number" class="form-control" {{ $item->is_free_good  ? 'disabled' : '' }} id="qty" value="{{ $item->qty }}" min="1" onkeyup="SalesOrder.recalculateAllRows(this)"></td>
-                                                        <td><input type="text" class="form-control" id="unit_price" price="{{ $item->unit_price }}" disabled data_id="" value="{{ $item->unit_price }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                        <td><input type="text" class="form-control" id="disc_percent" disabled value="{{ $item->discount_percent }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                        <td><input type="text" class="form-control" id="disc_amount" amount="{{ $item->discount_amount }}" disabled value="{{ $item->discount_amount }}" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                        <td><input disabled type="text" class="form-control" id="subtotal" subtotal="{{ $item->subtotal }}" value="{{ $item->subtotal }}"></td>
-                                                        <td><input disabled type="text" class="form-control" id="tax_amount" amount="{{ $item->tax_amount }}" value="{{ $item->tax_amount }}"></td>
+                                                        <td data_id="{{ $item->unit }}" id="unit">
+                                                            {{ $item->unit_name }}</td>
+                                                        <td><input type="number" class="form-control"
+                                                                {{ $item->is_free_good ? 'readonly' : '' }}
+                                                                id="qty" value="{{ $item->qty }}"
+                                                                min="1"
+                                                                onkeyup="SalesOrder.recalculateAllRows(this)"></td>
+                                                        <td><input type="text" class="form-control"
+                                                                id="unit_price" price="{{ $item->unit_price }}"
+                                                                readonly data_id=""
+                                                                value="{{ $item->unit_price }}"
+                                                                onkeyup="SalesOrder.calcRow(this)"></td>
+                                                        <td><input type="text" class="form-control"
+                                                                id="disc_percent" readonly
+                                                                value="{{ $item->discount_percent }}"
+                                                                onkeyup="SalesOrder.calcRow(this)"></td>
+                                                        <td><input type="text" class="form-control"
+                                                                id="disc_amount"
+                                                                amount="{{ $item->discount_amount }}" readonly
+                                                                value="{{ $item->discount_amount }}"
+                                                                onkeyup="SalesOrder.calcRow(this)"></td>
+                                                        <td><input readonly type="text" class="form-control"
+                                                                id="subtotal" subtotal="{{ $item->subtotal }}"
+                                                                value="{{ $item->subtotal }}"></td>
+                                                        <td><input readonly type="text" class="form-control"
+                                                                id="tax_amount" amount="{{ $item->tax_amount }}"
+                                                                value="{{ $item->tax_amount }}"></td>
                                                         <td class="text-center">
-                                                            <button {{ $item->is_free_good ? 'disabled' : '' }} type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                                            <button {{ $item->is_free_good ? 'readonly' : '' }}
+                                                                type="button" class="btn btn-sm btn-danger"
+                                                                onclick="SalesOrder.removeRow(this)"><i
+                                                                    class="bx bx-trash-alt"></i></button>
                                                         </td>
                                                     </tr>
                                                 @endforeach
@@ -286,19 +326,33 @@
                                             <tr class="input" data_id="">
                                                 <td>
                                                     <div class="input-group">
-                                                        <button class="btn btn-outline-primary" type="button" onclick="SalesOrder.showDataProduct(this)">Pilih</button>
-                                                        <input disabled type="text" class="form-control required" id="product" error="Product" value="">
+                                                        <button class="btn btn-outline-primary" type="button"
+                                                            onclick="SalesOrder.showDataProduct(this)">Pilih</button>
+                                                        <input readonly type="text" class="form-control required"
+                                                            id="product" error="Product" value="">
                                                     </div>
                                                 </td>
                                                 <td data_id="" id="unit"></td>
-                                                <td><input type="number" class="form-control" id="qty" value="1" min="1" onkeyup="SalesOrder.recalculateAllRows(this)"></td>
-                                                <td><input type="text" class="form-control" id="unit_price" data_id="" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                <td><input type="text" class="form-control" id="disc_percent" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                <td><input type="text" class="form-control" id="disc_amount" disabled value="0" onkeyup="SalesOrder.calcRow(this)"></td>
-                                                <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
-                                                <td><input disabled type="text" class="form-control" id="tax_amount" value=""></td>
+                                                <td><input type="number" class="form-control" id="qty"
+                                                        value="1" min="1"
+                                                        onkeyup="SalesOrder.recalculateAllRows(this)"></td>
+                                                <td><input type="text" class="form-control" id="unit_price"
+                                                        data_id="" readonly value="0"
+                                                        onkeyup="SalesOrder.calcRow(this)"></td>
+                                                <td><input type="text" class="form-control" id="disc_percent"
+                                                        readonly value="0" onkeyup="SalesOrder.calcRow(this)">
+                                                </td>
+                                                <td><input type="text" class="form-control" id="disc_amount"
+                                                        readonly value="0" onkeyup="SalesOrder.calcRow(this)">
+                                                </td>
+                                                <td><input readonly type="text" class="form-control"
+                                                        id="subtotal" value="0"></td>
+                                                <td><input readonly type="text" class="form-control"
+                                                        id="tax_amount" value=""></td>
                                                 <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-danger" onclick="SalesOrder.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                        onclick="SalesOrder.removeRow(this)"><i
+                                                            class="bx bx-trash-alt"></i></button>
                                                 </td>
                                             </tr>
                                         @endif
@@ -309,42 +363,51 @@
                     </div>
 
 
-                    <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesOrder.addRow()">+ Tambah Barang</button>
+                    <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesOrder.addRow()">+ Tambah
+                        Barang</button>
 
                     <div class="text-end mt-4">
                         <div class="d-none">
-                            <h5>Total: <span id="total-harga">{{ isset($data->total_amount) ? $data->total_amount - $data->discount_amount : 0 }}</span></h5>
+                            <h5>Total: <span
+                                    id="total-harga">{{ isset($data->total_amount) ? $data->total_amount - $data->discount_amount : 0 }}</span>
+                            </h5>
                         </div>
                         <div>
-                            <h5>Total: <span id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount - $data->discount_amount, 2, ',', '.') : 0 }}</span></h5>
+                            <h5>Total: <span
+                                    id="total-harga-show">{{ isset($data->total_amount) ? number_format($data->total_amount - $data->discount_amount, 2, ',', '.') : 0 }}</span>
+                            </h5>
                         </div>
                     </div>
 
-                   <hr>
+                    <hr>
 
                     <!-- Tabs -->
                     <ul class="nav nav-tabs" id="diskonTab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-diskon-umum" data-bs-toggle="tab" data-bs-target="#tab-pane-diskon"
-                                type="button" role="tab" aria-controls="tab-pane-diskon" aria-selected="true">
+                            <button class="nav-link active" id="tab-diskon-umum" data-bs-toggle="tab"
+                                data-bs-target="#tab-pane-diskon" type="button" role="tab"
+                                aria-controls="tab-pane-diskon" aria-selected="true">
                                 Program Diskon
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-diskon-free" data-bs-toggle="tab" data-bs-target="#tab-pane-free"
-                                type="button" role="tab" aria-controls="tab-pane-free" aria-selected="false">
+                            <button class="nav-link" id="tab-diskon-free" data-bs-toggle="tab"
+                                data-bs-target="#tab-pane-free" type="button" role="tab"
+                                aria-controls="tab-pane-free" aria-selected="false">
                                 Program Free Good
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-promo-item" data-bs-toggle="tab" data-bs-target="#tab-pane-promo"
-                                type="button" role="tab" aria-controls="tab-pane-promo" aria-selected="true">
+                            <button class="nav-link" id="tab-promo-item" data-bs-toggle="tab"
+                                data-bs-target="#tab-pane-promo" type="button" role="tab"
+                                aria-controls="tab-pane-promo" aria-selected="true">
                                 Program Promo Item
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-uom" data-bs-toggle="tab" data-bs-target="#tab-pane-uom"
-                                type="button" role="tab" aria-controls="tab-pane-uom" aria-selected="false">
+                            <button class="nav-link" id="tab-uom" data-bs-toggle="tab"
+                                data-bs-target="#tab-pane-uom" type="button" role="tab"
+                                aria-controls="tab-pane-uom" aria-selected="false">
                                 Unit of Measurement
                             </button>
                         </li>
@@ -353,9 +416,11 @@
                     <!-- Tab Content -->
                     <div class="tab-content pt-3" id="diskonTabContent">
                         <!-- Tab Diskon -->
-                        <div class="tab-pane fade show active" id="tab-pane-diskon" role="tabpanel" aria-labelledby="tab-diskon-umum">
+                        <div class="tab-pane fade show active" id="tab-pane-diskon" role="tabpanel"
+                            aria-labelledby="tab-diskon-umum">
                             <div class="table-responsive">
-                                <table id="table-data-diskon" class="table table-striped table-bordered dt-responsive nowrap"
+                                <table id="table-data-diskon"
+                                    class="table table-striped table-bordered dt-responsive nowrap"
                                     style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                                     <thead class="table-light">
                                         <tr>
@@ -379,9 +444,11 @@
                         </div>
 
                         <!-- Tab Free Good -->
-                        <div class="tab-pane fade" id="tab-pane-free" role="tabpanel" aria-labelledby="tab-diskon-free">
+                        <div class="tab-pane fade" id="tab-pane-free" role="tabpanel"
+                            aria-labelledby="tab-diskon-free">
                             <div class="table-responsive">
-                                <table id="table-data-diskon-free" class="table table-striped table-bordered dt-responsive nowrap"
+                                <table id="table-data-diskon-free"
+                                    class="table table-striped table-bordered dt-responsive nowrap"
                                     style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                                     <thead class="table-light">
                                         <tr>
@@ -405,13 +472,15 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane fade" id="tab-pane-promo" role="tabpanel" aria-labelledby="tab-diskon-promo">
+                        <div class="tab-pane fade" id="tab-pane-promo" role="tabpanel"
+                            aria-labelledby="tab-diskon-promo">
                             @include('web.sales_order.promo-item')
                         </div>
 
                         <div class="tab-pane fade" id="tab-pane-uom" role="tabpanel" aria-labelledby="tab-uom">
                             <div class="table-responsive">
-                                <table id="table-data-uom" class="table table-striped table-bordered dt-responsive nowrap"
+                                <table id="table-data-uom"
+                                    class="table table-striped table-bordered dt-responsive nowrap"
                                     style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                                     <thead class="table-light">
                                         <tr>
@@ -435,14 +504,16 @@
             @if (isset($id))
                 @if ($data->status == 'draft' || $data->status == 'submited')
                     @if ($data->platform == 'mobile')
-                        <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+                        <button type="submit" onclick="SalesOrder.submit(this, event)"
+                            class="btn btn-success waves-effect waves-light me-1">
                             Confirm
                         </button>
                     @else
                         <!-- <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
                             Submit
                         </button> -->
-                        <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')" class="btn btn-success waves-effect waves-light me-1">
+                        <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')"
+                            class="btn btn-success waves-effect waves-light me-1">
                             Submit
                         </button>
                     @endif
@@ -451,7 +522,8 @@
                 <!-- <button type="submit" onclick="SalesOrder.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button> -->
-                 <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')" class="btn btn-success waves-effect waves-light me-1">
+                <button type="submit" onclick="SalesOrder.checkDiscount(this, event, 'save')"
+                    class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
             @endif
@@ -466,6 +538,6 @@
 
 <style>
     .freegood {
-        background-color:#f5f7ff
+        background-color: #f5f7ff
     }
 </style>
