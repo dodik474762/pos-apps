@@ -1,18 +1,29 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Multiple Invoice</title>
 
     <style>
         @page {
-            size: 215.9mm auto;  /* 8.5 inch lebar, tinggi otomatis */
-            margin: 5mm 11mm;
+            /*size: 215.9mm auto;*/
+            /* 8.5 inch lebar, tinggi otomatis */
+            /*margin: 5mm 11mm;*/
+            size: 210mm 297mm;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 8px;
+            font-size: 7pt;
+            color: #000;
+            margin: 0;
+            padding: 0;
         }
 
         .page-wrapper {
@@ -35,31 +46,32 @@
 
 <body>
 
-@foreach ($invoices as $globalIndex => $data)
-<div class="page-wrapper">
-    @php
-        $qr = '';
-        $do = empty($data->do) ? [] : $data->do;
-        $so = empty($data->do) ? $data->so : $do->so;
-        $salesman_name = $so->salesman->nama_lengkap ?? '-';
-    @endphp
+    @foreach ($invoices as $globalIndex => $data)
+        <div class="page-wrapper">
+            @php
+                $qr = '';
+                $do = empty($data->do) ? [] : $data->do;
+                $so = empty($data->do) ? $data->so : $do->so;
+                $salesman_name = $so->salesman->nama_lengkap ?? '-';
+            @endphp
 
-    @include('web.sales_invoice.print.po-printa5', [
-        'data'         => $data,
-        'company'      => $company,
-        'qr'           => $qr,
-        'so'           => $so,
-        'salesman_name'=> $salesman_name,
-        'ppn_val'    => $data->ppn_value,
-        'promo'        => $data->promo ?? collect(),
-        'promo_item'   => $data->promo_item ?? collect()
-    ])
+            @include('web.sales_invoice.print.po-printa4', [
+                'data' => $data,
+                'company' => $company,
+                'qr' => $qr,
+                'so' => $so,
+                'salesman_name' => $salesman_name,
+                'ppn_val' => $data->ppn_value,
+                'promo' => $data->promo ?? collect(),
+                'promo_item' => $data->promo_item ?? collect(),
+            ])
 
-    <div class="page-info">
-        Invoice {{ $globalIndex + 1 }} / {{ $invoices->count() }}
-    </div>
-</div>
-@endforeach
+            <div class="page-info">
+                Invoice {{ $globalIndex + 1 }} / {{ $invoices->count() }}
+            </div>
+        </div>
+    @endforeach
 
 </body>
+
 </html>
