@@ -469,7 +469,7 @@ class SalesInvoiceController extends Controller
             $header->tax_amount = $tax_amount;
             $header->total_amount = $data['total_amount'];
             if ($data['id'] != '') {
-                $header->reprint = 1; //reprint
+                // $header->reprint = 1; //reprint
             }
             $header->save();
 
