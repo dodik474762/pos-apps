@@ -461,6 +461,7 @@ class SalesOrderController extends Controller
             // =============================
             // PREPARE ITEMS
             // =============================
+            $is_motoris = false;
             $items = collect($data['items'])
                 ->filter(function ($item) {
                     return empty($item['free_for']);
@@ -497,6 +498,7 @@ class SalesOrderController extends Controller
 
                     if (!empty($sales_motoris) && $sales_motoris['has_motoris_price']) {
                         $item['price'] = $sales_motoris['motoris'][0]->price;
+                        $is_motoris = true;
                     }
 
                     return $item;
@@ -504,7 +506,12 @@ class SalesOrderController extends Controller
 
             $productIds     = $items->pluck('product_id')->toArray();
             $promoAll       = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
+            $calculatePromo = $is_motoris ? [
+                'discount_header' => [],
+                'discount_item'   => 0,
+                'grand_total'     => $items->sum('total_price'),
+                'result_items' => []
+            ] : $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
             // echo '<pre>';
             // print_r($calculatePromo);
             // die;
@@ -4616,6 +4623,7 @@ class SalesOrderController extends Controller
 
         try {
             $data['customer'] = $customersId;
+            $is_motoris = false;
             foreach ($data['details'] as $i) {
                 $products = $i['product_id'];
                 $product_unit = $i['unit_id'];
@@ -4652,6 +4660,7 @@ class SalesOrderController extends Controller
                 if (!empty($sales_motoris)) {
                     if ($sales_motoris['has_motoris_price']) {
                         $i['unit_price'] = $sales_motoris['motoris'][0]->price;
+                        $is_motoris = true;
                     }
                 }
 
@@ -4671,7 +4680,12 @@ class SalesOrderController extends Controller
             // die;
 
             $result['is_valid'] = true;
-            $result['data'] = $calculatePromo;
+            $result['data'] =  $is_motoris ? [
+                'discount_header' => [],
+                'discount_item'   => 0,
+                'grand_total'     => 0,
+                'result_items' => []
+            ]  : $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
         }
