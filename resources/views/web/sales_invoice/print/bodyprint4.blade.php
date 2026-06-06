@@ -88,7 +88,7 @@
      {{-- KEPADA --}}
      <div class="kepada-section">
          <strong>Kepada :</strong><br>
-         {{ $data->customers->nama_customer ?? '-' }}<br>
+         {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }}<br>
          {{ $data->customers->address ?? '-' }}
      </div>
 
