@@ -1714,15 +1714,26 @@ class SalesOrderController extends Controller
     public function checkDataPriceCustomer($params)
     {
         $customer = Customer::where('id', $params['customer'])->first();
+        // echo '<pre>';
+        // print_r($customer);
+        // echo '</pre>';
+        // die;
 
-        $channelPrice = ProductUomPrice::where('channel', $customer->channel_outlet)
-            ->where('product', $params['product_id'])
-            ->where('sub_channel', $customer->sub_channel_outlet)
-            ->get();
+        if ($customer->channel_outlet != 'RETAIL UMUM' && $customer->sub_channel_outlet != 'RT-RETAIL UMUM') {
+            $channelPrice = ProductUomPrice::where('channel', $customer->channel_outlet)
+                ->where('product', $params['product_id'])
+                ->where('sub_channel', $customer->sub_channel_outlet)
+                ->get();
+            return [
+                'customer' => $customer,
+                'channel_price' => $channelPrice,
+                'has_channel_price' => $channelPrice->isNotEmpty(),
+            ];
+        }
         return [
             'customer' => $customer,
-            'channel_price' => $channelPrice,
-            'has_channel_price' => $channelPrice->isNotEmpty(),
+            'channel_price' => [],
+            'has_channel_price' => false,
         ];
     }
 
