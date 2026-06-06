@@ -185,7 +185,7 @@
         table.summary-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7pt;
+            font-size: 8pt;
         }
 
         table.summary-table td {
