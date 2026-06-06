@@ -64,6 +64,7 @@
                                                 <tr class="text-uppercase">
                                                     <th>SO Number</th>
                                                     <th>Tanggal SO</th>
+                                                    <th>Kode Customer</th>
                                                     <th>Customer</th>
                                                     <th>Grand Total</th>
                                                     <th>Currency</th>
@@ -83,6 +84,7 @@
                                                     <tr>
                                                         <td>{{ $item->so_number }}</td>
                                                         <td>{{ $item->so_date }}</td>
+                                                        <td>{{ $item->customer_code }}</td>
                                                         <td>{{ $item->nama_customer }}</td>
                                                         <td>{{ number_format($item->total_amount - $item->discount_amount, 2, ',', '.') }}
                                                         </td>

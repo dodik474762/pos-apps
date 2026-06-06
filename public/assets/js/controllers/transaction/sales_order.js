@@ -207,6 +207,9 @@ let SalesOrder = {
                     data: "so_date",
                 },
                 {
+                    data: "customer_code",
+                },
+                {
                     data: "nama_customer",
                 },
                 {

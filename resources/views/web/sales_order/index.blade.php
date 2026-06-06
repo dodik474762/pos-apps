@@ -1,4 +1,3 @@
-
 @if (isset($akses->sales_order))
     @if ($akses->sales_order->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_order->update }}">
@@ -37,7 +36,7 @@
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesOrder.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
-                                            &nbsp;
+                                        &nbsp;
                                         <a type="button" class="btn btn-primary add-btn" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesOrder.confirmAlHandheld(this, event)"><i
@@ -47,7 +46,7 @@
                             </div>
                         </div>
                     </div>
-                     <div class="card-body border border-dashed border-end-0 border-start-0">
+                    <div class="card-body border border-dashed border-end-0 border-start-0">
                         <form class="">
                             <div class="row g-3">
                                 <!--end col-->
@@ -55,16 +54,14 @@
                                     <div>
                                         <label for="">Start Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="Y-m-d" id="start_date"
-                                            placeholder="Select start date">
+                                            data-date-format="Y-m-d" id="start_date" placeholder="Select start date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">End Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="Y-m-d" id="end_date"
-                                            placeholder="Select end date">
+                                            data-date-format="Y-m-d" id="end_date" placeholder="Select end date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
@@ -80,7 +77,9 @@
                                 <div class="col-xxl-3 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('sales-order-generate-all') }}" onclick="SalesOrder.search(this, '');"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            url="{{ route('sales-order-generate-all') }}"
+                                            onclick="SalesOrder.search(this, '');"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Generate SO to Invoice
                                         </button>
@@ -120,25 +119,28 @@
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
-                                        href="#list-data" role="tab" aria-selected="true" onclick="SalesOrder.filterTab('all')">
+                                        href="#list-data" role="tab" aria-selected="true"
+                                        onclick="SalesOrder.filterTab('all')">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link py-3" data-bs-toggle="tab" id="outstanding-so"
-                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('outstanding')">
+                                        href="#list-data" role="tab" aria-selected="false"
+                                        onclick="SalesOrder.filterTab('outstanding')">
                                         <i class="ri-time-line me-1 align-bottom"></i> Outstanding SO
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link py-3" data-bs-toggle="tab" id="hanya-call"
-                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('call')">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="hanya-call" href="#list-data"
+                                        role="tab" aria-selected="false" onclick="SalesOrder.filterTab('call')">
                                         <i class="ri-phone-line me-1 align-bottom"></i> Hanya Call
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link py-3" data-bs-toggle="tab" id="sudah-invoice"
-                                        href="#list-data" role="tab" aria-selected="false" onclick="SalesOrder.filterTab('invoiced')">
+                                        href="#list-data" role="tab" aria-selected="false"
+                                        onclick="SalesOrder.filterTab('invoiced')">
                                         <i class="ri-check-line me-1 align-bottom"></i> Sudah Invoice
                                     </a>
                                 </li>
@@ -153,6 +155,7 @@
                                                     <th>No</th>
                                                     <th>SO Number</th>
                                                     <th>Tanggal SO</th>
+                                                    <th>Kode Customer</th>
                                                     <th>Customer</th>
                                                     <th>Grand Total</th>
                                                     <th>Currency</th>

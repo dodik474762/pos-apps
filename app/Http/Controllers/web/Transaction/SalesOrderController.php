@@ -235,7 +235,8 @@ class SalesOrderController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
-                'cy.code as currency_code'
+                'cy.code as currency_code',
+                'cc.code as customer_code'
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')

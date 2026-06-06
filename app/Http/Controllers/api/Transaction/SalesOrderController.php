@@ -54,6 +54,7 @@ class SalesOrderController extends Controller
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
+                'cc.code as customer_code',
                 DB::raw('ROUND((m.total_amount - COALESCE(m.discount_amount,0)), 2) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
@@ -89,6 +90,7 @@ class SalesOrderController extends Controller
                     $query->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
