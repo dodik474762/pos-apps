@@ -90,7 +90,8 @@ class PromoItemController extends Controller
             'DISC STRATA',
             'DISC CHANNEL',
             'DISC PROMO',
-            'DISC SYARAT'
+            'DISC SYARAT',
+            'DISC SYARAT STRATA',
         ];
     }
 
@@ -147,7 +148,7 @@ class PromoItemController extends Controller
         // print_r($data['promo_item']);die;
         $data['product_free'] = DB::table('product_promo_item_detail_free')->where('product_promo_item_detail_free.product_promo_item', $data['id'])
             ->select(['product_promo_item_detail_free.*'])->get()->toArray();
-        
+
         $data['product_syarat'] = DB::table('product_promo_item_syarat')->where('product_promo_item_syarat.product_promo_item', $data['id'])
             ->select(['product_promo_item_syarat.*', 'p.name as product_name', 'u.name as unit_name'])
             ->join('product as p', 'p.id', '=', 'product_promo_item_syarat.product')
