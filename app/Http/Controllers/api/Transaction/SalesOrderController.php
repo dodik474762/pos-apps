@@ -3064,6 +3064,10 @@ class SalesOrderController extends Controller
         // Tracking untuk DISC SYARAT STRATA di loop per item
         // ============================================================
         $appliedKategoriDiscItem = [];
+        // echo '<pre>';
+        // print_r($promoHeaders);
+        // echo '</pre>';
+        // die;
 
         foreach ($promoHeaders as $promo) {
             // =============================
@@ -3523,11 +3527,18 @@ class SalesOrderController extends Controller
             // ============================================================
             $kategoriDisc = $promo->kategori_disc ?? 'DEFAULT';
             if (!empty($kategoriDisc) && isset($appliedKategoriDisc[$kategoriDisc])) {
+                $oldPromoId = $appliedKategoriDisc[$kategoriDisc]; // ← simpan dulu
                 // Remove dari discountHeader
                 $discountHeader = array_filter($discountHeader, function ($dh) use ($appliedKategoriDisc, $kategoriDisc) {
                     return $dh['promo_id'] != $appliedKategoriDisc[$kategoriDisc];
                 });
                 $discountHeader = array_values($discountHeader);
+                // ← TAMBAHAN: hapus juga dari resultItems
+                $resultItems = array_filter($resultItems, function ($r) use ($oldPromoId) {
+                    return $r['promo_id'] != $oldPromoId;
+                });
+                $resultItems = array_values($resultItems);
+
                 // Reset grandTotalRunning ke before-nya
                 $grandTotalRunning = $grandTotalAfterItemDisc;
                 foreach ($discountHeader as $dh) {
@@ -3547,7 +3558,32 @@ class SalesOrderController extends Controller
             $itemsValueApplied = [];
             if ($promo->discount_type === 'percent') {
                 $discPercentHeader = $promo->discount_value;
-                $discAmountHeader = $grandTotalRunning * ($promo->discount_value / 100);
+                // $discAmountHeader = $grandTotalRunning * ($promo->discount_value / 100);
+                // Hitung subtotal murni produk yang terkena promo ini
+                $subtotalItemsTerkena = 0;
+                foreach ($itemsValue as $v) {
+                    $subtotalItemsTerkena += $v['price'] * $v['qty'];
+                }
+                // Hitung total diskon dari discountHeader yang sudah ada,
+                // tapi hanya yang produknya overlap dengan itemsValue ini
+                $productIdsTerkena = array_column($itemsValue, 'product_id');
+                $discSudahDipotong = 0;
+                foreach ($discountHeader as $dh) {
+                    $promoLama = collect($promoHeaders)->where('id', $dh['promo_id'])->first();
+                    if (!$promoLama) continue;
+                    $produkPromoLama = $promoLama->promoProducts->pluck('product')->toArray();
+
+                    // Ambil penuh hanya jika SEMUA produk promo lama ada di produk terkena sekarang
+                    // (subset check, bukan proporsi)
+                    $semuaAdaDiTerkena = count(array_diff($produkPromoLama, $productIdsTerkena)) === 0;
+                    if ($semuaAdaDiTerkena) {
+                        $discSudahDipotong += $dh['discount_amount'];
+                    }
+                }
+
+                $basisDisc = $subtotalItemsTerkena - $discSudahDipotong;
+                $discAmountHeader = $basisDisc * ($promo->discount_value / 100);
+
 
                 // Potong per qty: diskon percent dikalikan total qty unit terkecil
                 if ($promo->potong_per_qty == 1) {
@@ -3665,6 +3701,7 @@ class SalesOrderController extends Controller
             $appliedKategoriDisc[$kategoriDisc] = $promo->id;
         }
 
+        // echo die;
         // echo '<pre>';
         // print_r($resultItems);
         // echo '</pre>';
