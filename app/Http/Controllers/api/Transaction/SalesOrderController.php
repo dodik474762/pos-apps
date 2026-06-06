@@ -3710,7 +3710,7 @@ class SalesOrderController extends Controller
     //     return response()->json($result);
     // }
 
-    public function getAllSalesNotInvoice($start_date = '', $end_date = '', $state = '')
+    public function getAllSalesNotInvoice($start_date = '', $end_date = '', $state = '', $salesOrderIds = [])
     {
         $start_date = $start_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($start_date));
         $end_date = $end_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($end_date));
@@ -3741,7 +3741,14 @@ class SalesOrderController extends Controller
             ->orderBy('sales_order_headers.id', 'desc');
         if ($state == '') {
         }
+        if (!empty($salesOrderIds)) {
+            $datadb->whereIn('sales_order_headers.id', $salesOrderIds);
+        }
 
+        // echo '<pre>';
+        // print_r($datadb->get()->toArray());
+        // echo '<pre>';
+        // die;
         $datadb = $datadb->get()->toArray();
 
         return $datadb;
@@ -3750,9 +3757,18 @@ class SalesOrderController extends Controller
     public function generateAll(Request $request)
     {
         $data = $request->all();
+        // echo '<pre>';
+        // print_r($data);
+        // die;
+        $salesOrderIds = $data['items_checked'];
         $result['is_valid'] = false;
         try {
-            $sales_order = $this->getAllSalesNotInvoice($data['start_date'], $data['end_date']);
+            $sales_order = $this->getAllSalesNotInvoice($data['start_date'], $data['end_date'], '', $salesOrderIds);
+            // echo '<pre>';
+            // print_r($sales_order);
+            // echo '<pre>';
+            // print_r($salesOrderIds);
+            // die;
             foreach ($sales_order as $v) {
                 $process = $this->saveInvoice($v);
             }

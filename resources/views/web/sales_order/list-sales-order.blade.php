@@ -1,4 +1,3 @@
-
 @if (isset($akses->sales_order))
     @if ($akses->sales_order->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_order->update }}">
@@ -39,7 +38,8 @@
                                             id="create-btn" href="javascript:void(0);"
                                             url="{{ route('sales-invoice-print-multiple') }}"
                                             onclick="SalesOrder.generateAll(this, event)"><i
-                                                class="ri-printer-line align-bottom me-1"></i> Generate Semua ke Invoice</a>
+                                                class="ri-printer-line align-bottom me-1"></i> Generate Semua ke
+                                            Invoice</a>
                                     </div>
                                 @endif
                             </div>
@@ -70,7 +70,8 @@
                                                     <th>Dibuat Oleh</th>
                                                     <th>Status</th>
                                                     <th style="width: 40px;">
-                                                        <input type="checkbox" id="check-all" onchange="SalesOrder.checkAll(this)">
+                                                        <input type="checkbox" id="check-all"
+                                                            onchange="SalesOrder.checkAll(this)">
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -83,12 +84,14 @@
                                                         <td>{{ $item->so_number }}</td>
                                                         <td>{{ $item->so_date }}</td>
                                                         <td>{{ $item->nama_customer }}</td>
-                                                        <td>{{ number_format($item->total_amount - $item->discount_amount, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->total_amount - $item->discount_amount, 2, ',', '.') }}
+                                                        </td>
                                                         <td>{{ $item->currency_code }}</td>
                                                         <td>{{ $item->created_by_name }}</td>
                                                         <td>{{ $item->status }}</td>
                                                         <td>
-                                                              <input type="checkbox" class="check-item" value="{{ $item->id }}">
+                                                            <input type="checkbox" data_id="{{ $item->id }}"
+                                                                class="check-item" value="{{ $item->id }}">
                                                         </td>
                                                     </tr>
                                                 @endforeach

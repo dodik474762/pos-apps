@@ -431,6 +431,18 @@ let SalesOrder = {
         params.start_date = start_date;
         params.end_date = end_date;
 
+        const itemsChecked = $('input.check-item:checked');
+        if (itemsChecked.length == 0) {
+            message.sweetError("Informasi", "Pilih Data Terlebih Dahulu");
+            return false;
+        }
+
+        params.items_checked = [];
+        itemsChecked.each(function (index) {
+            params.items_checked.push($(this).attr("data_id"));
+        });
+
+
         $.ajax({
             type: "POST",
             dataType: "json",
