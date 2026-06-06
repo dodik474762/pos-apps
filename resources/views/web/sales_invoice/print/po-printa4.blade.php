@@ -133,7 +133,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1mm;
-            font-size: 7pt;
+            font-size: 8pt;
         }
 
         table.tabel-barang th,
