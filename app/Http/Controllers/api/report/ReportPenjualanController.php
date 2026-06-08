@@ -97,8 +97,40 @@ class ReportPenjualanController extends Controller
     ) as qty_sold
 "),
                 'ppi.beban',
-                'sop.discount_amount',                                               // 👈 total discount dari promo
-                DB::raw('IFNULL(sop.discount_amount / NULLIF((SELECT COUNT(sod2.qty) FROM sales_order_details sod2 WHERE sod2.sales_order_id = m.id AND sod2.deleted IS NULL), 0), 0) as prorate_discount'),
+                'sop.discount_amount',
+                //                 DB::raw('
+                //     IFNULL((
+                //         SELECT SUM(sop2.discount_amount)
+                //         FROM sales_order_promo sop2
+                //         JOIN product_promo_item_detail ppid2
+                //             ON ppid2.product_promo_item = sop2.promo
+                //         WHERE sop2.sales_order_id = m.id
+                //           AND ppid2.product = sod.product_id
+                //     ), 0) as prorate_discount
+                // '),                                      // 👈 total discount dari promo
+                // DB::raw('IFNULL(sop.discount_amount / NULLIF((SELECT COUNT(sod2.qty) FROM sales_order_details sod2 WHERE sod2.sales_order_id = m.id AND sod2.deleted IS NULL), 0), 0) as prorate_discount'),
+                DB::raw('
+    IFNULL((
+        SELECT CASE 
+            WHEN sod.id = (
+                SELECT MIN(sod_inner.id)
+                FROM sales_order_details sod_inner
+                JOIN sales_order_promo sop_inner ON sop_inner.sales_order_id = sod_inner.sales_order_id
+                JOIN product_promo_item_detail ppid_inner 
+                    ON ppid_inner.product_promo_item = sop_inner.promo
+                    AND ppid_inner.product = sod_inner.product_id
+                WHERE sod_inner.sales_order_id = m.id
+                  AND sod_inner.deleted IS NULL
+            )
+            THEN (
+                SELECT SUM(sop2.discount_amount)
+                FROM sales_order_promo sop2
+                WHERE sop2.sales_order_id = m.id
+            )
+            ELSE 0
+        END
+    ), 0) as prorate_discount
+'),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
@@ -125,6 +157,7 @@ class ReportPenjualanController extends Controller
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('m.so_date', [$date_start, $date_end])
             // ->where('m.id', '1588')
+            // ->where('sih.id', 177)
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
             ->orderBy('m.salesman', 'asc')
@@ -138,6 +171,7 @@ class ReportPenjualanController extends Controller
                 $datadb->where(function ($query) use ($keyword) {
                     $query->where('m.salesman', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('c.channel_outlet', 'LIKE', '%' . $keyword . '%')
