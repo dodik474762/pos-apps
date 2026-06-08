@@ -193,19 +193,19 @@ class SalesPlanController extends Controller
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesPlanDetailRoute::find($item['id']);
-                        if ($exist && $exist->status !== 'DRAFT') {
-                            DB::rollBack();
+                        // if ($exist && $exist->status !== 'DRAFT') {
+                        //     DB::rollBack();
 
-                            return response()->json([
-                                'is_valid' => false,
-                                'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
-                            ]);
-                        }
-                        if ($exist) {
-                            $exist->deleted = now();
-                            $exist->deleted_by = $userId;
-                            $exist->save();
-                        }
+                        //     return response()->json([
+                        //         'is_valid' => false,
+                        //         'message' => 'Tidak dapat dihapus karena status sudah bukan draft',
+                        //     ]);
+                        // }
+                        // if ($exist) {
+                        $exist->deleted = now();
+                        $exist->deleted_by = $userId;
+                        $exist->save();
+                        // }
                     }
 
                     continue;

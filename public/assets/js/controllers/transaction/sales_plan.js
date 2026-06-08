@@ -43,7 +43,7 @@ let SalesPlan = {
         table.each((index, elm) => {
             const $row = $(elm);
             // hanya push jika data_id kosong
-            if ($row.attr("data_id") !== "") return;
+            if ($row.attr("data_id") !== "" && $row.hasClass("remove") == false) return;
 
             result.push({
                 id: $row.attr("data_id") || null,
@@ -219,9 +219,8 @@ let SalesPlan = {
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesPlan.module(),
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -877,10 +876,9 @@ let SalesPlan = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesPlan.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
