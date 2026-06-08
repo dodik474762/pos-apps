@@ -102,8 +102,8 @@ class DashboardController extends Controller
 
         $totalSales = DB::table('sales_order_headers')
             ->whereYear('so_date', $year)
-            ->whereNull('deleted')
-            ->whereIn('status', ['confirmed', 'completed', 'partial']);
+            ->whereNull('deleted');
+        // ->whereIn('status', ['confirmed', 'completed', 'partial']);
 
         $summary = $totalSales->sum('total_amount');
         $jumlah = $totalSales->count();
@@ -121,7 +121,7 @@ class DashboardController extends Controller
         $outstandingReceivable = DB::table('sales_invoice_header')
             ->whereNull('deleted')
             ->whereYear('invoice_date', $year)
-            ->whereIn('status', ['POSTED', 'PARTIAL PAID']);
+            ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT']);
 
 
         $summary = $outstandingReceivable->selectRaw('SUM(total_amount - amount_paid) as outstanding')

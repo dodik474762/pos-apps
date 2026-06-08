@@ -28,7 +28,8 @@
            ========================================= */
         .faktur-block {
             width: 194mm;
-            height: 161.5mm;
+            /* height: 161.5mm; */
+            height: auto;
             /* Tepat setengah A4 */
             padding: 5mm 8mm 4mm 8mm;
             overflow: hidden;
