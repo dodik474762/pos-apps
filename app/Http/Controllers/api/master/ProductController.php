@@ -182,8 +182,8 @@ class ProductController extends Controller
                 ->select([
                     'm.id as product_id',
                     'm.code as product_code',
-                    // 'm.name as product_name',
-                    DB::raw("TRIM(CONCAT(COALESCE(v.nama_vendor, ''), ' ', m.name)) AS product_name"),
+                    'm.name as product_name',
+                    // DB::raw("TRIM(CONCAT(COALESCE(v.nama_vendor, ''), ' ', m.name)) AS product_name"),
                     'u.name as product_unit',
                     'pup.price as product_price',
                     'u.id as product_unit_id',
