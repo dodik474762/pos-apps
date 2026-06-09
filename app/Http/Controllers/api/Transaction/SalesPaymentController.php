@@ -864,7 +864,7 @@ class SalesPaymentController extends Controller
                     DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
                 )
                 ->join('customer as c', 'c.id', '=', 'sih.customer_id')
-                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])       // hanya invoice yang sudah diposting
+                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
