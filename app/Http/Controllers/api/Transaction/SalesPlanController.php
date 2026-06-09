@@ -202,10 +202,11 @@ class SalesPlanController extends Controller
                         //     ]);
                         // }
                         // if ($exist) {
-                        $exist->deleted = now();
-                        $exist->deleted_by = $userId;
-                        $exist->save();
+                        // $exist->deleted = now();
+                        // $exist->deleted_by = $userId;
+                        // $exist->save();
                         // }
+                        $exist->delete();
                     }
 
                     continue;
