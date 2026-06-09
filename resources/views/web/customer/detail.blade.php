@@ -29,7 +29,7 @@
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Kategori</label>
-                                <select disabled class="form-control select2 required" error="Kategori" id="customer_category">
+                                <select class="form-control select2 required" error="Kategori" id="customer_category">
                                     @foreach ($data_category as $item)
                                         <option value="{{ $item['id'] }}"
                                             {{ isset($data->customer_category) ? ($data->customer_category == $item['id'] ? 'selected' : '') : '' }}>
@@ -40,27 +40,30 @@
                             <div class="mb-3">
                                 <label>PIC</label>
                                 <div>
-                                    <input disabled tabindex="2" type="text" id="pic" class="form-control required" error="PIC"
-                                        placeholder="PIC" value="{{ isset($data->pic) ? $data->pic : '' }}">
+                                    <input tabindex="2" type="text" id="pic" class="form-control required"
+                                        error="PIC" placeholder="PIC"
+                                        value="{{ isset($data->pic) ? $data->pic : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Office Contact</label>
                                 <div>
-                                    <input tabindex="4" type="text" id="office_contact" class="form-control" error="Office Contact"
-                                        placeholder="Office Contact" value="{{ isset($data->office_contact) ? $data->office_contact : '' }}">
+                                    <input tabindex="4" type="text" id="office_contact" class="form-control"
+                                        error="Office Contact" placeholder="Office Contact"
+                                        value="{{ isset($data->office_contact) ? $data->office_contact : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Address</label>
                                 <div>
-                                    <input disabled tabindex="6" type="text" id="address" class="form-control required" error="Address"
-                                        placeholder="Address" value="{{ isset($data->address) ? $data->address : '' }}">
+                                    <input tabindex="6" type="text" id="address" class="form-control required"
+                                        error="Address" placeholder="Address"
+                                        value="{{ isset($data->address) ? $data->address : '' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Provinsi</label>
-                                <select disabled class="form-control select2 required" error="Province" id="provinsi"
+                                <select class="form-control select2 required" error="Province" id="provinsi"
                                     onchange="Customer.getCity(this)">
                                     <option value=""></option>
                                     @foreach ($data_province as $item)
@@ -73,28 +76,34 @@
                             <div class="mb-3">
                                 <label>Currency</label>
                                 <div>
-                                    <select disabled name="" id="currency" class="form-control">
+                                    <select name="" id="currency" class="form-control">
                                         <option value="">PILIH</option>
-                                        <option value="IDR" {{ isset($data->currency) ? ($data->currency == 'IDR' ? 'selected' : '') : '' }}>IDR</option>
-                                        <option value="USD" {{ isset($data->currency) ? ($data->currency == 'USD' ? 'selected' : '') : '' }}>USD</option>
+                                        <option value="IDR"
+                                            {{ isset($data->currency) ? ($data->currency == 'IDR' ? 'selected' : '') : '' }}>
+                                            IDR</option>
+                                        <option value="USD"
+                                            {{ isset($data->currency) ? ($data->currency == 'USD' ? 'selected' : '') : '' }}>
+                                            USD</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Max Retur</label>
                                 <div>
-                                    <input disabled tabindex="10" type="number" id="max_retur" class="form-control required" error="Max Retur"
-                                        placeholder="Max Retur" value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
+                                    <input tabindex="10" type="number" id="max_retur" class="form-control required"
+                                        error="Max Retur" placeholder="Max Retur"
+                                        value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label>Longitude</label>
                                 <div>
-                                    <input disabled tabindex="12" type="text" id="longitude" class="form-control" error="Longitude"
-                                        placeholder="Longitude Ex : 106.816666" value="{{ isset($data->longitude) ? $data->longitude : '' }}">
+                                    <input tabindex="12" type="text" id="longitude" class="form-control"
+                                        error="Longitude" placeholder="Longitude Ex : 106.816666"
+                                        value="{{ isset($data->longitude) ? $data->longitude : '' }}">
                                 </div>
                             </div>
-                              <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Pasar</label>
                                 <select class="form-control select2" error="Pasar" id="pasar">
                                     <option value=""></option>
@@ -110,74 +119,85 @@
                             <div class="mb-3">
                                 <label>Nama Customer</label>
                                 <div>
-                                    <input disabled tabindex="1" type="text" id="nama_customer" class="form-control required" error="Nama Customer"
-                                        placeholder="Nama Customer" value="{{ isset($data->nama_customer) ? $data->nama_customer : '' }}">
+                                    <input tabindex="1" type="text" id="nama_customer"
+                                        class="form-control required" error="Nama Customer" placeholder="Nama Customer"
+                                        value="{{ isset($data->nama_customer) ? $data->nama_customer : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Phone</label>
                                 <div>
-                                    <input disabled tabindex="3" type="text" id="phone" class="form-control required" error="Phone"
-                                        placeholder="Phone" value="{{ isset($data->phone) ? $data->phone : '' }}">
+                                    <input tabindex="3" type="text" id="phone" class="form-control required"
+                                        error="Phone" placeholder="Phone"
+                                        value="{{ isset($data->phone) ? $data->phone : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Email</label>
                                 <div>
-                                    <input disabled tabindex="5" type="text" id="email" class="form-control required" error="Email"
-                                        placeholder="Email" value="{{ isset($data->email) ? $data->email : '' }}">
+                                    <input tabindex="5" type="text" id="email"
+                                        class="form-control required" error="Email" placeholder="Email"
+                                        value="{{ isset($data->email) ? $data->email : '' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Kota</label>
-                                <select disabled class="form-control select2" error="Kota" id="kota" onchange="Customer.getKecamatan(this)">
+                                <select class="form-control select2" error="Kota" id="kota"
+                                    onchange="Customer.getKecamatan(this)">
                                     @if (isset($data->kota))
                                         <option value="{{ $data->kota }}" selected>{{ $data->city_name }}</option>
                                     @endif
                                 </select>
                             </div>
-                              <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Kecamatan</label>
-                                <select disabled class="form-control select2" error="Kecamatan" id="kecamatan" onchange="Customer.getKelurahan(this)">
+                                <select class="form-control select2" error="Kecamatan" id="kecamatan"
+                                    onchange="Customer.getKelurahan(this)">
                                     @if (isset($data->kecamatan))
-                                        <option value="{{ $data->kecamatan }}" selected>{{ $data->kecamatan_name }}</option>
+                                        <option value="{{ $data->kecamatan }}" selected>{{ $data->kecamatan_name }}
+                                        </option>
                                     @endif
                                 </select>
                             </div>
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Kelurahan</label>
-                                <select disabled class="form-control select2" error="Kelurahan" id="kelurahan">
+                                <select class="form-control select2" error="Kelurahan" id="kelurahan">
                                     @if (isset($data->kelurahan))
-                                        <option value="{{ $data->kelurahan }}" selected>{{ $data->kelurahan_name }}</option>
+                                        <option value="{{ $data->kelurahan }}" selected>{{ $data->kelurahan_name }}
+                                        </option>
                                     @endif
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label>NPWP</label>
                                 <div>
-                                    <input disabled tabindex="9" type="text" id="npwp" class="form-control required" error="NPWP"
-                                        placeholder="NPWP" value="{{ isset($data->npwp) ? $data->npwp : '' }}">
+                                    <input tabindex="9" type="text" id="npwp"
+                                        class="form-control required" error="NPWP" placeholder="NPWP"
+                                        value="{{ isset($data->npwp) ? $data->npwp : '' }}">
                                 </div>
                             </div>
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label>No. KTP</label>
                                 <div>
-                                    <input disabled tabindex="9" type="text" id="no_ktp" class="form-control" error="No. KTP"
-                                        placeholder="No. KTP" value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
+                                    <input tabindex="9" type="text" id="no_ktp" class="form-control"
+                                        error="No. KTP" placeholder="No. KTP"
+                                        value="{{ isset($data->no_ktp) ? $data->no_ktp : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Reference Number</label>
                                 <div>
-                                    <input tabindex="10" type="text" id="reference_number" class="form-control" error="Reference Number"
-                                        placeholder="Reference Number" value="{{ isset($data->reference_number) ? $data->reference_number : '' }}">
+                                    <input tabindex="10" type="text" id="reference_number" class="form-control"
+                                        error="Reference Number" placeholder="Reference Number"
+                                        value="{{ isset($data->reference_number) ? $data->reference_number : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Latitude</label>
                                 <div>
-                                    <input  disabled tabindex="11" type="text" id="latitude" class="form-control" error="Latitude"
-                                        placeholder="Latitude Ex : -6.200000" value="{{ isset($data->latitude) ? $data->latitude : '' }}">
+                                    <input tabindex="11" type="text" id="latitude" class="form-control"
+                                        error="Latitude" placeholder="Latitude Ex : -6.200000"
+                                        value="{{ isset($data->latitude) ? $data->latitude : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -186,19 +206,19 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h4>Foto Customer</h4>
-                            @if($data->photo_path != '')
+                            @if ($data->photo_path != '')
                                 <img src="{{ asset($data->photo_path) }}" alt="Foto">
                             @endif
                         </div>
                         <div class="col-md-4">
                             <h4>Foto KTP</h4>
-                            @if($data->foto_ktp_path != '')
+                            @if ($data->foto_ktp_path != '')
                                 <img src="{{ asset($data->foto_ktp_path) }}" alt="Foto">
                             @endif
                         </div>
                         <div class="col-md-4">
                             <h4>Foto NPWP</h4>
-                            @if($data->foto_npwp_path != '')
+                            @if ($data->foto_npwp_path != '')
                                 <img src="{{ asset($data->foto_npwp_path) }}" alt="Foto">
                             @endif
                         </div>
@@ -221,8 +241,7 @@
                         Reject
                     </button>
                 @endif
-                <button type="reset" onclick="Customer.cancelAcc(this, event)"
-                    class="btn  waves-effect">
+                <button type="reset" onclick="Customer.cancelAcc(this, event)" class="btn  waves-effect">
                     Cancel
                 </button>
             </div>

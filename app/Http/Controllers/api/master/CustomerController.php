@@ -263,6 +263,25 @@ class CustomerController extends Controller
             $roles->remarks = isset($data['remarks']) ? $data['remarks'] : '';
             $roles->office_contact = $data['office_contact'];
             $roles->reference_number = $data['reference_number'];
+            $roles->no_ktp = $data['no_ktp'];
+            $roles->nama_customer = $data['nama_customer'];
+            $roles->pic = $data['pic'];
+            $roles->phone = $data['phone'];
+            $roles->office_contact = $data['office_contact'];
+            $roles->email = $data['email'];
+            $roles->address = $data['address'];
+            $roles->kota = $data['kota'];
+            $roles->provinsi = $data['provinsi'];
+            $roles->npwp = $data['npwp'];
+            $roles->currency = $data['currency'];
+            $roles->customer_category = $data['customer_category'];
+            $roles->payment_terms = 3;
+            $roles->kecamatan = $data['kecamatan'];
+            $roles->kelurahan = $data['kelurahan'];
+            $roles->reference_number = $data['reference_number'];
+            $roles->latitude = $data['latitude'];
+            $roles->longitude = $data['longitude'];
+            $roles->pasar = $data['pasar'];
             $roles->save();
 
             DB::commit();

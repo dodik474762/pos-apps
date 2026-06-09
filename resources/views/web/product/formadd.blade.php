@@ -161,10 +161,10 @@
                             </div>
 
                             <div class="mb-3">
-                                <label>Nama SKU</label>
+                                <label>Nama Brand</label>
                                 <div>
                                     <input type="text" id="sku_name" name="sku_name"
-                                        class="form-control required" error="Nama SKU" placeholder="Nama SKU"
+                                        class="form-control required" error="Nama Brand" placeholder="Nama Brand"
                                         value="{{ isset($data->sku_name) ? $data->sku_name : '' }}">
                                 </div>
                             </div>

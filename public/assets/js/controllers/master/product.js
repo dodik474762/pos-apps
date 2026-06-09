@@ -78,7 +78,7 @@ let Product = {
             serverSide: true,
             ordering: true,
             autoWidth: false,
-            order: [[0, "asc"]],
+            order: [[0, "desc"]],
             aLengthMenu: [
                 [25, 50, 100],
                 [25, 50, 100],
