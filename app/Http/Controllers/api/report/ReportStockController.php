@@ -469,7 +469,18 @@ class ReportStockController extends Controller
                 DB::raw('ROUND(
                 SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
             ) as stok_tersedia_raw'),
-                'm.price'
+                // 'm.price'
+                // TAMBAH subquery price terlama (non-zero preferred)
+                DB::raw('COALESCE(
+        (SELECT m2.price FROM product_stock_move m2 
+         WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
+           AND m2.price > 0 AND DATE(m2.created_at) <= "' . $tanggal . '"
+         ORDER BY m2.created_at ASC LIMIT 1),
+        (SELECT m2.price FROM product_stock_move m2 
+         WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
+           AND DATE(m2.created_at) <= "' . $tanggal . '"
+         ORDER BY m2.created_at ASC LIMIT 1)
+    ) as price')
             ])
             ->with(['products.uomFromLarge.units'])
             ->join('product as p', 'p.id', 'm.product')
@@ -510,7 +521,7 @@ class ReportStockController extends Controller
             ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
 
             ->whereDate('m.created_at', '<=', $tanggal)
-            // ->where('p.id', '56')
+            // ->where('p.code', 'P26JAN0020')
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -526,7 +537,7 @@ class ReportStockController extends Controller
                 'u_rtg.name',
                 'pu_pcs.nilai_konversi_terkecil',
                 'u_pcs.name',
-                'm.price'
+                // 'm.price'
             )
             ->orderBy('p.name');
 
