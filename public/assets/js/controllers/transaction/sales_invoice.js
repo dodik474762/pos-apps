@@ -247,6 +247,9 @@ let SalesInvoice = {
                     data: "so_date",
                 },
                 {
+                    data: "customer_code",
+                },
+                {
                     data: "nama_customer",
                 },
                 {
@@ -290,6 +293,9 @@ let SalesInvoice = {
                         }
                         return data;
                     }
+                },
+                {
+                    data: "payment_terms",
                 },
                 {
                     data: "due_date",
@@ -436,6 +442,9 @@ let SalesInvoice = {
                     data: "do_date",
                 },
                 {
+                    data: "customer_code",
+                },
+                {
                     data: "nama_customer",
                 },
                 {
@@ -479,6 +488,9 @@ let SalesInvoice = {
                         }
                         return data;
                     }
+                },
+                {
+                    data: "payment_terms",
                 },
                 {
                     data: "due_date",

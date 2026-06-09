@@ -34,15 +34,18 @@ class SalesInvoiceController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
+                'cc.code as customer_code',
                 'do.do_number',
                 'do.do_date',
                 'w.name as warehouse_name',
-                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
+                'top.remarks as payment_terms',
+                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining'),
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('delivery_order_header as do', 'do.id', 'm.do_id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -66,6 +69,8 @@ class SalesInvoiceController extends Controller
                     $query->orWhere('do.do_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
@@ -101,15 +106,18 @@ class SalesInvoiceController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
+                'cc.code as customer_code',
                 'so.so_number',
                 'so.so_date',
                 'w.name as warehouse_name',
+                'top.remarks as payment_terms',
                 DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -133,6 +141,8 @@ class SalesInvoiceController extends Controller
                     $query->orWhere('so.so_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }

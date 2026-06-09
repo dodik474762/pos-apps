@@ -345,6 +345,7 @@ class CustomerController extends Controller
             $roles->latitude = $data['latitude'];
             $roles->longitude = $data['longitude'];
             $roles->platform = 'mobile';
+            $roles->payment_terms = 3;
             $roles->users = $users_id;
             $roles->save();
 

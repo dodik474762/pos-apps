@@ -55,23 +55,22 @@
                                     <div>
                                         <label for="">Start Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="Y-m-d" id="start_date"
-                                            placeholder="Select start date">
+                                            data-date-format="Y-m-d" id="start_date" placeholder="Select start date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">End Date</label>
                                         <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="Y-m-d" id="end_date"
-                                            placeholder="Select end date">
+                                            data-date-format="Y-m-d" id="end_date" placeholder="Select end date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <label for="">&nbsp;</label>
                                         <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" id="belum_lunas" value="1">
+                                            <input class="form-check-input" type="checkbox" id="belum_lunas"
+                                                value="1">
                                             <label class="form-check-label" for="belum_lunas">
                                                 Belum Lunas
                                             </label>
@@ -145,12 +144,14 @@
                                                     <th>Tanggal Invoice</th>
                                                     <th>SO Number</th>
                                                     <th>Tanggal SO</th>
+                                                    <th>Customer Code</th>
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
                                                     <th>Dibuat Oleh</th>
                                                     <th>Total Tagihan</th>
                                                     <th>Total Pembayaran</th>
                                                     <th>Total Outstanding</th>
+                                                    <th>Payment Terms</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
                                                     <th>Status Cetak</th>
@@ -183,12 +184,14 @@
                                                     <th>Tanggal Invoice</th>
                                                     <th>DO Number</th>
                                                     <th>Tanggal DO</th>
+                                                    <th>Customer Code</th>
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
                                                     <th>Dibuat Oleh</th>
                                                     <th>Total Tagihan</th>
                                                     <th>Total Pembayaran</th>
                                                     <th>Total Outstanding</th>
+                                                    <th>Payment Terms</th>
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Waktu Print</th>
                                                     <th>Status Cetak</th>
