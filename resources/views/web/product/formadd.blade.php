@@ -1,6 +1,5 @@
-
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-  data-bs-target="#data-modal-karyawan"></button>
+    data-bs-target="#data-modal-karyawan"></button>
 <div id="content-modal-form"></div>
 
 <!-- start page title -->
@@ -26,14 +25,16 @@
         <div class="card">
             <div class="card-body">
                 {{-- <form onsubmit="Product.submit(this, event)" enctype="multipart/form-data"> --}}
-                <form action="{{ url('/api/master/product/submit') }}" method="POST" enctype="multipart/form-data" id="form-product">
-                     @csrf
+                <form action="{{ url('/api/master/product/submit') }}" method="POST" enctype="multipart/form-data"
+                    id="form-product">
+                    @csrf
                     <input type="hidden" id="id" name="id" value="{{ isset($id) ? $id : '' }}">
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Type</label>
-                                <select class="form-control select2 required" error='Type' id="product_type" name="product_type">
+                                <select class="form-control select2 required" error='Type' id="product_type"
+                                    name="product_type">
                                     @foreach ($product_type as $item)
                                         <option value="{{ $item['id'] }}"
                                             {{ isset($data->product_type) ? ($data->product_type == $item['id'] ? 'selected' : '') : '' }}>
@@ -52,23 +53,24 @@
                             <div class="mb-3">
                                 <label>Kode Princpal</label>
                                 <div>
-                                    <input type="text" id="model_number" name="model_number" class="form-control required"
-                                        error="Kode Princpal" placeholder="Kode Princpal"
+                                    <input type="text" id="model_number" name="model_number"
+                                        class="form-control required" error="Kode Princpal" placeholder="Kode Princpal"
                                         value="{{ isset($data->model_number) ? $data->model_number : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Remarks</label>
                                 <div>
-                                    <input type="text" id="remarks" name="remarks" class="form-control required" error="Remarks"
-                                        placeholder="Remarks"
+                                    <input type="text" id="remarks" name="remarks" class="form-control required"
+                                        error="Remarks" placeholder="Remarks"
                                         value="{{ isset($data->remarks) ? $data->remarks : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Tax Jual</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Tax Jual' id="tax_id" name="tax_id">
+                                    <select class="form-control select2 required" error='Tax Jual' id="tax_id"
+                                        name="tax_id">
                                         <option value="">-- Pilih Tax Jual --</option>
                                         @foreach ($taxs as $item)
                                             <option value="{{ $item['id'] }}"
@@ -81,7 +83,8 @@
                             <div class="mb-3">
                                 <label>Principal</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Principal' id="principal" name="principal">
+                                    <select class="form-control select2 required" error='Principal' id="principal"
+                                        name="principal">
                                         <option value="">-- Principal --</option>
                                         @foreach ($vendors as $item)
                                             <option value="{{ $item->id }}"
@@ -92,10 +95,11 @@
                                 </div>
                             </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label>Vendor</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Principal' id="vendor" name="vendor">
+                                    <select class="form-control select2 required" error='Principal' id="vendor"
+                                        name="vendor">
                                         <option value="">-- Vendor --</option>
                                         @foreach ($vendors as $item)
                                             <option value="{{ $item->id }}"
@@ -109,7 +113,8 @@
                             <div class="mb-3">
                                 <label>Tax Tipe</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Tax Tipe' id="type_tax" name="type_tax">
+                                    <select class="form-control select2 required" error='Tax Tipe' id="type_tax"
+                                        name="type_tax">
                                         <option value="">-- Pilih Tax Tipe --</option>
                                         @foreach ($tax_type as $item)
                                             <option value="{{ $item }}"
@@ -122,7 +127,8 @@
                             <div class="mb-3">
                                 <label>Retur Type</label>
                                 <div>
-                                    <select class="form-control select2 required" error='Retur Type' id="type_retur" name="type_retur">
+                                    <select class="form-control select2 required" error='Retur Type' id="type_retur"
+                                        name="type_retur">
                                         @foreach ($retur_type as $item)
                                             <option value="{{ $item }}"
                                                 {{ isset($data->type_retur) ? ($data->type_retur == $item ? 'selected' : '') : '' }}>
@@ -144,9 +150,10 @@
                                                 File {{ $data->files }}</a>
                                         @endif
                                     @endif
-                                    <input id="file" name="file" type="file" readonly class="form-control"
-                                        placeholder="Pilih Data File" aria-label="Pilih Data File" src=""
-                                        error="Data File" aria-describedby="button-addon1"
+                                    <input id="file" name="file" type="file" readonly
+                                        class="form-control" placeholder="Pilih Data File"
+                                        aria-label="Pilih Data File" src="" error="Data File"
+                                        aria-describedby="button-addon1"
                                         value="{{ isset($data->id) ? $data->files : '' }}">
                                     <input type="hidden" name="files" id="files"
                                         value="{{ isset($data->id) ? $data->id : '' }}">
@@ -156,43 +163,45 @@
                             <div class="mb-3">
                                 <label>Nama SKU</label>
                                 <div>
-                                    <input type="text" id="sku_name" name="sku_name" class="form-control required" error="Nama SKU"
-                                        placeholder="Nama SKU"
+                                    <input type="text" id="sku_name" name="sku_name"
+                                        class="form-control required" error="Nama SKU" placeholder="Nama SKU"
                                         value="{{ isset($data->sku_name) ? $data->sku_name : '' }}">
                                 </div>
                             </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label>Kategori SKU</label>
                                 <div>
-                                    <input type="text" id="category" name="category" class="form-control required" error="Kategori SKU"
-                                        placeholder="Kategori SKU"
+                                    <input type="text" id="category" name="category"
+                                        class="form-control required" error="Kategori SKU" placeholder="Kategori SKU"
                                         value="{{ isset($data->category) ? $data->category : '' }}">
                                 </div>
                             </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label>Sub Brand</label>
                                 <div>
-                                    <input type="text" id="sub_brand" name="sub_brand" class="form-control" error="Sub Brand"
-                                        placeholder="Sub Brand"
+                                    <input type="text" id="sub_brand" name="sub_brand" class="form-control"
+                                        error="Sub Brand" placeholder="Sub Brand"
                                         value="{{ isset($data->sub_brand) ? $data->sub_brand : '' }}">
                                 </div>
                             </div>
 
-                             @if(count($product_uoms) > 0)
+                            @if (count($product_uoms) > 0)
                                 <div class="mb-3">
                                     <label>Harga Jual Retail Satuan Besar</label>
                                     <div>
-                                        <input type="text" id="harga_satuan_besar" name="harga_satuan_besar" class="form-control required" error="Harga"
-                                            placeholder="Harga"
-                                            value="{{  count($product_prices) > 0 ? $prices_retails[count($prices_retails)-1]->price : ''  }}">
-                                            <div style="margin-top: 5px;">
-                                                <button class="btn btn-primary" onclick="Product.updateHargaRetail(this, event)">Update Harga Retail</button>
-                                            </div>
+                                        <input type="text" id="harga_satuan_besar" name="harga_satuan_besar"
+                                            class="form-control required" error="Harga" placeholder="Harga"
+                                            value="{{ $product_prices->isNotEmpty() ? $product_prices->last()->price : '' }}">
+                                        <div style="margin-top: 5px;">
+                                            <button class="btn btn-primary"
+                                                onclick="Product.updateHargaRetail(this, event)">Update Harga
+                                                Retail</button>
+                                        </div>
                                     </div>
                                 </div>
-                             @endif
+                            @endif
 
                         </div>
 
@@ -269,12 +278,12 @@
                                 class="btn btn-success waves-effect waves-light me-1">
                                 Submit
                             </button> --}}
-                            <button type="submit"
-                                onclick="Product.submit(this, event)"
+                            <button type="submit" onclick="Product.submit(this, event)"
                                 class="btn btn-success waves-effect waves-light me-1">
                                 Submit
                             </button>
-                            <button type="reset" onclick="Product.cancel(this, event)" class="btn btn waves-effect">
+                            <button type="reset" onclick="Product.cancel(this, event)"
+                                class="btn btn waves-effect">
                                 Cancel
                             </button>
                         </div>
