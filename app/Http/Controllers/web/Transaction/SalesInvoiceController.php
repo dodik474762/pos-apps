@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
 use App\Models\Master\Tax;
+use App\Models\Master\Users;
 use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
@@ -270,8 +271,12 @@ class SalesInvoiceController extends Controller
         ]);
         $do = $data['do_id'] != '' ? DeliveryOrderHeader::where('id', $data->do_id)->first() : [];
         $so = $data['do_id'] != '' ? SalesOrderHeader::where('id', $do->so_id)->first() : SalesOrderHeader::where('id', $data->sales_order)->first();
+        $userSalesman = Users::where('id', $so->salesman)->first();
+        // echo '<pre>';
+        // print_r($userSalesman);
+        // die;
         $salesman = Karyawan::where('id', $so->salesman)->first();
-        $salesman_name = ! empty($salesman) ? $salesman->nama_lengkap : '-';
+        $salesman_name = ! empty($userSalesman) ? $userSalesman->username : '-';
 
         $tax = DB::table('tax')->where('id', $so->tax_id ?? 1)->first();
         $ppn_val = 11;

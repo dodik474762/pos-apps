@@ -252,7 +252,8 @@
             $qr = '';
             $do = empty($data->do) ? [] : $data->do;
             $so = empty($data->do) ? $data->so : $do->so;
-            $salesman_name = $so->salesman->nama_lengkap ?? '-';
+            $salesman_name = $so->salesmans->username ?? '-';
+
         @endphp
 
         @include('web.sales_invoice.print.bodyprint4', [
