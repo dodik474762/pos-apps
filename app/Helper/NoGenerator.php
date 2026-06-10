@@ -919,6 +919,11 @@ function cancelAllGL($reference = '')
     GeneralLedger::where('reference', $reference)->delete();
 }
 
+function updateAllGL($reference = '', $to_reference = '')
+{
+    GeneralLedger::where('reference', $to_reference)->update(['reference' => $reference]);
+}
+
 function getGeneralLedger($reference = '')
 {
     $general_ledgers = DB::table('general_ledgers as gl')
