@@ -73,10 +73,15 @@ class ReportPiutangController extends Controller
                     ->whereNull('dv.deleted');
             })
             // ->where('m.id', '1588')
+            // ->where('usr.name', 'SLS-005')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
-            ->orderBy('m.salesman', 'asc')
-            ->having('outstanding_amount', '>', 0);
+            ->orderBy('m.salesman', 'asc');
+        if ($data['types'] == 'per-penjual') {
+            $datadb->where('m.total_amount', '>', 0);
+        } else {
+            $datadb->having('outstanding_amount', '>', 0);
+        }
 
         if (isset($data['types'])) {
             if ($data['types'] == 'per-penjual') {
@@ -160,7 +165,6 @@ class ReportPiutangController extends Controller
         foreach ($datadb as $value) {
             $resultdb[] = $value;
         }
-
         $data['data'] = $resultdb;
         $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
 
