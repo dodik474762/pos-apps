@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 class CustomerCategoryController extends Controller
 {
     public $akses_menu = [];
-    public function __construct(){
+    public function __construct()
+    {
         date_default_timezone_set('Asia/Jakarta');
         $this->akses_menu = json_decode(session('akses_menu'));
     }
@@ -22,19 +23,23 @@ class CustomerCategoryController extends Controller
         );
     }
 
-    public function getTitleParent(){
+    public function getTitleParent()
+    {
         return "Master";
     }
 
-    public function getTableName(){
+    public function getTableName()
+    {
         return "";
     }
 
-    public function getTitle(){
+    public function getTitle()
+    {
         return "Customer Category";
     }
 
-    public function index(){
+    public function index()
+    {
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -50,32 +55,35 @@ class CustomerCategoryController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function add(){
-       $data['data'] = [];
-       $data['title'] = 'Form '.$this->getTitle();
-       $data['title_parent'] = $this->getTitleParent();
-       $view = view('web.customer_category.formadd', $data);
-       $put['title_content'] = $this->getTitle();
-       $put['title_top'] = 'Form '.$this->getTitle();
-       $put['title_parent'] = $this->getTitleParent();
-       $put['view_file'] = $view;
-       $put['header_data'] = $this->getHeaderCss();
-       return view('web.template.main', $put);
-   }
+    public function add()
+    {
+        $data['data'] = [];
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $view = view('web.customer_category.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
 
-   public function ubah(Request $request){
-       $api = new MasterCustomerCategoryController();
-       $data = $request->all();
-       $data['data'] = $api->getDetailData($data['id'])->original;
+    public function ubah(Request $request)
+    {
+        $api = new MasterCustomerCategoryController();
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
 
-       $data['title'] = 'Form '.$this->getTitle();
-       $data['title_parent'] = $this->getTitleParent();
-       $view = view('web.customer_category.formadd', $data);
-       $put['title_content'] = $this->getTitle();
-       $put['title_top'] = 'Form '.$this->getTitle();
-       $put['title_parent'] = $this->getTitleParent();
-       $put['view_file'] = $view;
-       $put['header_data'] = $this->getHeaderCss();
-       return view('web.template.main', $put);
-   }
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses_session'] = session('akses');
+        $view = view('web.customer_category.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
 }
