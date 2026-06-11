@@ -454,7 +454,7 @@ let ReportPenjualan = {
                     },
                 },
                 {
-                    data: "total_amount",
+                    data: "gross_amount",
                     title: "GROSSAMOUNT",
                     render: function (data, type, row) {
                         return data ?? 0;
@@ -477,11 +477,11 @@ let ReportPenjualan = {
                     },
                 },
                 {
-                    data: "prorate_discount",
+                    data: "discount_per_product",
                     title: "LINE DISCOUNT 3",
                     render: function (data, type, row) {
                         // selalu 0
-                        return 0;
+                        return row.discount_per_product ?? 0;
                     },
                 },
                 {
@@ -502,9 +502,10 @@ let ReportPenjualan = {
                         let line1 = row.beban === "PRINCIPAL" ? (data ?? 0) : 0;
                         let line2 =
                             row.beban === "DISTRIBUTOR" ? (data ?? 0) : 0;
-                        let line3 = 0;
+                        let line3 = row.discount_per_product ?? 0;
+                        line3 = isNaN(parseFloat(line3)) ? 0 : parseFloat(line3);
                         let totalDiscount = line1 + line2 + line3;
-                        let grossAmount = row.total_amount ?? 0;
+                        let grossAmount = row.gross_amount ?? 0;
                         return grossAmount - totalDiscount;
                     },
                 },

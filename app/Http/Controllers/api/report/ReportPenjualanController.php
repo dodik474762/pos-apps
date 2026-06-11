@@ -129,8 +129,13 @@ class ReportPenjualanController extends Controller
             )
             ELSE 0
         END
-    ), 0) as prorate_discount
+    ), 0) as prorate_discount  
 '),
+                'sih.invoice_date',
+                'sih.amount_paid',
+                'sid.discount as discount_per_product',
+                DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
+                DB::raw('(sid.qty * sid.price) AS gross_amount'),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
@@ -159,6 +164,7 @@ class ReportPenjualanController extends Controller
             // ->where('m.id', '1588')
             // ->where('sih.id', 177)
             // ->where('usr.name', 'SLS-005')
+            // ->where('sih.invoice_number', 'SI06260291')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0)
@@ -234,7 +240,7 @@ class ReportPenjualanController extends Controller
         }
 
         $data['data'] = $resultdb;
-        $data['draw'] = $_POST['draw'];
+        $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
 
         $query = DB::getQueryLog();
         return json_encode($data);
