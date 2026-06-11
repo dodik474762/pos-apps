@@ -159,6 +159,7 @@ class ReportPenjualanController extends Controller
             // ->where('m.id', '1588')
             // ->where('sih.id', 177)
             ->whereNull('m.deleted')
+            ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0)
             ->orderBy('m.salesman', 'asc')
             ->orderBy('m.so_number', 'asc');
@@ -242,6 +243,7 @@ class ReportPenjualanController extends Controller
     {
         DB::enableQueryLog();
         $data = $request->all();
+        $filter_satuan = $_POST['filter_satuan'] ?? 'default';
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -283,7 +285,58 @@ class ReportPenjualanController extends Controller
                 'sih.invoice_date',
                 'sid.qty',
                 'sid.price',
-                'sid.subtotal'
+                'sid.subtotal',
+                DB::raw("
+                (
+                    SELECT SUM(
+                        CASE 
+                            WHEN uom_used.level = 1 THEN FLOOR(inner_sod.qty)
+                            ELSE FLOOR(inner_sod.qty * uom_used.nilai_konversi_terkecil)
+                        END
+                    )
+                    FROM sales_order_details inner_sod
+                    JOIN product_uom uom_used
+                        ON uom_used.unit_tujuan = inner_sod.unit
+                        AND uom_used.product = inner_sod.product_id
+                        AND uom_used.deleted IS NULL
+                    WHERE inner_sod.sales_order_id = m.id
+                    AND inner_sod.product_id = sod.product_id
+                    AND inner_sod.deleted IS NULL
+                ) as qty_terkecil
+            "),
+
+                DB::raw("
+                (
+                    SELECT SUM(
+                        CASE 
+                            WHEN uom_used.level = 1 THEN FLOOR(inner_sod.qty)
+                            ELSE FLOOR(inner_sod.qty * uom_used.nilai_konversi_terkecil)
+                        END
+                    )
+                    /
+                    (
+                        SELECT nilai_konversi_terkecil FROM product_uom
+                        WHERE product = sod.product_id
+                        AND deleted IS NULL
+                        AND level = (
+                            SELECT MAX(level) FROM product_uom
+                            WHERE product = sod.product_id
+                                AND deleted IS NULL
+                        )
+                        LIMIT 1
+                    )
+                    FROM sales_order_details inner_sod
+                    JOIN product_uom uom_used
+                        ON uom_used.unit_tujuan = inner_sod.unit
+                        AND uom_used.product = inner_sod.product_id
+                        AND uom_used.deleted IS NULL
+                    WHERE inner_sod.sales_order_id = m.id
+                    AND inner_sod.product_id = sod.product_id
+                    AND inner_sod.deleted IS NULL
+                ) as qty_terbesar
+            "),
+                'unit_terkecil.name as unit_terkecil',
+                'unit_terbesar.name as unit_terbesar'
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
@@ -307,10 +360,23 @@ class ReportPenjualanController extends Controller
                     ->on('dv.users', 'm.salesman')
                     ->whereNull('dv.deleted');
             })
-            ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
-            ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
+            ->leftJoin('product_uom as pou', function ($q) {
+                $q->on('pou.product', 'sod.product_id')
+                    ->where('pou.state', 'large')
+                    ->whereNull('pou.deleted');
+            })
+            ->leftJoin('product_uom as pou_terkecil', function ($q) {
+                $q->on('pou_terkecil.product', 'sod.product_id')
+                    ->where('pou_terkecil.state', 'small')
+                    ->whereNull('pou_terkecil.deleted');
+            })
+            ->leftJoin('unit as unit_terkecil', 'unit_terkecil.id', 'pou_terkecil.unit_tujuan')
+            ->leftJoin('unit as unit_terbesar', 'unit_terbesar.id', 'pou.unit_tujuan')
+            // ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
+            // ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('m.id', '1588')
+            // ->where('p.code', 'P26JAN0016')
+            ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
             ->orderBy('m.salesman', 'asc')
@@ -378,6 +444,9 @@ class ReportPenjualanController extends Controller
 
         $resultdb = [];
         $datadb = $datadb->get()->toArray();
+        // echo '<pre>';
+        // print_r($datadb);
+        // die();
 
         foreach ($datadb as $value) {
             $resultdb[] = $value;

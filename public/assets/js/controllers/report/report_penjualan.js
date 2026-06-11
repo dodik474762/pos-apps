@@ -52,6 +52,15 @@ let ReportPenjualan = {
                 $(this).select2();
             });
         }
+
+
+        // Tambah di bagian bawah $(function() { ... })
+        $('a[href="#report-per-barang"]').on('shown.bs.tab', function () {
+            $('#filter-satuan-wrapper').show();
+        });
+        $('a[href="#report-per-barang"]').on('hidden.bs.tab', function () {
+            $('#filter-satuan-wrapper').hide();
+        });
     },
 
     cancel: (elm, e) => {
@@ -1882,6 +1891,7 @@ let ReportPenjualan = {
                 data: function (d) {
                     d.date_start = $("#filter-start-date").val();
                     d.date_end = $("#filter-end-date").val();
+                    d.filter_satuan = $("#filter-satuan").val() || "default";
                 },
             },
             deferRender: true,
@@ -1987,17 +1997,26 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    // Kolom KUANTITAS — render sesuai filter_satuan
                     data: "qty",
                     title: "KUANTITAS",
                     render: function (data, type, row) {
-                        return data;
+                        let satuan = $("#filter-satuan").val() || "default";
+                        if (satuan === "terkecil") return row.qty_terkecil ?? 0;
+                        if (satuan === "terbesar") return row.qty_terbesar ?? 0;
+                        return data ?? 0; // default = qty dari invoice detail
                     },
                 },
+
                 {
+                    // Kolom SATUAN — label menyesuaikan pilihan
                     data: "unit_jual",
                     title: "SATUAN",
                     render: function (data, type, row) {
-                        return data;
+                        let satuan = $("#filter-satuan").val() || "default";
+                        if (satuan === "terkecil") return row.unit_terkecil ?? data;
+                        if (satuan === "terbesar") return row.unit_terbesar ?? data;
+                        return data ?? "";
                     },
                 },
                 {

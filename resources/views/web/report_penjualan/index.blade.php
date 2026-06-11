@@ -73,6 +73,17 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-xxl-2 col-sm-6 col-md-3" id="filter-satuan-wrapper"
+                                    style="display:none">
+                                    <label class="form-label mb-1">Satuan</label>
+                                    <div>
+                                        <select name="filter-satuan" id="filter-satuan" class="form-control">
+                                            <option value="default">Default (Unit Jual)</option>
+                                            <option value="terkecil">Terkecil</option>
+                                            <option value="terbesar">Terbesar</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-6 col-md-3">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"
