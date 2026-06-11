@@ -15,7 +15,7 @@
  {{-- ============================================================
      FAKTUR COPY 1 (atas)
      ============================================================ --}}
- <div class="faktur-block">
+ <div class="faktur-block" style="margin-top:-10px;">
 
      {{-- HEADER --}}
      <table class="header-outer">
@@ -36,7 +36,7 @@
              </td>
 
              {{-- Kanan: judul + kotak info --}}
-             <td style="width:160pt; vertical-align:top; padding-left:4pt;">
+             <td style="width:160pt; vertical-align:top; padding-left:4pt;;">
                  <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;">Faktur Penjualan
                  </div>
                  <table style="width:100%; border-collapse:collapse; font-size:7.5pt;">
@@ -226,7 +226,9 @@
                  </tr>
                  <tr>
                      <td><strong>Total</strong></td>
-                     <td class="text-right"><strong>{{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
+                     <td class="text-right" style="font-size:12px !important;">
+                         <strong>{{ number_format($grandTotal, 0, ',', '.') }}</strong>
+                     </td>
                  </tr>
              </table>
          </div>
