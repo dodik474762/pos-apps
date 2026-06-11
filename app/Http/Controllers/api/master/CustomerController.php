@@ -613,6 +613,21 @@ class CustomerController extends Controller
             }
 
             $detail = Customer::find($data['id']);
+
+            if ($detail->payment_terms != '3') {
+                if (empty($fileKtpName) && $data['no_ktp']) {
+                    $result['is_valid'] = false;
+                    $result['message'] = 'Silahkan Upload Foto KTP';
+                    return $result;
+                }
+
+                if (empty($fileNpWpName) && $data['npwp']) {
+                    $result['is_valid'] = false;
+                    $result['message'] = 'Silahkan Upload Foto NPWP';
+                    return $result;
+                }
+            }
+
             $detail->npwp = $data['npwp'] ?? $detail->npwp;
             $detail->no_ktp = $data['no_ktp'] ?? $detail->no_ktp;
             $detail->validate_time = date('Y-m-d H:i:s');
