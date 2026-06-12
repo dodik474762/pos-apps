@@ -226,7 +226,7 @@
                  </tr>
                  <tr>
                      <td><strong>Total</strong></td>
-                     <td class="text-right" style="font-size:12px !important;">
+                     <td class="text-right" style="font-size:14px !important;">
                          <strong>{{ number_format($grandTotal, 0, ',', '.') }}</strong>
                      </td>
                  </tr>
