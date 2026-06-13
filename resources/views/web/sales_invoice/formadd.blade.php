@@ -118,9 +118,14 @@
 
                                 @if (!empty($details))
                                     @foreach ($details as $item)
-                                        <tr class="input" disc_amount_header="{{ $item->discount_amount_header }}" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
+                                        <tr class="input" disc_amount_header="{{ $item->discount_amount_header }}" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}" data-price="{{ $item->price }}" data-disc="{{ $item->discount }}" data-tax-rate="{{ $item->tax_rate }}">
                                             <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
-                                            <td id="qty">{{ $item->qty }}</td>
+                                            <td id="qty" style="min-width:90px">
+                                                <input type="number" id="qty" class="form-control form-control-sm" step="any" min="0"
+                                                    value="{{ $item->qty }}"
+                                                    data-original-qty="{{ $item->qty }}"
+                                                    oninput="SalesInvoice.recalcExistingRow(this)">
+                                            </td>
                                             <td id="price">{{ $item->price }}</td>
                                             <td id="discount">{{ $item->discount }}</td>
                                             <td id="tax" data_id="{{ $item->tax }}" type_tax="{{ $item->type_tax }}" rate="{{ $item->tax_rate }}">{{ $item->tax_amount }}</td>

@@ -48,13 +48,26 @@ let SalesInvoice = {
         table.each((index, elm) => {
             const $row = $(elm);
 
+            // Baca qty: jika ada input#qty, pakai .val(), jika tidak pakai .text()
+            const $qtyInput = $row.find("td#qty input#qty");
+            const qty = $qtyInput.length > 0
+                ? parseFloat($qtyInput.val()) || 0
+                : parseFloat($row.find("#qty").text()) || 0;
+
+            // Deteksi perubahan qty: bandingkan dengan original qty dari data attribute
+            const originalQty = $qtyInput.length > 0
+                ? parseFloat($qtyInput.attr("data-original-qty")) || 0
+                : qty;
+            const qtyChanged = qty !== originalQty ? 1 : 0;
+
             result.push({
                 id: $row.attr("data_id") || null,
                 so_detail_id: $row.attr("so_detail_id") || null,
                 product_id: $row.find("#product").attr("data_id") || null,
 
-                // kembali pakai TEXT
-                qty: parseFloat($row.find("#qty").text()) || 0,
+                qty: qty,
+                qty_changed: qtyChanged,
+                original_qty: originalQty,
                 price: parseFloat($row.find("#price").text()) || 0,
                 discount: parseFloat($row.find("#discount").text()) || 0,
                 tax_amount: parseFloat($row.find("#tax").text()) || 0,
@@ -1032,6 +1045,26 @@ let SalesInvoice = {
             $(elm).closest("tr").addClass("remove");
             $(elm).closest("tr").addClass("d-none");
         }
+
+        SalesInvoice.hitungSummaryAll();
+    },
+
+    recalcExistingRow: (elm) => {
+        const tr = $(elm).closest("tr");
+        const qty = parseFloat($(elm).val()) || 0;
+        const price = parseFloat(tr.attr("data-price")) || 0;
+        const disc = parseFloat(tr.attr("data-disc")) || 0;
+        const taxRate = parseFloat(tr.find("td#tax").attr("rate")) || 0;
+
+        const subTotal = qty * price;
+        const dpp = subTotal - disc;
+        const taxAmount = dpp * (taxRate / 100);
+        const subtotalResult = dpp + taxAmount;
+
+        // Update td subtotal
+        tr.find("td#subtotal").text(subtotalResult.toFixed(2));
+        // Update td tax amount
+        tr.find("td#tax").text(taxAmount.toFixed(2));
 
         SalesInvoice.hitungSummaryAll();
     },

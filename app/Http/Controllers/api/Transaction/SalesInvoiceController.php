@@ -495,18 +495,12 @@ class SalesInvoiceController extends Controller
             $line_no = 1;
             $batalItem = false;
             $soIdBatal = [];
+            $qtyChangedItems = []; // so_detail_id => new_qty
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesInvoiceDtl::find($item['id']);
-                        // if ($exist && $exist->status !== 'DRAFT') {
-                        //     DB::rollBack();
-                        //     return response()->json([
-                        //         'is_valid' => false,
-                        //         'message' => 'Tidak dapat dihapus karena status sudah bukan draft'
-                        //     ]);
-                        // }
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
@@ -517,6 +511,11 @@ class SalesInvoiceController extends Controller
                         }
                     }
                     continue;
+                }
+
+                // Deteksi perubahan qty
+                if (!empty($item['qty_changed']) && $item['qty_changed'] == 1 && !empty($item['so_detail_id'])) {
+                    $qtyChangedItems[$item['so_detail_id']] = $item['qty'];
                 }
 
                 // Item baru atau update
@@ -616,7 +615,8 @@ class SalesInvoiceController extends Controller
 
             /*GENERATE SO */
             if ($data['id'] != '') {
-                if ($batalItem) {
+                $needGenerateSo = $batalItem || !empty($qtyChangedItems);
+                if ($needGenerateSo) {
                     $soProcess = new SalesOrderController();
                     $so_payload['so_date'] = $so->so_date;
                     $so_payload['customer_id'] = $so->customer_id;
@@ -624,9 +624,24 @@ class SalesInvoiceController extends Controller
                     $so_payload['salesman'] = $so->salesman;
                     $so_payload['payment_term'] = $so->payment_term;
                     $so_payload['remarks'] = 'KOREKSI INVOICE NO ' . $header->invoice_number;
-                    $so_payload['items'] = SalesOrderDetail::where('sales_order_id', $so->id)
+
+                    // Ambil SO detail, exclude yang dibatal, override qty yang berubah
+                    $soDetails = SalesOrderDetail::where('sales_order_id', $so->id)
                         ->select(['*', 'unit as unit_id', 'unit_price as price', DB::raw('qty * unit_price as total_price')])
-                        ->whereNotIn('id', $soIdBatal)->get()->toArray();
+                        ->whereNotIn('id', $soIdBatal)
+                        ->get()
+                        ->map(function ($row) use ($qtyChangedItems) {
+                            $rowArray = $row->toArray();
+                            // Override qty jika ada perubahan dari invoice
+                            if (!empty($qtyChangedItems[$row->id])) {
+                                $rowArray['qty'] = $qtyChangedItems[$row->id];
+                                $rowArray['total_price'] = $rowArray['qty'] * $rowArray['price'];
+                            }
+                            return $rowArray;
+                        })
+                        ->toArray();
+
+                    $so_payload['items'] = $soDetails;
 
                     // Buat Request object manual
                     $request = new Request();
