@@ -53,7 +53,8 @@ class PLTagihanController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
         $routeplan = $this->getRoutePlanSales($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
         $invoices = $this->getAllInvoiceCetak($customers);
@@ -84,6 +85,9 @@ class PLTagihanController extends Controller
 
         $salesPlan = new SalesPlanController();
         $dailyVisit = $salesPlan->getDailyVisits($salesman, $today);
+        // echo '<pre>';
+        // print_r($dailyVisit);
+        // die;
 
         return $dailyVisit;
     }
