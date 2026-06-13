@@ -62,10 +62,8 @@
                             </div>
 
                             <div class="mb-3">
-                                 <label class="form-label">Customer</label>
-                                <select class="form-control select2 required" error="Customer" multiple="multiple" id="customer_id"
-                                onchange="SalesPayment.getListItemOutstandingCustomer(this)">
-                                    <option value=""></option>
+                                 <label class="form-label">Customer (Biarkan kosong untuk ALL)</label>
+                                <select class="form-control select2" multiple="multiple" id="customer_id">
                                     @foreach ($data_customer as $item)
                                         <option value="{{ $item['id'] }}">
                                             {{ $item['nama_customer'] }}</option>
@@ -123,6 +121,22 @@
                     </div>
 
                     <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Start Date (Invoice)</label>
+                            <input type="date" id="filter_start_date" class="form-control" value="{{ date('Y-m-01') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">End Date (Invoice)</label>
+                            <input type="date" id="filter_end_date" class="form-control" value="{{ date('Y-m-t') }}">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary" onclick="SalesPayment.filterBulk()">
+                                <i class="bx bx-filter-alt"></i> Filter Outstanding
+                            </button>
+                        </div>
+                    </div>
 
                     {{-- ================= DETAIL ITEMS ================= --}}
                     <div class="table-responsive">

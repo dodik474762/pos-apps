@@ -555,166 +555,80 @@ class SalesPaymentController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
+        // echo '<pre>';
+        // print_r($data);
+        // echo '</pre>';
+        // exit;
 
         DB::beginTransaction();
         try {
-
-            $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'piutang usaha')
-                ->with('account') // kalau kamu pakai relasi
-                ->first();
-
-            $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
-                ->where('account_type', 'diskon bayar')
-                ->with('account')
-                ->first();
-
-            if (! $piutangAcc || ! $discBayarAcc) {
-                DB::rollBack();
-
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Konfigurasi akun untuk Sales Payment belum lengkap.',
-                ]);
-            }
-
-            $kasAccount = Coa::find($data['account_id']);
-            // === HEADER ===
-
-            if (empty($data['customers'])) {
+            if (empty($data['details'])) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
-                    'message' => 'Customer belum dipilih.'
+                    'message' => 'Tidak ada invoice yang dipilih.'
                 ]);
             }
 
-            foreach ($data['customers'] as $k => $v) {
-                $data['customer_id'] = $v;
-
-                $header = new SalesPaymentHeader();
-                $header->payment_code = generateNoSP(); // misal helper
-                $header->created_by = $userId;
-                $header->status = 'PENDING';
-
-                $header->payment_date = $data['payment_date'];
-                $header->customer_id = $data['customer_id'];
-                $header->payment_method = $data['payment_method'];
-                $header->total_amount = 0;
-                $header->discount_amount = 0;
-                $header->net_amount = 0;
-                $header->reference_no = $data['reference_no'];
-                $header->remarks = $data['remarks'];
-                $header->coa_kas = $data['account_id'];
-                $header->bulk = $data['bulk'];
-                $header->save();
-
-                $hdrId = $header->id;
-
-                $reference = $header->payment_code;
-
-                // === DETAIL ===
-                $totalAmount = 0;
-                $disc_total = 0;
-                $net_total = 0;
-                $line_no = 1;
-                foreach ($data['details'] as $key => $value) {
-                    // Skip baris yang ditandai untuk dihapus
-                    if (!empty($value['remove']) && $value['remove'] == 1) {
-                        if (!empty($value['id'])) {
-                            $exist = SalesPaymentDtl::find($value['id']);
-                            if ($exist) {
-                                $exist->deleted = now();
-                                $exist->deleted_by = $userId;
-                                $exist->save();
-                            }
-                        }
-                        continue;
-                    }
-
-                    $outstanding_amount = $value['outstanding_amount'] - $value['allocated_amount'];
-                    if ($outstanding_amount < 0) {
-                        DB::rollBack();
-                        return response()->json([
-                            'is_valid' => false,
-                            'message' => 'Allocated amount tidak boleh lebih besar dari Outstanding Amount pada baris ke-' . ($key + 1)
-                        ]);
-                    }
-
-                    $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
-                    $disc_amount = 0;
-                    if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
-                        $disc_amount = $value['discount_amount'];
-                        $disc_total += $disc_amount;
-                    }
-
-                    if ($value['allocated_amount'] > 0) {
-                        $net_total += ($value['allocated_amount'] - $disc_amount);
-                    }
-
-                    if ($value['allocated_amount'] < $disc_amount) {
-                        DB::rollBack();
-                        return response()->json([
-                            'is_valid' => false,
-                            'message' => 'Allocated amount tidak boleh lebih kecil dari Discount Amount ' . $disc_amount . ' pada baris ke-' . ($key + 1)
-                        ]);
-                    }
-
-                    $totalAmount += $value['allocated_amount'];
-
-                    // Item baru atau update
-                    $detail = empty($value['id'])
-                        ? new SalesPaymentDtl()
-                        : SalesPaymentDtl::find($value['id']);
-
-                    $detail->payment_id = $hdrId;
-                    $detail->invoice_id = $value['invoice_id'];
-                    $detail->allocated_amount = $value['allocated_amount'];
-                    $detail->outstanding_amount = $value['outstanding_amount'];
-                    $detail->line_no = $line_no++;
-                    $detail->save();
-
-                    /*mapping coa */
-
-                    $invoice = SalesInvoiceHeader::find($value['invoice_id']);
-                    $total_paid = 0;
-                    if ($value['id'] == '') {
-                        $total_paid = $invoice->amount_paid + $value['allocated_amount'];
-                    } else {
-                        $total_paid = $invoice->amount_paid - $value['allocated_amount_old'] + $value['allocated_amount'];
-                    }
-                    $invoice->amount_paid = $total_paid;
-                    if ($outstanding_amount == 0) {
-                        $invoice->status = 'PAID';
-                    } else {
-                        $invoice->status = 'PARTIAL PAID';
-                    }
-                    $invoice->save();
+            // Group details by customer_id
+            $customerDetails = [];
+            foreach ($data['details'] as $detail) {
+                // Pastikan remove=0 dan ada customer_id di detail
+                if (!empty($detail['remove']) && $detail['remove'] == 1) {
+                    continue;
                 }
 
-                $currency = Currency::where('code', 'IDR')->first();
-                $currencyId = $currency->id;
-
-                $update = SalesPaymentHeader::find($hdrId);
-                $update->total_amount = $totalAmount;
-                $update->discount_amount = $disc_total;
-                $update->net_amount = $net_total;
-                $update->save();
-
-                postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $totalAmount, $currencyId);
-
-                $kasAccount->cd = $kasAccount->normal_balance == 'Debit' ? 'D' : 'C';
-                postingGL($reference, $kasAccount->id, $kasAccount->account_name, $kasAccount->cd, ($net_total), $currencyId);
-                if ($disc_total > 0) {
-                    postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, $discBayarAcc->cd, ($disc_total), $currencyId);
+                $customerId = $detail['customer_id'] ?? null;
+                if (!$customerId) {
+                    continue;
                 }
+
+                if (!isset($customerDetails[$customerId])) {
+                    $customerDetails[$customerId] = [];
+                }
+                $customerDetails[$customerId][] = $detail;
             }
 
+            if (empty($customerDetails)) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Detail invoice tidak valid atau tidak memiliki customer.'
+                ]);
+            }
+
+            // Lakukan submit per customer
+            foreach ($customerDetails as $customerId => $details) {
+                $payload = [
+                    'id' => null, // selalu create baru untuk bulk
+                    'payment_date' => $data['payment_date'],
+                    'payment_method' => $data['payment_method'],
+                    'customer_id' => $customerId,
+                    'account_id' => $data['account_id'],
+                    'reference_no' => $data['reference_no'] ?? '',
+                    'remarks' => $data['remarks'] ?? '',
+                    'bulk' => 1,
+                    'details' => $details
+                ];
+
+                $req = new Request();
+                $req->replace($payload);
+
+                $response = $this->submit($req);
+                $respData = json_decode($response->getContent(), true);
+
+                if (!$respData['is_valid']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Gagal pada customer ID ' . $customerId . ': ' . $respData['message']
+                    ]);
+                }
+            }
 
             DB::commit();
             $result['is_valid'] = true;
             $result['message'] = 'Sales Payment Bulk berhasil disimpan';
-            $result['so_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['is_valid'] = false;
@@ -728,6 +642,11 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $id = $data['id'];
+
+        // echo '<pre>';
+        // print_r($data);
+        // echo '</pre>';
+        // exit;
         DB::beginTransaction();
 
         try {
@@ -872,11 +791,13 @@ class SalesPaymentController extends Controller
                 $datadb->where('sih.customer_id', $customerId);
             } else {
                 $ids = isset($data['customers']) ? $data['customers'] : [];
-                if (empty($ids)) {
-                    $datadb->where('sih.customer_id', 0);
-                } else {
+                if (!empty($ids)) {
                     $datadb->whereIn('sih.customer_id', $ids);
                 }
+            }
+
+            if (!empty($data['start_date']) && !empty($data['end_date'])) {
+                $datadb->whereBetween('sih.invoice_date', [$data['start_date'], $data['end_date']]);
             }
             $datadb = $datadb->get();
         } catch (\Throwable $th) {

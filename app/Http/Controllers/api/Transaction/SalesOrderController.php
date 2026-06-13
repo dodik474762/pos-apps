@@ -459,6 +459,7 @@ class SalesOrderController extends Controller
             }
 
             $customersId = $data['customer_id'];
+            // $custUpdate = Customer::where('id', $customersId)->first();
 
             // =============================
             // PREPARE ITEMS

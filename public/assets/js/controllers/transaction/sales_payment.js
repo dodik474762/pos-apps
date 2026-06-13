@@ -129,40 +129,72 @@ let SalesPayment = {
         }
     },
 
-    submitBulk: (elm, e) => {
+    submitBulk: async (elm, e) => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
             let params = SalesPayment.getPostInput(true);
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                data: params,
-                url: url.base_url(SalesPayment.moduleApi()) + "submitBulk",
-                headers: {
-                    "X-CSRF-TOKEN": SalesPayment.csrf_token(),
-                },
-                beforeSend: () => {
-                    message.loadingProses("Proses Simpan Data...");
-                },
-                error: function () {
-                    message.closeLoading();
-                    message.sweetError("Informasi", "Gagal");
-                },
+            
+            let details = params.details.filter(item => item.customer_id != null && item.customer_id !== "");
+            
+            if (details.length === 0) {
+                message.sweetError("Informasi", "Tidak ada detail yang valid untuk disubmit.");
+                return;
+            }
 
-                success: function (resp) {
-                    message.closeLoading();
-                    if (resp.is_valid) {
-                        message.sweetSuccess();
-                        setTimeout(function () {
-                            // window.location.reload();
-                            SalesPayment.back();
-                        }, 1000);
-                    } else {
-                        message.sweetError("Informasi", resp.message);
+            // Atur ukuran chunk (misal 50 baris per request agar aman dari max_input_vars)
+            const chunkSize = 50; 
+            const chunks = [];
+            for (let i = 0; i < details.length; i += chunkSize) {
+                chunks.push(details.slice(i, i + chunkSize));
+            }
+
+            message.loadingProses("Proses Simpan Data Bulk (0/" + chunks.length + ")...");
+            
+            let hasError = false;
+            let errorMessage = "Gagal memproses sebagian data.";
+
+            for (let i = 0; i < chunks.length; i++) {
+                // Update loading message
+                $(".swal2-html-container").text("Proses Simpan Data Bulk (" + (i + 1) + "/" + chunks.length + ")...");
+
+                let chunkParams = { ...params };
+                chunkParams.details = chunks[i];
+
+                try {
+                    let resp = await $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        data: chunkParams,
+                        url: url.base_url(SalesPayment.moduleApi()) + "submitBulk",
+                        headers: {
+                            "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+                        }
+                    });
+
+                    if (!resp.is_valid) {
+                        hasError = true;
+                        errorMessage = resp.message;
+                        break; // Hentikan proses jika terjadi error di salah satu chunk
                     }
-                },
-            });
+                } catch (err) {
+                    hasError = true;
+                    errorMessage = "Terjadi kesalahan server saat memproses data bagian ke-" + (i + 1);
+                    break;
+                }
+            }
+
+            message.closeLoading();
+
+            if (hasError) {
+                message.sweetError("Informasi", errorMessage);
+            } else {
+                message.sweetSuccess();
+                setTimeout(function () {
+                    SalesPayment.back();
+                }, 1000);
+            }
+
         } else {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }
@@ -510,8 +542,15 @@ let SalesPayment = {
     },
 
     getListItemOutstandingCustomer:(elm)=>{
-        const ids = $(elm).val();
-        SalesPayment.getOutstandingInvoiceAllCustomer(ids);
+        // Tidak digunakan lagi, digantikan oleh filterBulk
+    },
+
+    filterBulk: () => {
+        const customers = $("#customer_id").val() || [];
+        const start_date = $("#filter_start_date").val();
+        const end_date = $("#filter_end_date").val();
+
+        SalesPayment.getOutstandingInvoiceAllCustomer(customers, start_date, end_date);
     },
 
     getOutstandingInvoice: (customer) => {
@@ -546,9 +585,11 @@ let SalesPayment = {
         });
     },
 
-    getOutstandingInvoiceAllCustomer: (customers) => {
+    getOutstandingInvoiceAllCustomer: (customers, start_date = '', end_date = '') => {
         let params = {
             customers: customers,
+            start_date: start_date,
+            end_date: end_date
         };
 
         $.ajax({
