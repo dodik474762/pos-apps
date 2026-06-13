@@ -109,10 +109,13 @@ class SalesPaymentController extends Controller
         $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID', 'DRAFT'])
             ->select([
                 'c.id as id',
-                'c.nama_customer'
+                'c.nama_customer',
+                'c.code as customer_code',
+                'pt.remarks as payment_terms'
             ])
             ->distinct()
             ->join('customer as c', 'c.id', 'sales_invoice_header.customer_id')
+            ->join('term_of_payment as pt', 'pt.id', 'c.payment_terms')
             ->whereNull('sales_invoice_header.deleted')
             ->get()
             ->toArray();
