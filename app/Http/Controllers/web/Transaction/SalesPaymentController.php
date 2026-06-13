@@ -181,6 +181,7 @@ class SalesPaymentController extends Controller
             ->orderBy('sales_payment_detail.id')
             ->get();
 
+        $data['payment_method'] = $data['data']->payment_method;
         $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
