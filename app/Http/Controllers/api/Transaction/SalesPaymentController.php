@@ -513,7 +513,7 @@ class SalesPaymentController extends Controller
             // === UPDATE INVOICE ===
             $invoice->amount_paid      += $totalAmount;
             $outstanding_after          = $invoice->outstanding_amount - $totalAmount;
-            $invoice->outstanding_amount = $outstanding_after;
+            // $invoice->outstanding_amount = $outstanding_after;
             $invoice->status            = ($outstanding_after <= 0) ? 'PAID' : 'PARTIAL PAID';
             $invoice->save();
 

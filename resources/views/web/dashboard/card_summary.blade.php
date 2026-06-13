@@ -70,7 +70,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
-                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Laba</p>
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Laba Bruto</p>
                     </div>
                     <div class="flex-shrink-0">
                         <h5 class="text-muted fs-14 mb-0">

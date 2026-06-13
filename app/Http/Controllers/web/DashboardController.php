@@ -58,7 +58,7 @@ class DashboardController extends Controller
         // exit;
 
         // $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
-        $data['gross_profit'] = $data['summary_invoice']['summary_netto'] - $data['summary_po']['summary_po'];
+        $data['gross_profit'] = $data['summary_invoice']['summary_netto'] - $data['summary_invoice']['total_cogs'];
         $view = view('web.dashboard.index', $data);
 
         $put['group_karyawan'] = $this->getListGroupKaryawan();
@@ -124,6 +124,7 @@ class DashboardController extends Controller
 
         $outstandingReceivable = DB::table('sales_invoice_header')
             ->whereNull('deleted')
+            ->where('invoice_number', 'SI06260204')
             ->whereYear('invoice_date', $year)
             ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID']);
 
@@ -134,11 +135,56 @@ class DashboardController extends Controller
         $jumlah = $outstandingReceivable->count();
         $summary_gross = $outstandingReceivable->sum('subtotal');
 
+        $cogsQuery = DB::table('sales_invoice_detail as sid')
+            ->join('sales_invoice_header as sih', 'sih.id', '=', 'sid.invoice_id')
+            ->join('product_uom as pu', function ($join) {
+                $join->on('pu.product', '=', 'sid.product_id')
+                    ->where('pu.state', '=', 'large')
+                    ->whereNull('pu.deleted');
+            })
+            ->join('sales_order_details as sod', 'sod.id', 'sid.so_detail_id')
+            ->join('product_uom as pu_con', function ($join) {
+                $join->on('pu_con.product', '=', 'sid.product_id')
+                    ->where('pu_con.unit_tujuan', '=', 'sod.unit')
+                    ->whereNull('pu.deleted');
+            })
+            ->where('sih.invoice_number', 'SI06260204')
+            ->whereNull('sih.deleted')
+            ->where('sid.product_id', 120)
+            ->whereYear('sih.invoice_date', $year)
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID'])
+            ->select(
+                DB::raw("
+                SUM(
+                    (sid.qty * pu_con.nilai_konversi_terkecil) 
+                    COALESCE((
+                        SELECT puc.cost 
+                        FROM product_uom_cost puc 
+                        WHERE puc.product = sid.product_id 
+                          AND puc.date_start <= sih.invoice_date 
+                        ORDER BY puc.date_start DESC 
+                        LIMIT 1
+                    ), 0)
+                ) as total_cogs
+            "),
+                'sid.product_id',
+                'sid.qty',
+                'pu.nilai_konversi_terkecil',
+                'sih.invoice_date'
+            )
+            ->groupBy('sid.product_id', 'sid.qty', 'pu.nilai_konversi_terkecil', 'sih.invoice_date')
+            ->get();
+        // ->value('total_cogs');
+        echo '<pre>';
+        print_r($cogsQuery);
+        die;
+
         return [
             'summary' => $summary,
             'jumlah' => $jumlah,
             'summary_netto' => $summary_netto,
-            'summary_gross' => $summary_gross
+            'summary_gross' => $summary_gross,
+            'total_cogs' => $cogsQuery ?: 0
         ];
     }
 
