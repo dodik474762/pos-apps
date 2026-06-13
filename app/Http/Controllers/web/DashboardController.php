@@ -53,8 +53,12 @@ class DashboardController extends Controller
         $data['summary_po'] = $this->getSummaryPO($year);
         $data['summary_so'] = $this->getSummarySO($year);
         $data['summary_invoice'] = $this->getSummaryInvoice($year);
+        // echo '<pre>';
+        // print_r($data['summary_invoice']);
+        // exit;
 
-        $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
+        // $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
+        $data['gross_profit'] = $data['summary_invoice']['summary_netto'] - $data['summary_po']['summary_po'];
         $view = view('web.dashboard.index', $data);
 
         $put['group_karyawan'] = $this->getListGroupKaryawan();
@@ -121,16 +125,20 @@ class DashboardController extends Controller
         $outstandingReceivable = DB::table('sales_invoice_header')
             ->whereNull('deleted')
             ->whereYear('invoice_date', $year)
-            ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT']);
+            ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID']);
 
 
         $summary = $outstandingReceivable->selectRaw('SUM(total_amount - amount_paid) as outstanding')
             ->value('outstanding');
+        $summary_netto = $outstandingReceivable->sum('total_amount');
         $jumlah = $outstandingReceivable->count();
+        $summary_gross = $outstandingReceivable->sum('subtotal');
 
         return [
             'summary' => $summary,
-            'jumlah' => $jumlah
+            'jumlah' => $jumlah,
+            'summary_netto' => $summary_netto,
+            'summary_gross' => $summary_gross
         ];
     }
 

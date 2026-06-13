@@ -16,7 +16,7 @@
                 </div>
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
-                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span >{{ $summary_po['jumlah_po'] }}</span></h4>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span>{{ $summary_po['jumlah_po'] }}</span></h4>
                         <a href="#" class="text-decoration-underline">IDR
                             {{ number_format($summary_po['summary_po'], 0, ',', '.') }}
                         </a>
@@ -48,9 +48,10 @@
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
-                                data-target="0">{{ $summary_so['jumlah'] }}</span></h4>
+                                data-target="0">{{ $summary_invoice['jumlah'] }}</span></h4>
                         <a href="#" class="text-decoration-underline">IDR
-                            {{ number_format($summary_so['summary'], 0, ',', '.') }}
+                            {{ number_format($summary_invoice['summary_gross'], 0, ',', '.') }} (GROSS) /
+                            {{ number_format($summary_invoice['summary_netto'], 0, ',', '.') }} (NETTO)
                         </a>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -69,7 +70,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
-                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Laba Bruto</p>
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Laba</p>
                     </div>
                     <div class="flex-shrink-0">
                         <h5 class="text-muted fs-14 mb-0">
