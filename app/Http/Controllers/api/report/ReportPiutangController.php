@@ -74,7 +74,7 @@ class ReportPiutangController extends Controller
             })
             // ->where('m.id', '1588')
             // ->where('usr.name', 'SLS-005')
-            // ->where('sih.invoice_number', 'SI06260306')
+            // ->where('sih.invoice_number', 'SI06260132')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->orderBy('m.salesman', 'asc');

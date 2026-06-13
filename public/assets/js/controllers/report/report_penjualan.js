@@ -1630,9 +1630,17 @@ let ReportPenjualan = {
                                         return (
                                             sum +
                                             parseFloat(
-                                                r.total_amount || 0,
+                                                r.outstanding_amount || 0,
                                             )
                                         );
+                                    }, 0);
+
+                                    var total_piutang = rows.reduce(function (sum, r) {
+                                        return sum + parseFloat(r.total_amount || 0);
+                                    }, 0);
+
+                                    var total_bayar = rows.reduce(function (sum, r) {
+                                        return sum + parseFloat(r.amount_paid || 0);
                                     }, 0);
 
                                     // Baris header group salesman
@@ -1644,8 +1652,8 @@ let ReportPenjualan = {
                                         "",
                                         "",
                                         "",
-                                        "",
-                                        "",
+                                        total_piutang,
+                                        total_bayar,
                                         subtotal,
                                     ]);
 
@@ -1738,6 +1746,20 @@ let ReportPenjualan = {
             rowGroup: {
                 dataSrc: "salesman_name",
                 startRender: function (rows, group) {
+                    var totalPiutang = rows
+                        .data()
+                        .pluck("total_amount")
+                        .reduce(function (a, b) {
+                            return parseFloat(a || 0) + parseFloat(b || 0);
+                        }, 0);
+
+                    var totalBayar = rows
+                        .data()
+                        .pluck("amount_paid")
+                        .reduce(function (a, b) {
+                            return parseFloat(a || 0) + parseFloat(b || 0);
+                        }, 0);
+
                     var subtotal = rows
                         .data()
                         .pluck("outstanding_amount")
@@ -1745,21 +1767,33 @@ let ReportPenjualan = {
                             return parseFloat(a || 0) + parseFloat(b || 0);
                         }, 0);
 
-                    var formatted = new Intl.NumberFormat("id-ID", {
-                        minimumFractionDigits: 2,
-                    }).format(subtotal);
+                    var fmt = function (v) {
+                        return new Intl.NumberFormat("id-ID", {
+                            minimumFractionDigits: 2,
+                        }).format(v);
+                    };
 
                     return $("<tr/>")
                         .append(
-                            `<td colspan="9" class="group-salesman-header">
-                            <i class="mdi mdi-account me-1"></i>
-                            <strong>${group}</strong>
-                        </td>`,
+                            `<td colspan="7" class="group-salesman-header">
+                    <i class="mdi mdi-account me-1"></i>
+                    <strong>${group}</strong>
+                </td>`,
                         )
                         .append(
                             `<td class="text-end group-salesman-header">
-                            <strong>${formatted}</strong>
-                        </td>`,
+                    <strong>${fmt(totalPiutang)}</strong>
+                </td>`,
+                        )
+                        .append(
+                            `<td class="text-end group-salesman-header">
+                    <strong>${fmt(totalBayar)}</strong>
+                </td>`,
+                        )
+                        .append(
+                            `<td class="text-end group-salesman-header">
+                    <strong>${fmt(subtotal)}</strong>
+                </td>`,
                         );
                 },
             },

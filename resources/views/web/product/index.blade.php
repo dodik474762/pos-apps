@@ -101,7 +101,7 @@
                                                     <th>Brand</th>
                                                     <th>Sub Brand</th>
                                                     <th>Kode Principal</th>
-                                                    <th>Kode</th>
+                                                    <th>Kode Product</th>
                                                     <th>Product</th>
                                                     <th>Type</th>
                                                     <th>Stock</th>
