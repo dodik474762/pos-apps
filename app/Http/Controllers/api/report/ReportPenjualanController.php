@@ -343,7 +343,9 @@ class ReportPenjualanController extends Controller
                 ) as qty_terbesar
             "),
                 'unit_terkecil.name as unit_terkecil',
-                'unit_terbesar.name as unit_terbesar'
+                'unit_terbesar.name as unit_terbesar',
+                'price_terkecil.price as price_terkecil',
+                'price_terbesar.price as price_terbesar'
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
@@ -376,6 +378,18 @@ class ReportPenjualanController extends Controller
                 $q->on('pou_terkecil.product', 'sod.product_id')
                     ->where('pou_terkecil.state', 'small')
                     ->whereNull('pou_terkecil.deleted');
+            })
+            ->leftJoin('product_uom_price as price_terkecil', function ($q) {
+                $q->on('price_terkecil.product', 'sod.product_id')
+                    ->on('price_terkecil.unit', 'pou_terkecil.unit_tujuan')
+                    ->whereNull('price_terkecil.deleted')
+                    ->where('price_terkecil.type', 'RETAIL');
+            })
+            ->leftJoin('product_uom_price as price_terbesar', function ($q) {
+                $q->on('price_terbesar.product', 'sod.product_id')
+                    ->on('price_terbesar.unit', 'pou.unit_tujuan')
+                    ->whereNull('price_terbesar.deleted')
+                    ->where('price_terbesar.type', 'RETAIL');
             })
             ->leftJoin('unit as unit_terkecil', 'unit_terkecil.id', 'pou_terkecil.unit_tujuan')
             ->leftJoin('unit as unit_terbesar', 'unit_terbesar.id', 'pou.unit_tujuan')

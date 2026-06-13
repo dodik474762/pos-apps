@@ -2044,14 +2044,20 @@ let ReportPenjualan = {
                     data: "price",
                     title: "HARGA",
                     render: function (data, type, row) {
-                        return data;
+                        let satuan = $("#filter-satuan").val() || "default";
+                        if (satuan === "terkecil") return row.price_terkecil ?? data;
+                        if (satuan === "terbesar") return row.price_terbesar ?? data;
+                        return data ?? "";
                     },
                 },
                 {
                     data: "subtotal",
                     title: "TOTAL HARGA",
                     render: function (data, type, row) {
-                        return data;
+                        let satuan = $("#filter-satuan").val() || "default";
+                        if (satuan === "terkecil") return row.price_terkecil * row.qty_terkecil ?? data;
+                        if (satuan === "terbesar") return row.price_terbesar * row.qty_terbesar ?? data;
+                        return data ?? "";
                     },
                 },
                 {
