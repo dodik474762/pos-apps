@@ -656,11 +656,15 @@ class SalesInvoiceController extends Controller
                         }
                     }
 
+                    $cancelInvoiceOld = SalesInvoiceHeader::find($data['id']);
+
+                    $dueDate = date('Y-m-d', strtotime($data['invoice_date'] . ' + ' . $so->payment_term . ' days'));
                     $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
                     $updateInvoiceHeader->invoice_number = $reference;
+                    $updateInvoiceHeader->invoice_date = $data['invoice_date'];
+                    $updateInvoiceHeader->due_date = $dueDate;
                     $updateInvoiceHeader->save();
 
-                    $cancelInvoiceOld = SalesInvoiceHeader::find($data['id']);
                     $cancelInvoiceOld->status = 'CANCELED';
                     $cancelInvoiceOld->deleted = date('Y-m-d H:i:s');
                     $cancelInvoiceOld->deleted_by = session('user_id');
