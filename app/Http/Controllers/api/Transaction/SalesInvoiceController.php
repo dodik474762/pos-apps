@@ -611,64 +611,64 @@ class SalesInvoiceController extends Controller
             /*GENERATE SO */
             if ($data['id'] != '') {
                 if ($batalItem) {
-                }
-                $soProcess = new SalesOrderController();
-                $so_payload['so_date'] = $so->so_date;
-                $so_payload['customer_id'] = $so->customer_id;
-                $so_payload['currency'] = $so->currency;
-                $so_payload['salesman'] = $so->salesman;
-                $so_payload['payment_term'] = $so->payment_term;
-                $so_payload['remarks'] = 'KOREKSI INVOICE NO ' . $header->invoice_number;
-                $so_payload['items'] = SalesOrderDetail::where('sales_order_id', $so->id)
-                    ->select(['*', 'unit as unit_id', 'unit_price as price', DB::raw('qty * unit_price as total_price')])
-                    ->whereNotIn('id', $soIdBatal)->get()->toArray();
+                    $soProcess = new SalesOrderController();
+                    $so_payload['so_date'] = $so->so_date;
+                    $so_payload['customer_id'] = $so->customer_id;
+                    $so_payload['currency'] = $so->currency;
+                    $so_payload['salesman'] = $so->salesman;
+                    $so_payload['payment_term'] = $so->payment_term;
+                    $so_payload['remarks'] = 'KOREKSI INVOICE NO ' . $header->invoice_number;
+                    $so_payload['items'] = SalesOrderDetail::where('sales_order_id', $so->id)
+                        ->select(['*', 'unit as unit_id', 'unit_price as price', DB::raw('qty * unit_price as total_price')])
+                        ->whereNotIn('id', $soIdBatal)->get()->toArray();
 
-                // Buat Request object manual
-                $request = new Request();
-                $request->replace($so_payload);
+                    // Buat Request object manual
+                    $request = new Request();
+                    $request->replace($so_payload);
 
-                $response = $soProcess->submit($request);
+                    $response = $soProcess->submit($request);
 
-                // Ambil hasil response jika perlu
-                $resultSo = json_decode($response->getContent(), true);
+                    // Ambil hasil response jika perlu
+                    $resultSo = json_decode($response->getContent(), true);
 
-                if (!$resultSo['is_valid']) {
-                    // handle error
-                    throw new \Exception('Gagal generate SO: ' . $resultSo['message']);
-                }
-
-                $newSoId = $resultSo['so_id'];
-                /*generate invoice */
-                $soToNewInvoice = $soProcess->getAllSalesNotInvoice($so_payload['so_date'], $so_payload['so_date'], '', [$newSoId]);
-                $newInvoiceId = 0;
-                $newInvoiceNumber = '';
-                foreach ($soToNewInvoice as $v) {
-                    $process = $soProcess->saveInvoice($v);
-                    $process = json_decode($process->getContent(), true);
-                    if ($process['is_valid']) {
-                        $newInvoiceId = $process['invoice_id'];
-                        $newInvoiceNumber = $process['invoice_number'];
-                    } else {
-                        DB::rollBack();
-                        return response()->json([
-                            'is_valid' => false,
-                            'message' => 'Gagal Process invoice'
-                        ]);
+                    if (!$resultSo['is_valid']) {
+                        // handle error
+                        throw new \Exception('Gagal generate SO: ' . $resultSo['message']);
                     }
+
+                    $newSoId = $resultSo['so_id'];
+                    /*generate invoice */
+                    $soToNewInvoice = $soProcess->getAllSalesNotInvoice($so_payload['so_date'], $so_payload['so_date'], '', [$newSoId]);
+                    $newInvoiceId = 0;
+                    $newInvoiceNumber = '';
+                    foreach ($soToNewInvoice as $v) {
+                        $process = $soProcess->saveInvoice($v);
+                        $process = json_decode($process->getContent(), true);
+                        if ($process['is_valid']) {
+                            $newInvoiceId = $process['invoice_id'];
+                            $newInvoiceNumber = $process['invoice_number'];
+                        } else {
+                            DB::rollBack();
+                            return response()->json([
+                                'is_valid' => false,
+                                'message' => 'Gagal Process invoice'
+                            ]);
+                        }
+                    }
+
+                    $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
+                    $updateInvoiceHeader->invoice_number = $reference;
+                    $updateInvoiceHeader->save();
+
+                    $cancelInvoiceOld = SalesInvoiceHeader::find($data['id']);
+                    $cancelInvoiceOld->status = 'CANCELED';
+                    $cancelInvoiceOld->deleted = date('Y-m-d H:i:s');
+                    $cancelInvoiceOld->deleted_by = session('user_id');
+                    $cancelInvoiceOld->save();
+
+                    cancelAllGL($reference);
+                    updateAllGL($reference, $newInvoiceNumber);
                 }
-
-                $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
-                $updateInvoiceHeader->invoice_number = $reference;
-                $updateInvoiceHeader->save();
-
-                $cancelInvoiceOld = SalesInvoiceHeader::find($data['id']);
-                $cancelInvoiceOld->status = 'CANCELED';
-                $cancelInvoiceOld->deleted = date('Y-m-d H:i:s');
-                $cancelInvoiceOld->deleted_by = session('user_id');
-                $cancelInvoiceOld->save();
-
-                cancelAllGL($reference);
-                updateAllGL($reference, $newInvoiceNumber);
             }
 
 

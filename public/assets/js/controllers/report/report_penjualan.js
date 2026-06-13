@@ -491,7 +491,16 @@ let ReportPenjualan = {
                         let line1 = row.beban === "PRINCIPAL" ? (data ?? 0) : 0;
                         let line2 =
                             row.beban === "DISTRIBUTOR" ? (data ?? 0) : 0;
-                        let line3 = 0;
+                        let line3 = row.discount_per_product ?? 0;
+                        line3 = isNaN(parseFloat(line3))
+                            ? 0
+                            : parseFloat(line3);
+                        line1 = isNaN(parseFloat(line1))
+                            ? 0
+                            : parseFloat(line1);
+                        line2 = isNaN(parseFloat(line2))
+                            ? 0
+                            : parseFloat(line2);
                         return line1 + line2 + line3;
                     },
                 },
@@ -503,9 +512,20 @@ let ReportPenjualan = {
                         let line2 =
                             row.beban === "DISTRIBUTOR" ? (data ?? 0) : 0;
                         let line3 = row.discount_per_product ?? 0;
-                        line3 = isNaN(parseFloat(line3)) ? 0 : parseFloat(line3);
+                        line3 = isNaN(parseFloat(line3))
+                            ? 0
+                            : parseFloat(line3);
+                        line1 = isNaN(parseFloat(line1))
+                            ? 0
+                            : parseFloat(line1);
+                        line2 = isNaN(parseFloat(line2))
+                            ? 0
+                            : parseFloat(line2);
                         let totalDiscount = line1 + line2 + line3;
                         let grossAmount = row.gross_amount ?? 0;
+                        grossAmount = isNaN(parseFloat(grossAmount))
+                            ? 0
+                            : parseFloat(grossAmount);
                         return grossAmount - totalDiscount;
                     },
                 },
