@@ -54,7 +54,7 @@ class DashboardController extends Controller
         $data['summary_so'] = $this->getSummarySO($year);
         $data['summary_invoice'] = $this->getSummaryInvoice($year);
         // echo '<pre>';
-        // print_r($data['summary_invoice']);
+        // print_r($data['summary_so']);
         // exit;
 
         // $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
@@ -106,6 +106,7 @@ class DashboardController extends Controller
 
         $totalSales = DB::table('sales_order_headers')
             ->whereYear('so_date', $year)
+            ->where('total_amount', '>', 0)
             ->whereNull('deleted');
         // ->whereIn('status', ['confirmed', 'completed', 'partial']);
 
@@ -124,7 +125,7 @@ class DashboardController extends Controller
 
         $outstandingReceivable = DB::table('sales_invoice_header')
             ->whereNull('deleted')
-            ->where('invoice_number', 'SI06260204')
+            // ->where('invoice_number', 'SI06260204')
             ->whereYear('invoice_date', $year)
             ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID']);
 
@@ -145,39 +146,51 @@ class DashboardController extends Controller
             ->join('sales_order_details as sod', 'sod.id', 'sid.so_detail_id')
             ->join('product_uom as pu_con', function ($join) {
                 $join->on('pu_con.product', '=', 'sid.product_id')
-                    ->where('pu_con.unit_tujuan', '=', 'sod.unit')
-                    ->whereNull('pu.deleted');
+                    ->on('pu_con.unit_tujuan', '=', 'sod.unit')
+                    ->whereNull('pu_con.deleted');
             })
-            ->where('sih.invoice_number', 'SI06260204')
+            // ->where('sih.invoice_number', 'SI06260204')
             ->whereNull('sih.deleted')
-            ->where('sid.product_id', 120)
+            // ->where('sid.product_id', 120)
             ->whereYear('sih.invoice_date', $year)
             ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID'])
             ->select(
                 DB::raw("
-                SUM(
-                    (sid.qty * pu_con.nilai_konversi_terkecil) 
-                    COALESCE((
-                        SELECT puc.cost 
-                        FROM product_uom_cost puc 
-                        WHERE puc.product = sid.product_id 
-                          AND puc.date_start <= sih.invoice_date 
-                        ORDER BY puc.date_start DESC 
-                        LIMIT 1
-                    ), 0)
-                ) as total_cogs
-            "),
-                'sid.product_id',
-                'sid.qty',
-                'pu.nilai_konversi_terkecil',
-                'sih.invoice_date'
+                       SUM(
+        sid.qty 
+        * CASE 
+            WHEN sod.unit = pu.unit_tujuan THEN 1
+            ELSE pu_con.nilai_konversi_terkecil / pu.nilai_konversi_terkecil
+          END
+        * COALESCE((
+            SELECT puc.cost FROM product_uom_cost puc 
+            WHERE puc.product = sid.product_id AND puc.date_start <= sih.invoice_date 
+            ORDER BY puc.date_start DESC LIMIT 1
+          ), 0)
+    ) as total_cogs
+                            "),
+                // 'sid.product_id',
+                // 'sid.qty',
+                // 'pu.nilai_konversi_terkecil',
+                // 'sih.invoice_date',
+                // 'sid.so_detail_id',
+                // 'sod.unit',
+                // 'pu_con.nilai_konversi_terkecil as nilai_konversi_terkecil_con'
             )
-            ->groupBy('sid.product_id', 'sid.qty', 'pu.nilai_konversi_terkecil', 'sih.invoice_date')
-            ->get();
-        // ->value('total_cogs');
-        echo '<pre>';
-        print_r($cogsQuery);
-        die;
+            // ->groupBy(
+            //     'sid.product_id',
+            //     'sid.qty',
+            //     'pu.nilai_konversi_terkecil',
+            //     'sih.invoice_date',
+            //     'sid.so_detail_id',
+            //     'sod.unit',
+            //     'pu_con.nilai_konversi_terkecil'
+            // )
+            // ->get();
+            ->value('total_cogs');
+        // echo '<pre>';
+        // print_r($cogsQuery);
+        // die;
 
         return [
             'summary' => $summary,
