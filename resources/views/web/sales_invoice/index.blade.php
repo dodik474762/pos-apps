@@ -75,6 +75,13 @@
                                                 Belum Lunas
                                             </label>
                                         </div>
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input" type="checkbox" id="sudah_lunas"
+                                                value="1">
+                                            <label class="form-check-label" for="sudah_lunas">
+                                                Sudah Lunas
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">

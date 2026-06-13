@@ -220,6 +220,7 @@ let SalesInvoice = {
                     d.start_date = $("#start_date").val();
                     d.end_date = $("#end_date").val();
                     d.belum_lunas = $("#belum_lunas").is(":checked") ? 1 : 0;
+                    d.sudah_lunas = $("#sudah_lunas").is(":checked") ? 1 : 0;
                 }
             },
             deferRender: true,
@@ -415,6 +416,7 @@ let SalesInvoice = {
                     d.start_date = $("#start_date").val();
                     d.end_date = $("#end_date").val();
                     d.belum_lunas = $("#belum_lunas").is(":checked") ? 1 : 0;
+                    d.sudah_lunas = $("#sudah_lunas").is(":checked") ? 1 : 0;
                 }
             },
             deferRender: true,
