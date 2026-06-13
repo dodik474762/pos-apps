@@ -1630,7 +1630,7 @@ let ReportPenjualan = {
                                         return (
                                             sum +
                                             parseFloat(
-                                                r.outstanding_amount || 0,
+                                                r.total_amount || 0,
                                             )
                                         );
                                     }, 0);
