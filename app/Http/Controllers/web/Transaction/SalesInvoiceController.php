@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
+use App\Models\Master\Region;
 use App\Models\Master\Tax;
 use App\Models\Master\Users;
 use App\Models\Transaction\DeliveryOrderHeader;
@@ -240,9 +241,24 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesInvoiceHeader::with(['so', 'do.so', 'customers', 'customers.top', 'warehouses', 'items.products', 'items.so_detail.units'])->findOrFail($data['id']);
+        $data = SalesInvoiceHeader::with([
+            'so',
+            'do.so',
+            'customers',
+            'customers.top',
+            'warehouses',
+            'items.products',
+            'items.so_detail.units'
+        ])->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         $qr = '';
+
+        $kecamatan = Region::where('id', $data->customers->kecamatan)->first();
+        $kecamatan_name = $kecamatan->name ?? '-';
+        $kabupaten = Region::where('id', $data->customers->kota)->first();
+        $kabupaten_name = $kabupaten->name ?? '-';
+        $provinsi = Region::where('id', $data->customers->provinsi)->first();
+        $provinsi_name = $provinsi->name ?? '-';
 
         $promo_item = DB::table('sales_order_promo_item as sopi')
             ->where('sales_order_id', $data->so->id)
@@ -286,8 +302,19 @@ class SalesInvoiceController extends Controller
 
         // $customPaper = [0, 0, 612.0, 792.0]; //Letter
         $customPaper = 'A4'; //A4
-        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa4', compact('data', 'company', 'qr', 'so', 'salesman_name', 'promo', 'promo_item', 'ppn_val'))
-            ->setPaper($customPaper, 'portrait');
+        $pdf = Pdf::loadView('web.sales_invoice.print.po-printa4', compact(
+            'data',
+            'company',
+            'qr',
+            'so',
+            'salesman_name',
+            'promo',
+            'promo_item',
+            'ppn_val',
+            'kecamatan_name',
+            'kabupaten_name',
+            'provinsi_name'
+        ))->setPaper($customPaper, 'portrait');
 
         return $pdf->stream('SI-' . $data->invoice_number . '.pdf');
     }
@@ -353,6 +380,17 @@ class SalesInvoiceController extends Controller
             }
 
             $data->ppn_value = $ppn_val;
+
+            $kecamatan = Region::where('id', $data->customers->kecamatan)->first();
+            $kecamatan_name = $kecamatan->name ?? '-';
+            $kabupaten = Region::where('id', $data->customers->kota)->first();
+            $kabupaten_name = $kabupaten->name ?? '-';
+            $provinsi = Region::where('id', $data->customers->provinsi)->first();
+            $provinsi_name = $provinsi->name ?? '-';
+
+            $data->kecamatan_name = $kecamatan_name;
+            $data->kabupaten_name = $kabupaten_name;
+            $data->provinsi_name = $provinsi_name;
         }
 
         $customPaper = [0, 0, 612.0, 792.0]; //Letter

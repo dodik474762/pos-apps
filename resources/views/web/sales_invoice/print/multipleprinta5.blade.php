@@ -265,6 +265,9 @@
             'ppn_val' => $data->ppn_value,
             'promo' => $data->promo ?? collect(),
             'promo_item' => $data->promo_item ?? collect(),
+            'kecamatan_name' => $data->kecamatan_name,
+            'kabupaten_name' => $data->kabupaten_name,
+            'provinsi_name' => $data->provinsi_name,
         ])
 
         {{-- <div class="page-info">

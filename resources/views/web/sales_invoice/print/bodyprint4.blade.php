@@ -89,7 +89,8 @@
      <div class="kepada-section">
          <strong>Kepada :</strong><br>
          {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }}<br>
-         {{ $data->customers->address ?? '-' }}
+         {{ $data->customers->address ?? '-' }}<br>
+         {{ $kecamatan_name ?? '-' }}, {{ $kabupaten_name ?? '-' }}
      </div>
 
      {{-- TABEL BARANG --}}

@@ -121,7 +121,7 @@
            INFO PELANGGAN
            ========================================= */
         .kepada-section {
-            font-size: 7pt;
+            font-size: 8pt;
             margin-bottom: 1mm;
             border-top: 1px solid #000;
             padding-top: 1mm;
