@@ -628,6 +628,7 @@ class SalesInvoiceController extends Controller
                     // Ambil SO detail, exclude yang dibatal, override qty yang berubah
                     $soDetails = SalesOrderDetail::where('sales_order_id', $so->id)
                         ->select(['*', 'unit as unit_id', 'unit_price as price', DB::raw('qty * unit_price as total_price')])
+                        ->whereNull('deleted')
                         ->whereNotIn('id', $soIdBatal)
                         ->get()
                         ->map(function ($row) use ($qtyChangedItems) {
@@ -641,6 +642,10 @@ class SalesInvoiceController extends Controller
                         })
                         ->toArray();
 
+                    // echo '<pre>';
+                    // print_r($soDetails);
+                    // die;
+
                     $so_payload['items'] = $soDetails;
 
                     // Buat Request object manual
@@ -651,6 +656,9 @@ class SalesInvoiceController extends Controller
 
                     // Ambil hasil response jika perlu
                     $resultSo = json_decode($response->getContent(), true);
+                    // echo '<pre>';
+                    // print_r($resultSo);
+                    // die;
 
                     if (!$resultSo['is_valid']) {
                         // handle error
@@ -658,6 +666,10 @@ class SalesInvoiceController extends Controller
                     }
 
                     $newSoId = $resultSo['so_id'];
+                    $sodb = SalesOrderHeader::find($newSoId);
+                    // echo '<pre>';
+                    // print_r($sodb);
+                    // die;
                     /*generate invoice */
                     $soToNewInvoice = $soProcess->getAllSalesNotInvoice($so_payload['so_date'], $so_payload['so_date'], '', [$newSoId]);
                     $newInvoiceId = 0;
@@ -681,6 +693,9 @@ class SalesInvoiceController extends Controller
 
                     $dueDate = date('Y-m-d', strtotime($data['invoice_date'] . ' + ' . $so->payment_term . ' days'));
                     $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
+                    // echo '<pre>';
+                    // print_r($updateInvoiceHeader);
+                    // die;
                     $updateInvoiceHeader->invoice_number = $reference;
                     $updateInvoiceHeader->invoice_date = $data['invoice_date'];
                     $updateInvoiceHeader->due_date = $dueDate;
