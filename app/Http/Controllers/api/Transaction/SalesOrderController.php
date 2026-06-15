@@ -1889,6 +1889,9 @@ class SalesOrderController extends Controller
         }
         $datadb = $datadb->get();
         $data['products'] = $datadb;
+        // echo '<pre>';
+        // print_r($data['products']);
+        // die;
 
         return view('web.sales_order.modal.dataproductsatuan', $data);
     }
@@ -1952,8 +1955,8 @@ class SalesOrderController extends Controller
         $datadb = ProductPromoItem::select('product_promo_item.*')
             ->with(['promoProducts', 'promoFree', 'promoSyarat'])
             ->whereIn('product_promo_item.id', $promoIds)
-            ->orderBy('product_promo_item.min_mix', 'desc')
-            ->orderBy('product_promo_item.min_qty', 'asc') // ✅ tambahkan ini
+            // ->orderBy('product_promo_item.min_mix', 'desc')
+            // ->orderBy('product_promo_item.min_qty', 'asc') // ✅ tambahkan ini
             ->orderBy('product_promo_item.id')
             ->get();
         return $datadb;
@@ -3400,6 +3403,14 @@ class SalesOrderController extends Controller
             }
         }
 
+        // echo '<pre>';
+        // print_r($items);
+        // die;
+
+        // echo '<pre>';
+        // print_r($productIds);
+        // die;
+
         // Tambah item yang tidak kena promo apapun
         $itemNonDisc = [];
         foreach ($items as $item) {
@@ -3412,6 +3423,7 @@ class SalesOrderController extends Controller
                 }
             }
             if (!$productInPromo) {
+                /*cek in promo */
                 $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
                 $itemNonDisc[] = $item;
             }
@@ -3482,6 +3494,9 @@ class SalesOrderController extends Controller
             }
 
             $promoProduc = $promo->promoProducts->pluck('product')->toArray();
+            // echo '<pre>';
+            // print_r($promoProduc);
+            // die;
 
             $mixTotalPromo = 0;
             $itemsHasDiscount = [];
@@ -3493,6 +3508,10 @@ class SalesOrderController extends Controller
                     }
                 }
             }
+
+            // echo '<pre>';
+            // print_r($itemsHasDiscount);
+            // die;
 
             $mix_min_promo = $promo->min_mix;
             $mix_max_promo = $promo->max_mix;
@@ -3507,6 +3526,10 @@ class SalesOrderController extends Controller
                     $itemsValue[] = $vi;
                 }
             }
+
+            // echo '<pre>';
+            // print_r($itemsValue);
+            // die;
 
             $rawSubtotal = 0;
             foreach ($itemsValue as $v) {
@@ -3555,6 +3578,10 @@ class SalesOrderController extends Controller
                     $grandTotalRunning -= $dh['discount_amount'];
                 }
             }
+
+            // echo '<pre>';
+            // print_r($appliedKategoriDisc);
+            // die;
 
             // Hitung grand total semua items
             $grandTotalAllItems = 0;
