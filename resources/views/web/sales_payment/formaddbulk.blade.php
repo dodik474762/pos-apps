@@ -150,9 +150,11 @@
                                     <th style="width: 20%">Customer</th>
                                     <th style="width: 15%">Invoice</th>
                                     <th style="width: 15%">Tanggal Invoice</th>
-                                    <th style="width: 20%">Outstanding Amount</th>
+                                    <th style="width: 10%">Jatuh Tempo</th>
+                                    <th style="width: 5%">TOP</th>
+                                    <th style="width: 10%">Outstanding Amount</th>
                                     <th style="width: 20%">Allocated Amount</th>
-                                    <th style="width: 10%">Action</th>
+                                    <th style="width: 5%">Action</th>
                                 </tr>
                             </thead>
 
@@ -165,6 +167,8 @@
                                                 discount_amount="{{ $item->discount_amount }}">
                                                 {{ $item->invoice_number }}</td>
                                             <td id="date_invoice">{{ $item->invoice_date }}</td>
+                                            <td>{{ $item->due_date }}</td>
+                                            <td>{{ $item->top_name }}</td>
                                             <td>
                                                 <input type="number" step="0.01" class="form-control"
                                                     id="outstanding_amount" disabled
@@ -187,8 +191,11 @@
                                     @endforeach
                                 @else
                                     <tr data_id="">
+                                        <td></td>
                                         <td id="invoice_id" data_id="" subtotal="" discount_amount=""></td>
                                         <td id="date_invoice"></td>
+                                        <td id="due_date"></td>
+                                        <td id="top_name"></td>
                                         <td>
                                             <input type="number" step="0.01" class="form-control"
                                                 id="outstanding_amount" disabled value="">

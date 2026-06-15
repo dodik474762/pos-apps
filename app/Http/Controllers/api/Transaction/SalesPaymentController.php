@@ -779,10 +779,13 @@ class SalesPaymentController extends Controller
                     'sih.amount_paid',
                     'c.code as customer_code',
                     'c.nama_customer',
+                    'sih.due_date',
+                    'top.remarks as top_name',
                     DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
                     DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
                 )
                 ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+                ->leftJoin('term_of_payment as top', 'top.id', '=', 'c.payment_terms')
                 ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
