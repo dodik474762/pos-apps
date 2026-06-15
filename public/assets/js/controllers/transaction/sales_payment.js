@@ -44,12 +44,17 @@ let SalesPayment = {
         window.location.href = url.base_url(SalesPayment.module()) + "addAll";
     },
 
-    getPostItem: () => {
+    getPostItem: (bulk = false) => {
         const rows = $("#table-items tbody tr");
         let result = [];
 
         rows.each((index, elm) => {
             const $row = $(elm);
+            if (bulk) {
+                if (!$row.find("#select_invoice").prop("checked")) {
+                    return;
+                }
+            }
 
             result.push({
                 id: $row.attr("data_id") || null,
@@ -84,7 +89,7 @@ let SalesPayment = {
             reference_no: $("#reference_no").val() || null,
             remarks: $("#remarks").val() || null,
             bulk: bulk ? 1 : 0,
-            details: SalesPayment.getPostItem(),
+            details: SalesPayment.getPostItem(bulk),
         };
 
         return data;
@@ -134,23 +139,23 @@ let SalesPayment = {
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
             let params = SalesPayment.getPostInput(true);
-            
+
             let details = params.details.filter(item => item.customer_id != null && item.customer_id !== "");
-            
+
             if (details.length === 0) {
                 message.sweetError("Informasi", "Tidak ada detail yang valid untuk disubmit.");
                 return;
             }
 
             // Atur ukuran chunk (misal 50 baris per request agar aman dari max_input_vars)
-            const chunkSize = 50; 
+            const chunkSize = 50;
             const chunks = [];
             for (let i = 0; i < details.length; i += chunkSize) {
                 chunks.push(details.slice(i, i + chunkSize));
             }
 
             message.loadingProses("Proses Simpan Data Bulk (0/" + chunks.length + ")...");
-            
+
             let hasError = false;
             let errorMessage = "Gagal memproses sebagian data.";
 
@@ -277,15 +282,13 @@ let SalesPayment = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             SalesPayment.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesPayment.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "PENDING") {
@@ -541,7 +544,7 @@ let SalesPayment = {
         SalesPayment.getOutstandingInvoice(data_id);
     },
 
-    getListItemOutstandingCustomer:(elm)=>{
+    getListItemOutstandingCustomer: (elm) => {
         // Tidak digunakan lagi, digantikan oleh filterBulk
     },
 
@@ -922,10 +925,9 @@ let SalesPayment = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesPayment.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
@@ -1037,7 +1039,7 @@ let SalesPayment = {
         }
     },
 
-    changePaymentMethod:(elm)=>{
+    changePaymentMethod: (elm) => {
         const paymentMethod = $(elm).val();
         const url = $("input#url").val();
 
@@ -1049,8 +1051,27 @@ let SalesPayment = {
         const url = $("input#url-print").val();
         const salesman = $('#salesman').val();
 
-        window.location.href = url + "?date=" + date+"&salesman="+salesman;
-    }
+        window.location.href = url + "?date=" + date + "&salesman=" + salesman;
+    },
+
+    selectAll: (elm) => {
+        const isChecked = $(elm).is(":checked");
+        const table = $("table#table-items").find(".select_invoice_checkbox");
+        console.log(isChecked);
+        console.log(table);
+
+        table.each((index, elm) => {
+            const $row = $(elm);
+
+            if (isChecked) {
+                $row.prop("checked", true);
+                // SalesPayment.changeAllocate(checkbox);
+            } else {
+                $row.prop("checked", false);
+                // SalesPayment.changeAllocate(checkbox);
+            }
+        });
+    },
 };
 
 $(function () {

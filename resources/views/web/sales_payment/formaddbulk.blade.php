@@ -154,7 +154,10 @@
                                     <th style="width: 5%">TOP</th>
                                     <th style="width: 10%">Outstanding Amount</th>
                                     <th style="width: 20%">Allocated Amount</th>
-                                    <th style="width: 5%">Action</th>
+                                    <th style="width: 5%">
+                                        <input type="checkbox" class="form-check-input" id="select_all"
+                                            onchange="SalesPayment.selectAll(this)">
+                                    </th>
                                 </tr>
                             </thead>
 

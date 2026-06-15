@@ -17,6 +17,7 @@
                 onkeyup="SalesPayment.changeAllocate(this)">
         </td>
         <td class="text-center">
+            <input type="checkbox" class="form-check-input select_invoice_checkbox" id="select_invoice">
             <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">
                 <i class="bx bx-trash-alt"></i>
             </button>
