@@ -323,17 +323,17 @@ let Dashboard = {
                     var t = e.replace(" ", "");
                     return -1 === t.indexOf(",")
                         ? getComputedStyle(
-                              document.documentElement,
-                          ).getPropertyValue(t) || t
+                            document.documentElement,
+                        ).getPropertyValue(t) || t
                         : 2 == (e = e.split(",")).length
-                          ? "rgba(" +
+                            ? "rgba(" +
                             getComputedStyle(
                                 document.documentElement,
                             ).getPropertyValue(e[0]) +
                             "," +
                             e[1] +
                             ")"
-                          : t;
+                            : t;
                 });
         }
     },
@@ -482,42 +482,36 @@ let Dashboard = {
         let index_ = 0;
         if (result.data.length > 0) {
             markers = [];
-            try {
+            // ✅ Cek null dulu sebelum clearLayers
+            if (group !== null) {
                 group.clearLayers();
-            } catch (error) {
-                console.log("group marker layer ", error);
             }
         }
 
         result.data.forEach((element) => {
-            if (isNaN(element.latitude) || isNaN(element.longitude)) {
-                console.log("invalid gps location");
-                console.log(element.latitude, element.longitude);
+            // ✅ Skip jika koordinat tidak valid
+            if (
+                element.latitude === null || element.longitude === null ||
+                element.latitude === '' || element.longitude === '' ||
+                isNaN(parseFloat(element.latitude)) || isNaN(parseFloat(element.longitude))
+            ) {
+                console.log("invalid gps location", element.latitude, element.longitude);
                 return;
             }
 
             let content_ = element;
-
             let keterangan = ``;
             if (content_) {
                 keterangan = `
-                    <div style="">
-                        <img src="${
-                            content_.checkin_path
-                        }" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
-                    </div>
-                    SO Number : <b>${content_.so_number}</b> <br>
-                    Visit Date : <b>${content_.so_date ?? ""}</b> <br>
-                    Amount IDR : <b>${content_.total_amount}</b> <br>
-                    Customer : <b>${content_.customer_code} - ${
-                        content_.nama_customer
-                    }</b> <br>
-                    Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${
-                        content_.latitude
-                    },${content_.longitude}" target="_blank">${
-                        content_.latitude
-                    }, ${content_.longitude}</a></b> <br>
-                `;
+                <div style="">
+                    <img src="${content_.checkin_path}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
+                </div>
+                SO Number : <b>${content_.so_number}</b> <br>
+                Visit Date : <b>${content_.so_date ?? ""}</b> <br>
+                Amount IDR : <b>${content_.total_amount}</b> <br>
+                Customer : <b>${content_.customer_code} - ${content_.nama_customer}</b> <br>
+                Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${content_.latitude},${content_.longitude}" target="_blank">${content_.latitude}, ${content_.longitude}</a></b> <br>
+            `;
             }
 
             var myIconMarkerOutlet = L.icon({
@@ -525,24 +519,16 @@ let Dashboard = {
                 iconSize: [40, 40],
             });
 
-            if (element.latitude != null && element.longitude != null) {
-                let markerOutlet = L.marker(
-                    [
-                        parseFloat(element.latitude),
-                        parseFloat(element.longitude),
-                    ],
-                    { customId: element.id, icon: myIconMarkerOutlet },
-                ).bindPopup(keterangan);
-                markers.push(markerOutlet);
-            }
+            let markerOutlet = L.marker(
+                [parseFloat(element.latitude), parseFloat(element.longitude)],
+                { customId: element.id, icon: myIconMarkerOutlet }
+            ).bindPopup(keterangan);
+            markers.push(markerOutlet);
 
             index_++;
-            map.setView(
-                [parseFloat(element.latitude), parseFloat(element.longitude)],
-                12,
-            );
         });
 
+        // ✅ setView dan fitBounds hanya setelah semua marker valid terkumpul
         if (markers.length > 0) {
             group = L.featureGroup(markers).addTo(map);
             map.fitBounds(group.getBounds());
@@ -562,7 +548,7 @@ let Dashboard = {
 
         L.tileLayer(
             "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=" +
-                mapboxToken,
+            mapboxToken,
             {
                 maxZoom: 18,
                 attribution:
