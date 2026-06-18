@@ -1349,6 +1349,7 @@ class SalesOrderController extends Controller
             // =============================
             // PREPARE ITEMS
             // =============================
+            $is_motoris = false;
             $items = collect($data['details'])
                 ->filter(function ($item) {
                     return empty($item['free_for']);
@@ -1393,6 +1394,7 @@ class SalesOrderController extends Controller
 
                     if (!empty($sales_motoris) && $sales_motoris['has_motoris_price']) {
                         $item['price'] = $sales_motoris['motoris'][0]->price;
+                        $is_motoris = true;
                     }
 
                     return $item;
@@ -1400,7 +1402,12 @@ class SalesOrderController extends Controller
 
             $productIds     = $items->pluck('product_id')->toArray();
             $promoAll       = $this->getPromoItemAll($productIds);
-            $calculatePromo = $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
+            $calculatePromo =  $is_motoris ? [
+                'discount_header' => [],
+                'discount_item'   => 0,
+                'grand_total'     => $items->sum('total_price'),
+                'result_items' => []
+            ] : $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
 
             // =============================
             // HEADER
