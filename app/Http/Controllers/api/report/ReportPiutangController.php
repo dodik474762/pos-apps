@@ -78,7 +78,7 @@ class ReportPiutangController extends Controller
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->orderBy('m.salesman', 'asc');
-        if ($data['types'] == 'per-penjual') {
+        if (isset($data['types']) && $data['types'] == 'per-penjual') {
             $datadb->where('m.total_amount', '>', 0);
         } else {
             $datadb->having('outstanding_amount', '>', 0);
