@@ -15,7 +15,7 @@
  {{-- ============================================================
      FAKTUR COPY 1 (atas)
      ============================================================ --}}
- <div class="faktur-block" style="margin-top:-20px;">
+ <div class="faktur-block" style="margin-top:-25px;">
 
      {{-- HEADER --}}
      <table class="header-outer">
