@@ -164,7 +164,7 @@ class ReportPenjualanController extends Controller
             // ->where('p.id', '1039')
             // ->where('sih.id', 177)
             // ->where('usr.name', 'SLS-005')
-            // ->where('sih.invoice_number', 'SI06260036')
+            ->where('sih.invoice_number', 'SI06260312')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0)
