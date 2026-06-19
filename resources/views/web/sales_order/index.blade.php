@@ -138,6 +138,13 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="correction" href="#list-data"
+                                        role="tab" aria-selected="false"
+                                        onclick="SalesOrder.filterTab('correction')">
+                                        <i class="ri-phone-line me-1 align-bottom"></i> Correction SO
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link py-3" data-bs-toggle="tab" id="sudah-invoice"
                                         href="#list-data" role="tab" aria-selected="false"
                                         onclick="SalesOrder.filterTab('invoiced')">

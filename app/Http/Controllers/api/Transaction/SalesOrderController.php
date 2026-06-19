@@ -75,11 +75,13 @@ class SalesOrderController extends Controller
             }
             if (isset($_POST['tab'])) {
                 if ($_POST['tab'] == 'outstanding') {
-                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '>', 0);
+                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '>', 0)->where('m.status', '!=', 'correction');
                 } else if ($_POST['tab'] == 'call') {
-                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '<=', 0);
+                    $datadb->whereNull('sih.sales_order')->where('m.total_amount', '<=', 0)->where('m.status', '!=', 'correction');
                 } else if ($_POST['tab'] == 'invoiced') {
-                    $datadb->whereNotNull('sih.sales_order');
+                    $datadb->whereNotNull('sih.sales_order')->where('m.status', '!=', 'correction');
+                } else if ($_POST['tab'] == 'correction') {
+                    $datadb->where('m.status', 'correction');
                 }
             }
             $data['recordsTotal'] = $datadb->get()->count();
