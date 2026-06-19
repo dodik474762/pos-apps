@@ -40,7 +40,11 @@ class ReportPenjualanController extends Controller
                 'm.platform',
                 'p.code as product_code',
                 'p.name as product_name',
-                'v.nama_vendor as principal',
+                'principal.nama_vendor as principal',
+                'p.category',
+                'p.sku_name as brand',
+                'p.sub_brand',
+                'v.nama_vendor',
                 'kec.name as kecamatan',
                 'kab.name as kabupaten',
                 'kel.name as kelurahan',
@@ -149,6 +153,7 @@ class ReportPenjualanController extends Controller
             })
             ->join('sales_invoice_header as sih', 'sih.id', 'sid.invoice_id')
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+            ->leftJoin('vendor as principal', 'principal.id', 'p.principal')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
@@ -164,7 +169,7 @@ class ReportPenjualanController extends Controller
             // ->where('p.id', '1039')
             // ->where('sih.id', 177)
             // ->where('usr.name', 'SLS-005')
-            ->where('sih.invoice_number', 'SI06260312')
+            // ->where('sih.invoice_number', 'SI06260312')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0)
@@ -186,7 +191,12 @@ class ReportPenjualanController extends Controller
                         ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
+                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('principal.nama_vendor', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('kec.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('kab.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('kel.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
 

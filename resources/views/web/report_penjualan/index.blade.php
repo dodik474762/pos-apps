@@ -140,8 +140,12 @@
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
                                                     <th>PRINCIPAL</th>
+                                                    <th>VENDOR</th>
                                                     <th>KODE PRODUK</th>
                                                     <th>NAMA PRODUK</th>
+                                                    <th>KATEGORI</th>
+                                                    <th>BRAND</th>
+                                                    <th>SUB BRAND</th>
                                                     <th>PACKAGING</th>
                                                     <th>KODE CUSTOMER</th>
                                                     <th>NAMA CUSTOMER</th>

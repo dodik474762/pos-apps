@@ -262,6 +262,13 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "nama_vendor",
+                    title: "VENDOR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
                     data: "product_code",
                     title: "KODE PRODUK",
                     render: function (data, type, row) {
@@ -271,6 +278,27 @@ let ReportPenjualan = {
                 {
                     data: "product_name",
                     title: "NAMA PRODUK",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "category",
+                    title: "KATEGORI",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "brand",
+                    title: "BRAND",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "sub_brand",
+                    title: "SUB BRAND",
                     render: function (data, type, row) {
                         return data;
                     },
