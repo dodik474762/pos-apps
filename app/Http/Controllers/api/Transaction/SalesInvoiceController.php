@@ -684,7 +684,7 @@ class SalesInvoiceController extends Controller
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Gagal Process invoice'
+                                'message' => 'Gagal Process invoice '.$process['message']
                             ]);
                         }
                     }

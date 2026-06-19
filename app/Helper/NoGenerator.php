@@ -1213,7 +1213,8 @@ function checkCustomerCreditLimit($customer = 0)
 
         //count invoice outstanding
         $countInvoiceOutstanding = DB::table('sales_invoice_header')
-            ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
+            // ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
+            ->whereIn('status', ['POSTED', 'PARTIAL PAID'])
             ->whereNull('deleted')
             ->where('customer_id', $customer)
             ->count();
