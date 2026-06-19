@@ -166,7 +166,7 @@
     @endphp
 
     {{-- ==================== PAGE BREAK HANYA JIKA PRODUK > 10 ==================== --}}
-    @if($totalProduk > 10)
+    @if ($totalProduk > 10)
         <div class="page-break"></div>
     @endif
 
@@ -196,11 +196,12 @@
                     <td>{{ $d['product_code'] ?? '-' }}</td>
                     <td>{{ $d['product_name'] ?? '-' }}</td>
 
-                    <td class="text-right">{{ number_format($d['conversion']['qty_in_largest_unit'], 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($d['conversion']['qty_in_largest_unit'], 2, ',', '.') }}
+                    </td>
 
                     <td>{{ $d['conversion']['largest_unit_name'] ?? '-' }}</td>
-                    <td>{{ $d['remarks'] ?? '-' }} {!! $d['assembly'] == 1 ? '<strong>Assembly</strong>' : '' !!}
-                        <br/>
+                    <td>{!! $d['assembly'] == 1 ? '<strong>Assembly</strong>' : '' !!}
+                        <br />
                         {{ $d['assembly_name'] }}
                     </td>
                 </tr>

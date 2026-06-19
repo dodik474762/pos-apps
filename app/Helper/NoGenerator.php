@@ -937,6 +937,119 @@ function getGeneralLedger($reference = '')
     return $general_ledgers;
 }
 
+function hitungKonversiKeSatuanTerkecil($product_uom, $unit, &$cache = [])
+{
+    if (isset($cache[$unit])) {
+        return $cache[$unit];
+    }
+
+    $uom = $product_uom->firstWhere('unit_tujuan', $unit);
+
+    if (!$uom) {
+        return 0;
+    }
+
+    // Base case: satuan terkecil (tidak punya parent / level 1)
+    if (!$uom->nilai_konversi_terkecil) {
+        $cache[$unit] = 1;
+        return 1;
+    }
+
+    // Recursive case: nilai_konversi (ke parent) dikali konversi parent ke satuan terkecil
+    $nilaiKeParent = $uom->nilai_konversi_terkecil;
+    $parentKeTerkecil = hitungKonversiKeSatuanTerkecil($product_uom, $uom->nilai_konversi_terkecil, $cache);
+
+    $hasil = $nilaiKeParent * $parentKeTerkecil;
+    $cache[$unit] = $hasil;
+
+    return $hasil;
+}
+
+function konversiSatuan($productId, $unitDari, $unitKe, $qty = 1)
+{
+    $product_uom = ProductUom::whereNull('deleted')
+        ->where('product', $productId)
+        ->orderBy('level')
+        ->get();
+
+    $cache = [];
+
+    $konversiDari = hitungKonversiKeSatuanTerkecil($product_uom, $unitDari, $cache);
+    $konversiKe = hitungKonversiKeSatuanTerkecil($product_uom, $unitKe, $cache);
+
+    if (!$konversiDari || !$konversiKe) {
+        return null;
+    }
+
+    // qty dalam satuan terkecil, lalu dikonversi ke satuan tujuan
+    return ($qty * $konversiDari) / $konversiKe;
+}
+
+function totalKeSatuanTerkecil($product_uom, array $inputs)
+{
+    $total = 0;
+
+    foreach ($inputs as $input) {
+        $uom = $product_uom->firstWhere('unit_tujuan', $input['unit']);
+
+        if (!$uom) {
+            continue;
+        }
+
+        $total += $input['qty'] * $uom->nilai_konversi_terkecil;
+    }
+
+    return $total;
+}
+
+function pecahDariSatuanTerkecil($product_uom, $totalTerkecil)
+{
+    // Urutkan dari konversi TERBESAR ke TERKECIL
+    $uomUrut = $product_uom->sortByDesc('nilai_konversi_terkecil');
+
+    $hasil = [];
+    $sisa = $totalTerkecil;
+
+    foreach ($uomUrut as $uom) {
+        $konversi = $uom->nilai_konversi_terkecil;
+
+        if (!$konversi) {
+            continue;
+        }
+
+        $qtyUnitIni = intdiv((int) round($sisa), (int) $konversi);
+        $hasil[$uom->unit_tujuan] = $qtyUnitIni;
+
+        $sisa -= $qtyUnitIni * $konversi;
+    }
+
+    return $hasil;
+}
+
+function normalisasiQtyUom($productId, array $inputs)
+{
+    $product_uom = ProductUom::whereNull('deleted')
+        ->where('product', $productId)
+        ->orderBy('level')
+        ->get();
+
+    $totalTerkecil = totalKeSatuanTerkecil($product_uom, $inputs);
+
+    return pecahDariSatuanTerkecil($product_uom, $totalTerkecil);
+}
+
+function hitungHargaPerSatuan($price, $product_uom, $unitTerbesar, $unitTujuan, &$cache = [])
+{
+    $konversiTerbesar = hitungKonversiKeSatuanTerkecil($product_uom, $unitTerbesar, $cache);
+    $konversiTujuan = hitungKonversiKeSatuanTerkecil($product_uom, $unitTujuan, $cache);
+
+    if (!$konversiTerbesar) {
+        return 0;
+    }
+
+    return ($price / $konversiTerbesar) * $konversiTujuan;
+}
+
 function getSmallestUnit($productId, $fromUnitId, $qty = 1)
 {
     $multiplier = 1;

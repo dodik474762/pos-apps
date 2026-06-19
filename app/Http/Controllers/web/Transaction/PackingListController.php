@@ -282,14 +282,19 @@ class PackingListController extends Controller
         // echo '<pre>';
         // print_r($details);die;
         $doIds = $details->pluck('delivery_order_id')->toArray();
+
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
             ->select([
                 'packing_list_detail.*',
                 'doh.do_number',
             ])
             ->with(['product', 'deliveryDetail'])
+            ->join('product as p', 'p.id', 'packing_list_detail.product_id')
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
             ->where('packing_list_detail.packing_list_id', $data->id)
+            // ->whereIn('p.code', ['PQ03', 'P26MAY-1A'])
+            ->orderBy('p.vendor', 'asc')
+            ->orderBy('p.code', 'asc')
             ->get();
 
         // $grouped = $details
@@ -318,6 +323,13 @@ class PackingListController extends Controller
                 $totalInSmallQty += $qtyProductInSmall;
             }
 
+
+            $inputs = [];
+            foreach ($items as $v) {
+                $inputs[] = ['unit' => $v['delivery_detail']['uom'], 'qty' => $v['qty_packed']];
+            }
+            $hasilNormalisasi = normalisasiQtyUom($key, $inputs);
+
             $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
             $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
 
@@ -325,6 +337,33 @@ class PackingListController extends Controller
             $qtyLarges = ceil($qtyOriginal);
 
             $isAssembly = ($qtyOriginal != floor($qtyOriginal));
+
+            // === Ambil daftar unit (id => nama) milik product ini, urut dari level terbesar ke terkecil ===
+            $allProductUom = DB::table('product_uom')
+                ->where('product', $key)
+                ->orderByDesc('level')
+                ->get();
+            // echo '<pre>';
+            // print_r($allProductUom);
+            // die;
+
+            $unitNames = DB::table('unit')
+                ->whereIn('id', $allProductUom->pluck('unit_tujuan')->toArray())
+                ->pluck('name', 'id');
+
+
+            // === Bangun string assembly dari hasil normalisasi, skip yang qty = 0 ===
+            $assemblyParts = [];
+            foreach ($allProductUom as $uom) {
+                $unitCode = $uom->unit_tujuan;
+                $qtyUnit = $hasilNormalisasi[$unitCode] ?? 0;
+
+                if ($qtyUnit > 0) {
+                    $namaUnit = $unitNames[$unitCode] ?? $unitCode;
+                    $assemblyParts[] = $qtyUnit . ' ' . $namaUnit;
+                }
+            }
+            $assemblyNameNormalized = implode(' / ', $assemblyParts);
 
             $groupedUom = [];
             $assemblysItem = [];
@@ -340,7 +379,12 @@ class PackingListController extends Controller
                 $assemblysItem[] = $qty . ' ' . $unit_name->name;
             }
 
-
+            // echo '<pre>';
+            // print_r($hasil);
+            // print_r($inputs);
+            // print_r($assemblysItem);
+            // print_r($groupByItemUom);
+            // die;
             $groupedItem[] = [
                 'product_id' => $key,
                 'product_code' => $items[0]['product']['code'],
@@ -349,7 +393,8 @@ class PackingListController extends Controller
                 'conversion' => $largestUnit,
                 'assembly' => $isAssembly,
                 'groupedUom' => $groupedUom,
-                'assembly_name' => implode('/', $assemblysItem)
+                // 'assembly_name' => implode('/', $assemblysItem)
+                'assembly_name' => $assemblyNameNormalized
             ];
         }
         // $productLargest = [];
