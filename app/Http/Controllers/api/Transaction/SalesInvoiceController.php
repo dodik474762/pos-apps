@@ -684,7 +684,7 @@ class SalesInvoiceController extends Controller
                             DB::rollBack();
                             return response()->json([
                                 'is_valid' => false,
-                                'message' => 'Gagal Process invoice '.$process['message']
+                                'message' => 'Gagal Process invoice ' . $process['message']
                             ]);
                         }
                     }
@@ -735,11 +735,11 @@ class SalesInvoiceController extends Controller
 
             $menu = SalesInvoiceHeader::find($data['id']);
 
-            if ($menu->status != 'DRAFT') {
-                DB::rollBack();
-                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak DRAFT';
-                return response()->json($result);
-            }
+            // if ($menu->status != 'DRAFT' && $menu->status != 'PACKED') {
+            //     DB::rollBack();
+            //     $result['message'] = 'Tidak dapat dihapus karena status sudah ' . $menu->status;
+            //     return response()->json($result);
+            // }
 
             // Soft delete header
             $menu->deleted = date('Y-m-d H:i:s');
