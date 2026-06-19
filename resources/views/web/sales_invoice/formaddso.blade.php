@@ -1,11 +1,11 @@
-<button type="button" id="btn-show-modal" style="display: none;"
-        data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 
 <div id="content-modal-form"></div>
 
 <input type="hidden" id="id" value="{{ $data->id ?? '' }}">
 <input type="hidden" id="url"
-       value="{{ isset($data) ? route('sales-invoice-edit') : route('sales-invoice-add') }}">
+    value="{{ isset($data) ? route('sales-invoice-edit') : route('sales-invoice-add') }}">
 
 <!-- Start Page Title -->
 <div class="row">
@@ -41,27 +41,25 @@
                             <div class="mb-3">
                                 <label class="form-label">Invoice Number</label>
                                 <input type="text" id="invoice_number" class="form-control"
-                                       value="{{ $data->invoice_number ?? 'AUTO' }}" readonly>
+                                    value="{{ $data->invoice_number ?? 'AUTO' }}" readonly>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Invoice Date</label>
                                 <input type="date" id="invoice_date" class="form-control required"
-                                       error="Invoice Date"
-                                       value="{{ $data->invoice_date ?? date('Y-m-d') }}">
+                                    error="Invoice Date" value="{{ $data->invoice_date ?? date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Sales Order</label>
                                 <div class="input-group">
                                     <button type="button" class="btn btn-outline-primary"
-                                            onclick="SalesInvoice.showModalSO(this)">
+                                        onclick="SalesInvoice.showModalSO(this)">
                                         Pilih
                                     </button>
                                     <input disabled type="text" id="so_number" class="form-control required"
-                                           error="SO Number"
-                                           value="{{ $data->so_number ?? '' }}"
-                                           data_id="{{ $data->sales_order ?? '' }}">
+                                        error="SO Number" value="{{ $data->so_number ?? '' }}"
+                                        data_id="{{ $data->sales_order ?? '' }}">
                                 </div>
                             </div>
 
@@ -73,9 +71,9 @@
                             <div class="mb-3">
                                 <label class="form-label">Customer</label>
                                 <input disabled type="text" id="customer_id" class="form-control required"
-                                       error="Customer"
-                                       value="{{ isset($data->nama_customer) ? $data->customer_id.'//'.$data->nama_customer : '' }}"
-                                       data_id="{{ $data->customer_id ?? '' }}">
+                                    error="Customer"
+                                    value="{{ isset($data->nama_customer) ? $data->customer_id . '//' . $data->nama_customer : '' }}"
+                                    data_id="{{ $data->customer_id ?? '' }}">
                             </div>
 
                             <div class="mb-3 d-none">
@@ -83,7 +81,9 @@
                                 <select id="tax" class="form-control select2">
                                     <option value=""></option>
                                     @foreach ($taxes as $item)
-                                        <option rate="{{ $item->rate }}" value="{{ $item->id }}" {{ isset($data->tax_id) ? $data->tax_id == $item->id ? 'selected' : ''  : ''}}>{{ $item->tax_name }}</option>
+                                        <option rate="{{ $item->rate }}" value="{{ $item->id }}"
+                                            {{ isset($data->tax_id) ? ($data->tax_id == $item->id ? 'selected' : '') : '' }}>
+                                            {{ $item->tax_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -91,7 +91,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Packing List</label>
                                 <input type="checkbox" id="is_packing" class=""
-                                       {{ isset($data->is_packing) ? ($data->is_packing == 1 ? 'checked' : '') : 'checked' }}>
+                                    {{ isset($data->is_packing) ? ($data->is_packing == 1 ? 'checked' : '') : 'checked' }}>
                             </div>
 
                         </div>
@@ -118,32 +118,37 @@
 
                                 @if (!empty($details))
                                     @foreach ($details as $item)
-                                        <tr class="input" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}" data-price="{{ $item->price }}" data-disc="{{ $item->discount }}" data-tax-rate="{{ $item->tax_rate }}">
-                                            <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
+                                        <tr class="input" data_id="{{ $item->id }}"
+                                            so_detail_id="{{ $item->so_detail_id }}" data-price="{{ $item->price }}"
+                                            data-disc="{{ $item->discount }}" data-tax-rate="{{ $item->tax_rate }}">
+                                            <td id="product" data_id="{{ $item->product_id }}">
+                                                {{ $item->product_code }} - {{ $item->product_name }}</td>
                                             <td id="qty" style="min-width:90px">
-                                                <input type="number" id="qty" class="form-control form-control-sm" step="any" min="0"
+                                                <input type="number" id="qty"
+                                                    class="form-control form-control-sm" step="any" min="0"
                                                     value="{{ $item->qty }}"
                                                     data-original-qty="{{ $item->qty }}"
                                                     oninput="SalesInvoice.recalcExistingRow(this)">
                                             </td>
                                             <td id="price">{{ $item->price }}</td>
                                             <td id="discount">{{ $item->discount }}</td>
-                                            <td id="tax" data_id="{{ $item->tax }}" type_tax="{{ $item->type_tax }}" rate="{{ $item->tax_rate }}">{{ $item->tax_amount }}</td>
+                                            <td id="tax" data_id="{{ $item->tax }}"
+                                                type_tax="{{ $item->type_tax }}" rate="{{ $item->tax_rate }}">
+                                                {{ $item->tax_amount }}</td>
                                             <td id="subtotal">{{ $item->subtotal }}</td>
 
                                             <td class="text-center">
-                                                @if($item->flag_cancel == '1')
+                                                @if ($item->flag_cancel == '1')
                                                     <i>Dibatalkan oleh Driver, Saat Kirim</i>
                                                 @else
                                                     <button type="button" class="btn btn-sm btn-danger"
-                                                            onclick="SalesInvoice.removeRow(this)">
+                                                        onclick="SalesInvoice.removeRow(this)">
                                                         <i class="bx bx-trash-alt"></i>
                                                     </button>
                                                 @endif
                                             </td>
                                         </tr>
                                     @endforeach
-
                                 @else
                                     {{-- DEFAULT EMPTY ROW --}}
                                     <tr class="input" data_id="">
@@ -163,7 +168,8 @@
                     </div>
 
                     <div class="text-end mt-4">
-                        <h5>Grand Total: <span id="grand-total">{{ isset($data->subtotal) ? $data->subtotal : 0 }}</span></h5>
+                        <h5>Grand Total: <span
+                                id="grand-total">{{ isset($data->subtotal) ? $data->subtotal : 0 }}</span></h5>
                     </div>
 
                 </form>
@@ -177,25 +183,30 @@
             @if (isset($id))
                 @if ($data->status == 'DRAFT')
                     <button type="button" onclick="SalesInvoice.posted(this, event)"
-                            class="btn btn-primary waves-effect waves-light me-1">
+                        class="btn btn-primary waves-effect waves-light me-1">
                         Posted
                     </button>
                     &nbsp;
                     <button type="submit" onclick="SalesInvoice.submit(this, event)"
-                            class="btn btn-success waves-effect waves-light me-1">
+                        class="btn btn-success waves-effect waves-light me-1">
+                        Submit
+                    </button>
+                @endif
+                @if ($data->status != 'PAID' && $data->status != 'PARTIAL-PAID' && $data->status != 'CANCELED')
+                    <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                        class="btn btn-success waves-effect waves-light me-1">
                         Submit
                     </button>
                 @endif
             @endif
             @if (!isset($id))
                 <button type="submit" onclick="SalesInvoice.submit(this, event)"
-                        class="btn btn-success waves-effect waves-light me-1">
+                    class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
-            @endif            
+            @endif
 
-            <button type="reset" onclick="SalesInvoice.back(this, event)"
-                    class="btn btn-secondary waves-effect">
+            <button type="reset" onclick="SalesInvoice.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel
             </button>
         </div>
@@ -204,5 +215,7 @@
 </div>
 
 <style>
-    .freegood { background-color:#f5f7ff }
+    .freegood {
+        background-color: #f5f7ff
+    }
 </style>

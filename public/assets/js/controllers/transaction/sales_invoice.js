@@ -356,7 +356,7 @@ let SalesInvoice = {
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "DRAFT" || akses_session == "superadmin") {
+                            if (row.status == "DRAFT" || row.status == "PACKED" || akses_session == "superadmin") {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
