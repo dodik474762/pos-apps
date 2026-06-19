@@ -127,7 +127,7 @@ let PackingList = {
 
     getPostInput: (bulk = false) => {
         let data = {
-            id: $("#id").val() || null,
+            id: $("input#id").val() || null,
             packing_list_no: $("#packing_list_no").val() || null,
             packing_date: $("#packing_date").val() || null,
             vehicle_no: $("#vehicle_no").val() || null,
@@ -136,9 +136,13 @@ let PackingList = {
             expedition_name: $("#expedition_name").val() || null,
             remarks: $("#remarks").val() || null,
 
-            do_list: PackingList.getPostDo(), // 🔥 DO LIST
-            details: PackingList.getPostItem(), // 🔥 ITEM LIST
-            items_checked: PackingList.getPostItemChecked(),
+            // do_list: PackingList.getPostDo(), // 🔥 DO LIST
+            // details: PackingList.getPostItem(), // 🔥 ITEM LIST
+            // items_checked: PackingList.getPostItemChecked(),
+            // 🔥 kirim sebagai JSON string, bukan array nested
+            do_list: JSON.stringify(PackingList.getPostDo()),
+            details: JSON.stringify(PackingList.getPostItem()),
+            items_checked: JSON.stringify(PackingList.getPostItemChecked()),
         };
 
         return data;
@@ -349,20 +353,17 @@ let PackingList = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             PackingList.module(),
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PackingList.module(),
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                             html += `<a href='${url.base_url(
                                 PackingList.module(),
-                            )}cetakSj?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
+                            )}cetakSj?id=${data}' data_id="${row.id
+                                }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "PENDING") {
@@ -508,15 +509,13 @@ let PackingList = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             PackingList.modulePr(),
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PackingList.modulePr(),
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "PENDING") {
@@ -1462,10 +1461,9 @@ let PackingList = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="PackingList.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">

@@ -1,11 +1,10 @@
-<button type="button" id="btn-show-modal" style="display: none;"
-        data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 
 <div id="content-modal-form"></div>
 
-<input type="hidden" id="id" value="{{ $data->packing_list_id ?? '' }}">
-<input type="hidden" id="url"
-       value="{{ isset($data) ? route('packing-list-edit') : route('packing-list-add') }}">
+{{-- <input type="hidden" id="id" value="{{ $data->packing_list_id ?? '' }}"> --}}
+<input type="hidden" id="url" value="{{ isset($data) ? route('packing-list-edit') : route('packing-list-add') }}">
 
 <!-- Page Title -->
 <div class="row">
@@ -31,7 +30,7 @@
             <div class="card-body">
 
                 <form onsubmit="PackingList.submit(this, event)">
-
+                    <input type="hidden" id="id" value="{{ $data->id ?? '' }}">
                     <div class="row">
 
                         <!-- LEFT SIDE -->
@@ -39,15 +38,14 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Packing List No</label>
-                                <input type="text" id="packing_list_no"
-                                       class="form-control"
-                                       value="{{ $data->packing_list_no ?? 'AUTO' }}" readonly>
+                                <input type="text" id="packing_list_no" class="form-control"
+                                    value="{{ $data->packing_list_no ?? 'AUTO' }}" readonly>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Packing Date</label>
                                 <input type="date" id="packing_date" class="form-control required"
-                                       value="{{ $data->packing_date ?? date('Y-m-d') }}">
+                                    value="{{ $data->packing_date ?? date('Y-m-d') }}">
                             </div>
 
                             <!-- <div class="mb-3">
@@ -58,7 +56,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Vehicle No</label>
-                                <select name="vehicle_no" id="vehicle_no" class="form-control required select2" error="Vehicle Harus Diisi">
+                                <select name="vehicle_no" id="vehicle_no" class="form-control required select2"
+                                    error="Vehicle Harus Diisi">
                                     <option value="">Pilih Kendaraan</option>
                                     @foreach ($list_kendaraan as $item)
                                         <option value="{{ $item->nopol }}"
@@ -71,7 +70,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Driver Name</label>
-                                <select name="driver" id="driver" class="form-control required select2" error="Driver Harus Diisi">
+                                <select name="driver" id="driver" class="form-control required select2"
+                                    error="Driver Harus Diisi">
                                     <option value="">Pilih Driver</option>
                                     @foreach ($list_users as $driver)
                                         <option value="{{ $driver->id }}"
@@ -90,7 +90,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Expedition Name</label>
                                 <input type="text" id="expedition_name" class="form-control"
-                                       value="{{ $data->expedition_name ?? '' }}">
+                                    value="{{ $data->expedition_name ?? '' }}">
                             </div>
 
                             <div class="mb-3">
@@ -107,8 +107,8 @@
                     {{-- ==================== DO LIST =========================== --}}
                     <div class="d-flex justify-content-between">
                         <h5>Delivery Orders</h5>
-                        <button type="button" class="btn btn-primary btn-sm"
-                                onclick="PackingList.showModalDO()">Tambah Faktur</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="PackingList.showModalDO()">Tambah
+                            Faktur</button>
                     </div>
 
                     <div class="table-responsive mt-2">
@@ -123,36 +123,50 @@
                             </thead>
 
                             <tbody id="do-body">
-                                @if(!empty($details))
-                                    @foreach($details as $row)
+                                @if (!empty($details))
+                                    @foreach ($details as $row)
                                         @php
                                             $statusColor = '';
-                                            if($row->status == 'CONFIRMED'){
+                                            if ($row->status == 'CONFIRMED') {
                                                 $statusColor = 'text-success';
                                             }
-                                            if($row->status == 'NOT DELIVERED'){
+                                            if ($row->status == 'NOT DELIVERED') {
                                                 $statusColor = 'text-danger';
                                             }
-                                            if($row->status == 'CANCEL'){
+                                            if ($row->status == 'CANCEL') {
                                                 $statusColor = 'text-danger';
                                             }
-                                            
+
                                             $photo_path = '';
-                                            if($row->photo_path != ''){
+                                            if ($row->photo_path != '') {
                                                 $photo_path = $row->photo_path;
                                             }
                                         @endphp
                                         <tr data_id="{{ $row->id }}">
-                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">{{ $row->do_number }} {!!  $row->status == '' ? '' : '<label class="'.$statusColor.'" data_id="'.$row->id.'" status="'.$row->status.'" onclick="PackingList.cancelPl(this, event)">(' . $row->status . ') '.$row->remarks.'</label>' !!}
-                                                @if($photo_path != '')
-                                                <a href="{{ $photo_path }}" target="_blank">Foto Pengiriman</a>
-                                                @endif 
+                                            <td id="do_number" data_id="{{ $row->delivery_order_id }}">
+                                                {{ $row->do_number }} {!! $row->status == ''
+                                                    ? ''
+                                                    : '<label class="' .
+                                                        $statusColor .
+                                                        '" data_id="' .
+                                                        $row->id .
+                                                        '" status="' .
+                                                        $row->status .
+                                                        '" onclick="PackingList.cancelPl(this, event)">(' .
+                                                        $row->status .
+                                                        ') ' .
+                                                        $row->remarks .
+                                                        '</label>' !!}
+                                                @if ($photo_path != '')
+                                                    <a href="{{ $photo_path }}" target="_blank">Foto Pengiriman</a>
+                                                @endif
                                             </td>
                                             <td id="do_date">{{ $row->do_date }}</td>
-                                            <td id="do_customer" data_id="{{ $row->customer_id }}">{{ $row->customer_code }} - {{ $row->nama_customer }}</td>
+                                            <td id="do_customer" data_id="{{ $row->customer_id }}">
+                                                {{ $row->customer_code }} - {{ $row->nama_customer }}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-danger btn-sm"
-                                                        onclick="PackingList.removeRow(this)">
+                                                    onclick="PackingList.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button>
                                             </td>
@@ -181,17 +195,19 @@
                             </thead>
 
                             <tbody id="detail-body">
-                                @if(!empty($details))
+                                @if (!empty($details))
                                     @foreach ($grouped as $item)
                                         @foreach ($item as $items)
                                             @foreach ($items as $prod)
-                                                <tr class="do_detail_{{ $prod->delivery_order_id }}" do_id="{{ $prod->delivery_order_id }}" data_id="{{ $prod->delivery_detail_id }}">
-                                                    <td id="product_id" data_id="{{ $prod->product->id }}">{{ $prod->product->code }} - {{ $prod->product->name }}</td>
+                                                <tr class="do_detail_{{ $prod->delivery_order_id }}"
+                                                    do_id="{{ $prod->delivery_order_id }}"
+                                                    data_id="{{ $prod->delivery_detail_id }}">
+                                                    <td id="product_id" data_id="{{ $prod->product->id }}">
+                                                        {{ $prod->product->code }} - {{ $prod->product->name }}</td>
                                                     <td id="product_qty">{{ $prod->qty_do }}</td>
                                                     <td>
                                                         <input type="number" step="0.01" class="form-control"
-                                                            id="qty_pack"
-                                                            value="{{ $prod->qty_packed }}">
+                                                            id="qty_pack" value="{{ $prod->qty_packed }}">
                                                     </td>
                                                     <td>{{ $prod->deliveryDetail->units->name ?? '-' }}</td>
                                                     <td>
@@ -202,7 +218,7 @@
                                             @endforeach
                                         @endforeach
                                     @endforeach
-                                    {{-- @foreach($details as $d)
+                                    {{-- @foreach ($details as $d)
                                         @foreach ($d->detail as $prod)
                                             <tr class="do_detail_{{ $prod->delivery_order_id }}" do_id="{{ $prod->delivery_order_id }}" data_id="{{ $prod->delivery_detail_id }}">
                                                 <td id="product_id" data_id="{{ $prod->product->id }}">{{ $prod->product->code }} - {{ $prod->product->name }}</td>
@@ -232,12 +248,11 @@
 
         <div class="text-end mt-3">
             <button type="submit" onclick="PackingList.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
+                class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
 
-            <button type="reset" onclick="PackingList.back(this, event)"
-                    class="btn btn-secondary waves-effect">
+            <button type="reset" onclick="PackingList.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel
             </button>
         </div>
