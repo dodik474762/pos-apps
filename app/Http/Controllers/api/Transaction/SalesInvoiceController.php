@@ -665,8 +665,15 @@ class SalesInvoiceController extends Controller
                         throw new \Exception('Gagal generate SO: ' . $resultSo['message']);
                     }
 
+                    /*update so old to correction */
+                    $updateOldSo = SalesOrderHeader::find($so->id);
+                    $updateOldSo->status = 'correction';
+                    $updateOldSo->save();
+
                     $newSoId = $resultSo['so_id'];
                     $sodb = SalesOrderHeader::find($newSoId);
+                    $sodb->ref_so_id = $so->id;
+                    $sodb->save();
                     // echo '<pre>';
                     // print_r($sodb);
                     // die;
