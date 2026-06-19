@@ -10,6 +10,7 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #000;
+            margin: 0;
         }
 
         table {
@@ -50,11 +51,26 @@
             width: 90px;
         }
 
-        /* TABLE DETAIL */
+        .table-detail {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            /* penting */
+        }
+
         .table-detail th,
         .table-detail td {
-            font-size: 10px;
-            padding: 5px;
+            font-size: 8px;
+            /* kecilkan */
+            padding: 3px;
+            border: 1px solid #000;
+
+            /* supaya text turun baris */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+
+            vertical-align: top;
         }
 
         .table-detail th {
@@ -115,15 +131,18 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>No. DO</th>
-                <th>Tanggal DO</th>
-                <th>No. Faktur</th>
-                <th>Total Faktur</th>
-                <th>Outstanding Faktur</th>
-                <th>Kode Customer</th>
-                <th>Nama Customer</th>
-                <th>Remark</th>
+                <th style="width:3%">No</th>
+                <th style="width:11%">No. DO</th>
+                <th style="width:11%">No. Faktur</th>
+                <th style="width:9%">Total Faktur</th>
+                <th style="width:11%">Outstanding</th>
+                <th style="width:10%">Kode Cust</th>
+                <th style="width:12%">Nama Customer</th>
+                <th style="width:5%">TOP</th>
+                <th style="width:9%">Jth Tempo</th>
+                <th style="width:6%">Tunai</th>
+                <th style="width:8%">Transfer</th>
+                <th style="width:5%">Remark</th>
             </tr>
         </thead>
 
@@ -133,12 +152,16 @@
                 <tr>
                     <td>{{ $no++ }}</td>
                     <td>{{ $item->do_number }}</td>
-                    <td>{{ $item->do_date }}</td>
+                    {{-- <td>{{ $item->do_date }}</td> --}}
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
                     <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                     <td>{{ $item->customer_code }}</td>
                     <td>{{ $item->nama_customer }}</td>
+                    <td>{{ $item->top_name }}</td>
+                    <td>{{ date('d/m/Y', strtotime($item->due_date)) }}</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
                     <td>&nbsp;</td>
                 </tr>
             @endforeach
@@ -146,7 +169,7 @@
 
         <tfoot>
             <tr>
-                <td colspan="8" class="text-right"><strong>Total DO</strong></td>
+                <td colspan="11" class="text-right"><strong>Total DO</strong></td>
                 <td class="text-right">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
@@ -177,13 +200,12 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Kode Produk</th>
-                <th>Nama Produk</th>
-                <!-- <th>Qty DO</th> -->
-                <th>Qty Pack</th>
-                <th>Satuan</th>
-                <th>Remark</th>
+                <th style="width:5%">No</th>
+                <th style="width:18%">Kode Produk</th>
+                <th style="width:35%">Nama Produk</th>
+                <th style="width:12%">Qty Pack</th>
+                <th style="width:10%">Satuan</th>
+                <th style="width:20%">Remark</th>
             </tr>
         </thead>
 

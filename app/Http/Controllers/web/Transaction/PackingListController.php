@@ -267,7 +267,9 @@ class PackingListController extends Controller
                 'doh.do_date',
                 'sih.invoice_number',
                 'sih.total_amount',
-                'sih.amount_paid'
+                'sih.amount_paid',
+                'top.remarks as top_name',
+                'sih.due_date'
             ])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
@@ -277,6 +279,7 @@ class PackingListController extends Controller
                     ->whereNull('sih.deleted');
             })
             ->join('customer as c', 'c.id', 'doh.customer_id')
+            ->join('term_of_payment as top', 'top.id', 'c.payment_terms')
             // ->where('doh.do_number', 'DO11250004')
             ->get();
         // echo '<pre>';
