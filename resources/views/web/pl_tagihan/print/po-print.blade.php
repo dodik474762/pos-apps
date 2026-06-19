@@ -56,14 +56,33 @@
         }
 
         /* 🔹 Ukuran font kecil untuk tabel detail barang */
+        .table-detail {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
         .table-detail th,
         .table-detail td {
-            font-size: 10px;
-            padding: 3px;
+            border: 1px solid #000;
+
+            font-size: 8px;
+            padding: 2px 3px;
+
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+
+            vertical-align: top;
         }
 
         .table-detail th {
             background: #f8f8f8;
+            text-align: center;
+        }
+
+        .table-detail td.text-right {
+            text-align: right;
         }
     </style>
 </head>
@@ -95,11 +114,11 @@
     {{-- INFORMASI PO --}}
     <table class="no-border" style="width:100%;">
         <tr>
-            <td><strong>NIK Salesman:</strong> {{ $salesman->nik }}</td>
-            <td style="padding-left:40px;"><strong>Jabatan:</strong> {{ $salesman->jabatan }}</td>
+            <td><strong>NIK Salesman:</strong> {{ $salesman_name }}</td>
+            <td style="padding-left:40px;"><strong>Jabatan:</strong> SALESMAN</td>
         </tr>
         <tr>
-            <td><strong>Nama Salesman:</strong> {{ $salesman->nama_lengkap ?? '-' }}</td>
+            <td><strong>Nama Salesman:</strong> {{ $salesman_name ?? '-' }}</td>
         </tr>
     </table>
 
@@ -107,43 +126,60 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Tanggal Rute</th>
-                <th>Invoice Number</th>
-                <th>Tanggal Invoice</th>
-                <th>DO Number</th>
-                <th>Tanggal DO</th>
-                <th>Customer</th>
-                <th>Warehouse</th>
-                <th>Tanggal Jatuh Tempo</th>
-                <th>Status</th>
-                <th>Outstanding</th>
-                <th>Remark</th>
+                <th style="width:5%">No</th>
+
+                <th style="width:7%">Tanggal<br>Rute</th>
+
+                <th style="width:10%">Invoice</th>
+
+                <th style="width:8%">Tgl<br>Invoice</th>
+
+                <th style="width:8%">DO</th>
+
+                <th style="width:16%">Customer</th>
+
+                <th style="width:7%">Warehouse</th>
+
+                <th style="width:8%">Jatuh<br>Tempo</th>
+
+                <th style="width:6%">Status</th>
+
+                <th style="width:9%">Outstanding</th>
+
+                <th style="width:4%">TOP</th>
+
+                <th style="width:6%">Tunai</th>
+
+                <th style="width:8%">Transfer</th>
+
+                <th style="width:7%">Remark</th>
             </tr>
         </thead>
         <tbody>
-             @php
+            @php
                 $no = 1;
                 $outstandin = 0;
             @endphp
             @foreach ($invoices as $item)
-            @php
-                $out = $item->total_amount - $item->amount_paid;
-                $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
-                $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
-            @endphp
+                @php
+                    $out = $item->total_amount - $item->amount_paid;
+                    $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
+                    $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                @endphp
                 <tr>
                     <td>{{ $no++ }}</td>
                     <td>{{ $tanggal_rute }}</td>
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->invoice_date }}</td>
-                    <td>{{ $do_date }}</td>
                     <td>{{ $do_number }}</td>
                     <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                     <td>{{ $item->warehouse_name }}</td>
                     <td>{{ $item->due_date }}</td>
                     <td>{{ $item->status }}</td>
                     <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
+                    <td>{{ $item->top_name }}</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
                     <td>&nbsp;</td>
                 </tr>
                 @php
@@ -153,8 +189,9 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong></td>
+                <td colspan="12" class="text-right"><strong>Sub Total</strong></td>
+                <td class="text-right" colspan="2"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
+                </td>
             </tr>
         </tfoot>
     </table>
@@ -188,4 +225,5 @@
         </tr>
     </table>
 </body>
+
 </html>

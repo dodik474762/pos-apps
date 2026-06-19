@@ -107,6 +107,7 @@ class PLTagihanController extends Controller
                 'dohs.do_date as dohs_date',
                 'w.name as warehouse_name',
                 'soh.so_number',
+                'tp.remarks as top_name',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
@@ -116,6 +117,7 @@ class PLTagihanController extends Controller
             })
             ->leftJoin('delivery_order_header as dohs', 'dohs.so_id', 'soh.id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
