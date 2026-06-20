@@ -240,7 +240,7 @@ let SalesInvoice = {
             createdRow: function (row, data, dataIndex) {
                 // console.log('row', $(row));
             },
-            buttons: ["copy", "excel", "pdf", "colvis"],
+            // buttons: ["copy", "excel", "pdf", "colvis"],
             columns: [
                 {
                     data: "id",
