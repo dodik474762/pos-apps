@@ -289,6 +289,12 @@ class PackingListController extends Controller
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
             ->select([
                 'packing_list_detail.*',
+                // 'packing_list_detail.packing_list_id',
+                // 'packing_list_detail.delivery_order_id',
+                // 'packing_list_detail.product_id',
+                // 'packing_list_detail.qty_do',
+                // 'packing_list_detail.qty_packed',
+                // 'packing_list_detail.delivery_detail_id',
                 'doh.do_number',
             ])
             ->with(['product', 'deliveryDetail'])
@@ -296,6 +302,7 @@ class PackingListController extends Controller
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
             ->where('packing_list_detail.packing_list_id', $data->id)
             // ->whereIn('p.code', ['PQ03', 'P26MAY-1A'])
+            // ->where('p.id', 40)
             ->orderBy('p.vendor', 'asc')
             ->orderBy('p.code', 'asc')
             ->get();
