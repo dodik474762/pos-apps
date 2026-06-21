@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
+use App\Models\Master\ProductUom;
 use App\Models\Master\Tax;
 use Illuminate\Http\Request;
 use App\Models\Transaction\DeliveryOrderDtl;
@@ -508,6 +509,16 @@ class SalesInvoiceController extends Controller
 
                             $batalItem = true;
                             $soIdBatal[] = $item['so_detail_id'];
+
+                            // 🔥 Kembalikan stock karena item dibatalkan
+                            $soDetailCancel = SalesOrderDetail::find($item['so_detail_id']);
+                            if ($soDetailCancel) {
+                                $qtyBaseUnitCancel = getSmallestUnit($item['product_id'], $soDetailCancel->unit, $item['qty']);
+                                $productUomLevel1Cancel = ProductUom::where('product', $item['product_id'])->where('level', '1')->first();
+                                if ($productUomLevel1Cancel) {
+                                    stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1Cancel->unit_tujuan, $qtyBaseUnitCancel['qty_in_base_unit'], $item, 'add', 'sales_invoice_cancel');
+                                }
+                            }
                         }
                     }
                     continue;
@@ -519,9 +530,17 @@ class SalesInvoiceController extends Controller
                 }
 
                 // Item baru atau update
-                $detail = empty($item['id'])
+                // Item baru atau update
+                $isNew = empty($item['id']);
+                $oldQty = 0;
+
+                $detail = $isNew
                     ? new SalesInvoiceDtl()
                     : SalesInvoiceDtl::find($item['id']);
+
+                if (!$isNew && $detail) {
+                    $oldQty = $detail->qty; // simpan qty lama sebelum di-overwrite
+                }
 
                 $detail->invoice_id = $hdrId;
                 $detail->so_detail_id = $item['so_detail_id'];
@@ -537,6 +556,23 @@ class SalesInvoiceController extends Controller
                 $detail->line_no = $line_no++;
                 $detail->save();
 
+
+                // 🔥 Update stock: kurangi stock sesuai qty
+                $soDetailForUnit = SalesOrderDetail::find($item['so_detail_id']);
+                if ($soDetailForUnit) {
+                    // Hitung selisih qty supaya tidak double-kurangi saat edit invoice
+                    $qtyDiff = $isNew ? $item['qty'] : ($item['qty'] - $oldQty);
+
+                    if ($qtyDiff != 0) {
+                        $qtyBaseUnit = getSmallestUnit($item['product_id'], $soDetailForUnit->unit, abs($qtyDiff));
+                        $productUomLevel1 = ProductUom::where('product', $item['product_id'])->where('level', '1')->first();
+
+                        if ($productUomLevel1) {
+                            $stockType = $qtyDiff > 0 ? 'reduce' : 'add'; // qty naik = kurangi stock lebih banyak, qty turun = kembalikan sebagian
+                            stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, $stockType, 'sales_invoice');
+                        }
+                    }
+                }
                 /*mapping coa */
             }
 
@@ -749,6 +785,8 @@ class SalesInvoiceController extends Controller
             // }
 
             // Soft delete header
+
+
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->deleted_by = session('user_id');
             $menu->status = 'CANCELED';
@@ -773,6 +811,16 @@ class SalesInvoiceController extends Controller
                 $oldDetail = SalesInvoiceDtl::find($value->id);
 
                 if ($oldDetail) {
+                    // 🔥 Kembalikan stock sebelum soft delete
+                    $soDetailRestore = SalesOrderDetail::find($oldDetail->so_detail_id);
+                    if ($soDetailRestore) {
+                        $qtyBaseUnitRestore = getSmallestUnit($oldDetail->product_id, $soDetailRestore->unit, $oldDetail->qty);
+                        $productUomLevel1Restore = ProductUom::where('product', $oldDetail->product_id)->where('level', '1')->first();
+                        if ($productUomLevel1Restore) {
+                            stockUpdate($menu->id, $menu->warehouse_id, $oldDetail->product_id, $productUomLevel1Restore->unit_tujuan, $qtyBaseUnitRestore['qty_in_base_unit'], (array) $oldDetail, 'add', 'sales_invoice_cancel');
+                        }
+                    }
+
                     $value->deleted = date('Y-m-d H:i:s');
                     $value->deleted_by = session('user_id');
                     $value->save();
