@@ -1188,31 +1188,37 @@ function getLargestUnit($productId, $fromUnitId, $qty = 1)
 
 function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
 {
-    // Update stok di gudang
-    $warehouseId = $warehouse; // sesuaikan, atau ambil dari form GR
-
-    $stock = DB::table('product_stock')
-        ->where('product', $value['product'])
-        ->where('unit', $baseUnit)
-        ->where('warehouse', $warehouseId)
-        ->first();
+    $warehouseId = $warehouse;
 
     $product_uom_large = ProductUom::whereNull('deleted')
-        ->where('product', $value['product'])
+        ->where('product', $product)
         ->where('state', 'large')
+        ->first();
+
+    $product_uom_small = ProductUom::whereNull('deleted')
+        ->where('product', $product)
+        ->where('state', 'small')
+        ->first();
+
+    $baseUnit = $product_uom_small->unit_tujuan ?? $baseUnit;
+
+    $stock = DB::table('product_stock')
+        ->where('product', $product)
+        ->where('unit', $baseUnit)
+        ->where('warehouse', $warehouseId)
         ->first();
 
     $sell_price     = 0;
     $purchase_price = 0;
 
     if ($product_uom_large) {
-        $product_price = ProductUomPrice::where('product', $value['product'])
+        $product_price = ProductUomPrice::where('product', $product)
             ->where('unit', $product_uom_large->unit_tujuan)
             ->where('date_start', '<=', date('Y-m-d'))
             ->orderBy('id', 'desc')
             ->first();
 
-        $product_cost = ProductUomCost::where('product', $value['product'])
+        $product_cost = ProductUomCost::where('product', $product)
             ->where('unit_id', $product_uom_large->unit_tujuan)
             ->where('date_start', '<=', date('Y-m-d'))
             ->where('is_active', '1')
@@ -1224,7 +1230,6 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
     }
 
     if ($stock) {
-        // Update qty existing
         DB::table('product_stock')
             ->where('id', $stock->id)
             ->update([
@@ -1232,9 +1237,8 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
                 'updated_at' => now(),
             ]);
     } else {
-        // Insert baru
         DB::table('product_stock')->insert([
-            'product' => $value['product'],
+            'product' => $product,
             'unit' => $baseUnit,
             'warehouse' => $warehouseId,
             'qty' => $type == 'add' ? $convertedQty : $convertedQty * -1,
@@ -1244,7 +1248,7 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
     }
 
     DB::table('product_stock_move')->insert([
-        'product' => $value['product'],
+        'product' => $product,
         'unit' => $baseUnit,
         'warehouse' => $warehouseId,
         'qty_in' => $type == 'add' ? $convertedQty : 0,
@@ -1256,6 +1260,77 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         'created_at' => now(),
     ]);
 }
+
+// function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
+// {
+//     // Update stok di gudang
+//     $warehouseId = $warehouse; // sesuaikan, atau ambil dari form GR
+
+//     $stock = DB::table('product_stock')
+//         ->where('product', $value['product'])
+//         ->where('unit', $baseUnit)
+//         ->where('warehouse', $warehouseId)
+//         ->first();
+
+//     $product_uom_large = ProductUom::whereNull('deleted')
+//         ->where('product', $value['product'])
+//         ->where('state', 'large')
+//         ->first();
+
+//     $sell_price     = 0;
+//     $purchase_price = 0;
+
+//     if ($product_uom_large) {
+//         $product_price = ProductUomPrice::where('product', $value['product'])
+//             ->where('unit', $product_uom_large->unit_tujuan)
+//             ->where('date_start', '<=', date('Y-m-d'))
+//             ->orderBy('id', 'desc')
+//             ->first();
+
+//         $product_cost = ProductUomCost::where('product', $value['product'])
+//             ->where('unit_id', $product_uom_large->unit_tujuan)
+//             ->where('date_start', '<=', date('Y-m-d'))
+//             ->where('is_active', '1')
+//             ->orderBy('id', 'desc')
+//             ->first();
+
+//         $sell_price     = $product_price->price  ?? 0;
+//         $purchase_price = $product_cost->cost    ?? 0;
+//     }
+
+//     if ($stock) {
+//         // Update qty existing
+//         DB::table('product_stock')
+//             ->where('id', $stock->id)
+//             ->update([
+//                 'qty' => $type == 'add' ? $stock->qty + $convertedQty : $stock->qty - $convertedQty,
+//                 'updated_at' => now(),
+//             ]);
+//     } else {
+//         // Insert baru
+//         DB::table('product_stock')->insert([
+//             'product' => $value['product'],
+//             'unit' => $baseUnit,
+//             'warehouse' => $warehouseId,
+//             'qty' => $type == 'add' ? $convertedQty : $convertedQty * -1,
+//             'avg_cost' => $value['price'] ?? 0,
+//             'created_at' => now(),
+//         ]);
+//     }
+
+//     DB::table('product_stock_move')->insert([
+//         'product' => $value['product'],
+//         'unit' => $baseUnit,
+//         'warehouse' => $warehouseId,
+//         'qty_in' => $type == 'add' ? $convertedQty : 0,
+//         'qty_out' => $type == 'add' ? 0 : $convertedQty,
+//         'move_type' => $move_type,
+//         'reference_id' => $reference_id,
+//         'price' => $sell_price,
+//         'purchase_price' => $purchase_price,
+//         'created_at' => now(),
+//     ]);
+// }
 
 function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '')
 {
