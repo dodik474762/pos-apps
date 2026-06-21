@@ -168,9 +168,25 @@ class PackingListController extends Controller
             ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
             ->leftJoin('customer as c', 'c.id', 'doh.customer_id')
             ->get();
+        // $data['grouped'] = $data['details']
+        //     ->pluck('detail')
+        //     ->flatten()
+        //     ->groupBy([
+        //         fn($item) => $item->product->product_code,
+        //         fn($item) => $item->deliveryDetail->units->name ?? '',
+        //     ]);
         $data['grouped'] = $data['details']
             ->pluck('detail')
             ->flatten()
+            ->unique(function ($item) {
+                return $item->packing_list_id . '-'
+                    . $item->delivery_order_id . '-'
+                    . $item->product_id . '-'
+                    . $item->qty_do . '-'
+                    . $item->qty_packed . '-'
+                    . $item->delivery_detail_id;
+            })
+            ->values()
             ->groupBy([
                 fn($item) => $item->product->product_code,
                 fn($item) => $item->deliveryDetail->units->name ?? '',

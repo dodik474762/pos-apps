@@ -345,10 +345,6 @@ class PackingListController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
-        // echo '<pre>';
-        // print_r($data);
-        // die;
-
         // 🔥 decode JSON string jadi array
         $data['do_list'] = is_string($data['do_list']) ? json_decode($data['do_list'], true) : $data['do_list'];
         $data['details'] = is_string($data['details']) ? json_decode($data['details'], true) : $data['details'];
@@ -379,6 +375,9 @@ class PackingListController extends Controller
 
             $hdrId = $header->id;
 
+            // HAPUS dulu SEMUA detail packing list ini, di luar loop
+            PackingListDtl::where('packing_list_id', $hdrId)->delete();
+
             // === DETAIL DO===
             $details = empty($data['details']) ? [] : collect($data['details']);
             if (empty($details)) {
@@ -391,25 +390,25 @@ class PackingListController extends Controller
             foreach ($data['do_list'] as $key => $value) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
-                    if (!empty($value['id'])) {
-                        $exist = PackingListDo::find($value['id']);
-                        if ($exist) {
-                            $exist->delete();
+                    // if (!empty($value['id'])) {
+                    //     $exist = PackingListDo::find($value['id']);
+                    //     if ($exist) {
+                    //         $exist->delete();
 
-                            //DO kembali ke status confirm
-                            $do = DeliveryOrderHeader::find($value['delivery_order_id']);
-                            $do->status = 'CONFIRMED';
-                            $do->save();
+                    //         //DO kembali ke status confirm
+                    //         $do = DeliveryOrderHeader::find($value['delivery_order_id']);
+                    //         $do->status = 'CONFIRMED';
+                    //         $do->save();
 
-                            // 🔥 ganti nama variabel, jangan timpa $details
-                            $oldDetailsToRemove = PackingListDtl::where('packing_list_id', $hdrId)
-                                ->where('delivery_order_id', $value['delivery_order_id'])
-                                ->get();
-                            foreach ($oldDetailsToRemove as $key2 => $value2) {
-                                $value2->delete();
-                            }
-                        }
-                    }
+                    //         // 🔥 ganti nama variabel, jangan timpa $details
+                    //         $oldDetailsToRemove = PackingListDtl::where('packing_list_id', $hdrId)
+                    //             ->where('delivery_order_id', $value['delivery_order_id'])
+                    //             ->get();
+                    //         foreach ($oldDetailsToRemove as $key2 => $value2) {
+                    //             $value2->delete();
+                    //         }
+                    //     }
+                    // }
                     continue;
                 }
 
@@ -437,11 +436,6 @@ class PackingListController extends Controller
                     $result['message'] = 'Detail DO ' . $value['do_number'] . ' tidak boleh kosong';
                     return response()->json($result);
                 }
-
-                // Baru delete setelah dipastikan data baru ADA
-                PackingListDtl::where('packing_list_id', $hdrId)
-                    ->where('delivery_order_id', $value['delivery_order_id'])
-                    ->delete();
 
                 foreach ($details_do as $key2 => $value2) {
                     $detailDo = new PackingListDtl();
