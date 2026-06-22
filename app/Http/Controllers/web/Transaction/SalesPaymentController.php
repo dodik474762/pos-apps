@@ -93,6 +93,7 @@ class SalesPaymentController extends Controller
         $data['details'] = [];
         $data['general_ledgers'] = [];
         $payment_method = $data['payment_method'] ?? 'CASH';
+        $data['akses'] = session('akses');
         $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -141,6 +142,7 @@ class SalesPaymentController extends Controller
         $payment_method = $data['payment_method'] ?? 'CASH';
         $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
         $data['data_customer'] = $this->getListCustomer();
+        $data['akses'] = session('akses');
         $view = view('web.sales_payment.formaddbulk', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -185,6 +187,7 @@ class SalesPaymentController extends Controller
         $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = session('akses');
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

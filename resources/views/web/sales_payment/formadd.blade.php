@@ -1,11 +1,10 @@
-<button type="button" id="btn-show-modal" style="display: none;"
-        data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 
 <div id="content-modal-form"></div>
 
 <input type="hidden" id="id" value="{{ $data->id ?? '' }}">
-<input type="hidden" id="url"
-       value="{{ route('sales-payment-add') }}">
+<input type="hidden" id="url" value="{{ route('sales-payment-add') }}">
 
 <!-- Start Page Title -->
 <div class="row">
@@ -40,14 +39,13 @@
                             <div class="mb-3">
                                 <label class="form-label">Payment Code</label>
                                 <input type="text" id="payment_code" class="form-control required"
-                                       value="{{ $data->payment_code ?? 'AUTO' }}" readonly>
+                                    value="{{ $data->payment_code ?? 'AUTO' }}" readonly>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Payment Date</label>
                                 <input type="date" id="payment_date" class="form-control required"
-                                       error="Payment Date"
-                                       value="{{ $data->payment_date ?? date('Y-m-d') }}">
+                                    error="Payment Date" value="{{ $data->payment_date ?? date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
@@ -55,8 +53,10 @@
                                 <select id="payment_method" class="form-control select2" required
                                     onchange="SalesPayment.changePaymentMethod(this)">
                                     <option value=""></option>
-                                    @foreach (['CASH','GIRO','TRANSFER'] as $method)
-                                        <option value="{{ $method }}" {{ isset($payment_method) && $payment_method == $method ? 'selected' : '' }}>{{ $method }}</option>
+                                    @foreach (['CASH', 'GIRO', 'TRANSFER'] as $method)
+                                        <option value="{{ $method }}"
+                                            {{ isset($payment_method) && $payment_method == $method ? 'selected' : '' }}>
+                                            {{ $method }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -65,13 +65,13 @@
                                 <label class="form-label">Customer</label>
                                 <div class="input-group">
                                     <button type="button" class="btn btn-outline-primary"
-                                            onclick="SalesPayment.showModalCustomer(this)">
+                                        onclick="SalesPayment.showModalCustomer(this)">
                                         Pilih
                                     </button>
                                     <input disabled type="text" id="customer_id" class="form-control required"
-                                           error="Customer"
-                                           value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->nama_customer : '' }}"
-                                           data_id="{{ $data->customer_id ?? '' }}">
+                                        error="Customer"
+                                        value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->nama_customer : '' }}"
+                                        data_id="{{ $data->customer_id ?? '' }}">
                                 </div>
                             </div>
 
@@ -80,7 +80,8 @@
                                 <select id="account_id" class="form-control select2 required">
                                     <option value="">-- Pilih Akun --</option>
                                     @foreach ($cashBankAccounts as $acc)
-                                        <option value="{{ $acc->id }}" {{ isset($data->coa_kas) ? ($data->coa_kas == $acc->id ? 'selected' : '')  : ''}}>
+                                        <option value="{{ $acc->id }}"
+                                            {{ isset($data->coa_kas) ? ($data->coa_kas == $acc->id ? 'selected' : '') : '' }}>
                                             {{ $acc->account_code }} - {{ $acc->account_name }}
                                         </option>
                                     @endforeach
@@ -94,26 +95,26 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Total Amount</label>
-                                <input disabled type="number" step="0.01" id="total_amount" class="form-control required"
-                                       value="{{ $data->total_amount ?? 0 }}">
+                                <input disabled type="number" step="0.01" id="total_amount"
+                                    class="form-control required" value="{{ $data->total_amount ?? 0 }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Discount Amount</label>
                                 <input disabled type="number" step="0.01" id="discount_amount" class="form-control"
-                                       value="{{ $data->discount_amount ?? 0 }}">
+                                    value="{{ $data->discount_amount ?? 0 }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Net Amount</label>
                                 <input disabled type="number" step="0.01" id="net_amount" class="form-control"
-                                       value="{{ $data->net_amount ?? 0 }}">
+                                    value="{{ $data->net_amount ?? 0 }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Reference No</label>
                                 <input type="text" id="reference_no" class="form-control"
-                                       value="{{ $data->reference_no ?? '' }}">
+                                    value="{{ $data->reference_no ?? '' }}">
                             </div>
 
                             <div class="mb-3">
@@ -141,20 +142,31 @@
                             </thead>
 
                             <tbody id="detail-body">
-                                @if(!empty($details))
-                                    @foreach($details as $i => $item)
+                                @if (!empty($details))
+                                    @foreach ($details as $i => $item)
                                         <tr data_id="{{ $item->id }}">
-                                            <td id="customer_id_tr" data_id="{{ $item->customer_id }}">{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
-                                            <td id="invoice_id" data_id="{{ $item->invoice_id }}" subtotal="{{ $item->subtotal + $item->discount_amount }}" discount_amount="{{ $item->discount_amount }}">{{ $item->invoice_number }}</td>
+                                            <td id="customer_id_tr" data_id="{{ $item->customer_id }}">
+                                                {{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                                            <td id="invoice_id" data_id="{{ $item->invoice_id }}"
+                                                subtotal="{{ $item->subtotal + $item->discount_amount }}"
+                                                discount_amount="{{ $item->discount_amount }}">
+                                                {{ $item->invoice_number }}</td>
                                             <td id="date_invoice">{{ $item->invoice_date }}</td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled value="{{ $item->outstanding_amount }}">
+                                                <input type="number" step="0.01" class="form-control"
+                                                    id="outstanding_amount" disabled
+                                                    value="{{ $item->outstanding_amount }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" allocated_amount_old="{{ $item->allocated_amount }}" id="allocated_amount" value="{{ $item->allocated_amount }}" min="0" max="{{ $item->outstanding_amount }}" onkeyup="SalesPayment.changeAllocate(this)">
+                                                <input type="number" step="0.01" class="form-control"
+                                                    allocated_amount_old="{{ $item->allocated_amount }}"
+                                                    id="allocated_amount" value="{{ $item->allocated_amount }}"
+                                                    min="0" max="{{ $item->outstanding_amount }}"
+                                                    onkeyup="SalesPayment.changeAllocate(this)">
                                             </td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="SalesPayment.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button>
                                             </td>
@@ -162,16 +174,20 @@
                                     @endforeach
                                 @else
                                     <tr data_id="">
-                                        <td id="invoice_id"  data_id="" subtotal="" discount_amount=""></td>
+                                        <td id="invoice_id" data_id="" subtotal="" discount_amount=""></td>
                                         <td id="date_invoice"></td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control" id="outstanding_amount" disabled value="">
+                                            <input type="number" step="0.01" class="form-control"
+                                                id="outstanding_amount" disabled value="">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control" id="allocated_amount" value="" min="0" max="" onkeyup="SalesPayment.changeAllocate(this)">
+                                            <input type="number" step="0.01" class="form-control"
+                                                id="allocated_amount" value="" min="0" max=""
+                                                onkeyup="SalesPayment.changeAllocate(this)">
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="SalesPayment.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                onclick="SalesPayment.removeRow(this)">
                                                 <i class="bx bx-trash-alt"></i>
                                             </button>
                                         </td>
@@ -199,23 +215,24 @@
             @endphp
             @if (isset($id))
                 @if ($data->status == 'PENDING')
-                    <button type="button" onclick="SalesPayment.posted(this, event)"
+                    @if (strtolower($akses) == 'superadmin')
+                        <button type="button" onclick="SalesPayment.posted(this, event)"
                             class="btn btn-primary waves-effect waves-light me-1">
-                        Confirm
-                    </button>
+                            Confirm
+                        </button>
+                    @endif
                 @else
                     @php
-                        $disabled = 'disabled'
+                        $disabled = 'disabled';
                     @endphp
                 @endif
             @endif
             <button {{ $disabled }} type="submit" onclick="SalesPayment.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
+                class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
 
-            <button type="reset" onclick="SalesPayment.back(this, event)"
-                    class="btn btn-secondary waves-effect">
+            <button type="reset" onclick="SalesPayment.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel
             </button>
         </div>
@@ -223,6 +240,7 @@
 </div>
 
 <style>
-    .freegood { background-color:#f5f7ff }
+    .freegood {
+        background-color: #f5f7ff
+    }
 </style>
-
