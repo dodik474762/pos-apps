@@ -196,6 +196,9 @@
 
                             <tbody id="detail-body">
                                 @if (!empty($details))
+                                    @php
+                                        $totalRows = 1;
+                                    @endphp
                                     @foreach ($grouped as $item)
                                         @foreach ($item as $items)
                                             @foreach ($items as $prod)
@@ -215,6 +218,9 @@
                                                             value="{{ $prod->remark }}">
                                                     </td>
                                                 </tr>
+                                                @php
+                                                    $totalRows++;
+                                                @endphp
                                             @endforeach
                                         @endforeach
                                     @endforeach
@@ -236,6 +242,9 @@
                                             </tr>
                                         @endforeach
                                     @endforeach --}}
+                                    @php
+                                        //echo $totalRows;
+                                    @endphp
                                 @endif
                             </tbody>
                         </table>

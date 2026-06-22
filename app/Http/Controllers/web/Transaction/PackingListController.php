@@ -192,8 +192,6 @@ class PackingListController extends Controller
                 fn($item) => $item->deliveryDetail->units->name ?? '',
             ]);
         $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
-        // echo '<pre>';
-        // print_r($data['details']);die;
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
