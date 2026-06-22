@@ -210,27 +210,30 @@
         </div>
 
         <div class="text-end mt-3">
-            @php
-                $disabled = '';
-            @endphp
-            @if (isset($id))
-                @if ($data->status == 'PENDING')
-                    @if (strtolower($akses) == 'superadmin')
-                        <button type="button" onclick="SalesPayment.posted(this, event)"
-                            class="btn btn-primary waves-effect waves-light me-1">
-                            Confirm
-                        </button>
+            @if (isset($view_akses))
+            @else
+                @php
+                    $disabled = '';
+                @endphp
+                @if (isset($id))
+                    @if ($data->status == 'PENDING')
+                        @if (strtolower($akses) == 'superadmin')
+                            <button type="button" onclick="SalesPayment.posted(this, event)"
+                                class="btn btn-primary waves-effect waves-light me-1">
+                                Confirm
+                            </button>
+                        @endif
+                    @else
+                        @php
+                            $disabled = 'disabled';
+                        @endphp
                     @endif
-                @else
-                    @php
-                        $disabled = 'disabled';
-                    @endphp
                 @endif
+                <button {{ $disabled }} type="submit" onclick="SalesPayment.submit(this, event)"
+                    class="btn btn-success waves-effect waves-light me-1">
+                    Submit
+                </button>
             @endif
-            <button {{ $disabled }} type="submit" onclick="SalesPayment.submit(this, event)"
-                class="btn btn-success waves-effect waves-light me-1">
-                Submit
-            </button>
 
             <button type="reset" onclick="SalesPayment.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel

@@ -198,6 +198,52 @@ class SalesPaymentController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function detail(Request $request)
+    {
+        $api = new TransactionSalesPaymentController();
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['cashBankAccounts'] = $this->getListKasBank();
+        $data['details'] = SalesPaymentDtl::where('sales_payment_detail.payment_id', $data['id'])
+            ->select([
+                'sales_payment_detail.*',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.total_amount as total_amount_invoice',
+                'sih.discount_amount',
+                'sih.subtotal',
+                'sih.amount_paid',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'c.id as customer_id'
+            ])
+            ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
+            ->join('customer as c', 'sih.customer_id', 'c.id')
+            ->whereNull('sales_payment_detail.deleted')
+            ->orderBy('sales_payment_detail.id')
+            ->get();
+
+        $data['payment_method'] = $data['data']->payment_method;
+        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = session('akses');
+        $data['view_akses'] = 'detail';
+        $view = view('web.sales_payment.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function getCustomer($salesmanId)
     {
         $periodYear = intval(date('Y'));  // misal dari form input
