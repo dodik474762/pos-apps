@@ -120,7 +120,7 @@ class PLTagihanController extends Controller
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
-            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
+            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])
             ->whereIn('cc.id', $customers)
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
