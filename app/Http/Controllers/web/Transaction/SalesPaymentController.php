@@ -106,7 +106,7 @@ class SalesPaymentController extends Controller
 
     public function getListCustomer()
     {
-        $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID', 'DRAFT'])
+        $datadb = SalesInvoiceHeader::whereIn('sales_invoice_header.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PACKED'])
             ->select([
                 'c.id as id',
                 'c.nama_customer',
