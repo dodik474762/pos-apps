@@ -278,10 +278,13 @@
                                 class="btn btn-success waves-effect waves-light me-1">
                                 Submit
                             </button> --}}
-                            <button type="submit" onclick="Product.submit(this, event)"
-                                class="btn btn-success waves-effect waves-light me-1">
-                                Submit
-                            </button>
+                            @if (isset($view_detail))
+                            @else
+                                <button type="submit" onclick="Product.submit(this, event)"
+                                    class="btn btn-success waves-effect waves-light me-1">
+                                    Submit
+                                </button>
+                            @endif
                             <button type="reset" onclick="Product.cancel(this, event)"
                                 class="btn btn waves-effect">
                                 Cancel

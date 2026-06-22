@@ -272,6 +272,48 @@ class ProductController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function detail(Request $request)
+    {
+        $api = new MasterProductController();
+        $data = $request->all();
+
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
+        $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
+
+        $data['retur_type'] = ['NON RETUR', 'RETUR'];
+        // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
+        $data['tax_type'] = ['include'];
+        $data['data_satuan'] = Unit::whereNull('deleted')->get();
+        $data['vendors'] = $this->getListVendor();
+        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['product_logs'] = $this->getProductLog($data['id']);
+        $data['product_uoms'] = $this->getListProductUom($data['id']);
+        $data['tipe_price'] = $this->getListPriceList();
+        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
+        $data['prices_retails'] = collect($data['product_prices'])->where('channel', 'RETAIL UMUM');
+        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        $data['data_disc_tipe'] = ['percent', 'nominal'];
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
+        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
+        $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
+        $data['product_stocks'] = $this->getStock($data['id']);
+        $data['product_costs'] = $this->getCostProduct($data['id']);
+        $data['akses'] = session('akses');
+        $data['view_detail'] = 'detail';
+        $view = view('web.product.formadd', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
     public function import(Request $request)
     {
         $api = new MasterProductController();
