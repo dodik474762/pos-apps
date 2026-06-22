@@ -703,13 +703,36 @@ class SalesInvoiceController extends Controller
 
                     /*update so old to correction */
                     $updateOldSo = SalesOrderHeader::find($so->id);
+                    $oldStatusSo = $updateOldSo->status;
+
                     $updateOldSo->status = 'correction';
                     $updateOldSo->save();
 
                     $newSoId = $resultSo['so_id'];
                     $sodb = SalesOrderHeader::find($newSoId);
                     $sodb->ref_so_id = $so->id;
+                    $sodb->status = $oldStatusSo;
                     $sodb->save();
+
+                    /*update do */
+                    $doHeaders = DeliveryOrderHeader::where('so_id', $so->id)->first();
+                    $doIdHeader = 0;
+                    if (!empty($doHeaders)) {
+                        $doHeaders->so_id = $newSoId;
+                        $doHeaders->save();
+
+                        $doIdHeader = $doHeaders->id;
+
+                        /*update do detail */
+                        $doDetail = DeliveryOrderDtl::where('do_id', $doIdHeader)->get();
+                        foreach ($doDetail as $row) {
+                            $soDetailNew = SalesOrderDetail::where('so_id', $newSoId)->where('product_id', $row->product_id)->first();
+                            if (!empty($soDetailNew)) {
+                                $row->so_detail_id = $soDetailNew->id;
+                                $row->save();
+                            }
+                        }
+                    }
                     // echo '<pre>';
                     // print_r($sodb);
                     // die;
@@ -742,6 +765,7 @@ class SalesInvoiceController extends Controller
                     $updateInvoiceHeader->invoice_number = $reference;
                     $updateInvoiceHeader->invoice_date = $data['invoice_date'];
                     $updateInvoiceHeader->due_date = $dueDate;
+                    $updateInvoiceHeader->status = $cancelInvoiceOld->status; //ini sesuai kondisi status invoice sebelumnya
                     $updateInvoiceHeader->save();
 
                     $cancelInvoiceOld->status = 'CANCELED';
