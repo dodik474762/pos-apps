@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
+use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
@@ -143,6 +144,7 @@ class SalesPaymentController extends Controller
         $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
         $data['data_customer'] = $this->getListCustomer();
         $data['akses'] = session('akses');
+        $data['packing_list'] = $this->getListPackingListInvoice();
         $view = view('web.sales_payment.formaddbulk', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -151,6 +153,31 @@ class SalesPaymentController extends Controller
         $put['header_data'] = $this->getHeaderCss();
 
         return view('web.template.main', $put);
+    }
+
+    public function getListPackingListInvoice()
+    {
+        $datadb = PackingListDo::join('packing_list as pl', 'pl.id', 'packing_list_do.packing_list_id')
+            ->select([
+                'pl.packing_list_no',
+                'pl.id',
+                'pl.vehicle_no',
+                'pl.driver_name',
+                'pl.packing_date',
+                'pl.id'
+            ])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+            ->join('sales_invoice_header as sih', 'sih.sales_order', 'soh.id')
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PACKED'])
+            ->distinct()
+            ->whereNull('pl.deleted')
+            ->get();
+
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
+        return $datadb;
     }
 
     public function ubah(Request $request)

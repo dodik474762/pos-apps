@@ -135,6 +135,17 @@
                             <input type="date" id="filter_end_date" class="form-control"
                                 value="{{ date('Y-m-t') }}">
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Packing List No</label>
+                            <select id="filter_packing_list_no" class="form-control select2 required">
+                                <option value="">-- Pilih Packing List No --</option>
+                                @foreach ($packing_list as $pln)
+                                    <option value="{{ $pln->id }}">{{ $pln->packing_list_no }} -
+                                        {{ $pln->vehicle_no }} - {{ $pln->driver_name }} / {{ $pln->packing_date }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="button" class="btn btn-primary" onclick="SalesPayment.filterBulk()">
                                 <i class="bx bx-filter-alt"></i> Filter Outstanding

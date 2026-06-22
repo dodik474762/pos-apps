@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\Currency;
+use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
@@ -761,9 +762,36 @@ class SalesPaymentController extends Controller
         return view('web.sales_payment.modal.datacustomer', $data);
     }
 
+    public function getListPackingListInvoice($id)
+    {
+        $datadb = PackingListDo::join('packing_list as pl', 'pl.id', 'packing_list_do.packing_list_id')
+            ->select([
+                'sih.id as invoice_id',
+            ])
+            ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+            ->join('sales_invoice_header as sih', 'sih.sales_order', 'soh.id')
+            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PACKED'])
+            ->distinct()
+            ->where('pl.id', $id)
+            ->whereNull('pl.deleted')
+            ->get()->toArray();
+
+        return $datadb;
+    }
+
     public function getOutstandingInvoice(Request $request)
     {
         $data = $request->all();
+        $packingListId = isset($data['packing_list_id']) ? $data['packing_list_id'] : '';
+        $invoiceIds = [];
+        if ($packingListId != '') {
+            $invoicePl = $this->getListPackingListInvoice($packingListId);
+            if (!empty($invoicePl)) {
+                $invoiceIds = array_column($invoicePl, 'invoice_id');
+            }
+        }
+
         $customerId = isset($data['customer']) ? $data['customer'] : '';
         try {
             //code...
@@ -790,17 +818,21 @@ class SalesPaymentController extends Controller
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
-            if ($customerId != '') {
-                $datadb->where('sih.customer_id', $customerId);
+            if (!empty($invoiceIds)) {
+                $datadb->whereIn('sih.id', $invoiceIds);
             } else {
-                $ids = isset($data['customers']) ? $data['customers'] : [];
-                if (!empty($ids)) {
-                    $datadb->whereIn('sih.customer_id', $ids);
+                if ($customerId != '') {
+                    $datadb->where('sih.customer_id', $customerId);
+                } else {
+                    $ids = isset($data['customers']) ? $data['customers'] : [];
+                    if (!empty($ids)) {
+                        $datadb->whereIn('sih.customer_id', $ids);
+                    }
                 }
-            }
 
-            if (!empty($data['start_date']) && !empty($data['end_date'])) {
-                $datadb->whereBetween('sih.invoice_date', [$data['start_date'], $data['end_date']]);
+                if (!empty($data['start_date']) && !empty($data['end_date'])) {
+                    $datadb->whereBetween('sih.invoice_date', [$data['start_date'], $data['end_date']]);
+                }
             }
             $datadb = $datadb->get();
         } catch (\Throwable $th) {
