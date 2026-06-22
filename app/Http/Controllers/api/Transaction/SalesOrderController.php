@@ -467,11 +467,12 @@ class SalesOrderController extends Controller
             // PREPARE ITEMS
             // =============================
             $is_motoris = false;
+            $is_channel_price = false;
             $items = collect($data['items'])
                 ->filter(function ($item) {
                     return empty($item['free_for']);
                 })
-                ->map(function ($item) use ($customersId, $data) {
+                ->map(function ($item) use ($customersId, $data, &$is_motoris, &$is_channel_price) {
                     $params['customer']   = $customersId;
                     $params['product_id'] = $item['product_id'];
                     $customers            = $this->checkDataPriceCustomer($params);
@@ -495,6 +496,7 @@ class SalesOrderController extends Controller
                         }
 
                         $item['price'] = $channel_price->price;
+                        $is_channel_price = true;
                     }
 
                     if (!empty($customer_produk) && $customer_produk['has_customer_product']) {
@@ -511,15 +513,12 @@ class SalesOrderController extends Controller
 
             $productIds     = $items->pluck('product_id')->toArray();
             $promoAll       = $this->getPromoItemAll($productIds);
-            $calculatePromo = $is_motoris ? [
+            $calculatePromo = $is_motoris || $is_channel_price ? [
                 'discount_header' => [],
                 'discount_item'   => 0,
                 'grand_total'     => $items->sum('total_price'),
                 'result_items' => []
             ] : $this->calculatePromoV2($items, $promoAll, $productIds, $customersId);
-            // echo '<pre>';
-            // print_r($calculatePromo);
-            // die;
 
             // =============================
             // HEADER
@@ -1352,11 +1351,12 @@ class SalesOrderController extends Controller
             // PREPARE ITEMS
             // =============================
             $is_motoris = false;
+            $is_channel_price = false;
             $items = collect($data['details'])
                 ->filter(function ($item) {
                     return empty($item['free_for']);
                 })
-                ->map(function ($item) use ($customersId, $users_id) {
+                ->map(function ($item) use ($customersId, $users_id, &$is_motoris, &$is_channel_price) {
                     [$products, $product_unit] = explode(':', $item['product_id']);
                     $products     = explode('/', $products);
                     $product_unit = explode('/', $product_unit);
@@ -1388,6 +1388,7 @@ class SalesOrderController extends Controller
                         }
 
                         $item['price'] = $channel_price->price;
+                        $is_channel_price = true;
                     }
 
                     if (!empty($customer_produk) && $customer_produk['has_customer_product']) {
@@ -1404,7 +1405,7 @@ class SalesOrderController extends Controller
 
             $productIds     = $items->pluck('product_id')->toArray();
             $promoAll       = $this->getPromoItemAll($productIds);
-            $calculatePromo =  $is_motoris ? [
+            $calculatePromo = $is_motoris || $is_channel_price ? [
                 'discount_header' => [],
                 'discount_item'   => 0,
                 'grand_total'     => $items->sum('total_price'),
@@ -1743,6 +1744,15 @@ class SalesOrderController extends Controller
                 ->where('product', $params['product_id'])
                 ->where('sub_channel', $customer->sub_channel_outlet)
                 ->get();
+            if ($channelPrice->isEmpty()) {
+                $channelPrice = ProductUomPrice::where('product_uom_price.customer', $params['customer'])
+                    ->select(['product_uom_price.*', 'p.name as product_name', 'u.name as unit_name'])
+                    ->join('product as p', 'p.id', 'product_uom_price.product')
+                    ->join('unit as u', 'u.id', 'product_uom_price.unit')
+                    ->where('p.id', $params['product_id'])
+                    ->orderBy('product_uom_price.id')
+                    ->get();
+            }
             return [
                 'customer' => $customer,
                 'channel_price' => $channelPrice,
@@ -4626,6 +4636,8 @@ class SalesOrderController extends Controller
         $result['message'] = '';
 
         try {
+            $is_motoris = false;
+            $is_channel_price = false;
             foreach ($data['details'] as $i) {
                 [$products, $product_unit] = explode(':', $i['product_id']);
                 $products = explode('/', $products);
@@ -4648,6 +4660,7 @@ class SalesOrderController extends Controller
                         }
 
                         $product_unit[1] = $channel_price->price;
+                        $is_channel_price = true;
                     }
                 }
 
@@ -4670,7 +4683,12 @@ class SalesOrderController extends Controller
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
 
             $result['is_valid'] = true;
-            $result['data'] = $calculatePromo;
+            $result['data'] =  $is_motoris || $is_channel_price ? [
+                'discount_header' => [],
+                'discount_item'   => 0,
+                'grand_total'     => 0,
+                'result_items' => []
+            ]  : $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
         }
@@ -4695,6 +4713,7 @@ class SalesOrderController extends Controller
         try {
             $data['customer'] = $customersId;
             $is_motoris = false;
+            $is_channel_price = false;
             foreach ($data['details'] as $i) {
                 $products = $i['product_id'];
                 $product_unit = $i['unit_id'];
@@ -4719,6 +4738,7 @@ class SalesOrderController extends Controller
                         }
 
                         $i['unit_price'] = $channel_price->price;
+                        $is_channel_price = true;
                     }
                 }
 
@@ -4751,7 +4771,7 @@ class SalesOrderController extends Controller
             // die;
 
             $result['is_valid'] = true;
-            $result['data'] =  $is_motoris ? [
+            $result['data'] =  $is_motoris || $is_channel_price ? [
                 'discount_header' => [],
                 'discount_item'   => 0,
                 'grand_total'     => 0,
