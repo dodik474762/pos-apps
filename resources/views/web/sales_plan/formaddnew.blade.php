@@ -133,43 +133,50 @@
 
                                                     <!-- Customer -->
                                                     <td>
-                                                    <div class="input-group">
-                                                        <button class="btn btn-outline-primary" type="button"
-                                                            onclick="SalesPlan.showDataCustomer(this)">Pilih</button>
-                                                        <input disabled type="text" class="form-control required" id="customer_id" error="Customer" value="{{ $item->customer_id }}//{{ $item->nama_customer }}">
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <select class="form-control" id="visit_type">
-                                                        @foreach ($visit_types as $v)
-                                                            <option value="{{ $v['id'] }}" {{ $item->visit_circle == $v['id'] ? 'selected' : '' }}>{{ $v['term_id'].' - '.$v['keterangan'] }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
-                                                  <!-- Visit Days -->
+                                                        <label for="customer_id"
+                                                            class="d-none">{{ $item->customer_id }}//{{ $item->nama_customer }}</label>
+                                                        <div class="input-group">
+                                                            <button class="btn btn-outline-primary" type="button"
+                                                                onclick="SalesPlan.showDataCustomer(this)">Pilih</button>
+                                                            <input disabled type="text" class="form-control required"
+                                                                id="customer_id" error="Customer"
+                                                                value="{{ $item->customer_id }}//{{ $item->nama_customer }}">
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-control" id="visit_type">
+                                                            @foreach ($visit_types as $v)
+                                                                <option value="{{ $v['id'] }}"
+                                                                    {{ $item->visit_circle == $v['id'] ? 'selected' : '' }}>
+                                                                    {{ $v['term_id'] . ' - ' . $v['keterangan'] }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <!-- Visit Days -->
                                                     @foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $d)
                                                         <td class="text-center">
                                                             @php
                                                                 $selected = '';
-                                                                if($item->visit_mon == 1 && $d == 'mon'){
+                                                                if ($item->visit_mon == 1 && $d == 'mon') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_tue == 1 && $d == 'tue'){
+                                                                if ($item->visit_tue == 1 && $d == 'tue') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_wed == 1 && $d == 'wed'){
+                                                                if ($item->visit_wed == 1 && $d == 'wed') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_thu == 1 && $d == 'thu'){
+                                                                if ($item->visit_thu == 1 && $d == 'thu') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_fri == 1 && $d == 'fri'){
+                                                                if ($item->visit_fri == 1 && $d == 'fri') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_sat == 1 && $d == 'sat'){
+                                                                if ($item->visit_sat == 1 && $d == 'sat') {
                                                                     $selected = 'checked';
                                                                 }
-                                                                if($item->visit_sun == 1 && $d == 'sun'){
+                                                                if ($item->visit_sun == 1 && $d == 'sun') {
                                                                     $selected = 'checked';
                                                                 }
 
@@ -178,19 +185,23 @@
                                                                 {{ $selected }}>
                                                         </td>
                                                     @endforeach
-                                                <td><input type="text" class="form-control" id="note"
-                                                        value="{{ $item->note  }}"></td>
-                                                <td>
-                                                    <select name="type" id="type"
-                                                        class="form-control required" error="Tipe">
-                                                        <option value="PERMANEN" {{ $item->pjp_status == 'PERMANEN' ? 'selected' : '' }}>PERMANEN</option>
-                                                        <option value="EXTRA CALL" {{ $item->pjp_status == 'EXTRA CALL' ? 'selected' : '' }}>EXTRA CALL</option>
-                                                    </select>
-                                                </td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="SalesPlan.removeRow(this)">Delete</button>
-                                                </td>
+                                                    <td><input type="text" class="form-control" id="note"
+                                                            value="{{ $item->note }}"></td>
+                                                    <td>
+                                                        <select name="type" id="type"
+                                                            class="form-control required" error="Tipe">
+                                                            <option value="PERMANEN"
+                                                                {{ $item->pjp_status == 'PERMANEN' ? 'selected' : '' }}>
+                                                                PERMANEN</option>
+                                                            <option value="EXTRA CALL"
+                                                                {{ $item->pjp_status == 'EXTRA CALL' ? 'selected' : '' }}>
+                                                                EXTRA CALL</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="SalesPlan.removeRow(this)">Delete</button>
+                                                    </td>
 
                                                 </tr>
                                             @endforeach
@@ -207,17 +218,18 @@
                                                 <td>
                                                     <select class="form-control" id="visit_type">
                                                         @foreach ($visit_types as $v)
-                                                            <option value="{{ $v['id'] }}">{{ $v['term_id'].' - '.$v['keterangan'] }}</option>
+                                                            <option value="{{ $v['id'] }}">
+                                                                {{ $v['term_id'] . ' - ' . $v['keterangan'] }}</option>
                                                         @endforeach
                                                     </select>
                                                 </td>
-                                                  <!-- Visit Days -->
-                                                    @foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $d)
-                                                        <td class="text-center">
-                                                            <input type="checkbox" id="visit_{{ $d }}"
-                                                                {{ isset($item) && $item->{'visit_' . $d} ? 'checked' : '' }}>
-                                                        </td>
-                                                    @endforeach
+                                                <!-- Visit Days -->
+                                                @foreach (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $d)
+                                                    <td class="text-center">
+                                                        <input type="checkbox" id="visit_{{ $d }}"
+                                                            {{ isset($item) && $item->{'visit_' . $d} ? 'checked' : '' }}>
+                                                    </td>
+                                                @endforeach
                                                 {{-- <td><input type="number" class="form-control" id="target_qty"
                                                         value="0">
                                                 </td>

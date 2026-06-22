@@ -36,23 +36,58 @@ let SalesPlan = {
     },
 
     // Ambil data dari tabel detail (Plan Details)
+    // getPostItem: () => {
+    //     const table = $("table#table-items tbody tr.input");
+    //     let result = [];
+
+    //     table.each((index, elm) => {
+    //         const $row = $(elm);
+    //         // hanya push jika data_id kosong
+    //         if ($row.attr("data_id") !== "" && $row.hasClass("remove") == false) return;
+
+    //         result.push({
+    //             id: $row.attr("data_id") || null,
+
+    //             customer_id: $row.find("#customer_id").attr("data_id") || null,
+    //             customer_name: $row.find("#customer_id").val() || "",
+
+    //             visit_type: $row.find("#visit_type").val() || "",
+
+    //             visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
+    //             visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
+    //             visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
+    //             visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
+    //             visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
+    //             visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
+    //             visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
+
+    //             note: $row.find("#note").val() || "",
+    //             type: $row.find("#type").val() || "PERMANEN",
+
+    //             remove: $row.hasClass("remove") ? 1 : 0,
+    //         });
+    //     });
+
+    //     return result;
+    // },
+
     getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
         let result = [];
 
-        table.each((index, elm) => {
+        // Ambil semua tr via DataTable nodes() agar rows di halaman lain ikut terbaca
+        let dt = $("#table-items").DataTable();
+        let allRows = dt.rows({ search: 'none' }).nodes().toArray(); // semua row, bukan cuma yang visible
+
+        allRows.forEach((elm) => {
             const $row = $(elm);
-            // hanya push jika data_id kosong
-            if ($row.attr("data_id") !== "" && $row.hasClass("remove") == false) return;
+            if (!$row.hasClass("input")) return;
+            if ($row.hasClass("remove")) return;
 
             result.push({
                 id: $row.attr("data_id") || null,
-
                 customer_id: $row.find("#customer_id").attr("data_id") || null,
                 customer_name: $row.find("#customer_id").val() || "",
-
                 visit_type: $row.find("#visit_type").val() || "",
-
                 visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
                 visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
                 visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
@@ -60,11 +95,9 @@ let SalesPlan = {
                 visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
                 visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
                 visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
-
                 note: $row.find("#note").val() || "",
                 type: $row.find("#type").val() || "PERMANEN",
-
-                remove: $row.hasClass("remove") ? 1 : 0,
+                remove: 0,
             });
         });
 
@@ -613,43 +646,75 @@ let SalesPlan = {
         document.getElementById("total-harga").textContent = total.toFixed(2);
     },
 
-    removeRow: (elm) => {
-        const data_id = $(elm).closest("tr").attr("data_id");
-        if (data_id == "") {
-            $(elm).closest("tr").remove();
-        } else {
-            $(elm).closest("tr").addClass("remove");
-            $(elm).closest("tr").addClass("d-none");
-        }
+    // removeRow: (elm) => {
+    //     const data_id = $(elm).closest("tr").attr("data_id");
+    //     if (data_id == "") {
+    //         $(elm).closest("tr").remove();
+    //     } else {
+    //         $(elm).closest("tr").addClass("remove");
+    //         $(elm).closest("tr").addClass("d-none");
+    //     }
 
-        const product_id = $(elm).closest("tr").find("input#product").val();
-        const splitProductId = product_id.split("//");
-        const programDiskon = $(`.diskon-` + splitProductId[1]);
-        programDiskon.remove();
+    //     const product_id = $(elm).closest("tr").find("input#product").val();
+    //     const splitProductId = product_id.split("//");
+    //     const programDiskon = $(`.diskon-` + splitProductId[1]);
+    //     programDiskon.remove();
+    // },
+
+    removeRow: (elm) => {
+        const dt = $("#table-items").DataTable();
+        const $tr = $(elm).closest("tr");
+        const data_id = $tr.attr("data_id");
+
+        if (!data_id || data_id === "") {
+            dt.row($tr).remove().draw(false);
+        } else {
+            $tr.addClass("remove d-none");
+            // Row di-hide tapi tidak di-remove dari DT agar masih terbaca getPostItem()
+            dt.row($tr).invalidate().draw(false);
+        }
     },
 
+    // addRow: () => {
+    //     const row = $("table#table-items")
+    //         .find("tbody")
+    //         .find("tr.input:last")
+    //         .clone();
+    //     row.removeClass("remove");
+    //     row.removeClass("d-none");
+    //     row.removeClass("freegood");
+    //     row.find("input").val("");
+    //     row.find("input#product").closest("div").find("button").text("Pilih");
+    //     row.find("input#product")
+    //         .closest("div")
+    //         .find("button")
+    //         .removeAttr("disabled");
+    //     row.find("input#product").removeAttr("disabled");
+    //     row.find("input#qty").removeAttr("disabled");
+    //     row.find("button.btn-danger").removeAttr("disabled");
+    //     row.removeAttr("data-free-for");
+    //     row.find("td#unit").text("");
+    //     row.find("td#unit").attr("data_id", "");
+    //     row.attr("data_id", "");
+    //     $("table#table-items").find("tbody").append(row);
+    // },
+
     addRow: () => {
-        const row = $("table#table-items")
-            .find("tbody")
-            .find("tr.input:last")
-            .clone();
-        row.removeClass("remove");
-        row.removeClass("d-none");
-        row.removeClass("freegood");
-        row.find("input").val("");
-        row.find("input#product").closest("div").find("button").text("Pilih");
-        row.find("input#product")
-            .closest("div")
-            .find("button")
-            .removeAttr("disabled");
-        row.find("input#product").removeAttr("disabled");
-        row.find("input#qty").removeAttr("disabled");
-        row.find("button.btn-danger").removeAttr("disabled");
-        row.removeAttr("data-free-for");
-        row.find("td#unit").text("");
-        row.find("td#unit").attr("data_id", "");
-        row.attr("data_id", "");
-        $("table#table-items").find("tbody").append(row);
+        const dt = $("#table-items").DataTable();
+
+        // Clone dari row terakhir sebagai template
+        const $lastRow = $("table#table-items tbody tr.input:last");
+        const $newRow = $lastRow.clone();
+
+        $newRow.removeClass("remove d-none freegood");
+        $newRow.find("input").val("");
+        $newRow.find("input[type='checkbox']").prop("checked", false);
+        $newRow.find("input#customer_id").attr("data_id", "");
+        $newRow.removeAttr("data_id");
+        $newRow.attr("data_id", "");
+
+        // Tambah via DataTable row.add() agar terdaftar di DT
+        dt.row.add($newRow[0]).draw(false);
     },
 
     getDataUomConversion: () => {
@@ -927,9 +992,90 @@ let SalesPlan = {
             $(elm).find("#price").attr("data_id", "");
         });
     },
+
+    setTableItems: () => {
+        if ($.fn.DataTable.isDataTable("#table-items")) return;
+
+        if (!window._tableItemsSearchSet) {
+            window._tableItemsSearchSet = true;
+            $.fn.dataTable.ext.search.push(function (settings) {
+                if (settings.nTable.id !== "table-items") return true;
+
+                const searchVal = $("div#table-items_filter input").val().toLowerCase();
+                if (!searchVal) return true;
+
+                const $row = $(settings.nTable).find("tbody tr.input:not(.d-none)");
+                // handled via data-search attribute on td
+                return true;
+            });
+        }
+
+        const dt = $("#table-items").DataTable({
+            paging: true,
+            pageLength: 25,
+            ordering: true,
+            searching: true,
+            autoWidth: false,
+            dom: '<"row mb-2"<"col-sm-6"B><"col-sm-6"f>>rtip',
+            buttons: [
+                {
+                    extend: "excelHtml5",
+                    text: '<i class="bx bx-file me-1"></i> Excel',
+                    className: "btn btn-success btn-sm",
+                    title: "Sales Plan Details",
+                    exportOptions: {
+                        columns: ':not(:last-child)', // skip kolom Action
+                        format: {
+                            body: function (data, row, column, node) {
+                                // ambil dari data-search jika ada (kolom customer)
+                                const $td = $(node);
+                                return $td.attr("data-search") || $td.find("input").val() || $td.find("select option:selected").text() || data;
+                            }
+                        }
+                    }
+                },
+                {
+                    extend: "print",
+                    text: '<i class="bx bx-printer me-1"></i> Print',
+                    className: "btn btn-secondary btn-sm",
+                    title: "Sales Plan Details",
+                    exportOptions: {
+                        columns: ':not(:last-child)',
+                        format: {
+                            body: function (data, row, column, node) {
+                                const $td = $(node);
+                                return $td.attr("data-search") || $td.find("input").val() || $td.find("select option:selected").text() || data;
+                            }
+                        }
+                    }
+                },
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: {
+                        filter: function (data, type, row, meta) {
+                            const td = $($("#table-items tbody tr").get(meta.row)).find("td").eq(0);
+                            return td.attr("data-search") || data;
+                        }
+                    }
+                }
+            ],
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+            },
+        });
+    },
 };
 
 $(function () {
     SalesPlan.setSelect2();
     SalesPlan.getData();
+    SalesPlan.setTableItems();
 });
