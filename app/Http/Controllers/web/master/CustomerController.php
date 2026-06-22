@@ -207,12 +207,17 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
 
+        $data['stock_customer'] = $this->getListProductStockKunjungan($data['id']);
+        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();
+        $data['channels'] = $this->getChannel();
+        $data['sub_channels'] = $this->getSubChannel();
         $data['tops'] = $this->getTerms();
-        $view = view('web.customer.detail', $data);
+        $data['view_detail'] = 'detail';
+        $view = view('web.customer.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();

@@ -268,8 +268,9 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Foto Customer</label>
-                                <input type="file" id="photo_path" class="form-control required"
-                                    error="Foto Customer" accept="image/*">
+                                <input type="file" id="photo_path"
+                                    class="form-control {{ isset($id) ? '' : 'required' }}" error="Foto Customer"
+                                    accept="image/*">
                                 @if (isset($data->photo_path))
                                     @if ($data->photo_path != '')
                                         <br />
@@ -327,10 +328,13 @@
 
         <div class="text-end">
             <div>
-                <button type="submit" onclick="Customer.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
-                    Submit
-                </button>
+                @if (isset($view_detail))
+                @else
+                    <button type="submit" onclick="Customer.submit(this, event)"
+                        class="btn btn-success waves-effect waves-light me-1">
+                        Submit
+                    </button>
+                @endif
                 <button type="reset" onclick="Customer.cancel(this, event)" class="btn  waves-effect">
                     Cancel
                 </button>
