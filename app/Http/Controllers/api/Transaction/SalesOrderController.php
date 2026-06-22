@@ -486,6 +486,9 @@ class SalesOrderController extends Controller
                     $sales_motoris      = $this->checkPriceMotoris($params);
                     $item['has_motoris_price'] = $sales_motoris['has_motoris_price'];
 
+                    $customer_motoris = $this->checkCustomerMotoris($params);
+                    $is_motoris = $customer_motoris['is_motoris'];
+
                     if (!empty($customers) && $customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])
                             ->where('unit', $item['unit_id'])
@@ -1378,6 +1381,9 @@ class SalesOrderController extends Controller
                     $item['price']             = doubleval(trim($product_unit[1]));
                     $item['has_channel_price'] = $customers_channel['has_channel_price'];
 
+                    $customer_motoris = $this->checkCustomerMotoris($params);
+                    $is_motoris = $customer_motoris['is_motoris'];
+
                     if (!empty($customers_channel) && $customers_channel['has_channel_price']) {
                         $channel_price = collect($customers_channel['channel_price'])
                             ->where('unit', $item['unit_id'])
@@ -1734,10 +1740,6 @@ class SalesOrderController extends Controller
     public function checkDataPriceCustomer($params)
     {
         $customer = Customer::where('id', $params['customer'])->first();
-        // echo '<pre>';
-        // print_r($customer);
-        // echo '</pre>';
-        // die;
 
         if ($customer->channel_outlet != 'RETAIL UMUM' && $customer->sub_channel_outlet != 'RT-RETAIL UMUM') {
             $channelPrice = ProductUomPrice::where('channel', $customer->channel_outlet)
@@ -1763,6 +1765,16 @@ class SalesOrderController extends Controller
             'customer' => $customer,
             'channel_price' => [],
             'has_channel_price' => false,
+        ];
+    }
+
+    public function checkCustomerMotoris($params)
+    {
+        $customerMotoris = Customer::where('id', $params['customer'])->first();
+        $is_motoris = $customerMotoris->channel_outlet == 'MOTORIS' && $customerMotoris->sub_channel_outlet == 'MOTORIS';
+        return [
+            'customer' => $customerMotoris,
+            'is_motoris' => $is_motoris,
         ];
     }
 
@@ -4650,6 +4662,9 @@ class SalesOrderController extends Controller
                 $params['unit_id'] = $product_unit[0];
                 $customer_produk = $this->checkCustomerProduct($params);
 
+                $customer_motoris = $this->checkCustomerMotoris($params);
+                $is_motoris = $customer_motoris['is_motoris'];
+
                 if (!empty($customers)) {
                     if ($customers['has_channel_price']) {
                         $channel_price = collect($customers['channel_price'])->where('unit', $product_unit[0])->first();
@@ -4726,7 +4741,8 @@ class SalesOrderController extends Controller
                 $customer_produk = $this->checkCustomerProduct($params);
 
                 $params['salesman'] = $data['salesman'];
-                $sales_motoris = $this->checkPriceMotoris($params);
+                $customer_motoris = $this->checkCustomerMotoris($params);
+                $is_motoris = $customer_motoris['is_motoris'];
 
                 if (!empty($customers)) {
                     if ($customers['has_channel_price']) {
