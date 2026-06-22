@@ -114,6 +114,7 @@ class ReportPiutangController extends Controller
                         ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
