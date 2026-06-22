@@ -166,10 +166,11 @@ class ReportPenjualanController extends Controller
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '1039')
+            // ->where('p.code', 'P26MAY-9A')
+            ->where('sid.qty', '>', 0)
             // ->where('sih.id', 177)
             // ->where('usr.name', 'SLS-005')
-            // ->where('sih.invoice_number', 'SI06260312')
+            // ->where('sih.invoice_number', 'SI06260519')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0)
@@ -410,6 +411,7 @@ class ReportPenjualanController extends Controller
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
+            ->where('sid.qty', '>', 0)
             ->orderBy('m.salesman', 'asc')
             ->orderBy('sih.invoice_date', 'asc');
 
