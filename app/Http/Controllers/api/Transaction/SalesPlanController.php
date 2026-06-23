@@ -151,7 +151,8 @@ class SalesPlanController extends Controller
     {
         $data = $request->all();
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
         $userId = session('user_id');
         $result = ['is_valid' => false];
 

@@ -83,22 +83,27 @@ let SalesPlan = {
             if (!$row.hasClass("input")) return;
             if ($row.hasClass("remove")) return;
 
-            result.push({
-                id: $row.attr("data_id") || null,
-                customer_id: $row.find("#customer_id").attr("data_id") || null,
-                customer_name: $row.find("#customer_id").val() || "",
-                visit_type: $row.find("#visit_type").val() || "",
-                visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
-                visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
-                visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
-                visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
-                visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
-                visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
-                visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
-                note: $row.find("#note").val() || "",
-                type: $row.find("#type").val() || "PERMANEN",
-                remove: 0,
-            });
+            const id = $row.attr("data_id") || null;
+
+
+            if (id == null) {
+                result.push({
+                    id: $row.attr("data_id") || null,
+                    customer_id: $row.find("#customer_id").attr("data_id") || null,
+                    customer_name: $row.find("#customer_id").val() || "",
+                    visit_type: $row.find("#visit_type").val() || "",
+                    visit_mon: $row.find("#visit_mon").is(":checked") ? 1 : 0,
+                    visit_tue: $row.find("#visit_tue").is(":checked") ? 1 : 0,
+                    visit_wed: $row.find("#visit_wed").is(":checked") ? 1 : 0,
+                    visit_thu: $row.find("#visit_thu").is(":checked") ? 1 : 0,
+                    visit_fri: $row.find("#visit_fri").is(":checked") ? 1 : 0,
+                    visit_sat: $row.find("#visit_sat").is(":checked") ? 1 : 0,
+                    visit_sun: $row.find("#visit_sun").is(":checked") ? 1 : 0,
+                    note: $row.find("#note").val() || "",
+                    type: $row.find("#type").val() || "PERMANEN",
+                    remove: 0,
+                });
+            }
         });
 
         return result;
