@@ -117,43 +117,43 @@
             @endphp
             @if (!empty($data['data_payment']))
                 @foreach ($data['data_payment'] as $item_payment)
-                        @foreach ($item_payment->items as $i => $item)
-                            @php
-                                $salesman = $item->invoice->do?->so?->salesmans?->name
-                                    ?? $item->invoice->so?->salesmans?->name
-                                    ?? '-';
-                                $show = true;
-                            @endphp
-
-                            @if ($salesmans != '')
-                                @if ($salesman == $salesmans->name)
-                                    @php
-                                        $show = true
-                                    @endphp
-                                @else
-                                    @php
-                                        $show = false
-                                    @endphp
-                                @endif
-                            @endif
-                            @if ($show)
-                                <tr>
-                                    <td>{{ $no++ }}</td>        
-                                    <td>{{ $salesman }}</td>                    
-                                    <td>{{ $item->invoice->invoice_number }}</td>
-                                    <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
-                                    <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
-                                    <td>{{ $item_payment->payment_method }}</td>
-                                    <td>{{ $item->invoice->invoice_date }}</td>
-                                    <td>{{ $item->invoice->due_date }}</td>
-                                    <td>{{ $item->invoice->status }}</td>
-                                    <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
-                                    <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
-                                </tr>
-                            @endif                            
+                    @foreach ($item_payment->items as $i => $item)
                         @php
-                            $total += $item->allocated_amount ?? 0;
+                            $salesman =
+                                $item->invoice->do?->so?->salesmans?->name ??
+                                ($item->invoice->so?->salesmans?->name ?? '-');
+                            $show = true;
                         @endphp
+
+                        @if ($salesmans != '')
+                            @if ($salesman == $salesmans->name)
+                                @php
+                                    $show = true;
+                                @endphp
+                            @else
+                                @php
+                                    $show = false;
+                                @endphp
+                            @endif
+                        @endif
+                        @if ($show)
+                            <tr>
+                                <td>{{ $no++ }}</td>
+                                <td>{{ $salesman }}</td>
+                                <td>{{ $item->invoice->invoice_number }}</td>
+                                <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
+                                <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
+                                <td>{{ $item_payment->payment_method }}</td>
+                                <td>{{ $item->invoice->invoice_date }}</td>
+                                <td>{{ $item->invoice->due_date }}</td>
+                                <td>{{ $item->invoice->status }}</td>
+                                <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
+                            </tr>
+                            @php
+                                $total += $item->allocated_amount ?? 0;
+                            @endphp
+                        @endif
                     @endforeach
                 @endforeach
             @endif
@@ -169,7 +169,7 @@
     <br><br>
     <table class="no-border" style="width:100%;">
         <tr>
-             <td class="text-center">
+            <td class="text-center">
                 <br><br><br>
                 <strong>Dibuat Oleh</strong>
                 <br><br><br>
@@ -180,20 +180,21 @@
                 <strong>Disetorkan Oleh</strong>
                 <br><br><br>
                 (__________________)
-            </td>  
+            </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Diterima Oleh</strong>
                 <br><br><br>
                 (__________________)
-            </td>   
+            </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Disetujui Oleh</strong>
                 <br><br><br>
                 (__________________)
-            </td>        
+            </td>
         </tr>
     </table>
 </body>
+
 </html>
