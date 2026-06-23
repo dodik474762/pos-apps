@@ -180,30 +180,33 @@
         </div>
 
         <div class="text-end">
-            @if (isset($id))
-                @if ($data->status == 'DRAFT')
-                    <button type="button" onclick="SalesInvoice.posted(this, event)"
-                        class="btn btn-primary waves-effect waves-light me-1">
-                        Posted
-                    </button>
-                    &nbsp;
+            @if (isset($view_detail))
+            @else
+                @if (isset($id))
+                    @if ($data->status == 'DRAFT')
+                        <button type="button" onclick="SalesInvoice.posted(this, event)"
+                            class="btn btn-primary waves-effect waves-light me-1">
+                            Posted
+                        </button>
+                        &nbsp;
+                        <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                            class="btn btn-success waves-effect waves-light me-1">
+                            Submit
+                        </button>
+                    @endif
+                    @if ($data->status != 'PAID' && $data->status != 'PARTIAL-PAID' && $data->status != 'CANCELED')
+                        <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                            class="btn btn-success waves-effect waves-light me-1">
+                            Submit
+                        </button>
+                    @endif
+                @endif
+                @if (!isset($id))
                     <button type="submit" onclick="SalesInvoice.submit(this, event)"
                         class="btn btn-success waves-effect waves-light me-1">
                         Submit
                     </button>
                 @endif
-                @if ($data->status != 'PAID' && $data->status != 'PARTIAL-PAID' && $data->status != 'CANCELED')
-                    <button type="submit" onclick="SalesInvoice.submit(this, event)"
-                        class="btn btn-success waves-effect waves-light me-1">
-                        Submit
-                    </button>
-                @endif
-            @endif
-            @if (!isset($id))
-                <button type="submit" onclick="SalesInvoice.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
-                    Submit
-                </button>
             @endif
 
             <button type="reset" onclick="SalesInvoice.back(this, event)" class="btn btn-secondary waves-effect">

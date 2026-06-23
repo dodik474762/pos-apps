@@ -349,6 +349,10 @@ let SalesInvoice = {
                             SalesInvoice.module()
                         )}cetak?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        html += `<a href='${url.base_url(
+                            SalesInvoice.module()
+                        )}detail?id=${data}' data_id="${row.id
+                            }" class="btn btn-warning editable-submit btn-sm waves-effect waves-light"><i class="bx bx-show"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesInvoice.module()

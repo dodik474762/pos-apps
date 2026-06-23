@@ -218,6 +218,47 @@ class SalesInvoiceController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function detail(Request $request)
+    {
+        $api = new TransactionSalesInvoiceController;
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['details'] = SalesInvoiceDtl::where('sales_invoice_detail.invoice_id', $data['id'])
+            ->select([
+                'sales_invoice_detail.*',
+                'p.id as product_id',
+                'p.name as product_name',
+                'p.code as product_code',
+                'u.name as unit_name',
+                'soh.discount_amount as discount_amount_header'
+            ])
+            ->join('sales_order_details as sod', 'sod.id', 'sales_invoice_detail.so_detail_id')
+            ->join('sales_order_headers as soh', 'soh.id', 'sod.sales_order_id')
+            ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
+            ->join('unit as u', 'u.id', 'sod.unit')
+            ->whereNull('sales_invoice_detail.deleted')
+            ->orderBy('sales_invoice_detail.id')
+            ->get();
+
+        $data['view_detail'] = 'detail';
+        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $view = $data['data']->do_id != '' ? view('web.sales_invoice.formadd', $data) : view('web.sales_invoice.formaddso', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function getCustomer($salesmanId)
     {
         $periodYear = intval(date('Y'));  // misal dari form input
