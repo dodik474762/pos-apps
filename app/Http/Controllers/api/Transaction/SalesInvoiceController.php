@@ -758,6 +758,13 @@ class SalesInvoiceController extends Controller
                     $cancelInvoiceOld = SalesInvoiceHeader::find($data['id']);
 
                     $dueDate = date('Y-m-d', strtotime($data['invoice_date'] . ' + ' . $so->payment_term . ' days'));
+                    if ($newInvoiceId == 0) {
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Gagal Process invoice ' . $reference
+                        ]);
+                    }
                     $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
                     // echo '<pre>';
                     // print_r($updateInvoiceHeader);

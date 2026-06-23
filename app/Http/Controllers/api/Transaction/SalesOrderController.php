@@ -1318,9 +1318,10 @@ class SalesOrderController extends Controller
         if (!empty($top)) {
             $payment_term = $top->nilai;
         } else {
-            DB::rollBack();
-            $result['message'] = 'TOP tidak ditemukan untuk customer ' . $customers->nama_customer . ' karna TOP : ' . $customers->payment_terms;
-            return response()->json($result);
+            $payment_term = 3;
+            // DB::rollBack();
+            // $result['message'] = 'TOP tidak ditemukan untuk customer ' . $customers->nama_customer . ' karna TOP : ' . $customers->payment_terms;
+            // return response()->json($result);
         }
 
         $result['is_valid'] = false;
