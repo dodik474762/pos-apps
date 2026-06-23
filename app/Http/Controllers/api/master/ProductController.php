@@ -178,6 +178,10 @@ class ProductController extends Controller
                     ->toArray();
             }
 
+            $stock = DB::table('product_stock')
+                ->select('product', DB::raw('SUM(qty) as stock'))
+                ->groupBy('product');
+
             $datadb = DB::table($this->getTableName() . ' as m')
                 ->select([
                     'm.id as product_id',
@@ -188,7 +192,7 @@ class ProductController extends Controller
                     'pup.price as product_price',
                     'u.id as product_unit_id',
                     // 'ps.qty as stock_product',
-                    DB::raw("COALESCE(ps.qty, 0) as stock_product"),
+                    DB::raw("COALESCE(ps.stock, 0) as stock_product"),
                     'pup.id as product_uom_price_id',
                     'us.name as stock_unit',
                     'tx.rate as tax_rate',
@@ -200,7 +204,9 @@ class ProductController extends Controller
                 ->join('product_uom_price as pup', function ($q) {
                     return $q->on('pup.product', 'm.id')->whereNull('pup.deleted');
                 })
-                ->leftJoin('product_stock as ps', 'ps.product', 'm.id')
+                ->leftJoinSub($stock, 'ps', function ($join) {
+                    $join->on('ps.product', '=', 'm.id');
+                })
                 ->leftJoin('product_uom as pu', function ($q) {
                     return $q->on('pu.product', 'm.id')
                         ->where('pu.level', '1');
@@ -209,6 +215,7 @@ class ProductController extends Controller
                 ->leftJoin('tax as tx', 'tx.id', 'm.tax_sale')
                 ->join('unit as u', 'u.id', 'pup.unit')
                 ->whereNull('m.deleted')
+                ->where('m.code', 'PQ02')
                 // ->where('ps.qty', '>', 0)
                 ->orderBy('m.id', 'desc')
                 ->orderBy('pup.id', 'asc');
