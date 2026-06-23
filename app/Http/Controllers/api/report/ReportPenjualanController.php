@@ -429,7 +429,9 @@ class ReportPenjualanController extends Controller
                         ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
+                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.code', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
 
