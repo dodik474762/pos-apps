@@ -76,8 +76,7 @@ class ReportPiutangController extends Controller
             // ->where('usr.name', 'SLS-005')
             // ->where('sih.invoice_number', 'SI06260132')
             ->whereNull('m.deleted')
-            ->whereNull('sih.deleted')
-            ->orderBy('m.salesman', 'asc');
+            ->whereNull('sih.deleted');
         if (isset($data['types']) && $data['types'] == 'per-penjual') {
             $datadb->where('m.total_amount', '>', 0);
         } else {
@@ -87,17 +86,12 @@ class ReportPiutangController extends Controller
         if (isset($data['types'])) {
             if ($data['types'] == 'per-penjual') {
                 $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end])
-                    ->whereNotNull('usr.name')
-                    ->orderBy('usr.name', 'asc')
-                    ->orderBy('c.code', 'asc')
-                    ->orderBy('sih.invoice_date', 'asc');
+                    ->whereNotNull('usr.name');
             } else {
-                $datadb->whereDate('sih.invoice_date', '<=', $tanggal)->orderBy('c.code', 'asc')
-                    ->orderBy('sih.invoice_date', 'asc');;
+                $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
             }
         } else {
-            $datadb->whereDate('sih.invoice_date', '<=', $tanggal)->orderBy('c.code', 'asc')
-                ->orderBy('sih.invoice_date', 'asc');;
+            $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
         }
 
         if (isset($_POST)) {
@@ -128,7 +122,7 @@ class ReportPiutangController extends Controller
                         $datadb->orderBy('m.so_date', $_POST['order'][0]['dir']);
                         break;
                     case 2:
-                        $datadb->orderBy('c.nama_customer', $_POST['order'][0]['dir']);
+                        $datadb->orderBy('sih.invoice_date', $_POST['order'][0]['dir']);
                         break;
                     case 3:
                         $datadb->orderBy('c.code', $_POST['order'][0]['dir']);
