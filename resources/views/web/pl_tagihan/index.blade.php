@@ -105,6 +105,7 @@
                                                     <th>Tunai</th>
                                                     <th>Giro/Transfer</th>
                                                     <th>Remark</th>
+                                                    <th>Retur</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
@@ -136,6 +137,7 @@
                                                         <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}
                                                         </td>
                                                         <td>{{ $item->top_name }}</td>
+                                                        <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>

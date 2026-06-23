@@ -130,7 +130,7 @@
 
                 <th style="width:7%">Tanggal<br>Rute</th>
 
-                <th style="width:10%">Invoice</th>
+                <th style="width:8%">Invoice</th>
 
                 <th style="width:8%">Tgl<br>Invoice</th>
                 <th style="width:8%">Jatuh<br>Tempo</th>
@@ -144,7 +144,7 @@
                 <th style="width:6%">Status</th>
 
                 <th style="width:6%">Nilai Faktur</th>
-                <th style="width:9%">Outstanding</th>
+                <th style="width:6%">Outstanding</th>
 
                 <th style="width:4%">TOP</th>
 
@@ -153,6 +153,8 @@
                 <th style="width:8%">Transfer</th>
 
                 <th style="width:7%">Remark</th>
+
+                <th style="width:5%">Retur</th>
             </tr>
         </thead>
         <tbody>
@@ -182,6 +184,7 @@
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
+                    <td>&nbsp;</td>
                 </tr>
                 @php
                     $outstandin += $out;
@@ -190,7 +193,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="13" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="14" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right" colspan="2"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
                 </td>
             </tr>
