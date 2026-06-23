@@ -1936,6 +1936,7 @@ let ReportPenjualan = {
 
         let deleteAction = $("#delete").val();
 
+
         var data = tableData.DataTable({
             processing: true,
             serverSide: true,
@@ -2117,9 +2118,12 @@ let ReportPenjualan = {
                     title: "TOTAL HARGA",
                     render: function (data, type, row) {
                         let satuan = $("#filter-satuan").val() || "default";
-                        if (satuan === "terkecil") return row.price_terkecil * row.qty_terkecil ?? data;
-                        if (satuan === "terbesar") return row.price_terbesar * row.qty_terbesar ?? data;
-                        return data ?? "";
+                        console.log('satuan', satuan);
+                        console.log("price_terkecil:", row.price_terkecil, "qty_terkecil:", row.qty_terkecil);
+                        console.log("price_terbesar:", row.price_terbesar, "qty_terbesar:", row.qty_terbesar);
+                        if (satuan === "terkecil") return row.price_terkecil * row.qty_terkecil;
+                        if (satuan === "terbesar") return row.price_terbesar * row.qty_terbesar;
+                        return data ?? 0;
                     },
                 },
                 {

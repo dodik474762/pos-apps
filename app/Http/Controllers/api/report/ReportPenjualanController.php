@@ -394,20 +394,21 @@ class ReportPenjualanController extends Controller
                 $q->on('price_terkecil.product', 'sod.product_id')
                     ->on('price_terkecil.unit', 'pou_terkecil.unit_tujuan')
                     ->whereNull('price_terkecil.deleted')
-                    ->where('price_terkecil.type', 'RETAIL');
+                    ->where('price_terkecil.channel', 'RETAIL UMUM');
             })
             ->leftJoin('product_uom_price as price_terbesar', function ($q) {
                 $q->on('price_terbesar.product', 'sod.product_id')
                     ->on('price_terbesar.unit', 'pou.unit_tujuan')
                     ->whereNull('price_terbesar.deleted')
-                    ->where('price_terbesar.type', 'RETAIL');
+                    ->where('price_terbesar.channel', 'RETAIL UMUM');
             })
             ->leftJoin('unit as unit_terkecil', 'unit_terkecil.id', 'pou_terkecil.unit_tujuan')
             ->leftJoin('unit as unit_terbesar', 'unit_terbesar.id', 'pou.unit_tujuan')
             // ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             // ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.code', 'P26JAN0016')
+            // ->where('p.id', '1034')
+            // ->where('sih.invoice_number', 'SI06260592')
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
