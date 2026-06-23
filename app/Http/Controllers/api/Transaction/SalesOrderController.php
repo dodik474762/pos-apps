@@ -508,7 +508,7 @@ class SalesOrderController extends Controller
 
                     if (!empty($sales_motoris) && $sales_motoris['has_motoris_price']) {
                         $item['price'] = $sales_motoris['motoris'][0]->price;
-                        $is_motoris = true;
+                        // $is_motoris = true;
                     }
 
                     return $item;
@@ -1403,7 +1403,7 @@ class SalesOrderController extends Controller
 
                     if (!empty($sales_motoris) && $sales_motoris['has_motoris_price']) {
                         $item['price'] = $sales_motoris['motoris'][0]->price;
-                        $is_motoris = true;
+                        // $is_motoris = true;
                     }
 
                     return $item;
@@ -4767,7 +4767,7 @@ class SalesOrderController extends Controller
                 if (!empty($sales_motoris)) {
                     if ($sales_motoris['has_motoris_price']) {
                         $i['unit_price'] = $sales_motoris['motoris'][0]->price;
-                        $is_motoris = true;
+                        // $is_motoris = true;
                     }
                 }
 
