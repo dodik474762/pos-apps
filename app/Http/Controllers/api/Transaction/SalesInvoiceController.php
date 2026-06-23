@@ -516,7 +516,9 @@ class SalesInvoiceController extends Controller
                                 $qtyBaseUnitCancel = getSmallestUnit($item['product_id'], $soDetailCancel->unit, $item['qty']);
                                 $productUomLevel1Cancel = ProductUom::where('product', $item['product_id'])->where('level', '1')->first();
                                 if ($productUomLevel1Cancel) {
-                                    stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1Cancel->unit_tujuan, $qtyBaseUnitCancel['qty_in_base_unit'], $item, 'add', 'sales_invoice_cancel');
+                                    if ($header->status == 'PACKED' || $header->status == 'PAID') {
+                                        stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1Cancel->unit_tujuan, $qtyBaseUnitCancel['qty_in_base_unit'], $item, 'add', 'sales_invoice_cancel');
+                                    }
                                 }
                             }
                         }
@@ -568,8 +570,10 @@ class SalesInvoiceController extends Controller
                         $productUomLevel1 = ProductUom::where('product', $item['product_id'])->where('level', '1')->first();
 
                         if ($productUomLevel1) {
-                            $stockType = $qtyDiff > 0 ? 'reduce' : 'add'; // qty naik = kurangi stock lebih banyak, qty turun = kembalikan sebagian
-                            stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, $stockType, 'sales_invoice');
+                            if ($header->status == 'PACKED' || $header->status == 'PAID') {
+                                $stockType = $qtyDiff > 0 ? 'reduce' : 'add'; // qty naik = kurangi stock lebih banyak, qty turun = kembalikan sebagian
+                                stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, $stockType, 'sales_invoice');
+                            }
                         }
                     }
                 }
@@ -733,9 +737,7 @@ class SalesInvoiceController extends Controller
                             }
                         }
                     }
-                    // echo '<pre>';
-                    // print_r($sodb);
-                    // die;
+
                     /*generate invoice */
                     $soToNewInvoice = $soProcess->getAllSalesNotInvoice($so_payload['so_date'], $so_payload['so_date'], '', [$newSoId]);
                     $newInvoiceId = 0;
@@ -762,7 +764,7 @@ class SalesInvoiceController extends Controller
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
-                            'message' => 'Gagal Process invoice ' . $reference
+                            'message' => 'Gagal Process invoice ' . $reference . ' new invoice : ' . $newInvoiceId
                         ]);
                     }
                     $updateInvoiceHeader = SalesInvoiceHeader::find($newInvoiceId);
@@ -848,7 +850,9 @@ class SalesInvoiceController extends Controller
                         $qtyBaseUnitRestore = getSmallestUnit($oldDetail->product_id, $soDetailRestore->unit, $oldDetail->qty);
                         $productUomLevel1Restore = ProductUom::where('product', $oldDetail->product_id)->where('level', '1')->first();
                         if ($productUomLevel1Restore) {
-                            stockUpdate($menu->id, $menu->warehouse_id, $oldDetail->product_id, $productUomLevel1Restore->unit_tujuan, $qtyBaseUnitRestore['qty_in_base_unit'], (array) $oldDetail, 'add', 'sales_invoice_cancel');
+                            if ($menu->status == 'PACKED' || $menu->status == 'PAID') {
+                                stockUpdate($menu->id, $menu->warehouse_id, $oldDetail->product_id, $productUomLevel1Restore->unit_tujuan, $qtyBaseUnitRestore['qty_in_base_unit'], (array) $oldDetail, 'add', 'sales_invoice_cancel');
+                            }
                         }
                     }
 

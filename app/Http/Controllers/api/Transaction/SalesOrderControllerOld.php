@@ -3326,7 +3326,7 @@ class SalesOrderController extends Controller
     //     return response()->json($result);
     // }
 
-    public function getAllSalesNotInvoice($date = '', $state = '')
+    public function getAllSalesNotInvoice($date = '', $state = '', $ids = [])
     {
         $date = $date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($date));
         $datadb = SalesOrderHeader::select([
@@ -3345,14 +3345,20 @@ class SalesOrderController extends Controller
                 return $q->on('sih.sales_order', 'sales_order_headers.id')
                     ->whereNull('sih.deleted');
             })
-            ->whereIn('sales_order_headers.status', ['draft', 'submited'])
+            ->whereIn('sales_order_headers.status', ['draft', 'submited', 'confirmed'])
             ->whereNull('sih.id')
             ->where('sales_order_headers.total_amount', '>', 0)
-            ->where('sales_order_headers.so_date', $date)
-            ->whereNull('sales_order_headers.deleted')
-            ->orderBy('sales_order_headers.id', 'desc');
-        if ($state == '') {
+            ->whereNull('sales_order_headers.deleted');
+        // if ($state == '') {
+        // }      
+
+        if (!empty($ids)) {
+            $datadb->whereIn('sales_order_headers.id', $ids);
+        } else {
+            $datadb->where('sales_order_headers.so_date', $date);
         }
+
+        $datadb->orderBy('sales_order_headers.id', 'desc');
 
         $datadb = $datadb->get()->toArray();
 

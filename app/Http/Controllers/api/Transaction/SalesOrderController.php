@@ -4409,25 +4409,22 @@ class SalesOrderController extends Controller
                 return $q->on('sih.sales_order', 'sales_order_headers.id')
                     ->whereNull('sih.deleted');
             })
-            ->whereIn('sales_order_headers.status', ['draft', 'submited'])
+            ->whereIn('sales_order_headers.status', ['draft', 'submited', 'confirmed'])
             ->whereNull('sih.id')
             ->where('sales_order_headers.total_amount', '>', 0)
-            ->where(function ($q) use ($start_date, $end_date) {
-                $q->where('sales_order_headers.so_date', '>=', $start_date)
-                    ->where('sales_order_headers.so_date', '<=', $end_date);
-            })
             ->whereNull('sales_order_headers.deleted')
             ->orderBy('sales_order_headers.id', 'desc');
         if ($state == '') {
         }
         if (!empty($salesOrderIds)) {
             $datadb->whereIn('sales_order_headers.id', $salesOrderIds);
+        } else {
+            $datadb->where(function ($q) use ($start_date, $end_date) {
+                $q->where('sales_order_headers.so_date', '>=', $start_date)
+                    ->where('sales_order_headers.so_date', '<=', $end_date);
+            });
         }
 
-        // echo '<pre>';
-        // print_r($datadb->get()->toArray());
-        // echo '<pre>';
-        // die;
         $datadb = $datadb->get()->toArray();
 
         return $datadb;
