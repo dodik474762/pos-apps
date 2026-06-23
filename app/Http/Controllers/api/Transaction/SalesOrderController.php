@@ -1314,7 +1314,14 @@ class SalesOrderController extends Controller
         $customers   = Customer::where('id', trim($data['customer_id']))->first();
         $customersId = $customers->id;
         $top         = TermOfPayment::where('id', $customers->payment_terms)->first();
-        $payment_term = $top->nilai;
+        $payment_term = 0;
+        if (!empty($top)) {
+            $payment_term = $top->nilai;
+        } else {
+            DB::rollBack();
+            $result['message'] = 'TOP tidak ditemukan untuk customer ' . $customers->nama_customer . ' karna TOP : ' . $customers->payment_terms;
+            return response()->json($result);
+        }
 
         $result['is_valid'] = false;
         $result['message']  = '';

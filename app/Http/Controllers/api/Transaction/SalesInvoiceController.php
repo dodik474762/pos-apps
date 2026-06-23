@@ -726,7 +726,7 @@ class SalesInvoiceController extends Controller
                         /*update do detail */
                         $doDetail = DeliveryOrderDtl::where('do_id', $doIdHeader)->get();
                         foreach ($doDetail as $row) {
-                            $soDetailNew = SalesOrderDetail::where('so_id', $newSoId)->where('product_id', $row->product_id)->first();
+                            $soDetailNew = SalesOrderDetail::where('sales_order_id', $newSoId)->where('product_id', $row->product_id)->first();
                             if (!empty($soDetailNew)) {
                                 $row->so_detail_id = $soDetailNew->id;
                                 $row->save();
@@ -786,7 +786,7 @@ class SalesInvoiceController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['is_valid'] = false;
-            $result['message'] = $th->getMessage();
+            $result['message'] = $th->getMessage() . ' ' . $th->getLine();
         }
 
         return response()->json($result);
