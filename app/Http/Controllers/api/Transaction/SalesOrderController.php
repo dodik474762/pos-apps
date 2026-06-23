@@ -4447,6 +4447,12 @@ class SalesOrderController extends Controller
             // die;
             foreach ($sales_order as $v) {
                 $process = $this->saveInvoice($v);
+                $process = json_decode($process->getContent(), true);
+                if ($process['is_valid'] == false) {
+                    $result['is_valid'] = false;
+                    $result['message'] = $process['message'] . ' untuk order' . $v['so_number'];
+                    return response()->json($result);
+                }
             }
             $result['is_valid'] = true;
             $result['message'] = 'Data Berhasil Diproses';
