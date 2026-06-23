@@ -93,12 +93,13 @@
                                                     <th>Tanggal Rute</th>
                                                     <th>Invoice Number</th>
                                                     <th>Tanggal Invoice</th>
+                                                    <th>Tanggal Jatuh Tempo</th>
                                                     <th>DO Number</th>
                                                     <th>Tanggal DO</th>
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
-                                                    <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
+                                                    <th>Nilai Faktur (IDR)</th>
                                                     <th>Tagihan (IDR)</th>
                                                     <th>Top</th>
                                                     <th>Tunai</th>
@@ -124,13 +125,14 @@
                                                         <td>{{ $tanggal }}</td>
                                                         <td>{{ $item->invoice_number }}</td>
                                                         <td>{{ $item->invoice_date }}</td>
+                                                        <td>{{ $item->due_date }}</td>
                                                         <td>{{ $do_date }}</td>
                                                         <td>{{ $do_number }}</td>
                                                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}
                                                         </td>
                                                         <td>{{ $item->warehouse_name }}</td>
-                                                        <td>{{ $item->due_date }}</td>
                                                         <td>{{ $item->status }}</td>
+                                                        <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
                                                         <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}
                                                         </td>
                                                         <td>{{ $item->top_name }}</td>

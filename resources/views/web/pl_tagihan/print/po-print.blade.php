@@ -133,17 +133,17 @@
                 <th style="width:10%">Invoice</th>
 
                 <th style="width:8%">Tgl<br>Invoice</th>
+                <th style="width:8%">Jatuh<br>Tempo</th>
 
                 <th style="width:8%">DO</th>
 
-                <th style="width:16%">Customer</th>
+                <th style="width:10%">Customer</th>
 
                 <th style="width:7%">Warehouse</th>
 
-                <th style="width:8%">Jatuh<br>Tempo</th>
-
                 <th style="width:6%">Status</th>
 
+                <th style="width:6%">Nilai Faktur</th>
                 <th style="width:9%">Outstanding</th>
 
                 <th style="width:4%">TOP</th>
@@ -171,11 +171,12 @@
                     <td>{{ $tanggal_rute }}</td>
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->invoice_date }}</td>
+                    <td>{{ $item->due_date }}</td>
                     <td>{{ $do_number }}</td>
                     <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                     <td>{{ $item->warehouse_name }}</td>
-                    <td>{{ $item->due_date }}</td>
                     <td>{{ $item->status }}</td>
+                    <td class="text-right">{{ number_format($item->total_amount, 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
                     <td>{{ $item->top_name }}</td>
                     <td>&nbsp;</td>
@@ -189,7 +190,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="12" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="13" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right" colspan="2"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
                 </td>
             </tr>
