@@ -1,9 +1,9 @@
-
 @if (isset($akses->sales_payment))
     @if ($akses->sales_payment->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_payment->update }}">
         <input type="hidden" id="delete" value="{{ $akses->sales_payment->delete }}">
         <input type="hidden" id="url-print" value="{{ route('sales-payment-print-rekap') }}">
+        <input type="hidden" id="url-confirm" value="{{ route('sales-payment-confirm') }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
@@ -53,27 +53,40 @@
                                 <!--end col-->
                                 <div class="col-md-3">
                                     <div>
-                                        <input type="date" class="form-control" 
-                                            id="filter-date"
-                                            value="{{ date('Y-m-d') }}"
+                                        <input type="date" class="form-control" id="filter-date" value=""
                                             placeholder="Print Tanggal">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                        <select name="salesman" id="salesman" class="form-control select2">
-                                            <option value="">ALL</option>
-                                            @foreach ($salesmans as $item)
-                                                <option {{ isset($salesman) ? $salesman == $item['id'] ? 'selected' : '' : '' }} value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}</option>
-                                            @endforeach
-                                        </select>
+                                    <select name="salesman" id="salesman" class="form-control select2">
+                                        <option value="">ALL</option>
+                                        @foreach ($salesmans as $item)
+                                            <option
+                                                {{ isset($salesman) ? ($salesman == $item['id'] ? 'selected' : '') : '' }}
+                                                value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div>
-                                        <button type="button" class="btn btn-danger w-100" onclick="SalesPayment.printRekapPembayaran();"> <i
+                                        <button type="button" class="btn btn-danger w-100"
+                                            onclick="SalesPayment.printRekapPembayaran();"> <i
                                                 class="ri-printer-line me-1 align-bottom"></i>
                                             Print Rekap Pembayaran
                                         </button>
                                     </div>
+                                </div>
+                                <div class="col-md-2">
+                                    @if (strtolower($akses_roles) == 'superadmin' || strtolower($akses_roles) == 'admin')
+                                        <div>
+                                            <button type="button" class="btn btn-success w-100"
+                                                onclick="SalesPayment.confirmPayment();"> <i
+                                                    class="ri-checkbox-line me-1 align-bottom"></i>
+                                                Confirm Pembayaran
+                                            </button>
+                                        </div>
+                                    @endif
                                 </div>
                                 <!--end col-->
                             </div>

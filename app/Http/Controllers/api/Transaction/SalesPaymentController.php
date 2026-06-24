@@ -884,4 +884,55 @@ class SalesPaymentController extends Controller
 
         return response()->json($result);
     }
+
+    public function confirmAll(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+        $date = isset($data['date']) ? $data['date'] : '';
+
+        DB::beginTransaction();
+        try {
+
+            $data['data_payment'] = SalesPaymentHeader::with([
+                'customers',
+                'customers.kecamatans',
+                'items.invoice',
+                'items.invoice.do',
+                'items.invoice.do.so.salesmans',
+                'items.invoice.so.salesmans'
+            ])
+                ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
+                ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
+                ->where('sales_payment_header.status', 'PENDING')
+                ->whereNull('sales_payment_header.deleted');
+            if (isset($data['date'])) {
+                if ($data['date'] != '') {
+                    $data['data_payment'] = $data['data_payment']->where('payment_date', $data['date']);
+                }
+            }
+            $data['data_payment'] = $data['data_payment']->get();
+            if ($data['data_payment']->isEmpty()) {
+                $result['is_valid'] = false;
+                $result['message'] = 'Tidak ada data';
+                return response()->json($result);
+            }
+
+            foreach ($data['data_payment'] as $key => $value) {
+                $menu = SalesPaymentHeader::find($value->id);
+                $menu->updated_by = session('user_id');
+                $menu->status = 'POSTED';
+                $menu->save();
+            }
+
+            DB::commit();
+
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
 }

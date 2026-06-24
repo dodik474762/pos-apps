@@ -57,6 +57,7 @@ class SalesPaymentController extends Controller
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
         // print_r($data);die;
+        $data['akses_roles'] = session('akses');
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
         $view = view('web.sales_payment.index', $data);
         $put['title_content'] = $this->getTitle();
@@ -338,5 +339,52 @@ class SalesPaymentController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('REKAPAN-SP-' . $data['date'] . '.pdf');
+    }
+
+    public function confirmPayment(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data['data_payment'] = SalesPaymentHeader::with([
+            'customers',
+            'customers.kecamatans',
+            'items.invoice',
+            'items.invoice.do',
+            'items.invoice.do.so.salesmans',
+            'items.invoice.so.salesmans'
+        ])
+            ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
+            ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
+            ->where('sales_payment_header.status', 'PENDING')
+            ->whereNull('sales_payment_header.deleted');
+        if (isset($data['date'])) {
+            if ($data['date'] != '') {
+                $data['data_payment'] = $data['data_payment']->where('payment_date', $data['date']);
+            }
+        }
+        $data['data_payment'] = $data['data_payment']->get();
+        $qr = '';
+
+        // echo '<pre>';
+        // print_r($data['data_payment']);
+        // die;
+        $salesmans = isset($data['salesman']) ? $data['salesman'] : '';
+        if ($salesmans != '') {
+            $salesmans = User::find($salesmans);
+        }
+        $data['salesmans'] = $salesmans;
+
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $data['akses_roles'] = session('akses');
+
+        $view = view('web.sales_payment.confirm-invoice', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
     }
 }

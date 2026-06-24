@@ -424,6 +424,39 @@ let SalesPayment = {
         });
     },
 
+    confirmAll: (elm) => {
+        let params = {};
+        params.date = $('#filter-date').val();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesPayment.moduleApi()) + "confirmAll",
+            headers: {
+                "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Confirm");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
     showModalCustomer: (elm) => {
         let params = {};
         const payment_method = $("#payment_method").val();
@@ -1057,6 +1090,14 @@ let SalesPayment = {
     printRekapPembayaran: () => {
         const date = $("#filter-date").val();
         const url = $("input#url-print").val();
+        const salesman = $('#salesman').val();
+
+        window.location.href = url + "?date=" + date + "&salesman=" + salesman;
+    },
+
+    confirmPayment: () => {
+        const date = $("#filter-date").val();
+        const url = $("input#url-confirm").val();
         const salesman = $('#salesman').val();
 
         window.location.href = url + "?date=" + date + "&salesman=" + salesman;

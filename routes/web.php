@@ -274,6 +274,7 @@ Route::get('transaksi/sales_payment/ubah', [SalesPaymentController::class, 'ubah
 Route::get('transaksi/sales_payment/detail', [SalesPaymentController::class, 'detail'])->name('sales-payment-detail');;
 Route::get('transaksi/sales_payment/cetak', [SalesPaymentController::class, 'cetak'])->name('sales-payment-print');
 Route::get('transaksi/sales_payment/cetakRekapan', [SalesPaymentController::class, 'cetakRekapan'])->name('sales-payment-print-rekap');
+Route::get('transaksi/sales_payment/confirmPayment', [SalesPaymentController::class, 'confirmPayment'])->name('sales-payment-confirm');
 
 Route::get('transaksi/sales_return', [SalesReturnController::class, 'index']);
 Route::get('transaksi/sales_return/add', [SalesReturnController::class, 'add'])->name('sales-return-add');
@@ -602,6 +603,7 @@ Route::post('api/transaksi/sales_payment/confirmDelete', [TransactionSalesPaymen
 Route::post('api/transaksi/sales_payment/showModalCustomer', [TransactionSalesPaymentController::class, 'showModalCustomer']);
 Route::post('api/transaksi/sales_payment/getOutstandingInvoice', [TransactionSalesPaymentController::class, 'getOutstandingInvoice']);
 Route::post('api/transaksi/sales_payment/posted', [TransactionSalesPaymentController::class, 'posted']);
+Route::post('api/transaksi/sales_payment/confirmAll', [TransactionSalesPaymentController::class, 'confirmAll']);
 Route::post('api_mobile/transaksi/sales_payment/sync', [TransactionSalesPaymentController::class, 'sync']);
 
 Route::post('api/transaksi/sales_return/getData', [TransactionSalesReturnController::class, 'getData']);
