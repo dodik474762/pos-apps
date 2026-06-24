@@ -146,7 +146,7 @@ class PLTagihanController extends Controller
 
         $tanggal_rute = $data['tanggal'];
         $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
 
         return $pdf->stream('PL-' . $salesman_name . '.pdf');
     }

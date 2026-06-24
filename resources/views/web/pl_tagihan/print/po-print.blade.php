@@ -9,12 +9,14 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #000;
+            margin: 0;
+            padding: 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 5px;
         }
 
         th,
@@ -66,8 +68,8 @@
         .table-detail td {
             border: 1px solid #000;
 
-            font-size: 8px;
-            padding: 2px 3px;
+            font-size: 10px;
+            padding: 1px 2px;
 
             white-space: normal;
             word-break: break-word;
@@ -89,7 +91,7 @@
 
 <body>
     {{-- HEADER --}}
-    <table class="header-table" style="width:100%;">
+    <table class="header-table" style="width:100%;margin-top: -30px;">
         <tr>
             <td style="width: 90px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
@@ -108,8 +110,6 @@
             </td>
         </tr>
     </table>
-
-    <br>
 
     {{-- INFORMASI PO --}}
     <table class="no-border" style="width:100%;">
@@ -169,7 +169,7 @@
                     $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
                 @endphp
                 <tr>
-                    <td>{{ $no++ }}</td>
+                    <td class="text-center">{{ $no++ }}</td>
                     <td>{{ $tanggal_rute }}</td>
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->invoice_date }}</td>
@@ -199,13 +199,8 @@
             </tr>
         </tfoot>
     </table>
-    <table class="no-border" style="width:100%;">
-        <tr>
-            <td></td>
-        </tr>
-    </table>
 
-    <br><br>
+    <br>
     <table class="no-border" style="width:100%;">
         <tr>
             <td class="text-center">
