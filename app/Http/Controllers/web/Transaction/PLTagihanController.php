@@ -92,6 +92,28 @@ class PLTagihanController extends Controller
         return $dailyVisit;
     }
 
+    public function getRoutePlanSalesAll($data)
+    {
+        $month = date('m');
+        $year = date('Y');
+        if (isset($data['tanggal'])) {
+            list($year, $month, $day) = explode('-', $data['tanggal']);
+        } else {
+            $data['tanggal'] = date('Y-m-d');
+        }
+        $salesman = isset($data['salesman']) ? $data['salesman'] : 0;
+
+        $today = Carbon::parse($data['tanggal']);
+
+        $salesPlan = new SalesPlanController();
+        $dailyVisit = $salesPlan->getDailyVisits('all', $today);
+        // echo '<pre>';
+        // print_r($dailyVisit);
+        // die;
+
+        return $dailyVisit;
+    }
+
     public function getAllInvoiceCetak($customers = [], $date = null)
     {
         $date = $date ?? date('Y-m-d');

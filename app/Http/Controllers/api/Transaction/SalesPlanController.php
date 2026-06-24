@@ -561,7 +561,6 @@ class SalesPlanController extends Controller
             ->leftJoinSub($invoiceSubquery, 'inv', function ($join) {
                 $join->on('inv.customer_id', '=', 'c.id');
             })
-            ->where('sph.salesman', $salesmanId)
             ->where($dayColumn, 1)
             ->where(function ($q) use ($weekNow, $weekOfMonth, $date) {
                 // =========================
@@ -630,6 +629,9 @@ class SalesPlanController extends Controller
                 'top.code as top_code',
                 'top.nilai as top_nilai'
             );
+        if ($salesmanId != 'all') {
+            $datadb->where('sph.salesman', $salesmanId);
+        }
 
         $datadb = $datadb->get();
         // echo '<pre>';

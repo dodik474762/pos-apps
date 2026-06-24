@@ -146,6 +146,10 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tanggal Rute Sales</label>
+                            <input type="date" id="filter_date_rute_sales" class="form-control" value="">
+                        </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="button" class="btn btn-primary" onclick="SalesPayment.filterBulk()">
                                 <i class="bx bx-filter-alt"></i> Filter Outstanding

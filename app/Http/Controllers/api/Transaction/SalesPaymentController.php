@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\web\Transaction\PLTagihanController;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\Currency;
@@ -790,6 +791,21 @@ class SalesPaymentController extends Controller
             $invoicePl = $this->getListPackingListInvoice($packingListId);
             if (!empty($invoicePl)) {
                 $invoiceIds = array_column($invoicePl, 'invoice_id');
+            }
+        }
+
+        $dateRuteSales = isset($data['date_rute_sales']) ? $data['date_rute_sales'] : '';
+        if ($dateRuteSales != '') {
+            $plTagihan = new PLTagihanController();
+            $param['salesman'] = 'all';
+            $param['tanggal'] = $dateRuteSales;
+            $plTagihanDb = $plTagihan->getRoutePlanSalesAll($param);
+            if ($plTagihanDb->isNotEmpty()) {
+                $customerIds = collect($plTagihanDb)->pluck('customer_id')->unique()->toArray();
+                $invoices = $plTagihan->getAllInvoiceCetak($customerIds);
+                if (!empty($invoices)) {
+                    $invoiceIds = collect($invoices)->pluck('id')->unique()->toArray();
+                }
             }
         }
 

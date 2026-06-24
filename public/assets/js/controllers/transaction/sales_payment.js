@@ -557,8 +557,9 @@ let SalesPayment = {
         const start_date = $("#filter_start_date").val();
         const end_date = $("#filter_end_date").val();
         const packing_list_id = $("#filter_packing_list_no").val();
+        const date_rute_sales = $("#filter_date_rute_sales").val();
 
-        SalesPayment.getOutstandingInvoiceAllCustomer(customers, start_date, end_date, packing_list_id);
+        SalesPayment.getOutstandingInvoiceAllCustomer(customers, start_date, end_date, packing_list_id, date_rute_sales);
     },
 
     getOutstandingInvoice: (customer) => {
@@ -593,12 +594,13 @@ let SalesPayment = {
         });
     },
 
-    getOutstandingInvoiceAllCustomer: (customers, start_date = '', end_date = '', packing_list_id = '') => {
+    getOutstandingInvoiceAllCustomer: (customers, start_date = '', end_date = '', packing_list_id = '', date_rute_sales = '') => {
         let params = {
             customers: customers,
             start_date: start_date,
             end_date: end_date,
-            packing_list_id: packing_list_id
+            packing_list_id: packing_list_id,
+            date_rute_sales: date_rute_sales
         };
 
         $.ajax({
