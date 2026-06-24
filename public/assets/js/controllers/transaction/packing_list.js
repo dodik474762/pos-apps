@@ -360,10 +360,10 @@ let PackingList = {
                                 PackingList.module(),
                             )}ubah?id=${data}' data_id="${row.id
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
-                            html += `<a href='${url.base_url(
-                                PackingList.module(),
-                            )}cetakSj?id=${data}' data_id="${row.id
-                                }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
+                            // html += `<a href='${url.base_url(
+                            //     PackingList.module(),
+                            // )}cetakSj?id=${data}' data_id="${row.id
+                            //     }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status != "CONFIRMED") {

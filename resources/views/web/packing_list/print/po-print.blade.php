@@ -16,7 +16,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         th,
@@ -60,7 +60,7 @@
 
         .table-detail th,
         .table-detail td {
-            font-size: 8px;
+            font-size: 10px;
             /* kecilkan */
             padding: 3px;
             border: 1px solid #000;
@@ -91,7 +91,7 @@
 <body>
 
     {{-- HEADER --}}
-    <table class="header-table" style="width:100%;">
+    <table class="header-table" style="width:100%;margin-top: -40px;">
         <tr>
             <td style="width: 90px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
@@ -106,8 +106,6 @@
             </td>
         </tr>
     </table>
-
-    <br>
 
     {{-- INFORMASI --}}
     <table class="no-border" style="width:100%;">
@@ -150,7 +148,7 @@
             @php $no = 1; @endphp
             @foreach ($details as $item)
                 <tr>
-                    <td>{{ $no++ }}</td>
+                    <td class="text-center">{{ $no++ }}</td>
                     <td>{{ $item->do_number }}</td>
                     {{-- <td>{{ $item->do_date }}</td> --}}
                     <td>{{ $item->invoice_number }}</td>
@@ -169,8 +167,8 @@
 
         <tfoot>
             <tr>
-                <td colspan="11" class="text-right"><strong>Total DO</strong></td>
-                <td class="text-right">
+                <td colspan="10" class="text-right"><strong>Total DO</strong></td>
+                <td class="text-right" colspan="2">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
             </tr>
@@ -189,9 +187,9 @@
     @endphp
 
     {{-- ==================== PAGE BREAK HANYA JIKA PRODUK > 10 ==================== --}}
-    @if ($totalProduk > 10)
+    {{-- @if ($totalProduk > 10)
         <div class="page-break"></div>
-    @endif
+    @endif --}}
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}
@@ -213,7 +211,7 @@
             @php $p = 1; @endphp
             @foreach ($groupedItem as $d)
                 <tr>
-                    <td>{{ $p++ }}</td>
+                    <td class="text-center">{{ $p++ }}</td>
 
                     <td>{{ $d['product_code'] ?? '-' }}</td>
                     <td>{{ $d['product_name'] ?? '-' }}</td>
@@ -273,9 +271,6 @@
             @endforeach --}}
         </tbody>
     </table>
-
-
-    <br><br>
 
     {{-- SIGN --}}
     <table class="no-border" style="width:100%;">
