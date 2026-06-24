@@ -86,7 +86,8 @@ class ReportPiutangController extends Controller
         if (isset($data['types'])) {
             if ($data['types'] == 'per-penjual') {
                 $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end])
-                    ->whereNotNull('usr.name');
+                    ->whereNotNull('usr.name')
+                    ->orderBy('usr.name', 'asc');
             } else {
                 $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
             }

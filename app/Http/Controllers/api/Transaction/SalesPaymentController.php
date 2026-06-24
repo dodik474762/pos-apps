@@ -433,7 +433,8 @@ class SalesPaymentController extends Controller
             }
 
             // === VALIDASI AMOUNT ===
-            $totalAmount = $data['total_amount'] ?? 0;
+            // $totalAmount = $data['total_amount'] ?? 0;
+            $totalAmount = (float) str_replace(['.', ','], ['', '.'], $data['total_amount'] ?? 0);
             if (!is_numeric($totalAmount) || $totalAmount <= 0) {
                 DB::rollBack();
                 return response()->json([
