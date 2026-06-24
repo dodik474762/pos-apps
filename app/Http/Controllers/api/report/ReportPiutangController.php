@@ -122,7 +122,11 @@ class ReportPiutangController extends Controller
                         $datadb->orderBy('m.so_date', $_POST['order'][0]['dir']);
                         break;
                     case 2:
-                        $datadb->orderBy('sih.invoice_date', $_POST['order'][0]['dir']);
+                        if (isset($_POST['types']) && $_POST['types'] == 'per-penjual') {
+                            $datadb->orderBy('usr.name', $_POST['order'][0]['dir']);
+                        } else {
+                            $datadb->orderBy('sih.invoice_date', $_POST['order'][0]['dir']);
+                        }
                         break;
                     case 3:
                         $datadb->orderBy('c.code', $_POST['order'][0]['dir']);
