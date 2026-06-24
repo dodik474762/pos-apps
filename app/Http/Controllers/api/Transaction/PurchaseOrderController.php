@@ -219,20 +219,24 @@ class PurchaseOrderController extends Controller
                         ->where('vendor', $data['vendor'])
                         ->first();
                     if (!empty($existCost)) {
-                        $existCost->cost = $value['price'];
-                        $existCost->vendor = $data['vendor'];
-                        $existCost->product_uom = $product_uom;
-                        $existCost->date_start = date('Y-m-d');
-                        $existCost->save();
+                        if ($value['price'] > 0) {
+                            $existCost->cost = $value['price'];
+                            $existCost->vendor = $data['vendor'];
+                            $existCost->product_uom = $product_uom;
+                            $existCost->date_start = date('Y-m-d');
+                            $existCost->save();
+                        }
                     } else {
-                        $product_cost = new ProductUomCost();
-                        $product_cost->cost = $value['price'];
-                        $product_cost->vendor = $data['vendor'];
-                        $product_cost->product_uom = $product_uom;
-                        $product_cost->product = $product;
-                        $product_cost->unit_id = $value['unit'];
-                        $product_cost->date_start = date('Y-m-d');
-                        $product_cost->save();
+                        if ($value['price'] > 0) {
+                            $product_cost = new ProductUomCost();
+                            $product_cost->cost = $value['price'];
+                            $product_cost->vendor = $data['vendor'];
+                            $product_cost->product_uom = $product_uom;
+                            $product_cost->product = $product;
+                            $product_cost->unit_id = $value['unit'];
+                            $product_cost->date_start = date('Y-m-d');
+                            $product_cost->save();
+                        }
                     }
                     /*uom cost price */
 

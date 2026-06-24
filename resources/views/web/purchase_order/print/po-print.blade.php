@@ -97,7 +97,8 @@
     <table class="no-border" style="width:100%;">
         <tr>
             <td><strong>Kode PO:</strong> {{ $data->code }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal PO:</strong> {{ date('d/m/Y', strtotime($data->po_date)) }}</td>
+            <td style="padding-left:40px;"><strong>Tanggal PO:</strong> {{ date('d/m/Y', strtotime($data->po_date)) }}
+            </td>
         </tr>
         <tr>
             <td><strong>Vendor:</strong> {{ $data->vendors->nama_vendor ?? '-' }}</td>
@@ -117,10 +118,10 @@
                 <th>Produk</th>
                 <th>Satuan</th>
                 <th>Qty</th>
-                <th>Harga Beli</th>
+                <th>Harga Beli (Inc Tax)</th>
                 <th>Disc (%)</th>
                 <th>Disc (Rp)</th>
-                <th>Pajak</th>
+                {{-- <th>Pajak</th> --}}
                 <th>Subtotal</th>
             </tr>
         </thead>
@@ -134,14 +135,14 @@
                     <td class="text-right">{{ number_format($item->purchase_price, 0, ',', '.') }}</td>
                     <td class="text-center">{{ $item->diskon_persen }}</td>
                     <td class="text-right">{{ number_format($item->diskon_nominal, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ $item->tax_rate }}%/{{ number_format($item->tax_amount, 0, ',', '.') }}</td>
+                    {{-- <td class="text-right">{{ $item->tax_rate }}%/{{ number_format($item->tax_amount, 0, ',', '.') }}</td> --}}
                     <td class="text-right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="8" class="text-right"><strong>Total</strong></td>
+                <td colspan="7" class="text-right"><strong>Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
@@ -165,4 +166,5 @@
         </tr>
     </table>
 </body>
+
 </html>
