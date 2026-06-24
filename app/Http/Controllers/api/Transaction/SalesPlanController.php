@@ -280,6 +280,24 @@ class SalesPlanController extends Controller
         return response()->json($result);
     }
 
+    public function deleteItem(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+        DB::beginTransaction();
+        try {
+            SalesPlanDetailRoute::where('id', $data['id'])->delete();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            // throw $th;
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
+
     public function getDetailData($id)
     {
         DB::enableQueryLog();

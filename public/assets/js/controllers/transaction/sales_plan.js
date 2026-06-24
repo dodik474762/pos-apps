@@ -674,9 +674,36 @@ let SalesPlan = {
         if (!data_id || data_id === "") {
             dt.row($tr).remove().draw(false);
         } else {
-            $tr.addClass("remove d-none");
-            // Row di-hide tapi tidak di-remove dari DT agar masih terbaca getPostItem()
-            dt.row($tr).invalidate().draw(false);
+            $.ajax({
+                url: url.base_url(SalesPlan.moduleApi()) + "delete-item",
+                type: "POST",
+                data: {
+                    id: data_id,
+                },
+                headers: {
+                    "X-CSRF-TOKEN": SalesPlan.csrf_token(),
+                },
+                beforeSend: function () {
+                    message.loadingProses('Proses Hapus Data');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    message.closeLoading();
+                    message.sweetError('Informasi', 'Gagal Menghapus Data ' + XMLHttpRequest.responseText);
+                },
+
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        message.sweetSuccess('Informasi', 'Berhasil Menghapus Data');
+                        setTimeout(function () {
+                            $tr.addClass("remove d-none");
+                            dt.row($tr).invalidate().draw(false);
+                        }, 1000);
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
         }
     },
 

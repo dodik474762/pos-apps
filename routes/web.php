@@ -568,6 +568,7 @@ Route::post('api/transaksi/sales_plan/getDataCustomer', [TransactionSalesPlanCon
 Route::post('api/transaksi/sales_plan/showDataProduct', [TransactionSalesPlanController::class, 'showDataProduct']);
 Route::post('api/transaksi/sales_plan/getDataProduct', [TransactionSalesPlanController::class, 'getDataProduct']);
 Route::post('api/transaksi/sales_plan/submit_import', [TransactionSalesPlanController::class, 'submit_import']);
+Route::post('api/transaksi/sales_plan/delete-item', [TransactionSalesPlanController::class, 'deleteItem']);
 Route::post('api_mobile/transaksi/sales_plan/getSalesRoutePlan', [TransactionSalesPlanController::class, 'getSalesRoutePlan']);
 
 Route::post('api/transaksi/delivery_order/getData', [TransactionDeliveryOrderController::class, 'getData']);
