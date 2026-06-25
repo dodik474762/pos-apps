@@ -25,6 +25,7 @@ use App\Models\Master\MobileSession;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Karyawan;
 use App\Models\Master\KaryawanHasProduct;
+use App\Models\Master\Product;
 use App\Models\Master\Tax;
 use App\Models\Master\Users;
 use App\Models\Transaction\SalesInvoiceDtl;
@@ -668,6 +669,29 @@ class SalesOrderController extends Controller
                     $item['disc_percent'] = 0;
                     $item['disc_amount']  = 0;
                     $item['subtotal']     = $item['price'] * $item['qty'];
+                }
+
+                /*cek stock */
+                $stock = DB::table('product_stock')
+                    ->where('product', $item['product_id'])
+                    ->where('warehouse', 1)
+                    ->first();
+                if (empty($stock)) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                    ]);
+                }
+
+                if ($stock && $stock->qty <= 0) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name  . ' habis',
+                    ]);
                 }
 
                 $detail = empty($item['id'])
