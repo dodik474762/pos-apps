@@ -1317,6 +1317,13 @@ let ReportStock = {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     },
                 },
+                // {
+                //     // No
+                //     data: "product",
+                //     render: function (data, type, row, meta) {
+                //         return data;
+                //     },
+                // },
                 {
                     // Kode Produk
                     data: "product_code",
