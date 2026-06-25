@@ -335,6 +335,7 @@ class ReportStockController extends Controller
             })
             ->join('unit as u_small', 'u_small.id', 'pu_small.unit_tujuan')
 
+            ->where('m.id', '>', '2115')
             ->whereDate('m.created_at', '<=', $tanggal)
             ->groupBy(
                 'm.product',
@@ -522,6 +523,7 @@ class ReportStockController extends Controller
 
             ->whereDate('m.created_at', '<=', $tanggal)
             // ->where('p.code', 'P26JAN0020')
+            ->where('m.id', '>', '2115')
             ->groupBy(
                 'm.product',
                 'm.warehouse',
