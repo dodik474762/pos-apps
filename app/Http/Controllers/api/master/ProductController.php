@@ -12,6 +12,7 @@ use App\Models\Master\ProductCatalog;
 use App\Models\Master\ProductDisc;
 use App\Models\Master\ProductFreeGood;
 use App\Models\Master\ProductLog;
+use App\Models\Master\ProductStock;
 use App\Models\Master\ProductUom;
 use App\Models\Master\ProductUomPrice;
 use App\Models\Master\ProductUomPriceLog;
@@ -363,7 +364,8 @@ class ProductController extends Controller
 
         // ambil data excel (BELUM masuk DB)
         $rows = $import->rows;
-        // return $this->submit_stock($rows);
+        return $this->submit_stock($rows);
+        die;
         // die;
         // echo '<pre>';
         // print_r($rows);
@@ -851,21 +853,32 @@ class ProductController extends Controller
     public function submit_stock($items)
     {
         $imported = 0;
+        // echo '<pre>';
+        // print_r($items);
+        // die;
         DB::beginTransaction();
         try {
             $adjs = new ProductAdjustmentStock();
-            $adjs->code = 'ADJMAY2026';
+            $adjs->code = 'ADJJUN2026';
             $adjs->remarks = 'IMPORTED';
             $adjs->warehouse = 1;
             $adjs->save();
             $adjsId = $adjs->id;
 
             foreach ($items as $key => $value) {
-                $product_code = $value['product_code'];
+                $product_code = $value['kode_produk'];
                 $product = Product::where('code', $product_code)->first();
-                $konversi_in_pcs = str_replace(',', '', trim($value['konversi_in_pcs']));
+                $konversi_in_pcs = str_replace(',', '', trim($value['perhitungan_fisik']));
 
-                $unit = 9;
+                $konversi_in_pcs = $konversi_in_pcs == '' ?  0 : $konversi_in_pcs;
+                ProductStock::where('product', $product->id)->delete();
+
+                $product_uom_small = ProductUom::whereNull('deleted')
+                    ->where('product', $product->id)
+                    ->where('state', 'small')
+                    ->first();
+
+                $unit = $product_uom_small->unit_tujuan ?? 9;
                 $warehouse = 1;
                 $productId = $product->id;
                 $item['product'] = $productId;

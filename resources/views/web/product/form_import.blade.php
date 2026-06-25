@@ -1,6 +1,5 @@
-
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-  data-bs-target="#data-modal-karyawan"></button>
+    data-bs-target="#data-modal-karyawan"></button>
 <div id="content-modal-form"></div>
 
 <!-- start page title -->
@@ -25,9 +24,10 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-body">
-                {{-- <form action="{{ url('/api/master/product/submit_import') }}" method="POST" enctype="multipart/form-data" id="form-product"> --}}
-                    <form action="{{ url('/api/master/product/submit_import_customer') }}" method="POST" enctype="multipart/form-data" id="form-product">
-                     @csrf
+                <form action="{{ url('/api/master/product/submit_import') }}" method="POST"
+                    enctype="multipart/form-data" id="form-product">
+                    {{-- <form action="{{ url('/api/master/product/submit_import_customer') }}" method="POST" enctype="multipart/form-data" id="form-product"> --}}
+                    @csrf
                     <input type="hidden" id="id" name="id" value="{{ isset($id) ? $id : '' }}">
                     <div class="row">
                         <div class="col-lg-6">
@@ -36,8 +36,7 @@
                                 <div class="input-group">
                                     <input id="file" name="file" type="file" readonly class="form-control"
                                         placeholder="Pilih Data File" aria-label="Pilih Data File" src=""
-                                        error="Data File" aria-describedby="button-addon1"
-                                        value="">
+                                        error="Data File" aria-describedby="button-addon1" value="">
                                 </div>
                             </div>
                         </div>
@@ -45,8 +44,7 @@
 
                     <div class="text-end">
                         <div>
-                            <button type="submit"
-                                onclick="Product.submit(this, event)"
+                            <button type="submit" onclick="Product.submit(this, event)"
                                 class="btn btn-success waves-effect waves-light me-1">
                                 Submit
                             </button>
