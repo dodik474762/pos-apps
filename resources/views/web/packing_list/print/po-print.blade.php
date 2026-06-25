@@ -132,12 +132,12 @@
                 <th style="width:3%">No</th>
                 <th style="width:11%">No. DO</th>
                 <th style="width:11%">No. Faktur</th>
-                <th style="width:9%">Total Faktur</th>
-                <th style="width:11%">Outstanding</th>
                 <th style="width:10%">Kode Cust</th>
                 <th style="width:12%">Nama Customer</th>
                 <th style="width:5%">TOP</th>
                 <th style="width:9%">Jth Tempo</th>
+                <th style="width:9%">Total Faktur</th>
+                <th style="width:11%">Outstanding</th>
                 <th style="width:6%">Tunai</th>
                 <th style="width:8%">Transfer</th>
                 <th style="width:5%">Remark</th>
@@ -152,12 +152,12 @@
                     <td>{{ $item->do_number }}</td>
                     {{-- <td>{{ $item->do_date }}</td> --}}
                     <td>{{ $item->invoice_number }}</td>
-                    <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
-                    <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                     <td>{{ $item->customer_code }}</td>
                     <td>{{ $item->nama_customer }}</td>
                     <td>{{ $item->top_name }}</td>
                     <td>{{ date('d/m/Y', strtotime($item->due_date)) }}</td>
+                    <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
+                    <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
