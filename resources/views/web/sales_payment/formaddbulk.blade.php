@@ -137,7 +137,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Packing List No</label>
-                            <select id="filter_packing_list_no" class="form-control select2 required">
+                            <select id="filter_packing_list_no" class="form-control select2">
                                 <option value="">-- Pilih Packing List No --</option>
                                 @foreach ($packing_list as $pln)
                                     <option value="{{ $pln->id }}">{{ $pln->packing_list_no }} -
