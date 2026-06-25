@@ -10,50 +10,53 @@ use App\Models\Transaction\ProductAdjustmentStockDtl;
 
 class ProductAdjustmentStockController extends Controller
 {
-    public function getTableName(){
+    public function getTableName()
+    {
         return "product_adjustment_stock_header";
     }
 
-    public function getData(){
+    public function getData()
+    {
         DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-            // 'p.name as product_name',
-            // 'p.code as product_code',
-            // 'u.name as unit_name',
-            'w.name as wh_name',
-        ])
-        // ->join('product as p', 'p.id', 'm.product')
-        // ->leftJoin('unit as u', 'u.id', 'm.unit')
-        ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
-        ->whereNull('m.deleted')
-        ->orderBy('m.id', 'desc');
-        if(isset($_POST)){
+
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                // 'p.name as product_name',
+                // 'p.code as product_code',
+                // 'u.name as unit_name',
+                'w.name as wh_name',
+            ])
+            // ->join('product as p', 'p.id', 'm.product')
+            // ->leftJoin('unit as u', 'u.id', 'm.unit')
+            ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
+            ->whereNull('m.deleted')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
-            if(isset($_POST['search']['value'])){
+            if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                $datadb->where(function($query) use ($keyword){
-                    $query->where('m.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.remarks', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%');
                     // $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
                     // $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
                     // $query->orWhere('u.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
-            if(isset($_POST['order'][0]['column'])){
+            if (isset($_POST['order'][0]['column'])) {
                 $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
             }
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            if(isset($_POST['length'])){
+            if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
-            if(isset($_POST['start'])){
+            if (isset($_POST['start'])) {
                 $datadb->offset($_POST['start']);
             }
         }
@@ -65,7 +68,8 @@ class ProductAdjustmentStockController extends Controller
         return json_encode($data);
     }
 
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $data = $request->all();
 
         // echo '<pre>';
@@ -74,10 +78,10 @@ class ProductAdjustmentStockController extends Controller
         DB::beginTransaction();
         try {
             //code...
-          
+
 
             $roles = $data['id'] == '' ? new ProductAdjustmentStock() : ProductAdjustmentStock::find($data['id']);
-            if($data['id'] == ''){
+            if ($data['id'] == '') {
                 $roles->code = generateNoAdjStock();
             }
             $roles->remarks = $data['remarks'];
@@ -102,10 +106,16 @@ class ProductAdjustmentStockController extends Controller
                     $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $value['qty'] : 0;
 
                     $pushItem['product'] = $product_id;
-                    stockUpdate($headerId,
-                    $data['warehouse_id'],
-                    $product_id,
-                    $productUomLevel1->unit_tujuan, $qtyBaseUnit, $pushItem, 'add', 'adjustment stock');
+                    stockUpdate(
+                        $headerId,
+                        $data['warehouse_id'],
+                        $product_id,
+                        $productUomLevel1->unit_tujuan,
+                        $qtyBaseUnit,
+                        $pushItem,
+                        'add',
+                        'adjustment stock'
+                    );
                 } else {
                     if ($value['id'] != '') {
                         ProductAdjustmentStockDtl::where('id', $value['id'])->delete();
@@ -123,7 +133,8 @@ class ProductAdjustmentStockController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDelete(Request $request){
+    public function confirmDelete(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -143,28 +154,32 @@ class ProductAdjustmentStockController extends Controller
         return response()->json($result);
     }
 
-    public function getDetailData($id){
+    public function getDetailData($id)
+    {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])->where('m.id', $id);
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $data = $request->all();
         return view('web.adjustment_stock.modal.confirmdelete', $data);
     }
 
-    public function getListVendor(){
+    public function getListVendor()
+    {
         $datadb = DB::table('vendor')->whereNull('deleted')->get();
         return $datadb;
     }
 
-    public function showDataProduct(Request $request){
+    public function showDataProduct(Request $request)
+    {
         $data = $request->all();
         $data['vendors'] = $this->getListVendor();
 
@@ -182,6 +197,10 @@ class ProductAdjustmentStockController extends Controller
             'recordsFiltered' => 0,
             'draw' => $_POST['draw'] ?? 1,
         ];
+
+        $stock = DB::table('product_stock')
+            ->select('product', DB::raw('SUM(qty) as stock'))
+            ->groupBy('product');
 
         // --- Base Query ---
         $datadb = DB::table('product as m')
@@ -201,8 +220,12 @@ class ProductAdjustmentStockController extends Controller
                 'pup.date_end',
                 'pup.customer_name',
                 'pup.id as price_id',
-                'v.nama_vendor'
+                'v.nama_vendor',
+                DB::raw("COALESCE(ps.stock, 0) as stock_product"),
             ])
+            ->leftJoinSub($stock, 'ps', function ($join) {
+                $join->on('m.id', '=', 'm.id');
+            })
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
             ->join('product_uom as pu', 'pu.product', '=', 'm.id')
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')

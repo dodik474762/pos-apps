@@ -227,9 +227,8 @@ let AdjustmentStock = {
             if (updateAction == 1) {
               html += `<a href='${url.base_url(
                 AdjustmentStock.module(),
-              )}ubah?id=${data}' data_id="${
-                row.id
-              }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+              )}ubah?id=${data}' data_id="${row.id
+                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
             }
             if (deleteAction == 1) {
               html += `<button type="button" data_id="${row.id}" onclick="AdjustmentStock.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
@@ -438,6 +437,9 @@ let AdjustmentStock = {
           data: "date_start",
         },
         {
+          data: "stock_product",
+        },
+        {
           data: "id",
           render: function (data, type, row) {
             var html = "";
@@ -474,29 +476,29 @@ let AdjustmentStock = {
   },
 
   pilihDataProduct: (elm, e) => {
-          e.preventDefault();
-          let produk_name = $(elm).attr("produk_name");
-          let produk_id = $(elm).attr("produk_id");
-          let unit = $(elm).attr("unit");
-          let unit_name = $(elm).attr("unit_name");
-          let product_uom_id = $(elm).attr("data_id");
-          let price = $(elm).attr("price");
-          let price_id = $(elm).attr("price_id");
-          $(elmChoose)
-              .closest("div")
-              .find("input")
-              .val(product_uom_id + "//" + produk_id + "//" + produk_name);
-          $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
-  
-          $(elmChoose).closest("tr").find("td#unit").text(unit_name);
-          $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
-          $(elmChoose).closest("tr").find("td#unit_price").text(price);
-          $(elmChoose)
-              .closest("tr")
-              .find("td#unit_price")
-              .attr("data_id", price_id);
-          $("button.btn-close").trigger("click");
-      },
+    e.preventDefault();
+    let produk_name = $(elm).attr("produk_name");
+    let produk_id = $(elm).attr("produk_id");
+    let unit = $(elm).attr("unit");
+    let unit_name = $(elm).attr("unit_name");
+    let product_uom_id = $(elm).attr("data_id");
+    let price = $(elm).attr("price");
+    let price_id = $(elm).attr("price_id");
+    $(elmChoose)
+      .closest("div")
+      .find("input")
+      .val(product_uom_id + "//" + produk_id + "//" + produk_name);
+    $(elmChoose).closest("div").find("input").attr("data_id", produk_id);
+
+    $(elmChoose).closest("tr").find("td#unit").text(unit_name);
+    $(elmChoose).closest("tr").find("td#unit").attr("data_id", unit);
+    $(elmChoose).closest("tr").find("td#unit_price").text(price);
+    $(elmChoose)
+      .closest("tr")
+      .find("td#unit_price")
+      .attr("data_id", price_id);
+    $("button.btn-close").trigger("click");
+  },
 };
 
 $(function () {

@@ -1,6 +1,5 @@
 <!-- First modal dialog -->
-<div class="modal bs-example-modal-lg fade" id="data-modal-product" aria-hidden="true" aria-labelledby="..."
-    tabindex="-1">
+<div class="modal bs-example-modal-lg fade" id="data-modal-product" aria-hidden="true" aria-labelledby="..." tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -13,7 +12,8 @@
                         <div class="mb-3">
                             <label>Principal</label>
                             <div>
-                                <select class="form-control select2" error='Principal' id="principal" name="principal" onchange="AdjustmentStock.filterPrincipal(this)">
+                                <select class="form-control select2" error='Principal' id="principal" name="principal"
+                                    onchange="AdjustmentStock.filterPrincipal(this)">
                                     <option value="">-- Principal --</option>
                                     @foreach ($vendors as $item)
                                         <option value="{{ $item->id }}">
@@ -40,12 +40,13 @@
                                 <th>Customer</th>
                                 <th>Harga</th>
                                 <th>Tanggal Berlaku</th>
+                                <th>Stock</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="text-center" colspan="10">Tidak ada data ditemukan</td>
+                                <td class="text-center" colspan="11">Tidak ada data ditemukan</td>
                             </tr>
                         </tbody>
                     </table>
