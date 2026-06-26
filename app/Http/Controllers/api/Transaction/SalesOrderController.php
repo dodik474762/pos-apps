@@ -1556,6 +1556,38 @@ class SalesOrderController extends Controller
                     $item['subtotal']     = $item['price'] * $item['qty'];
                 }
 
+                /*cek stock */
+                $stock = DB::table('product_stock')
+                    ->where('product', $item['product_id'])
+                    ->where('warehouse', 1)
+                    ->first();
+                if (empty($stock)) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                    ]);
+                }
+
+                if ($stock && $stock->qty <= 0) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name  . ' habis',
+                    ]);
+                }
+
+                if ($item['qty'] <= 0) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Jumlah ' . $productsDb->name  . ' tidak boleh 0',
+                    ]);
+                }
+
                 $detail                       = new SalesOrderDetail;
                 $detail->sales_order_id       = $hdrId;
                 $detail->product_id           = $item['product_id'];

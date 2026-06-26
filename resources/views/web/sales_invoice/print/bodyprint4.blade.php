@@ -140,7 +140,8 @@
                      <td>{{ $item->products->name ?? '-' }}</td>
                      <td class="text-center">{{ $item->so_detail->units->name ?? '-' }}</td>
                      <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                     <td class="text-right">{{ number_format($hargaExcl, 0, ',', '.') }} {{ $harga_channel }}</td>
+                     <td class="text-right">{{ $subtotal <= 0 ? 0 : number_format($hargaExcl, 0, ',', '.') }}
+                         {{ $harga_channel }}</td>
                      <td class="text-right">{{ number_format($ppn, 0, ',', '.') }}</td>
                      <td class="text-right">{{ number_format($item->discount, 0, ',', '.') }}</td>
                      <td class="text-right">{{ number_format($subtotal, 0, ',', '.') }}</td>
