@@ -187,9 +187,9 @@
     @endphp
 
     {{-- ==================== PAGE BREAK HANYA JIKA PRODUK > 10 ==================== --}}
-    {{-- @if ($totalProduk > 10)
+    @if ($totalProduk > 10)
         <div class="page-break"></div>
-    @endif --}}
+    @endif
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}

@@ -49,8 +49,9 @@
                          <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
                              {{ date('d M Y', strtotime($data->invoice_date)) }}
                          </td>
-                         <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
-                             <strong>{{ $data->invoice_number }}</strong>
+                         <td
+                             style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;font-size:13px;">
+                             {{ $data->invoice_number }}
                          </td>
                      </tr>
                      <tr>
