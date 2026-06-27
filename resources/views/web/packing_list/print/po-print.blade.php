@@ -277,19 +277,31 @@
         <tr>
             <td class="text-center">
                 <br><br><br>
-                <strong>Diterima Oleh</strong>
+                <strong>Dibuat Oleh</strong>
+                <br><br><br>
+                (__________________)
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Kolektor</strong>
+                <br><br><br>
+                (__________________)
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Kasir</strong>
+                <br><br><br>
+                (__________________)
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Admin AR</strong>
                 <br><br><br>
                 (__________________)
             </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Disetujui Oleh</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Dibuat Oleh</strong>
                 <br><br><br>
                 (__________________)
             </td>
