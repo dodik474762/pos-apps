@@ -165,11 +165,14 @@ class PLTagihanController extends Controller
         $company = CompanyModel::where('id', session('id_company'))->first();
         $routeplan = $this->getRoutePlanSales($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        $invoices = $this->getAllInvoiceCetak($customers);
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
-        $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
+        if (isset($data['salesman'])) {
+            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
+            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        }
+        $invoices = $this->getAllInvoiceCetak($customers);
 
 
         $tanggal_rute = $data['tanggal'];
