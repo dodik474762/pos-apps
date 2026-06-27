@@ -100,6 +100,85 @@ class SalesInvoiceController extends Controller
         return json_encode($data);
     }
 
+    public function getDataTagihan()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'so.so_number',
+                'so.so_date',
+                'w.name as warehouse_name',
+                'top.remarks as payment_terms',
+                'sit.id as tagihan_id',
+                'sit.tgl_tagih',
+                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
+            ])
+            ->join('sales_invoice_tagihan as sit', 'sit.invoice_id', 'm.id')
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('sales_order_headers as so', 'so.id', 'm.sales_order')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
+            ->whereNull('m.deleted')
+            // ->where('m.id', 800)
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
+                $datadb->where('m.invoice_date', '>=', $_POST['start_date']);
+            }
+            if (isset($_POST['end_date']) && $_POST['end_date'] != '') {
+                $datadb->where('m.invoice_date', '<=', $_POST['end_date']);
+            }
+            if (isset($_POST['belum_lunas']) && $_POST['belum_lunas'] == '1') {
+                $datadb->whereNotIn('m.status', ['PAID', 'CANCELLED', 'CANCELED', 'paid', 'cancelled', 'canceled']);
+            }
+            if (isset($_POST['sudah_lunas']) && $_POST['sudah_lunas'] == '1') {
+                $datadb->whereIn('m.status', ['PAID', 'paid']);
+            }
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function getDataFromSO()
     {
         DB::enableQueryLog();
@@ -908,6 +987,27 @@ class SalesInvoiceController extends Controller
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
+
+    public function cancelTagihan(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+
+            $menu = SalesInvoiceTagihan::find($data['id']);
+            $menu->delete();
+
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {

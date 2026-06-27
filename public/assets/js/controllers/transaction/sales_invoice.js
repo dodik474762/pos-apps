@@ -400,6 +400,203 @@ let SalesInvoice = {
             });
     },
 
+    getDataTagihan: async () => {
+        let tableData = $("table#table-data-invoice");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportInvoiceTagihan",
+                    action: newexportaction,
+                },
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesInvoice.moduleApi()) + `getDataTagihan`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+                data: function (d) {
+                    d.start_date = $("#start_date").val();
+                    d.end_date = $("#end_date").val();
+                    d.belum_lunas = $("#belum_lunas").is(":checked") ? 1 : 0;
+                    d.sudah_lunas = $("#sudah_lunas").is(":checked") ? 1 : 0;
+                }
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            // buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "so_number",
+                },
+                {
+                    data: "so_date",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "warehouse_name",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
+                    data: "total_amount",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "amount_paid",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "amount_remaining",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "payment_terms",
+                },
+                {
+                    data: "due_date",
+                },
+                {
+                    data: "print_date",
+                },
+                {
+                    data: "print_date",
+                    render: function (data, type, row) {
+                        if (data) {
+                            if (row.reprint == 1) {
+                                return "Belum Cetak";
+                            }
+                            return "Sudah Cetak";
+                        }
+                        return "Belum Cetak";
+                    },
+                },
+                {
+                    data: "reprint",
+                    render: function (data, type, row) {
+                        if (data == 1) {
+                            return "Ya";
+                        }
+                        return "Tidak";
+                    },
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "tgl_tagih",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        let html = "";
+                        const akses_session = $('#akses_session').val();
+                        if (akses_session == 'superadmin' || akses_session == 'admin tax & klaim') {
+                            html += `<a href='' onclick="SalesInvoice.cancelTagihan(this, event)" data_id="${row.tagihan_id
+                                }" class="btn btn-danger editable-submit btn-sm waves-effect waves-light">Batalkan Tagihan</a>&nbsp;`;
+                        }
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
     getDataFromDO: async () => {
         let tableData = $("table#table-data-do");
 
@@ -718,6 +915,40 @@ let SalesInvoice = {
                     }
                 },
             });
+        });
+    },
+
+    cancelTagihan: (elm, e) => {
+        if (e) e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesInvoice.moduleApi()) + "cancelTagihan",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
         });
     },
 
@@ -1650,5 +1881,6 @@ $(function () {
     SalesInvoice.setSelect2();
     SalesInvoice.getData();
     SalesInvoice.getDataFromDO();
+    SalesInvoice.getDataTagihan();
     SalesInvoice.editReload();
 });
