@@ -174,6 +174,10 @@ class PLTagihanController extends Controller
         }
         $invoices = $this->getAllInvoiceCetak($customers);
 
+        if (isset($data['ids'])) {
+            $invoices = $invoices->whereIn('id', explode(',', $data['ids']));
+        }
+
 
         $tanggal_rute = $data['tanggal'];
         $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))

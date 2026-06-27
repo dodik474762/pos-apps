@@ -269,15 +269,13 @@ let PLTagihan = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             PLTagihan.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PLTagihan.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -852,10 +850,9 @@ let PLTagihan = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="PLTagihan.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
@@ -979,7 +976,7 @@ let PLTagihan = {
             message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date+"&salesman="+salesman;
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman;
     },
 
     cetak: (elm) => {
@@ -994,7 +991,17 @@ let PLTagihan = {
             message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date+"&salesman="+salesman;
+
+        let ids = [];
+        document.querySelectorAll(".check-item:checked").forEach((el) => {
+            ids.push(el.value);
+        });
+
+        if (ids.length === 0) {
+            message.sweetError("Informasi", "Pilih minimal 1 invoice untuk dicetak.");
+            return;
+        }
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&ids=" + ids.join(",");
     },
 
     checkAll: (elm) => {
