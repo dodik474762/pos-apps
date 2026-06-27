@@ -660,33 +660,64 @@ let SalesInvoice = {
         e.preventDefault();
         let params = {};
         params.id = $(elm).attr("data_id");
-        $.ajax({
-            type: "POST",
-            dataType: "json",
-            data: params,
-            url: url.base_url(SalesInvoice.moduleApi()) + "tagihkan",
-            headers: {
-                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
-            },
-            beforeSend: () => {
-                message.loadingProses("Proses Simpan Data");
-            },
-            error: function () {
-                message.closeLoading();
-                message.sweetError("Informasi", "Gagal");
-            },
 
-            success: function (resp) {
-                message.closeLoading();
-                if (resp.is_valid) {
-                    message.sweetSuccess("Informasi", "Data Berhasil Ditagihkan");
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    message.sweetError("Informasi", resp.message);
+        Swal.fire({
+            title: 'Tanggal Tagihan',
+            html: `
+            <div class="input-group input-group-sm text-center">
+            <input 
+                type="date" 
+                id="tgl_tagihan" 
+                class="form-control" 
+                value="${new Date().toISOString().split('T')[0]}"
+            >
+            </div>
+        `,
+            showCancelButton: true,
+            confirmButtonText: 'Tagihkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            preConfirm: () => {
+                const tgl = document.getElementById('tgl_tagihan').value;
+                if (!tgl) {
+                    Swal.showValidationMessage('Tanggal tagihan wajib diisi');
+                    return false;
                 }
-            },
+                return tgl;
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            params.tgl_tagihan = result.value;
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: params,
+                url: url.base_url(SalesInvoice.moduleApi()) + "tagihkan",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+                beforeSend: () => {
+                    message.loadingProses("Proses Simpan Data");
+                },
+                error: function () {
+                    message.closeLoading();
+                    message.sweetError("Informasi", "Gagal");
+                },
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        message.sweetSuccess("Informasi", "Data Berhasil Ditagihkan");
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
         });
     },
 

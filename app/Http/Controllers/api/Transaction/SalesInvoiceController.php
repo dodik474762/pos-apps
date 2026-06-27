@@ -928,8 +928,9 @@ class SalesInvoiceController extends Controller
 
             $menu = SalesInvoiceHeader::find($data['id']);
 
+            $tgl_tagihan = $data['tgl_tagihan'];
             $tagihan = SalesInvoiceTagihan::where('invoice_id', $data['id'])->whereNull('deleted')
-                ->where('tgl_tagih', date('Y-m-d'))->first();
+                ->where('tgl_tagih', $tgl_tagihan)->first();
 
 
             $sales_order = SalesOrderHeader::where('id', $menu->sales_order)->first();
@@ -944,7 +945,7 @@ class SalesInvoiceController extends Controller
 
             $newTagihan = new SalesInvoiceTagihan();
             $newTagihan->invoice_id = $data['id'];
-            $newTagihan->tgl_tagih = date('Y-m-d');
+            $newTagihan->tgl_tagih = $tgl_tagihan;
             $newTagihan->customer_id = $menu->customer_id;
             $newTagihan->salesman_id = $sales_order->salesman;
             $newTagihan->save();
