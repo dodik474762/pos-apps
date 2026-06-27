@@ -112,7 +112,7 @@
     </table>
 
     {{-- INFORMASI PO --}}
-    <table class="no-border" style="width:100%;">
+    <table class="no-border" style="width:100%;line-height: 0.5;">
         <tr>
             <td><strong>NIK Salesman:</strong> {{ $salesman_name }}</td>
             <td style="padding-left:40px;"><strong>Jabatan:</strong> SALESMAN</td>
