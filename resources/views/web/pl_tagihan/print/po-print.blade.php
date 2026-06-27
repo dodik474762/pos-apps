@@ -96,9 +96,9 @@
             <td style="width: 90px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
             </td>
-            <td style="text-align: left;">
-                <h3 style="margin:0; padding:0;">{{ $company->nama_company }}</h3>
-                <small>{!! $company->alamat !!}</small>
+            <td style="text-align: left; vertical-align: top; padding: 0;">
+                <h3 style="margin: 0; padding: 0;">{{ $company->nama_company }}</h3>
+                <small style="display: block; margin-top: -8px;">{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
                 <h4 style="margin:0; padding:0;">PACKING LIST TAGIHAN</h4>
