@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesPlanController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
+use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -57,6 +58,12 @@ class PLTagihanController extends Controller
         // die;
         $routeplan = $this->getRoutePlanSales($data);
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        if (isset($data['salesman'])) {
+            $salesman = User::where('id', $data['salesman'])->first();
+            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
+            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        }
+
         $invoices = $this->getAllInvoiceCetak($customers);
         $data['invoices'] = $invoices;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
@@ -162,9 +169,8 @@ class PLTagihanController extends Controller
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
+        $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
 
-        // echo '<pre>';
-        // print_r($invoices);die;
 
         $tanggal_rute = $data['tanggal'];
         $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))

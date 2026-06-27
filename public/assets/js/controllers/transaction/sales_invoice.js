@@ -364,6 +364,11 @@ let SalesInvoice = {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesInvoice.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
+
+                        if (akses_session == 'superadmin' || akses_session == 'admin tax & klaim') {
+                            html += `&nbsp;<a href='' onclick="SalesInvoice.tagihkan(this, event)" data_id="${row.id
+                                }" class="btn btn-secondary editable-submit btn-sm waves-effect waves-light">Tagihkan</a>&nbsp;`;
+                        }
                         return html;
                     },
                 },
@@ -641,6 +646,40 @@ let SalesInvoice = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    tagihkan: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesInvoice.moduleApi()) + "tagihkan",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Data Berhasil Ditagihkan");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);

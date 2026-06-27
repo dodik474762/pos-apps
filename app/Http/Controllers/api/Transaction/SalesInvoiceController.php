@@ -13,6 +13,7 @@ use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\DeliveryOrderStatusLog;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
+use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\Transaction\SalesOrderHeader;
 use App\Models\Transaction\SalesOrderDetail;
 use Illuminate\Support\Facades\DB;
@@ -907,6 +908,47 @@ class SalesInvoiceController extends Controller
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
+
+    public function tagihkan(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        DB::beginTransaction();
+        try {
+
+            $menu = SalesInvoiceHeader::find($data['id']);
+
+            $tagihan = SalesInvoiceTagihan::where('invoice_id', $data['id'])->whereNull('deleted')
+                ->where('tgl_tagih', date('Y-m-d'))->first();
+
+
+            $sales_order = SalesOrderHeader::where('id', $menu->sales_order)->first();
+            if (empty($sales_order)) {
+                DB::rollBack();
+                $result['message'] = 'Sales Order ' . $menu->sales_order . ' tidak ditemukan';
+                return response()->json($result);
+            }
+            $tagih = empty($tagihan) ? new SalesInvoiceTagihan() : $tagihan;
+            $tagih->invoice_id = $data['id'];
+
+
+            $newTagihan = new SalesInvoiceTagihan();
+            $newTagihan->invoice_id = $data['id'];
+            $newTagihan->tgl_tagih = date('Y-m-d');
+            $newTagihan->customer_id = $menu->customer_id;
+            $newTagihan->salesman_id = $sales_order->salesman;
+            $newTagihan->save();
+
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
