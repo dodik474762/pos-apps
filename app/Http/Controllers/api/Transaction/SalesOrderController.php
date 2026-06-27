@@ -685,13 +685,15 @@ class SalesOrderController extends Controller
                     ]);
                 }
 
-                if ($stock && $stock->qty <= 0) {
-                    $productsDb = Product::find($item['product_id']);
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Stock ' . $productsDb->name  . ' habis',
-                    ]);
+                if (!isset($data['need_generate_so'])) {
+                    if ($stock && $stock->qty <= 0) {
+                        $productsDb = Product::find($item['product_id']);
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Stock ' . $productsDb->name  . ' habis',
+                        ]);
+                    }
                 }
 
                 $detail = empty($item['id'])

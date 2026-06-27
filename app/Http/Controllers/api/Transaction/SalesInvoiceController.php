@@ -687,6 +687,7 @@ class SalesInvoiceController extends Controller
                     // die;
 
                     $so_payload['items'] = $soDetails;
+                    $so_payload['need_generate_so'] = $needGenerateSo;
 
                     // Buat Request object manual
                     $request = new Request();
