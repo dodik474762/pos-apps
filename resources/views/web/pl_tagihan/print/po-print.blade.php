@@ -139,7 +139,7 @@
 
                 <th style="width:8%">DO</th>
 
-                <th style="width:16%">Customer</th>
+                <th style="width:14%">Customer</th>
 
                 <th style="width:6%">Status</th>
 
@@ -148,7 +148,7 @@
                 <th style="width:10%">Nilai Faktur</th>
                 <th style="width:10%">Outstanding</th>
 
-                <th style="width:6%">Tunai</th>
+                <th style="width:8%">Tunai</th>
 
                 <th style="width:8%">Transfer</th>
 
@@ -193,11 +193,15 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="10" class="text-right"><strong>Sub Total</strong></td>
-                <td class="" colspan="1"><strong>{{ number_format($nilaiFaktur, 0, ',', '.') }}</strong>
+                <td colspan="8" class="text-right"><strong>Sub Total</strong></td>
+                <td class="" colspan="1" class="text-right">
+                    <strong>{{ number_format($nilaiFaktur, 0, ',', '.') }}</strong>
                 </td>
-                <td class="" colspan="1"><strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
+                <td class="" colspan="1" class="text-right">
+                    <strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
                 </td>
+                <td></td>
+                <td></td>
                 <td></td>
                 <td></td>
             </tr>
