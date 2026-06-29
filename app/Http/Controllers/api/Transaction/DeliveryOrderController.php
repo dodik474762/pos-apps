@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Product;
 use App\Models\Master\ProductUom;
 use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
@@ -269,6 +270,30 @@ class DeliveryOrderController extends Controller
                 $detail = empty($item['id'])
                     ? new DeliveryOrderDtl()
                     : DeliveryOrderDtl::find($item['id']);
+
+                /*cek stock */
+                $stock = DB::table('product_stock')
+                    ->where('product', $item['product_id'])
+                    ->where('warehouse', $data['warehouse_id'])
+                    ->first();
+                if (empty($stock)) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                    ]);
+                }
+
+
+                if ($stock && $stock->qty <= 0) {
+                    $productsDb = Product::find($item['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name  . ' habis',
+                    ]);
+                }
 
                 $detail->do_id = $hdrId;
                 $detail->so_detail_id = $item['so_detail_id'];
