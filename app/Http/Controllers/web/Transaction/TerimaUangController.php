@@ -200,7 +200,7 @@ class TerimaUangController extends Controller
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
-            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED'])
+            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'PAID'])
             ->whereIn('cc.id', $customers)
             // ->whereRaw('(m.total_amount - COALESCE(spd.allocated_amount, 0) - COALESCE(rpd.amount_paid, 0)) > 0')
             // ->where('m.invoice_date', '>=', $date)
