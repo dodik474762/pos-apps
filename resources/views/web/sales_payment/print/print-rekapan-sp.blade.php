@@ -116,45 +116,23 @@
                 $no = 1;
             @endphp
             @if (!empty($data['data_payment']))
-                @foreach ($data['data_payment'] as $item_payment)
-                    @foreach ($item_payment->items as $i => $item)
-                        @php
-                            $salesman =
-                                $item->invoice->do?->so?->salesmans?->name ??
-                                ($item->invoice->so?->salesmans?->name ?? '-');
-                            $show = true;
-                        @endphp
-
-                        @if ($salesmans != '')
-                            @if ($salesman == $salesmans->name)
-                                @php
-                                    $show = true;
-                                @endphp
-                            @else
-                                @php
-                                    $show = false;
-                                @endphp
-                            @endif
-                        @endif
-                        @if ($show)
-                            <tr>
-                                <td>{{ $no++ }}</td>
-                                <td>{{ $salesman }}</td>
-                                <td>{{ $item->invoice->invoice_number }}</td>
-                                <td>{{ $item_payment->customer_code }} - {{ $item_payment->nama_customer }}</td>
-                                <td>{{ $item_payment->customers->kecamatans->name ?? '-' }}</td>
-                                <td>{{ $item_payment->payment_method }}</td>
-                                <td>{{ $item->invoice->invoice_date }}</td>
-                                <td>{{ $item->invoice->due_date }}</td>
-                                <td>{{ $item->invoice->status }}</td>
-                                <td>{{ number_format($item->outstanding_amount, 0, ',', '.') }}</td>
-                                <td class="text-right">{{ number_format($item->allocated_amount, 0, ',', '.') }}</td>
-                            </tr>
-                            @php
-                                $total += $item->allocated_amount ?? 0;
-                            @endphp
-                        @endif
-                    @endforeach
+                @foreach ($data['data_payment'] as $item)
+                    <tr>
+                        <td>{{ $no++ }}</td>
+                        <td>{{ $item->salesman_name }}</td>
+                        <td>{{ $item->invoice_number }}</td>
+                        <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                        <td>{{ $item->kecamatan_name ?? '-' }}</td>
+                        <td>{{ $item->top_name }}</td>
+                        <td>{{ $item->invoice_date }}</td>
+                        <td>{{ $item->due_date }}</td>
+                        <td>{{ $item->status }}</td>
+                        <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($item->amount_paid, 0, ',', '.') }}</td>
+                    </tr>
+                    @php
+                        $total += $item->amount_paid ?? 0;
+                    @endphp
                 @endforeach
             @endif
         </tbody>

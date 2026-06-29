@@ -8,6 +8,7 @@ use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
+use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
 use App\Models\User;
@@ -314,27 +315,48 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data['data_payment'] = SalesPaymentHeader::with([
-            'customers',
-            'customers.kecamatans',
-            'items.invoice',
-            'items.invoice.do',
-            'items.invoice.do.so.salesmans',
-            'items.invoice.so.salesmans'
-        ])
-            ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
-            ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
-            ->where('payment_date', $data['date'])->get();
+        // $data['data_payment'] = SalesPaymentHeader::with([
+        //     'customers',
+        //     'customers.kecamatans',
+        //     'items.invoice',
+        //     'items.invoice.do',
+        //     'items.invoice.do.so.salesmans',
+        //     'items.invoice.so.salesmans'
+        // ])
+        //     ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
+        //     ->join('customer as c', 'c.id', 'sales_payment_header.customer_id');
+        // ->where('payment_date', $data['date']);
         $qr = '';
 
         // echo '<pre>';
         // print_r($data['data_payment']);
         // die;
         $salesmans = isset($data['salesman']) ? $data['salesman'] : '';
+        $user_group = '';
         if ($salesmans != '') {
             $salesmans = User::find($salesmans);
+            $user_group = $salesmans->user_group;
         }
 
+        // Filter salesman sebelum get()
+        $data['data_payment'] = [];
+        if ($salesmans != '' && $user_group != 5) {
+            $plTagihan = new PLTagihanController();
+            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+            $routeplan = $plTagihan->getRoutePlanSales($data);
+            $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+            if (isset($data['salesman'])) {
+                $salesman = User::where('id', $data['salesman'])->first();
+                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
+                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+            }
+            $invoices = $plTagihan->getAllInvoiceCetak($customers);
+            $data['data_payment'] = $invoices;
+        }
+
+        // echo '<pre>';
+        // print_r($data['data_payment']);
+        // die;
         $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr', 'salesmans'))
             ->setPaper('a4', 'portrait');
 
