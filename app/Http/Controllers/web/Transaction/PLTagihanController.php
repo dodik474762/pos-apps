@@ -163,6 +163,60 @@ class PLTagihanController extends Controller
         return $datadb;
     }
 
+    public function getAllInvoiceCetakByIds($ids = [], $date = null)
+    {
+        $date = $date ?? date('Y-m-d');
+        $datadb = empty($ids) ? [] : DB::table('sales_invoice_header as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'do.do_number',
+                'do.do_date',
+                'dohs.do_number as dohs_number',
+                'dohs.do_date as dohs_date',
+                'w.name as warehouse_name',
+                'soh.so_number',
+                'tp.remarks as top_name',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name'
+            ])
+            ->distinct()
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('sales_order_headers as soh', function ($q) {
+                return $q->on('soh.id', 'do.id')->orOn('soh.id', 'm.sales_order');
+            })
+            ->leftJoin(DB::raw('(
+    SELECT so_id, do_number, do_date
+    FROM delivery_order_header
+    WHERE id IN (
+        SELECT MAX(id) FROM delivery_order_header GROUP BY so_id
+    )
+) as dohs'), 'dohs.so_id', 'soh.id')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+            // ->where('m.invoice_date', $date)
+            ->whereNull('m.deleted')
+            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT', 'PAID'])
+            ->whereIn('m.id', $ids)
+            // ->where('m.invoice_date', '>=', $date)
+            ->orderBy('m.id', 'desc');
+
+        $datadb = empty($ids) ?  [] : $datadb->get();
+
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
+
+        return $datadb;
+    }
+
+
     public function cetak(Request $request)
     {
         $data = $request->all();

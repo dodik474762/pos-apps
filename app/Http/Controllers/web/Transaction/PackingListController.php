@@ -265,14 +265,9 @@ class PackingListController extends Controller
         return $customers;
     }
 
-    public function cetak(Request $request)
+    public function getListInvoicePl($id)
     {
-        $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PackingList::where('id', $data['id'])->first();
-        // echo '<pre>';
-        // print_r($data);die;
-        $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
+        $plInvoice = PackingListDo::where('packing_list_do.packing_list_id', $id)
             ->select([
                 'packing_list_do.*',
                 'c.code as customer_code',
@@ -283,7 +278,8 @@ class PackingListController extends Controller
                 'sih.total_amount',
                 'sih.amount_paid',
                 'top.remarks as top_name',
-                'sih.due_date'
+                'sih.due_date',
+                'sih.id as invoice_id'
             ])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
@@ -296,6 +292,18 @@ class PackingListController extends Controller
             ->join('term_of_payment as top', 'top.id', 'c.payment_terms')
             // ->where('doh.do_number', 'DO11250004')
             ->get();
+
+        return $plInvoice;
+    }
+
+    public function cetak(Request $request)
+    {
+        $data = $request->all();
+        $company = CompanyModel::where('id', session('id_company'))->first();
+        $data = PackingList::where('id', $data['id'])->first();
+        // echo '<pre>';
+        // print_r($data);die;
+        $details = $this->getListInvoicePl($data->id);
         // echo '<pre>';
         // print_r($details);die;
         $doIds = $details->pluck('delivery_order_id')->toArray();
@@ -303,12 +311,6 @@ class PackingListController extends Controller
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
             ->select([
                 'packing_list_detail.*',
-                // 'packing_list_detail.packing_list_id',
-                // 'packing_list_detail.delivery_order_id',
-                // 'packing_list_detail.product_id',
-                // 'packing_list_detail.qty_do',
-                // 'packing_list_detail.qty_packed',
-                // 'packing_list_detail.delivery_detail_id',
                 'doh.do_number',
             ])
             ->with(['product', 'deliveryDetail'])
@@ -320,14 +322,6 @@ class PackingListController extends Controller
             ->orderBy('p.vendor', 'asc')
             ->orderBy('p.code', 'asc')
             ->get();
-
-        // $grouped = $details
-        //     ->pluck('detail')
-        //     ->flatten()
-        //     ->groupBy([
-        //         fn($item) => $item->product->product_code,
-        //         fn($item) => $item->deliveryDetail->units->name,
-        //     ]);
 
         $grouped = collect($packingListDetail)->groupBy('product_id')->toArray();
         $groupedItem = [];

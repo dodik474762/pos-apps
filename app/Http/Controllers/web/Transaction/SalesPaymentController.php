@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesPaymentController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
+use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
@@ -352,6 +353,36 @@ class SalesPaymentController extends Controller
             }
             $invoices = $plTagihan->getAllInvoiceCetak($customers);
             $data['data_payment'] = $invoices;
+        }
+
+        if ($salesmans == '') {
+            $plTagihan = new PLTagihanController();
+            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+            $routeplan = $plTagihan->getRoutePlanSalesAll($data);
+            $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+            if (isset($data['salesman'])) {
+                $salesman = User::where('id', $data['salesman'])->first();
+                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
+                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+            }
+            $invoices = $plTagihan->getAllInvoiceCetak($customers);
+            $data['data_payment'] = $invoices;
+        }
+
+        if ($salesmans != '' && $user_group == 5) {
+            $plDelivery = new PackingListController();
+            $plTagihan = new PLTagihanController();
+            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+            $dataPl = PackingList::where('driver_name', $salesmans->nik)->where('packing_date', $data['date'])->first();
+            if (!empty($dataPl)) {
+                $invoices = $plDelivery->getListInvoicePl($dataPl->id);
+                $idsInvoices = $invoices->pluck('invoice_id')->unique()->toArray();
+                // echo '<pre>';
+                // print_r($idsInvoices);
+                // die;
+                $invoices = $plTagihan->getAllInvoiceCetakByIds($idsInvoices);
+                $data['data_payment'] = $invoices;
+            }
         }
 
         // echo '<pre>';
