@@ -178,6 +178,8 @@ class PLTagihanController extends Controller
             $invoices = $invoices->whereIn('id', explode(',', $data['ids']));
         }
 
+        $invoices = $invoices->values();
+
 
         $tanggal_rute = $data['tanggal'];
         $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
