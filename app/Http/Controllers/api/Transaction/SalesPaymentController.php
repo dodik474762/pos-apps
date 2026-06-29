@@ -435,7 +435,18 @@ class SalesPaymentController extends Controller
 
             // === VALIDASI AMOUNT ===
             // $totalAmount = $data['total_amount'] ?? 0;
-            $totalAmount = (float) str_replace(['.', ','], ['', '.'], $data['total_amount'] ?? 0);
+            // $totalAmount = (float) str_replace(['.', ','], ['', '.'], $data['total_amount'] ?? 0);
+            $rawAmount = $data['total_amount'] ?? 0;
+
+            // Deteksi format: jika ada titik ribuan (misal "219.780")
+            // vs desimal (misal "219.78" atau "219780")
+            if (preg_match('/^\d{1,3}(\.\d{3})+(,\d+)?$/', $rawAmount)) {
+                // Format European: 219.780 atau 219.780,00
+                $totalAmount = (float) str_replace(['.', ','], ['', '.'], $rawAmount);
+            } else {
+                // Format plain / decimal dot: 219780 atau 219.78
+                $totalAmount = (float) str_replace(',', '', $rawAmount);
+            }
             if (!is_numeric($totalAmount) || $totalAmount <= 0) {
                 DB::rollBack();
                 return response()->json([
