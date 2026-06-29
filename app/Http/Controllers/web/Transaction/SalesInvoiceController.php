@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSa
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
+use App\Models\Master\Product;
 use App\Models\Master\Region;
 use App\Models\Master\Tax;
 use App\Models\Master\Users;
@@ -319,6 +320,33 @@ class SalesInvoiceController extends Controller
         // print_r($promo);
         // die;
 
+        $dataItems = $data->items;
+        foreach ($dataItems as $key => $value) {
+            $invoice = SalesInvoiceHeader::find($value->invoice_id);
+            /*cek stock */
+            $stock = DB::table('product_stock')
+                ->where('product', $value['product_id'])
+                ->where('warehouse', $invoice->warehouse_id)
+                ->first();
+            if (empty($stock)) {
+                $productsDb = Product::find($value['product_id']);
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                ]);
+            }
+
+            if ($stock && $stock->qty <= 0) {
+                $productsDb = Product::find($value['product_id']);
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty,
+                ]);
+            }
+        }
+
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
         SalesInvoiceHeader::where('id', $data->id)->update([
             'print_total' => $total_print + 1,
@@ -341,7 +369,7 @@ class SalesInvoiceController extends Controller
             $ppn_val = number_format($tax->rate, 0, ',', '.');
         }
 
-        // $customPaper = [0, 0, 612.0, 792.0]; //Letter
+        // $customPaper = [0, 0, 612.0, 792.0]; //Letter        
         $customPaper = 'A4'; //A4
         $pdf = Pdf::loadView('web.sales_invoice.print.po-printa4', compact(
             'data',
@@ -383,6 +411,33 @@ class SalesInvoiceController extends Controller
 
         // Update print count per invoice
         foreach ($invoices as $data) {
+            $dataItems = $data->items;
+            foreach ($dataItems as $key => $value) {
+                $invoice = SalesInvoiceHeader::find($value->invoice_id);
+                /*cek stock */
+                $stock = DB::table('product_stock')
+                    ->where('product', $value['product_id'])
+                    ->where('warehouse', $invoice->warehouse_id)
+                    ->first();
+                if (empty($stock)) {
+                    $productsDb = Product::find($value['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                    ]);
+                }
+
+                if ($stock && $stock->qty <= 0) {
+                    $productsDb = Product::find($value['product_id']);
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty . ' Invoice ' . $data->invoice_number,
+                    ]);
+                }
+            }
+
             $total_print = empty($data->print_total) ? 0 : $data->print_total;
             $invUpdate = SalesInvoiceHeader::where('id', $data->id);
             $invUpdate->update([
