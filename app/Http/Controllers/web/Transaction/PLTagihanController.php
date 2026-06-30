@@ -140,13 +140,18 @@ class PLTagihanController extends Controller
                 'usr.name as salesman_name',
                 'kec.name as kecamatan_name'
             ])
+            ->distinct()
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.id', 'm.do_id')->whereNull('do.deleted');
+            })
             ->leftJoin('sales_order_headers as soh', function ($q) {
                 return $q->on('soh.id', 'do.id')->orOn('soh.id', 'm.sales_order');
             })
-            ->leftJoin('delivery_order_header as dohs', 'dohs.so_id', 'soh.id')
+            ->leftJoin('delivery_order_header as dohs', function ($q) {
+                return $q->on('dohs.so_id', 'soh.id')->whereNull('dohs.deleted');
+            })
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
@@ -155,11 +160,16 @@ class PLTagihanController extends Controller
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])
             ->whereIn('cc.id', $customers)
+            // ->where('m.invoice_number', 'SI06261030')
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
 
+
         $datadb = empty($customers) ?  [] : $datadb->get();
 
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
         return $datadb;
     }
 
@@ -185,7 +195,9 @@ class PLTagihanController extends Controller
             ->distinct()
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.id', 'm.do_id')->whereNull('do.deleted');
+            })
             ->leftJoin('sales_order_headers as soh', function ($q) {
                 return $q->on('soh.id', 'do.id')->orOn('soh.id', 'm.sales_order');
             })
