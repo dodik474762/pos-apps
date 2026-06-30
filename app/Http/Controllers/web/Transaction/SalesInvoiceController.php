@@ -324,27 +324,27 @@ class SalesInvoiceController extends Controller
         foreach ($dataItems as $key => $value) {
             $invoice = SalesInvoiceHeader::find($value->invoice_id);
             /*cek stock */
-            $stock = DB::table('product_stock')
-                ->where('product', $value['product_id'])
-                ->where('warehouse', $invoice->warehouse_id)
-                ->first();
-            if (empty($stock)) {
-                $productsDb = Product::find($value['product_id']);
-                DB::rollBack();
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
-                ]);
-            }
+            // $stock = DB::table('product_stock')
+            //     ->where('product', $value['product_id'])
+            //     ->where('warehouse', $invoice->warehouse_id)
+            //     ->first();
+            // if (empty($stock)) {
+            //     $productsDb = Product::find($value['product_id']);
+            //     DB::rollBack();
+            //     return response()->json([
+            //         'is_valid' => false,
+            //         'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+            //     ]);
+            // }
 
-            if ($stock && $stock->qty <= 0) {
-                $productsDb = Product::find($value['product_id']);
-                DB::rollBack();
-                return response()->json([
-                    'is_valid' => false,
-                    'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty,
-                ]);
-            }
+            // if ($stock && $stock->qty <= 0) {
+            //     $productsDb = Product::find($value['product_id']);
+            //     DB::rollBack();
+            //     return response()->json([
+            //         'is_valid' => false,
+            //         'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty,
+            //     ]);
+            // }
         }
 
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
@@ -415,27 +415,27 @@ class SalesInvoiceController extends Controller
             foreach ($dataItems as $key => $value) {
                 $invoice = SalesInvoiceHeader::find($value->invoice_id);
                 /*cek stock */
-                $stock = DB::table('product_stock')
-                    ->where('product', $value['product_id'])
-                    ->where('warehouse', $invoice->warehouse_id)
-                    ->first();
-                if (empty($stock)) {
-                    $productsDb = Product::find($value['product_id']);
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
-                    ]);
-                }
+                // $stock = DB::table('product_stock')
+                //     ->where('product', $value['product_id'])
+                //     ->where('warehouse', $invoice->warehouse_id)
+                //     ->first();
+                // if (empty($stock)) {
+                //     $productsDb = Product::find($value['product_id']);
+                //     DB::rollBack();
+                //     return response()->json([
+                //         'is_valid' => false,
+                //         'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                //     ]);
+                // }
 
-                if ($stock && $stock->qty <= 0) {
-                    $productsDb = Product::find($value['product_id']);
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty . ' Invoice ' . $data->invoice_number,
-                    ]);
-                }
+                // if ($stock && $stock->qty <= 0) {
+                //     $productsDb = Product::find($value['product_id']);
+                //     DB::rollBack();
+                //     return response()->json([
+                //         'is_valid' => false,
+                //         'message' => 'Stock ' . $productsDb->name  . ' habis, sisa stock : ' . $stock->qty . ' Invoice ' . $data->invoice_number,
+                //     ]);
+                // }
             }
 
             $total_print = empty($data->print_total) ? 0 : $data->print_total;
