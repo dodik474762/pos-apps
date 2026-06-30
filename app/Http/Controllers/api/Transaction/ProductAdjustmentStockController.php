@@ -73,7 +73,8 @@ class ProductAdjustmentStockController extends Controller
         $data = $request->all();
 
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -97,13 +98,15 @@ class ProductAdjustmentStockController extends Controller
                     $items->product = $product_id;
                     $items->unit = $value['unit'];
                     $items->qty = $value['qty'];
+                    $items->qty_current = $value['qty_current'];
+                    $items->qty_adjust = $value['qty_adjustment'];
                     $items->price = $value['price'];
                     $items->warehouse = $data['warehouse_id'];
                     $items->save();
 
-                    $qtyBaseUnit = getSmallestUnitV2($product_id, $value['unit'], $value['qty']);
+                    $qtyBaseUnit = getSmallestUnitV2($product_id, $value['unit'], $value['qty_adjustment']);
                     $productUomLevel1 =  $qtyBaseUnit;
-                    $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $value['qty'] : 0;
+                    $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $value['qty_adjustment'] : 0;
 
                     $pushItem['product'] = $product_id;
                     stockUpdate(
@@ -224,10 +227,14 @@ class ProductAdjustmentStockController extends Controller
                 DB::raw("COALESCE(ps.stock, 0) as stock_product"),
             ])
             ->leftJoinSub($stock, 'ps', function ($join) {
-                $join->on('m.id', '=', 'm.id');
+                $join->on('m.id', '=', 'ps.product');
             })
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
-            ->join('product_uom as pu', 'pu.product', '=', 'm.id')
+            ->join('product_uom as pu', function ($join) {
+                $join->on('pu.product', '=', 'm.id');
+                $join->whereNull('pu.deleted')
+                    ->where('pu.level', '=', '1');
+            })
             ->join('unit as uo', 'uo.id', '=', 'pu.unit_tujuan')
             ->join('unit as u', 'u.id', '=', 'm.unit')
             ->leftJoin('vendor as v', 'v.id', '=', 'm.vendor')
@@ -239,8 +246,13 @@ class ProductAdjustmentStockController extends Controller
                         $query->whereNull('pup.date_end')
                             ->orWhere('pup.date_end', '>=', now());
                     })
-                    ->where('pup.date_start', '<=', now());
+                    ->where('pup.date_start', '<=', now())
+                    ->where(function ($q) {
+                        $q->where('pup.channel', 'RETAIL UMUM')
+                            ->orWhereNull('pup.channel');
+                    });
             })
+            // ->where('m.id', '2')
             ->whereNull('m.deleted');
 
         // if (isset($data['customer'])) {

@@ -91,6 +91,8 @@ let AdjustmentStock = {
         qty: $(elm).find("#qty").val(),
         price: $(elm).find("td#unit_price").text(),
         unit: $(elm).find("td#unit").attr('data_id'),
+        qty_current: $(elm).find("#qty_current").val(),
+        qty_adjustment: $(elm).find("#qty_adjustment").val(),
         remove: $(elm).hasClass("remove") ? 1 : 0,
       });
     });
@@ -447,6 +449,7 @@ let AdjustmentStock = {
                             code="${row.code}" produk_name="${row.name}"
                             price="${row.harga}"
                             price_id="${row.price_id}"
+                            stock_product="${row.stock_product}"
                             onclick="AdjustmentStock.pilihDataProduct(this, event)"
                             data_id="${row.id_uom}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
             return html;
@@ -484,6 +487,7 @@ let AdjustmentStock = {
     let product_uom_id = $(elm).attr("data_id");
     let price = $(elm).attr("price");
     let price_id = $(elm).attr("price_id");
+    let stock_product = $(elm).attr("stock_product");
     $(elmChoose)
       .closest("div")
       .find("input")
@@ -497,7 +501,17 @@ let AdjustmentStock = {
       .closest("tr")
       .find("td#unit_price")
       .attr("data_id", price_id);
+    $(elmChoose).closest("tr").find("input#qty_current").val(stock_product);
+    AdjustmentStock.calculateQty($(elmChoose).closest("tr").find("input#qty"));
     $("button.btn-close").trigger("click");
+  },
+
+  calculateQty: (elm) => {
+    let tr = $(elm).closest("tr");
+    let qty = parseFloat($(elm).val()) || 0;
+    let qty_current = parseFloat(tr.find("input#qty_current").val()) || 0;
+    let qty_adjustment = qty - qty_current;
+    tr.find("input#qty_adjustment").val(qty_adjustment);
   },
 };
 

@@ -1,5 +1,6 @@
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
-<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 <div id="content-modal-form"></div>
 
 <!-- start page title -->
@@ -66,7 +67,9 @@
                                             <th>#</th>
                                             <th>Product</th>
                                             <th>Unit</th>
-                                            <th>Qty</th>
+                                            <th>Qty Current Stock</th>
+                                            <th>Qty Aktual</th>
+                                            <th>Qty Adjustment</th>
                                             <th>Price</th>
                                             <th>Action</th>
                                         </tr>
@@ -90,13 +93,20 @@
                                                         </div>
                                                     </td>
                                                     <td id="unit" data_id=""></td>
-                                                     <td>
+                                                    <td>
+                                                        <input id="qty_current" type="number" readonly
+                                                            class="form-control" value="{{ isset($item['qty_current']) ? $item['qty_current'] : '' }}">
+                                                    </td>
+                                                    <td>
                                                         <input id="qty" type="number"
                                                             class="form-control required" error="Qty"
-                                                            placeholder="Pilih Data Qty"
-                                                            aria-label="Pilih Data Qty"
+                                                            placeholder="Pilih Data Qty" aria-label="Pilih Data Qty"
                                                             aria-describedby="button-addon1"
-                                                            value="{{ $item['qty'] }}">
+                                                            value="{{ $item['qty'] }}" onkeyup="AdjustmentStock.calculateQty(this)" onchange="AdjustmentStock.calculateQty(this)">
+                                                    </td>
+                                                    <td>
+                                                        <input id="qty_adjustment" type="number" readonly
+                                                            class="form-control" value="{{ isset($item['qty_adjustment']) ? $item['qty_adjustment'] : '' }}">
                                                     </td>
                                                     <td id="unit_price"></td>
                                                     <td class="text-center" id="action">
@@ -118,18 +128,25 @@
                                                             onclick="AdjustmentStock.showDataProduct(this)">Pilih</button>
                                                         <input readonly id="product" type="text"
                                                             class="form-control required" error="Product"
-                                                            placeholder="Pilih Data Product" aria-label="Pilih Data Product"
+                                                            placeholder="Pilih Data Product"
+                                                            aria-label="Pilih Data Product"
                                                             aria-describedby="button-addon1" value="">
                                                     </div>
                                                 </td>
                                                 <td id="unit" data_id=""></td>
-                                                 <td>
+                                                <td>
+                                                    <input id="qty_current" type="number" readonly
+                                                        class="form-control" value="">
+                                                </td>
+                                                <td>
                                                     <input id="qty" type="number"
                                                         class="form-control required" error="Qty"
-                                                        placeholder="Pilih Data Qty"
-                                                        aria-label="Pilih Data Qty"
-                                                        aria-describedby="button-addon1"
-                                                        value="">
+                                                        placeholder="Pilih Data Qty" aria-label="Pilih Data Qty"
+                                                        aria-describedby="button-addon1" value="" onkeyup="AdjustmentStock.calculateQty(this)" onchange="AdjustmentStock.calculateQty(this)">
+                                                </td>
+                                                <td>
+                                                    <input id="qty_adjustment" type="number" readonly
+                                                        class="form-control" value="">
                                                 </td>
                                                 <td id="unit_price"></td>
                                                 <td class="text-center" id="action">

@@ -8,7 +8,7 @@ use App\Models\Master\Warehouse;
 
 class ProductAdjustmentStockController extends Controller
 {
-     public $akses_menu = [];
+    public $akses_menu = [];
     public function __construct()
     {
         date_default_timezone_set('Asia/Jakarta');
