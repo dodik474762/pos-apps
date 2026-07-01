@@ -93,7 +93,7 @@
 
     <br>
 
-    <h4>Detail</h4>
+    <h4>Detail {{ $user_group == 5 ? $salesmans->nik : '' }} </h4>
     <table class="table-detail">
         <thead>
             <tr>
