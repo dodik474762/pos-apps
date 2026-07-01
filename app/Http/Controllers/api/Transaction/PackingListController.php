@@ -841,7 +841,9 @@ class PackingListController extends Controller
                 'top.nilai as top_nilai'
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'm.id')
-            ->join('delivery_order_header as doh', 'doh.id', 'pld.delivery_order_id')
+            ->join('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
+            })
             ->join('customer as c', 'c.id', 'doh.customer_id')
             ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('users as u', 'u.id', 'm.created_by')
@@ -854,6 +856,7 @@ class PackingListController extends Controller
             ->where(function ($q) {
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
             })
+            ->where('m.packing_date', '>=', '2026-06-29')
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
         $users = User::where('id', $data['users'])->first();
