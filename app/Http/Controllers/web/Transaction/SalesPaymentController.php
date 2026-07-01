@@ -351,14 +351,33 @@ class SalesPaymentController extends Controller
                 $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
                 $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
             }
-            $invoices = $plTagihan->getAllInvoiceCetak($customers);
-            $invoiceIds = !empty($invoices) ? $invoices->pluck('id')->unique()->toArray() : [];
             $salesPayment = SalesPaymentDtl::select([
-                'sales_payment_detail.id'
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'sih.invoice_date',
+                'sih.due_date',
+                'sih.status',
+                'sih.total_amount',
+                'sih.amount_paid'
             ])
-                ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
+                ->join('sales_invoice_header as sih', function ($q) {
+                    return $q->on('sih.id', 'sales_payment_detail.invoice_id')
+                        ->whereNull('sih.deleted');
+                })
+                ->join('sales_order_headers as soh', function ($q) {
+                    return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
+                })
+                ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+                ->join('customer as cc', 'cc.id', 'sih.customer_id')
+                ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+                ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
-                ->whereIn('sih.id', $invoiceIds)
+                ->whereIn('sih.customer_id', $customers)
                 ->whereNull('sales_payment_detail.deleted')
                 ->whereNull('sph.deleted')
                 ->where(function ($q) use ($data) {
@@ -366,11 +385,27 @@ class SalesPaymentController extends Controller
                 })
                 ->get();
 
-            $invoiceIdsShow = [];
-            foreach ($salesPayment as $key => $value) {
-                $invoiceIdsShow[] = $value->invoice_id;
-            }
-            $data['data_payment'] = empty($invoices) ? [] : collect($invoices)->whereIn('id', $invoiceIdsShow);
+            // $invoices = $plTagihan->getAllInvoiceCetak($customers);
+            // $invoiceIds = !empty($invoices) ? $invoices->pluck('id')->unique()->toArray() : [];
+            // $salesPayment = SalesPaymentDtl::select([
+            //     'sales_payment_detail.id'
+            // ])
+            //     ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
+            //     ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
+            //     ->whereIn('sih.id', $invoiceIds)
+            //     ->whereNull('sales_payment_detail.deleted')
+            //     ->whereNull('sph.deleted')
+            //     ->where(function ($q) use ($data) {
+            //         return $q->where('sph.payment_date', $data['tanggal']);
+            //     })
+            //     ->get();
+
+            // $invoiceIdsShow = [];
+            // foreach ($salesPayment as $key => $value) {
+            //     $invoiceIdsShow[] = $value->invoice_id;
+            // }
+            // $data['data_payment'] = empty($invoices) ? [] : collect($invoices)->whereIn('id', $invoiceIdsShow);
+            $data['data_payment'] = $salesPayment;
         }
 
         if ($salesmans == '') {
@@ -383,15 +418,36 @@ class SalesPaymentController extends Controller
                 $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
                 $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
             }
-            $invoices = $plTagihan->getAllInvoiceCetak($customers);
+            // $invoices = $plTagihan->getAllInvoiceCetak($customers);
 
-            $invoiceIds = !empty($invoices) ? $invoices->pluck('id')->unique()->toArray() : [];
+            // $invoiceIds = !empty($invoices) ? $invoices->pluck('id')->unique()->toArray() : [];
             $salesPayment = SalesPaymentDtl::select([
-                'sales_payment_detail.id'
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'sih.invoice_date',
+                'sih.due_date',
+                'sih.status',
+                'sih.total_amount',
+                'sih.amount_paid'
             ])
-                ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
+                ->join('sales_invoice_header as sih', function ($q) {
+                    return $q->on('sih.id', 'sales_payment_detail.invoice_id')
+                        ->whereNull('sih.deleted');
+                })
+                ->join('sales_order_headers as soh', function ($q) {
+                    return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
+                })
+                ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+                ->join('customer as cc', 'cc.id', 'sih.customer_id')
+                ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+                ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
-                ->whereIn('sih.id', $invoiceIds)
+                ->whereIn('sih.customer_id', $customers)
                 ->whereNull('sales_payment_detail.deleted')
                 ->whereNull('sph.deleted')
                 ->where(function ($q) use ($data) {
@@ -399,12 +455,8 @@ class SalesPaymentController extends Controller
                 })
                 ->get();
 
-            $invoiceIdsShow = [];
-            foreach ($salesPayment as $key => $value) {
-                $invoiceIdsShow[] = $value->invoice_id;
-            }
-            $data['data_payment'] = empty($invoices) ? [] : collect($invoices)->whereIn('id', $invoiceIdsShow);
-            // $data['data_payment'] = $invoices;
+
+            $data['data_payment'] = $salesPayment;
         }
 
         if ($salesmans != '' && $user_group == 5) {
