@@ -1225,6 +1225,14 @@ class SalesInvoiceController extends Controller
             /*driver invoice */
         }
 
+        if (isset($data['akses'])) {
+            if (strtolower($data['akses']) != 'administrator' && strtolower($data['akses']) != 'driver') {
+                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', date('Y-m-d'))->where('salesman_id', $data['users'])->get();
+                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+                $customers = array_filter(array_unique($customers));
+            }
+        }
+
 
         $result['message'] = '';
         $result['is_valid'] = true;
