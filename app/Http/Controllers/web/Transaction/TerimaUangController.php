@@ -231,6 +231,8 @@ class TerimaUangController extends Controller
 
     public function cetak(Request $request)
     {
+        $salesPayment = new SalesPaymentController();
+        $plTagihan = new PLTagihanController();
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
@@ -238,9 +240,16 @@ class TerimaUangController extends Controller
         if (!empty($usersdb)) {
             $akses = $usersdb->user_group;
         }
-        $routeplan = $akses == 6 || $akses == 4 ? $this->getRoutePlanSales($data) : $this->getRoutePlanDelivery($data);
+        $routeplan = $akses == 6 || $akses == 4 ? $plTagihan->getRoutePlanSales($data) : [];
+        // echo "<pre>";
+        // print_r($routeplan);
+        // die;
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        $invoices = $this->getAllInvoiceCetak($customers, $akses == 5 ? 'delivery' : 'salesman');
+        if ($akses == 6 || $akses == 4) {
+            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
+            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        }
+        $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal']);
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';

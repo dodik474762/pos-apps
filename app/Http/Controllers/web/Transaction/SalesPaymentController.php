@@ -326,7 +326,9 @@ class SalesPaymentController extends Controller
             'sih.due_date',
             'sih.status',
             'sih.total_amount',
-            'sih.amount_paid'
+            'sih.amount_paid',
+            'rpd.amount_paid as total_terbayar_rph',
+            'rph.status as status_received'
         ])
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sales_payment_detail.invoice_id')
@@ -340,6 +342,11 @@ class SalesPaymentController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
+            ->leftJoin('receive_payment_detail as rpd', 'rpd.invoice_id', 'sih.id')
+            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                return $q->on('rph.id', 'rpd.receive_id')
+                    ->where('rph.visit_date', $tanggal);
+            })
             ->whereIn('sih.customer_id', $customers)
             ->whereNull('sales_payment_detail.deleted')
             ->whereNull('sph.deleted')
@@ -367,7 +374,9 @@ class SalesPaymentController extends Controller
             'sih.due_date',
             'sih.status',
             'sih.total_amount',
-            'sih.amount_paid'
+            'sih.amount_paid',
+            'rpd.amount_paid as total_terbayar_rph',
+            'rph.status as status_received'
         ])
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sales_payment_detail.invoice_id')
@@ -382,6 +391,11 @@ class SalesPaymentController extends Controller
             ->join('packing_list_do as pld', 'pld.delivery_order_id', 'doh.id')
             ->join('packing_list as pl', function ($q) {
                 return $q->on('pl.id', 'pld.packing_list_id')->whereNull('pl.deleted');
+            })
+            ->leftJoin('receive_payment_detail as rpd', 'rpd.invoice_id', 'sih.id')
+            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                return $q->on('rph.id', 'rpd.receive_id')
+                    ->where('rph.visit_date', $tanggal);
             })
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
             ->join('customer as cc', 'cc.id', 'sih.customer_id')
