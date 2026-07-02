@@ -1211,6 +1211,7 @@ class SalesInvoiceController extends Controller
             $customers = [];
         }
 
+        $invoicesIds = [];
         if ($customerId == '0' || empty($customers)) {
             /*driver invoice */
             $pl = new PackingListController();
@@ -1218,6 +1219,7 @@ class SalesInvoiceController extends Controller
             if (!empty($packingListCustomer['data'])) {
                 foreach ($packingListCustomer['data'] as $key => $value) {
                     $customers[] = $value->customer_id;
+                    $invoicesIds[] = $value->invoice_id;
                 }
 
                 $customers = array_unique($customers);
@@ -1225,15 +1227,17 @@ class SalesInvoiceController extends Controller
             /*driver invoice */
         }
 
-        // if (isset($data['akses'])) {
-        //     if (strtolower($data['akses']) != 'administrator' && strtolower($data['akses']) != 'driver') {
-        //         $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', date('Y-m-d'))->where('salesman_id', $data['users'])->get();
-        //         $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-        //         $customers = array_filter(array_unique($customers));
-        //     }
-        // }
+        if (isset($data['akses'])) {
+            if (strtolower($data['akses']) != 'administrator' && strtolower($data['akses']) != 'driver') {
+                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', date('Y-m-d'))->where('salesman_id', $data['users'])->get();
+                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+                $customers = array_filter(array_unique($customers));
+            }
+        }
 
-
+        // $customers = [
+        //     2335
+        // ];
         $result['message'] = '';
         $result['is_valid'] = true;
         try {
@@ -1250,6 +1254,7 @@ class SalesInvoiceController extends Controller
                     'sih.amount_paid',
                     'c.code as customer_code',
                     'c.nama_customer',
+                    'sih.status',
                     DB::raw('(sih.subtotal - sih.discount_amount) AS total_before_discount'),
                     DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
                 )
@@ -1264,6 +1269,10 @@ class SalesInvoiceController extends Controller
                 if (strtolower($data['akses']) != 'driver' && strtolower($data['akses']) != 'administrator') {
                     $datadb->where('c.payment_terms', '!=', '3');
                 }
+            }
+
+            if (!empty($invoicesIds)) {
+                $datadb->whereIn('sih.id', $invoicesIds);
             }
 
             $datadb = $datadb->get();

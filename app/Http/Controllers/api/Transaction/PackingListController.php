@@ -838,11 +838,18 @@ class PackingListController extends Controller
                 'c.latitude',
                 'c.longitude',
                 'top.code as top_code',
-                'top.nilai as top_nilai'
+                'top.nilai as top_nilai',
+                'sih.id as invoice_id'
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'm.id')
             ->join('delivery_order_header as doh', function ($q) {
                 return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
+            })
+            ->join('sales_order_headers as soh', function ($q) {
+                return $q->on('soh.id', 'doh.so_id')->whereNull('soh.deleted');
+            })
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'soh.id')->whereNull('sih.deleted');
             })
             ->join('customer as c', 'c.id', 'doh.customer_id')
             ->join('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
