@@ -480,12 +480,12 @@ class DeliveryOrderController extends Controller
         try {
             // code...
             $menu = DeliveryOrderHeader::find($data['id']);
-            if ($menu->status != 'DRAFT') {
-                DB::rollBack();
-                $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
+            // if ($menu->status != 'DRAFT') {
+            //     DB::rollBack();
+            //     $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
 
-                return response()->json($result);
-            }
+            //     return response()->json($result);
+            // }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->deleted_by = session('user_id');
             $menu->save();
