@@ -1202,7 +1202,7 @@ class SalesInvoiceController extends Controller
     public function getOutstandingInvoice(Request $request)
     {
         $data = $request->all();
-        $customerId = isset($data['customer']) ? $data['customer'] : '0';
+        $customerId = isset($data['customer']) ? ($data['customer'] == '' ? '0' : $data['customer']) : '0';
         try {
             $customers = explode(',', $customerId);
             $customers = array_unique($customers);
