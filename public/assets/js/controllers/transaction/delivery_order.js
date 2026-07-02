@@ -254,7 +254,7 @@ let DeliveryOrder = {
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "DRAFT") {
+                            if (row.status == "DRAFT" || row.status == "CONFIRMED") {
                                 html += `<button type="button" data_id="${row.id}" onclick="DeliveryOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }

@@ -803,11 +803,11 @@ class SalesInvoiceController extends Controller
                     $doHeaders = DeliveryOrderHeader::where('so_id', $so->id)->first();
                     $doIdHeader = 0;
                     if (!empty($doHeaders)) {
-                        DB::rollBack();
-                        return response()->json([
-                            'is_valid' => false,
-                            'message' => 'DO sudah dibuat, tidak bisa diubah, batalkan DO terlebih dahulu. No DO : ' . $doHeaders->do_number
-                        ]);
+                        // DB::rollBack();
+                        // return response()->json([
+                        //     'is_valid' => false,
+                        //     'message' => 'DO sudah dibuat, tidak bisa diubah, batalkan DO terlebih dahulu. No DO : ' . $doHeaders->do_number
+                        // ]);
 
                         $doHeaders->so_id = $newSoId;
                         $doHeaders->save();

@@ -692,7 +692,7 @@ class SalesPaymentController extends Controller
             foreach ($details as $dt) {
 
                 // Kembalikan amount_paid invoice
-                $invoice = SalesInvoiceHeader::find($dt->invoice_id);
+                $invoice = SalesInvoiceHeader::where('id', $dt->invoice_id)->first();
                 if ($invoice) {
 
                     // Kembalikan nilai amount_paid
