@@ -327,6 +327,15 @@ class SalesPaymentController extends Controller
                 /*mapping coa */
 
                 $invoice = SalesInvoiceHeader::find($value['invoice_id']);
+                if ($invoice->status == 'PAID') {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message'  => 'Invoice ' . $invoice->invoice_number . ' sudah lunas.',
+                    ]);
+                }
+
+
                 $total_paid = 0;
                 if ($value['id'] == '') {
                     $total_paid = $invoice->amount_paid + $value['allocated_amount'];
@@ -483,6 +492,14 @@ class SalesPaymentController extends Controller
                 return response()->json([
                     'is_valid' => false,
                     'message'  => 'Invoice tidak ditemukan: ' . $invoice_number,
+                ]);
+            }
+
+            if ($invoice->status == 'PAID') {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message'  => 'Invoice ' . $invoice_number . ' sudah lunas.',
                 ]);
             }
 
