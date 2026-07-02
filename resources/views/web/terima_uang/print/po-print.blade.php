@@ -122,17 +122,18 @@
             </tr>
         </thead>
         <tbody>
-             @php
+            @php
                 $no = 1;
                 $total_terima = 0;
             @endphp
             @foreach ($invoices as $item)
-            @php
-                $out = $item->total_amount - $item->amount_paid;
-                $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
-                $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
-                $total_bayar = $item->total_terbayar_rph == '' ? $item->total_terbayar : $item->total_terbayar_rph;
-            @endphp
+                @php
+                    //$out = $item->total_amount - $item->amount_paid;
+                    $out = $item->total_amount;
+                    $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
+                    $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                    $total_bayar = $item->total_terbayar_rph == '' ? $item->total_terbayar : $item->total_terbayar_rph;
+                @endphp
                 <tr>
                     <td>{{ $no++ }}</td>
                     <td>{{ $tanggal_rute }}</td>
@@ -186,7 +187,7 @@
                 <br><br><br>
                 (__________________)
             </td>
-              <td class="text-center">
+            <td class="text-center">
                 <br><br><br>
                 <strong>Diketahui Oleh</strong>
                 <br><br><br>
@@ -195,4 +196,5 @@
         </tr>
     </table>
 </body>
+
 </html>

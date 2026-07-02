@@ -1,4 +1,3 @@
-
 @if (isset($akses->terima_uang))
     @if ($akses->terima_uang->view == 1)
         <input type="hidden" id="update" value="{{ $akses->terima_uang->update }}">
@@ -39,43 +38,50 @@
                             <div class="row g-3">
                                 <!--end col-->
                                 <div class="col-md-4">
-                                        <input type="date" class="form-control" data-provider="flatpickr"
-                                            data-date-format="d M, Y" data-range-date="true" id="filterDate"
-                                            placeholder="Select date" value="{{ isset($tanggal) ? $tanggal : '' }}">
+                                    <input type="date" class="form-control" data-provider="flatpickr"
+                                        data-date-format="d M, Y" data-range-date="true" id="filterDate"
+                                        placeholder="Select date" value="{{ isset($tanggal) ? $tanggal : '' }}">
                                 </div>
                                 <div class="col-md-4">
-                                        <select name="salesman" id="salesman" class="form-control select2">
-                                            <option value=""></option>
-                                            @foreach ($salesmans as $item)
-                                                <option {{ isset($salesman) ? $salesman == $item['id'] ? 'selected' : '' : '' }} value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}</option>
-                                            @endforeach
-                                        </select>
+                                    <select name="salesman" id="salesman" class="form-control select2">
+                                        <option value=""></option>
+                                        @foreach ($salesmans as $item)
+                                            <option
+                                                {{ isset($salesman) ? ($salesman == $item['id'] ? 'selected' : '') : '' }}
+                                                value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="button" class="btn btn-primary w-100" url="{{ route('terima-uang-print-all') }}" onclick="TerimaUang.search(this);"> <i
-                                                class="ri-equalizer-fill me-1 align-bottom"></i>
-                                            Print All Invoice
-                                        </button>
+                                    <button type="button" class="btn btn-primary w-100"
+                                        url="{{ route('terima-uang-print-all') }}" onclick="TerimaUang.search(this);">
+                                        <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                                        Print All Invoice
+                                    </button>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="button" class="btn btn-danger w-100" url="{{ route('terima-uang-print') }}" onclick="TerimaUang.cetak(this);"> <i
-                                                class="ri-equalizer-fill me-1 align-bottom"></i>
-                                            Print
-                                        </button>
+                                    <button type="button" class="btn btn-danger w-100"
+                                        url="{{ route('terima-uang-print') }}" onclick="TerimaUang.cetak(this);"> <i
+                                            class="ri-equalizer-fill me-1 align-bottom"></i>
+                                        Print
+                                    </button>
                                 </div>
                                 <div class="col-md-2">
-                                        <button type="button" class="btn btn-success w-100" onclick="TerimaUang.submit(this, event, 'pending');"> <i
-                                                class="ri-equalizer-fill me-1 align-bottom"></i>
-                                            Submit
-                                        </button>
+                                    <button type="button" class="btn btn-success w-100"
+                                        onclick="TerimaUang.submit(this, event, 'pending');"> <i
+                                            class="ri-equalizer-fill me-1 align-bottom"></i>
+                                        Submit
+                                    </button>
                                 </div>
                                 <div class="col-md-2">
                                     @if (strtolower($akses_user) == 'superadmin')
-                                        <button type="button" class="btn btn-info w-100" onclick="TerimaUang.submit(this, event, 'posted');"> <i
+                                        <button type="button" class="btn btn-info w-100"
+                                            onclick="TerimaUang.submit(this, event, 'posted');"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Posting
                                         </button>
-                                    @endif                                        
+                                    @endif
                                 </div>
                                 <!--end col-->
                             </div>
@@ -119,26 +125,36 @@
                                                 @endphp
                                                 @foreach ($invoices as $item)
                                                     @php
-                                                        $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
-                                                        $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
-                                                        $total_bayar = $item->total_terbayar_rph == '' ? $item->total_terbayar : $item->total_terbayar_rph;
+                                                        $do_number =
+                                                            $item->do_number == ''
+                                                                ? $item->dohs_number
+                                                                : $item->do_number;
+                                                        $do_date =
+                                                            $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                                                        $total_bayar =
+                                                            $item->total_terbayar_rph == ''
+                                                                ? $item->total_terbayar
+                                                                : $item->total_terbayar_rph;
                                                     @endphp
-                                                    <tr class="input" invoice_id="{{ $item->id }}">
+                                                    <tr class="input" invoice_id="{{ $item->invoice_id }}">
                                                         <td>{{ $no++ }}</td>
                                                         <td>{{ $tanggal }}</td>
                                                         <td>{{ $item->invoice_number }}</td>
                                                         <td>{{ $item->invoice_date }}</td>
                                                         <td>{{ $do_date }}</td>
                                                         <td>{{ $do_number }}</td>
-                                                        <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                                                        <td>{{ $item->customer_code }} - {{ $item->nama_customer }}
+                                                        </td>
                                                         <td>{{ $item->top_customer }}</td>
                                                         <td>{{ $item->due_date }}</td>
                                                         <td>{{ $item->status }}</td>
-                                                        <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->total_amount, 0, ',', '.') }}
+                                                        </td>
                                                         <td value="{{ $total_bayar }}">
                                                             @if ($item->status_received == '' || $item->status_received == 'PENDING')
-                                                                <input type="text" value="{{ $total_bayar }}" id="amount_paid">
-                                                            @endif                                                            
+                                                                <input type="text" value="{{ $total_bayar }}"
+                                                                    id="amount_paid">
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                 @endforeach

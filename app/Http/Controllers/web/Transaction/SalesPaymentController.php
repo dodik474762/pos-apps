@@ -328,7 +328,8 @@ class SalesPaymentController extends Controller
             'sih.total_amount',
             'sih.amount_paid',
             'rpd.amount_paid as total_terbayar_rph',
-            'rph.status as status_received'
+            'rph.status as status_received',
+            'sales_payment_detail.invoice_id'
         ])
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sales_payment_detail.invoice_id')
@@ -376,7 +377,8 @@ class SalesPaymentController extends Controller
             'sih.total_amount',
             'sih.amount_paid',
             'rpd.amount_paid as total_terbayar_rph',
-            'rph.status as status_received'
+            'rph.status as status_received',
+            'sales_payment_detail.invoice_id'
         ])
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sales_payment_detail.invoice_id')
