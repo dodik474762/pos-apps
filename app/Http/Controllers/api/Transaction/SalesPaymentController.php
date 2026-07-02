@@ -693,7 +693,7 @@ class SalesPaymentController extends Controller
 
                 // Kembalikan amount_paid invoice
                 $invoice = SalesInvoiceHeader::where('id', $dt->invoice_id)->first();
-                if ($invoice) {
+                if (!empty($invoice)) {
 
                     // Kembalikan nilai amount_paid
                     $invoice->amount_paid = $invoice->amount_paid - $dt->allocated_amount;
