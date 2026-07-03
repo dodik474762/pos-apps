@@ -7,6 +7,7 @@ use App\Http\Controllers\web\Transaction\PLTagihanController;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\Currency;
+use App\Models\Master\Users;
 use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
@@ -251,7 +252,7 @@ class SalesPaymentController extends Controller
             $header->discount_amount = 0;
             $header->net_amount = 0;
             $header->reference_no = $data['reference_no'];
-            $header->remarks = $data['remarks'];
+            $header->remarks = $data['$invoice->save();remarks'];
             $header->coa_kas = $data['account_id'];
             $header->bulk = $data['bulk'];
             $header->save();
@@ -512,6 +513,7 @@ class SalesPaymentController extends Controller
             $net_amount = $totalAmount; // ini yang masuk kas
 
             // === SIMPAN HEADER ===
+            $users = Users::where('id', $userId)->first();
             $header = new SalesPaymentHeader();
             $header->payment_code    = generateNoSP();
             $header->created_by      = $userId;
@@ -544,8 +546,10 @@ class SalesPaymentController extends Controller
             // === UPDATE INVOICE ===
             $invoice->amount_paid      += $totalAmount;
             $outstanding_after          = $invoice->outstanding_amount - $totalAmount;
-            // $invoice->outstanding_amount = $outstanding_after;
-            $invoice->status            = ($outstanding_after <= 0) ? 'PAID' : 'PARTIAL PAID';
+            // $invoice->outstanding_amount = $outstanding_after;                        
+            if ($users->user_group != 5) {
+                $invoice->status            = ($outstanding_after <= 0) ? 'PAID' : 'PARTIAL PAID';
+            }
             $invoice->save();
 
             // === CURRENCY ===
