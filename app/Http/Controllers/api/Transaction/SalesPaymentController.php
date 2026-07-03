@@ -252,7 +252,7 @@ class SalesPaymentController extends Controller
             $header->discount_amount = 0;
             $header->net_amount = 0;
             $header->reference_no = $data['reference_no'];
-            $header->remarks = $data['$invoice->save();remarks'];
+            $header->remarks = $data['remarks'] ?? null;
             $header->coa_kas = $data['account_id'];
             $header->bulk = $data['bulk'];
             $header->save();
