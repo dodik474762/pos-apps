@@ -286,7 +286,7 @@ class DeliveryOrderController extends Controller
                 }
 
 
-                if ($stock && $stock->qty <= 0) {
+                if ($stock && ($stock->qty - $item['qty'] <= 0)) {
                     $productsDb = Product::find($item['product_id']);
                     DB::rollBack();
                     return response()->json([

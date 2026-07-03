@@ -280,6 +280,7 @@ let SalesPayment = {
                 {
                     data: "id",
                     render: function (data, type, row) {
+
                         var html = `<a href='${url.base_url(
                             SalesPayment.module()
                         )}cetak?id=${data}' data_id="${row.id
@@ -295,7 +296,7 @@ let SalesPayment = {
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status == "PENDING") {
+                            if (row.status == "PENDING" || (row.status == "POSTED")) {
                                 html += `<button type="button" data_id="${row.id}" onclick="SalesPayment.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
