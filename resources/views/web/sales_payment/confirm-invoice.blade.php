@@ -74,6 +74,10 @@
                                             <th>Jumlah Belum Dibayar</th>
                                             <th>Jumlah Dibayar</th>
                                             <th>Tanggal Bayar</th>
+                                            <th style="width: 40px;">
+                                                <input type="checkbox" id="check-all"
+                                                    onchange="SalesPayment.checkAll(this)">
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody class="list">
@@ -121,6 +125,11 @@
                                                                 {{ number_format($item->allocated_amount, 0, ',', '.') }}
                                                             </td>
                                                             <td>{{ $item_payment->payment_date }}</td>
+                                                            <td>
+                                                                <input type="checkbox"
+                                                                    data_id="{{ $item_payment->id }}"
+                                                                    class="check-item" value="{{ $item_payment->id }}">
+                                                            </td>
                                                         </tr>
                                                         @php
                                                             $total += $item->allocated_amount ?? 0;

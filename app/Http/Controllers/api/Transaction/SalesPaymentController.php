@@ -925,6 +925,9 @@ class SalesPaymentController extends Controller
         $result['is_valid'] = false;
         $date = isset($data['date']) ? $data['date'] : '';
 
+        $items_checked = isset($data['items_checked']) ? $data['items_checked'] : [];
+
+
         DB::beginTransaction();
         try {
 
@@ -939,6 +942,7 @@ class SalesPaymentController extends Controller
                 ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
                 ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
                 ->where('sales_payment_header.status', 'PENDING')
+                ->whereIn('sales_payment_header.id', $items_checked)
                 ->whereNull('sales_payment_header.deleted');
             if (isset($data['date'])) {
                 if ($data['date'] != '') {

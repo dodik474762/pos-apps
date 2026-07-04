@@ -428,6 +428,17 @@ let SalesPayment = {
     confirmAll: (elm) => {
         let params = {};
         params.date = $('#filter-date').val();
+        const itemsChecked = $('input.check-item:checked');
+        if (itemsChecked.length == 0) {
+            message.sweetError("Informasi", "Pilih Data Terlebih Dahulu");
+            return false;
+        }
+
+        params.items_checked = [];
+        itemsChecked.each(function (index) {
+            params.items_checked.push($(this).attr("data_id"));
+        });
+
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -1102,6 +1113,13 @@ let SalesPayment = {
         const salesman = $('#salesman').val();
 
         window.location.href = url + "?date=" + date + "&salesman=" + salesman;
+    },
+
+    checkAll: (elm) => {
+        let checked = $(elm).is(":checked");
+        document.querySelectorAll(".check-item").forEach((el) => {
+            el.checked = checked;
+        });
     },
 
     selectAll: (elm) => {
