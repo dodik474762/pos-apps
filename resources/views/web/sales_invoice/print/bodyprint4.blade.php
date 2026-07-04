@@ -179,17 +179,17 @@
          <div class="footer-left">
              <div style="display:table; width:100%;">
                  <div style="display:table-cell; text-align:center; font-size:7.5pt; width:50%;">
-                     Dibuat Oleh<br><br><br>
+                     Dibuat Oleh - Driver<br><br><br>
                      <div style="border-top:1px solid #000; margin: 0 8pt;"></div>
                      <small>Tgl</small>
                  </div>
                  <div style="display:table-cell; text-align:center; font-size:7.5pt; width:50%;">
-                     Disetujui Oleh<br><br><br>
+                     Supervisor - BOM<br><br><br>
                      <div style="border-top:1px solid #000; margin: 0 8pt;"></div>
                      <small>Tgl</small>
                  </div>
                  <div style="display:table-cell; text-align:center; font-size:7.5pt; width:50%;">
-                     Diterima Oleh<br><br><br>
+                     Pelanggan<br><br><br>
                      <div style="border-top:1px solid #000; margin: 0 8pt;"></div>
                      <small>Tgl.</small>
                  </div>
