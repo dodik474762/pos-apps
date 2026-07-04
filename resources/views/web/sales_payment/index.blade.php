@@ -38,7 +38,7 @@
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesPayment.addAll(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create Bulk Payment</a>
-                                        <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
+                                        <a type="button" class="btn btn-success add-btn d-none" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
                                             onclick="SalesPayment.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
