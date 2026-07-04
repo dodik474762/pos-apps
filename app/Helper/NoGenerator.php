@@ -1430,11 +1430,22 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
     }
     $totalOutstanding = $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
 
+    $invOutstanding = DB::table('sales_invoice_header')
+        ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
+        ->whereNull('deleted')
+        ->where('customer_id', $customer)->get();
+
+    $invGroups = [];
+    foreach ($invOutstanding as $inv) {
+        $invGroups[$inv->invoice_number] = $inv->total_amount - $inv->amount_paid;
+    }
+
 
     if ($totalOutstanding >= $credit_limit) {
         return [
             'status' => false,
-            'message' => 'Customer telah mencapai batas kredit maksimal yaitu : ' . $credit_limit . ' dengan total piutang belum tertagih sebesar : ' . $totalOutstanding,
+            'message' => 'Customer telah mencapai batas kredit maksimal yaitu : ' . $credit_limit .
+                ' dengan total piutang belum tertagih sebesar : ' . $totalOutstanding . ' dengan rincian sebagai berikut : ' . json_encode($invGroups),
         ];
     } else {
         return [
