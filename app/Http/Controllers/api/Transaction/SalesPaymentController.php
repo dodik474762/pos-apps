@@ -42,7 +42,13 @@ class SalesPaymentController extends Controller
         if (isset($_POST)) {
 
             if (isset($_POST['status'])) {
-                $datadb->where('m.status', $_POST['status']);
+                if ($_POST['status'] == 'PENDING') {
+                    $datadb->where('m.status', $_POST['status'])->whereNull('m.verificator_id');
+                } else if ($_POST['status'] == 'WAITING') {
+                    $datadb->where('m.status', 'PENDING')->whereNotNull('m.verificator_id');
+                } else {
+                    $datadb->where('m.status', $_POST['status']);
+                }
             }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
