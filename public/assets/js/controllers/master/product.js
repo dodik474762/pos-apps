@@ -53,11 +53,13 @@ let Product = {
         return data;
     },
 
-    submit: (elm, e) => {
+    submit: (elm, e, state = "") => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
+            $("form#form-product").append(`<input type="hidden" name="state" value="${state}">`);
             $("form#form-product").submit();
+            $("form#form-product").remove("input#state");
         } else {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }

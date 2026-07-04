@@ -280,9 +280,14 @@
                             </button> --}}
                             @if (isset($view_detail))
                             @else
-                                <button type="submit" onclick="Product.submit(this, event)"
+                                <button type="submit" onclick="Product.submit(this, event, 'submit')"
                                     class="btn btn-success waves-effect waves-light me-1">
                                     Submit
+                                </button>
+                                &nbsp;
+                                <button type="submit" onclick="Product.submit(this, event, 'update')"
+                                    class="btn btn-warning waves-effect waves-light me-1">
+                                    Update
                                 </button>
                             @endif
                             <button type="reset" onclick="Product.cancel(this, event)"

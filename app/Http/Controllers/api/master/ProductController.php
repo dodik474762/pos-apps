@@ -922,6 +922,7 @@ class ProductController extends Controller
         $data = $request->all();
         $user = session()->all();
 
+
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -965,6 +966,13 @@ class ProductController extends Controller
             $roles->files       = !empty($data['file']) ? $fileName : $roles->files;
             $roles->path_files  = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
             $roles->save();
+
+            if ($data['state'] == 'update') {
+                DB::commit();
+                $result['is_valid'] = true;
+                $result['message'] = 'Success ';
+                return redirect()->action([MasterProductController::class, 'index'], ['success' => $result['message']]);
+            }
 
             // ========================
             // PRODUCT LOG
