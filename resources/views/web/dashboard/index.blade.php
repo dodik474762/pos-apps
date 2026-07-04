@@ -90,7 +90,7 @@
             </div>
 
 
-            <div class="row">
+            <div class="row {{ strtolower($akses) != 'superadmin' ? 'd-none' : '' }}">
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header align-items-center d-flex">
