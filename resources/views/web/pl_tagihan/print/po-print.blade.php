@@ -130,31 +130,31 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th style="width:5%;font-size: 12px;font-weight: normal;">No</th>
+                <td style="width:5%;font-size: 12px;font-weight: normal;">No</td>
 
-                <th style="width:8%;font-size: 12px;font-weight: normal;">Invoice</th>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">Invoice</td>
 
-                <th style="width:8%;font-size: 12px;font-weight: normal;">Tgl<br>Invoice</th>
-                <th style="width:8%;font-size: 12px;font-weight: normal;">Jatuh<br>Tempo</th>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">Tgl<br>Invoice</td>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">Jatuh<br>Tempo</td>
 
-                <th style="width:8%;font-size: 12px;font-weight: normal;">DO</th>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">DO</td>
 
-                <th style="width:14%;font-size: 12px;font-weight: normal;">Customer</th>
+                <td style="width:14%;font-size: 12px;font-weight: normal;">Customer</td>
 
-                <th style="width:6%;font-size: 12px;font-weight: normal;">Status</th>
+                <td style="width:6%;font-size: 12px;font-weight: normal;">Status</td>
 
-                <th style="width:4%;font-size: 12px;font-weight: normal;">TOP</th>
+                <td style="width:4%;font-size: 12px;font-weight: normal;">TOP</td>
 
-                <th style="width:10%;font-size: 12px;font-weight: normal;">Nilai Faktur</th>
-                <th style="width:10%;font-size: 12px;font-weight: normal;">Outstanding</th>
+                <td style="width:10%;font-size: 12px;font-weight: normal;">Nilai Faktur</td>
+                <td style="width:10%;font-size: 12px;font-weight: normal;">Outstanding</td>
 
-                <th style="width:8%;font-size: 12px;font-weight: normal;">Tunai</th>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">Tunai</td>
 
-                <th style="width:8%;font-size: 12px;font-weight: normal;">Transfer</th>
+                <td style="width:8%;font-size: 12px;font-weight: normal;">Transfer</td>
 
-                <th style="width:7%;font-size: 12px;font-weight: normal;">Remark</th>
+                <td style="width:7%;font-size: 12px;font-weight: normal;">Remark</td>
 
-                <th style="width:5%;font-size: 12px;font-weight: normal;">Retur</th>
+                <td style="width:5%;font-size: 12px;font-weight: normal;">Retur</td>
             </tr>
         </thead>
         <tbody>
