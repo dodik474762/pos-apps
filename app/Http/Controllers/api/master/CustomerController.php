@@ -146,6 +146,7 @@ class CustomerController extends Controller
         $files_ktp = $request->file('foto_ktp_path');
         $files_npwp = $request->file('foto_npwp_path');
         $result['is_valid'] = false;
+        $data['state'] = isset($data['state']) ? $data['state'] : 'create';
         DB::beginTransaction();
         try {
             //code...
