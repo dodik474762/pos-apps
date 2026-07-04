@@ -493,6 +493,7 @@ class SalesPaymentController extends Controller
             ->select(['sales_payment_header.*', 'c.nama_customer', 'c.code as customer_code'])
             ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
             ->where('sales_payment_header.status', 'PENDING')
+            ->whereNotNull('verificator_id')
             ->whereNull('sales_payment_header.deleted');
         if (isset($data['date'])) {
             if ($data['date'] != '') {

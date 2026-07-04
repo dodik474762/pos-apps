@@ -331,6 +331,131 @@ let SalesPayment = {
             });
     },
 
+    getDataPending: async () => {
+        let tableData = $("table#table-data-pending");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesPayment.moduleApi()) + `getData`,
+                type: "POST",
+                data: {
+                    status: 'PENDING'
+                },
+                headers: {
+                    "X-CSRF-TOKEN": SalesPayment.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "payment_code",
+                },
+                {
+                    data: "payment_date",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "payment_method",
+                },
+                {
+                    data: "total_amount",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+
+                        var html = `<a href='${url.base_url(
+                            SalesPayment.module()
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        html += `<a href='${url.base_url(
+                            SalesPayment.module()
+                        )}detail?id=${data}' data_id="${row.id
+                            }" class="btn btn-primary editable-submit btn-sm waves-effect waves-light"><i class="bx bx-show"></i></a>&nbsp;`;
+                        if (updateAction == 1) {
+                            html += `<a href='${url.base_url(
+                                SalesPayment.module()
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        }
+                        if (deleteAction == 1) {
+                            if (row.status == "PENDING" || (row.status == "POSTED")) {
+                                html += `<button type="button" data_id="${row.id}" onclick="SalesPayment.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            }
+                        }
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1145,5 +1270,6 @@ let SalesPayment = {
 $(function () {
     SalesPayment.setSelect2();
     SalesPayment.getData();
+    SalesPayment.getDataPending();
     SalesPayment.editReload();
 });

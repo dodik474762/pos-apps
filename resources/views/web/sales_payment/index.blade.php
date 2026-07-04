@@ -102,12 +102,48 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="pending"
+                                        href="#list-data-pending" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Pending Verification
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
                                 <div class="tab-pane active" id="list-data">
                                     <div class="table-responsive table-card mb-1">
                                         <table class="table table-nowrap align-middle" id="table-data">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>No. Pembayaran</th>
+                                                    <th>Tanggal Pembayaran</th>
+                                                    <th>Customer</th>
+                                                    <th>Metode Pembayaran</th>
+                                                    <th>Total </th>
+                                                    <th>Dibuat Oleh</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-pending">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-pending">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>

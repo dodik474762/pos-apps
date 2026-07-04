@@ -40,6 +40,10 @@ class SalesPaymentController extends Controller
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
+
+            if (isset($_POST['status'])) {
+                $datadb->where('m.status', $_POST['status']);
+            }
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
