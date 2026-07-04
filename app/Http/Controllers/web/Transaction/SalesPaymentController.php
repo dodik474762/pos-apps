@@ -427,7 +427,9 @@ class SalesPaymentController extends Controller
             ->orderBy('usr.nik')
             ->orderBy('cc.nama_customer')
             ->get();
-
+        // echo '<pre>';
+        // print_r($datadb->toSql());
+        // die;
         return $datadb;
     }
 
