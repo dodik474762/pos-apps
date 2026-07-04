@@ -307,7 +307,7 @@ class ProductController extends Controller
         $data['product_costs'] = $this->getCostProduct($data['id']);
         $data['akses'] = session('akses');
         $data['view_detail'] = 'detail';
-        $view = view('web.product.formadd', $data);
+        $view = view('web.product.formdetail', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
