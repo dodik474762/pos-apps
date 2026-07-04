@@ -636,6 +636,15 @@ class SalesInvoiceController extends Controller
 
             $hdrId = $header->id;
 
+            /*cek sudah ada pembayaran */
+            if ($header->amount_paid > 0) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Invoice sudah ada pembayaran. tidak dapat mengedit invoice.',
+                ]);
+            }
+
             // === DETAIL ===
             $line_no = 1;
             $batalItem = false;
@@ -962,6 +971,13 @@ class SalesInvoiceController extends Controller
 
             $menu = SalesInvoiceHeader::find($data['id']);
 
+            if ($menu->amount_paid > 0) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Invoice sudah ada pembayaran. tidak dapat mengedit invoice.',
+                ]);
+            }
             // if ($menu->status != 'DRAFT' && $menu->status != 'PACKED') {
             //     DB::rollBack();
             //     $result['message'] = 'Tidak dapat dihapus karena status sudah ' . $menu->status;
