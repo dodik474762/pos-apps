@@ -130,31 +130,31 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <td style="width:5%;font-size: 12px;font-weight: normal;">No</td>
+                <td style="width:5%;font-size: 14px;font-weight: normal;">No</td>
 
-                <td style="width:8%;font-size: 12px;font-weight: normal;">Invoice</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">Invoice</td>
 
-                <td style="width:8%;font-size: 12px;font-weight: normal;">Tgl<br>Invoice</td>
-                <td style="width:8%;font-size: 12px;font-weight: normal;">Jatuh<br>Tempo</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">Tgl<br>Invoice</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">Jatuh<br>Tempo</td>
 
-                <td style="width:8%;font-size: 12px;font-weight: normal;">DO</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">DO</td>
 
-                <td style="width:14%;font-size: 12px;font-weight: normal;">Customer</td>
+                <td style="width:14%;font-size: 14px;font-weight: normal;">Customer</td>
 
-                <td style="width:6%;font-size: 12px;font-weight: normal;">Status</td>
+                <td style="width:6%;font-size: 14px;font-weight: normal;">Status</td>
 
-                <td style="width:4%;font-size: 12px;font-weight: normal;">TOP</td>
+                <td style="width:4%;font-size: 14px;font-weight: normal;">TOP</td>
 
-                <td style="width:10%;font-size: 12px;font-weight: normal;">Nilai Faktur</td>
-                <td style="width:10%;font-size: 12px;font-weight: normal;">Outstanding</td>
+                <td style="width:10%;font-size: 14px;font-weight: normal;">Nilai Faktur</td>
+                <td style="width:10%;font-size: 14px;font-weight: normal;">Outstanding</td>
 
-                <td style="width:8%;font-size: 12px;font-weight: normal;">Tunai</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">Tunai</td>
 
-                <td style="width:8%;font-size: 12px;font-weight: normal;">Transfer</td>
+                <td style="width:8%;font-size: 14px;font-weight: normal;">Transfer</td>
 
-                <td style="width:7%;font-size: 12px;font-weight: normal;">Remark</td>
+                <td style="width:7%;font-size: 14px;font-weight: normal;">Remark</td>
 
-                <td style="width:5%;font-size: 12px;font-weight: normal;">Retur</td>
+                <td style="width:5%;font-size: 14px;font-weight: normal;">Retur</td>
             </tr>
         </thead>
         <tbody>
@@ -170,18 +170,19 @@
                     $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
                 @endphp
                 <tr>
-                    <td class="text-center">{{ $no++ }}</td>
-                    <td>{{ $item->invoice_number }}</td>
-                    <td>{{ $item->invoice_date }}</td>
-                    <td>{{ $item->due_date }}</td>
-                    <td>{{ $do_number }}</td>
-                    <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
-                    <td>{{ $item->status }}</td>
-                    <td>{{ $item->top_name }}</td>
-                    <td class="text-right">{{ number_format($item->total_amount, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td style="font-size: 14px;" class="text-center">{{ $no++ }}</td>
+                    <td style="font-size: 14px;">{{ $item->invoice_number }}</td>
+                    <td style="font-size: 14px;">{{ $item->invoice_date }}</td>
+                    <td style="font-size: 14px;">{{ $item->due_date }}</td>
+                    <td style="font-size: 14px;">{{ $do_number }}</td>
+                    <td style="font-size: 14px;">{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                    <td style="font-size: 14px;">{{ $item->status }}</td>
+                    <td style="font-size: 14px;">{{ $item->top_name }}</td>
+                    <td style="font-size: 14px;" class="text-right">
+                        {{ number_format($item->total_amount, 0, ',', '.') }}</td>
+                    <td style="font-size: 14px;" class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
+                    <td style="font-size: 14px;">&nbsp;</td>
+                    <td style="font-size: 14px;">&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                 </tr>
@@ -193,12 +194,12 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="8" class="text-right"><strong>Sub Total</strong></td>
-                <td class="" colspan="1" class="text-right">
-                    <strong>{{ number_format($nilaiFaktur, 0, ',', '.') }}</strong>
+                <td colspan="8" class="text-right" style="font-size: 14px;">Sub Total</td>
+                <td class="" colspan="1" class="text-right" style="font-size: 14px;">
+                    {{ number_format($nilaiFaktur, 0, ',', '.') }}
                 </td>
-                <td class="" colspan="1" class="text-right">
-                    <strong>{{ number_format($outstandin, 0, ',', '.') }}</strong>
+                <td class="" colspan="1" class="text-right" style="font-size: 14px;">
+                    {{ number_format($outstandin, 0, ',', '.') }}
                 </td>
                 <td></td>
                 <td></td>
