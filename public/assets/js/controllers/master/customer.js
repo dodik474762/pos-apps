@@ -464,11 +464,12 @@ let Customer = {
                 {
                     data: "id",
                     render: function (data, type, row) {
+                        const akses_session = $("#akses_session").val();
                         var html = `<a href='${url.base_url(
                             Customer.module()
                         )}detail?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-show"></i></a>&nbsp;`;
-                        if (updateAction == 1) {
+                        if (updateAction == 1 && akses_session.toLowerCase() == "superadmin") {
                             html += `<a href='${url.base_url(
                                 Customer.module()
                             )}ubah?id=${data}' data_id="${row.id

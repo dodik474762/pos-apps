@@ -818,8 +818,8 @@ let PackingList = {
             autoWidth: false,
             order: [[0, "asc"]],
             aLengthMenu: [
-                [25, 50, 100],
-                [25, 50, 100],
+                [200, 500, 700],
+                [200, 500, 700],
             ],
             // lengthChange: !1,
             language: {
