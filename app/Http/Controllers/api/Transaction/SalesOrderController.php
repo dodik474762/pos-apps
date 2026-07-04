@@ -732,6 +732,16 @@ class SalesOrderController extends Controller
                 // Free goods dari promo
                 if (!empty($freeGoods)) {
                     foreach ($freeGoods as $free) {
+                        $existFreeGood = SalesOrderDetail::where('product_id', $free['product_id'])
+                            ->where('sales_order_id', $hdrId)
+                            ->where('is_free_good', 1)
+                            ->whereNull('deleted')
+                            ->first();
+
+                        if (!empty($existFreeGood)) {
+                            continue;
+                        }
+
                         $freeDetail                  = new SalesOrderDetail();
                         $freeDetail->sales_order_id  = $hdrId;
                         $freeDetail->product_id      = $free['product_id'];
@@ -1623,6 +1633,16 @@ class SalesOrderController extends Controller
                 // Free goods dari promo
                 if (!empty($freeGoods)) {
                     foreach ($freeGoods as $free) {
+                        $existFreeGood = SalesOrderDetail::where('product_id', $free['product_id'])
+                            ->where('sales_order_id', $hdrId)
+                            ->where('is_free_good', 1)
+                            ->whereNull('deleted')
+                            ->first();
+
+                        if (!empty($existFreeGood)) {
+                            continue;
+                        }
+
                         $freeDetail                   = new SalesOrderDetail();
                         $freeDetail->sales_order_id   = $hdrId;
                         $freeDetail->product_id       = $free['product_id'];
