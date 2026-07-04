@@ -605,7 +605,7 @@ class SalesInvoiceController extends Controller
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
             if ($data['id'] == '') {
-                $policyCreateInvoice = checkCustomerCreditLimit($cust_id);
+                $policyCreateInvoice = checkCustomerCreditLimit($cust_id, $data['id']);
                 if (!$policyCreateInvoice['status']) {
                     DB::rollBack();
                     return response()->json([

@@ -1369,7 +1369,7 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
     ]);
 }
 
-function checkCustomerCreditLimit($customer = 0)
+function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
 {
     $datadb = Customer::where('id', $customer)->first();
 
@@ -1404,8 +1404,11 @@ function checkCustomerCreditLimit($customer = 0)
             // ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
             ->whereIn('status', ['POSTED', 'PARTIAL PAID'])
             ->whereNull('deleted')
-            ->where('customer_id', $customer)
-            ->count();
+            ->where('customer_id', $customer);
+        if ($exclude_id != '') {
+            $countInvoiceOutstanding->where('id', '!=', $exclude_id);
+        }
+        $countInvoiceOutstanding = $countInvoiceOutstanding->count();
 
         if ($countInvoiceOutstanding >= $min_invoice) {
             return [
@@ -1420,8 +1423,12 @@ function checkCustomerCreditLimit($customer = 0)
         ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
         ->whereNull('deleted')
         ->where('customer_id', $customer)
-        ->whereRaw('(total_amount - amount_paid) > 0')
-        ->sum(DB::raw('total_amount - amount_paid'));
+        ->whereRaw('(total_amount - amount_paid) > 0');
+
+    if ($exclude_id != '') {
+        $totalOutstanding->where('id', '!=', $exclude_id);
+    }
+    $totalOutstanding = $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
 
 
     if ($totalOutstanding >= $credit_limit) {
