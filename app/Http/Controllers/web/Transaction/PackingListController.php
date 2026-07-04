@@ -317,13 +317,17 @@ class PackingListController extends Controller
             ->join('product as p', 'p.id', 'packing_list_detail.product_id')
             ->join('delivery_order_header as doh', 'doh.id', 'packing_list_detail.delivery_order_id')
             ->where('packing_list_detail.packing_list_id', $data->id)
-            // ->whereIn('p.code', ['PQ03', 'P26MAY-1A'])
+            // ->whereIn('p.code', ['P26JAN0063'])
+            // ->where('doh.id', 664)
             // ->where('p.id', 40)
             ->orderBy('p.vendor', 'asc')
             ->orderBy('p.code', 'asc')
             ->get();
 
         $grouped = collect($packingListDetail)->groupBy('product_id')->toArray();
+        // echo '<pre>';
+        // print_r($grouped);
+        // die;
         $groupedItem = [];
         foreach ($grouped as $key => $value) {
             $items = $value;
