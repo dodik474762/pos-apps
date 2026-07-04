@@ -161,11 +161,12 @@ let Customer = {
     },
 
 
-    submit: (elm, e) => {
+    submit: (elm, e, state = '') => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
             let params = Customer.getPostInput();
+            params.state = state;
             $.ajax({
                 type: "POST",
                 dataType: "json",

@@ -206,7 +206,9 @@ class CustomerController extends Controller
         $data['company'] = session('id_company');
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();
-
+        // echo "<pre>";
+        // print_r($data);
+        // die;
         $data['stock_customer'] = $this->getListProductStockKunjungan($data['id']);
         $data['product_prices'] = $this->getListProductUomPrice($data['id']);
         $data['title'] = 'Form ' . $this->getTitle();
@@ -217,7 +219,7 @@ class CustomerController extends Controller
         $data['sub_channels'] = $this->getSubChannel();
         $data['tops'] = $this->getTerms();
         $data['view_detail'] = 'detail';
-        $view = view('web.customer.formadd', $data);
+        $view = view('web.customer.formdetail', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();

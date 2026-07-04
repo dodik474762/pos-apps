@@ -187,52 +187,82 @@ class CustomerController extends Controller
                 $roles->foto_npwp_path = $dbpathlampOutlet . $fileOutletName;
             }
             // $roles->branch = $data['branch'];
-            $roles->pic = $data['pic'];
-            $roles->no_ktp = $data['no_ktp'];
-            $roles->price_list = $data['price_list'];
-            $roles->nama_customer = $data['nama_customer'];
-            $roles->pic = $data['pic'];
-            $roles->phone = $data['phone'];
-            $roles->office_contact = $data['office_contact'];
-            $roles->email = $data['email'];
-            $roles->address = $data['address'];
-            $roles->kota = $data['kota'];
-            $roles->provinsi = $data['provinsi'];
-            $roles->npwp = $data['npwp'];
-            $roles->currency = $data['currency'];
-            $roles->customer_category = $data['customer_category'];
-            $roles->payment_terms = $data['payment_terms'];
-            $roles->credit_limit = $data['credit_limit'];
-            $roles->kecamatan = $data['kecamatan'];
-            $roles->kelurahan = $data['kelurahan'];
-            $roles->reference_number = $data['reference_number'];
-            $roles->max_retur = $data['max_retur'];
-            $roles->latitude = $data['latitude'];
-            $roles->longitude = $data['longitude'];
-            $roles->pasar = $data['pasar'];
-            $roles->channel_outlet = $data['channel_outlet'];
-            $roles->sub_channel_outlet = $data['sub_channel_outlet'];
-            $roles->min_invoice = $data['min_invoice'];
-            $roles->branch = 'YOGYAKARTA';
-            $roles->save();
-            $id_cust = $roles->id;
-            $name_cust = $data['nama_customer'];
+
+            if ($data['state'] == 'update-sales') {
+                $roles->pic = $data['pic'];
+                $roles->no_ktp = $data['no_ktp'];
+                $roles->nama_customer = $data['nama_customer'];
+                $roles->pic = $data['pic'];
+                $roles->phone = $data['phone'];
+                $roles->office_contact = $data['office_contact'];
+                $roles->email = $data['email'];
+                $roles->address = $data['address'];
+                $roles->kota = $data['kota'];
+                $roles->provinsi = $data['provinsi'];
+                $roles->npwp = $data['npwp'];
+                $roles->kecamatan = $data['kecamatan'];
+                $roles->kelurahan = $data['kelurahan'];
+                $roles->reference_number = $data['reference_number'];
+                $roles->max_retur = $data['max_retur'];
+                $roles->latitude = $data['latitude'];
+                $roles->longitude = $data['longitude'];
+                $roles->channel_outlet = $data['channel_outlet'];
+                $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+                $roles->pasar = $data['pasar'];
+                $roles->branch = 'YOGYAKARTA';
+                $roles->save();
+                $id_cust = $roles->id;
+                $name_cust = $data['nama_customer'];
+            } else {
+                $roles->pic = $data['pic'];
+                $roles->no_ktp = $data['no_ktp'];
+                $roles->price_list = $data['price_list'];
+                $roles->nama_customer = $data['nama_customer'];
+                $roles->pic = $data['pic'];
+                $roles->phone = $data['phone'];
+                $roles->office_contact = $data['office_contact'];
+                $roles->email = $data['email'];
+                $roles->address = $data['address'];
+                $roles->kota = $data['kota'];
+                $roles->provinsi = $data['provinsi'];
+                $roles->npwp = $data['npwp'];
+                $roles->currency = $data['currency'];
+                $roles->customer_category = $data['customer_category'];
+                $roles->payment_terms = $data['payment_terms'];
+                $roles->credit_limit = $data['credit_limit'];
+                $roles->kecamatan = $data['kecamatan'];
+                $roles->kelurahan = $data['kelurahan'];
+                $roles->reference_number = $data['reference_number'];
+                $roles->max_retur = $data['max_retur'];
+                $roles->latitude = $data['latitude'];
+                $roles->longitude = $data['longitude'];
+                $roles->pasar = $data['pasar'];
+                $roles->channel_outlet = $data['channel_outlet'];
+                $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+                $roles->min_invoice = $data['min_invoice'];
+                $roles->branch = 'YOGYAKARTA';
+                $roles->save();
+                $id_cust = $roles->id;
+                $name_cust = $data['nama_customer'];
+            }
 
 
-            foreach ($items_price as $key => $value) {
-                list($product, $product_name) = explode('//', $value->product);
-                list($unit, $unit_name) = explode('-', $value->uom);
-                $product_uom_price = $value->id != '' ? ProductUomPrice::find($value->id) : new ProductUomPrice();
-                $product_uom_price->product = $product;
-                $product_uom_price->unit = $unit;
-                $product_uom_price->price_list = $value->type_price;
-                $product_uom_price->price = $value->price;
-                $product_uom_price->date_start = $value->date_start;
-                $product_uom_price->min_qty = $value->min_qty;
-                $product_uom_price->max_qty = $value->max_qty;
-                $product_uom_price->customer = $id_cust;
-                $product_uom_price->customer_name = $name_cust;
-                $product_uom_price->save();
+            if ($data['state'] != 'update-sales') {
+                foreach ($items_price as $key => $value) {
+                    list($product, $product_name) = explode('//', $value->product);
+                    list($unit, $unit_name) = explode('-', $value->uom);
+                    $product_uom_price = $value->id != '' ? ProductUomPrice::find($value->id) : new ProductUomPrice();
+                    $product_uom_price->product = $product;
+                    $product_uom_price->unit = $unit;
+                    $product_uom_price->price_list = $value->type_price;
+                    $product_uom_price->price = $value->price;
+                    $product_uom_price->date_start = $value->date_start;
+                    $product_uom_price->min_qty = $value->min_qty;
+                    $product_uom_price->max_qty = $value->max_qty;
+                    $product_uom_price->customer = $id_cust;
+                    $product_uom_price->customer_name = $name_cust;
+                    $product_uom_price->save();
+                }
             }
 
             DB::commit();

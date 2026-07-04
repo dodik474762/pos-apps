@@ -80,7 +80,7 @@
                             <div class="mb-3">
                                 <label>Currency</label>
                                 <div>
-                                    <select name="" id="currency" class="form-control">
+                                    <select disabled name="" id="currency" class="form-control">
                                         <option value="">PILIH</option>
                                         <option value="IDR"
                                             {{ isset($data->currency) ? ($data->currency == 'IDR' ? 'selected' : '') : '' }}>
@@ -95,7 +95,7 @@
                                 <label>Payment Terms / TOP</label>
                                 <div>
                                     <select name="" id="payment_terms"
-                                        {{ strtolower($akses) != 'superadmin' ? 'readonly' : '' }}
+                                        {{ strtolower($akses) != 'superadmin' ? 'disabled' : '' }}
                                         class="form-control required" error="TOP"
                                         onchange="Customer.changeCreditLimit(this)">
                                         <option value="">PILIH</option>
@@ -110,7 +110,7 @@
                             <div class="mb-3">
                                 <label>Credit Limit</label>
                                 <div>
-                                    <input tabindex="10" type="number" id="credit_limit" class="form-control required"
+                                    <input disabled tabindex="10" type="number" id="credit_limit" class="form-control"
                                         error="Credit Limit" placeholder="Credit Limit"
                                         value="{{ isset($data->credit_limit) ? $data->credit_limit : '' }}">
                                 </div>
@@ -118,7 +118,7 @@
                             <div class="mb-3">
                                 <label>Price List</label>
                                 <div>
-                                    <select name="" id="price_list" class="form-control">
+                                    <select disabled name="" id="price_list" class="form-control">
                                         <option value="">PILIH</option>
                                         @foreach ($data_price_list as $item)
                                             <option value="{{ $item->id }}">{{ $item->name }}</option>
@@ -129,7 +129,7 @@
                             <div class="mb-3">
                                 <label>Max Retur</label>
                                 <div>
-                                    <input tabindex="10" type="number" id="max_retur" class="form-control required"
+                                    <input disabled tabindex="10" type="number" id="max_retur" class="form-control"
                                         error="Max Retur" placeholder="Max Retur"
                                         value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
                                 </div>
@@ -306,8 +306,8 @@
                             <div class="mb-3">
                                 <label>Min Faktur</label>
                                 <div>
-                                    <input tabindex="12" type="number" id="min_invoice"
-                                        class="form-control required" error="Min Faktur "
+                                    <input disabled tabindex="12" type="number" id="min_invoice"
+                                        class="form-control" error="Min Faktur "
                                         {{ strtolower($akses) != 'superadmin' ? 'readonly' : '' }}
                                         placeholder="Min Faktur"
                                         value="{{ isset($data->min_invoice) ? $data->min_invoice : '1' }}">
