@@ -130,31 +130,31 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th style="width:5%">No</th>
+                <th style="width:5%;font-size: 12px;font-weight: normal;">No</th>
 
-                <th style="width:8%">Invoice</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">Invoice</th>
 
-                <th style="width:8%">Tgl<br>Invoice</th>
-                <th style="width:8%">Jatuh<br>Tempo</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">Tgl<br>Invoice</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">Jatuh<br>Tempo</th>
 
-                <th style="width:8%">DO</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">DO</th>
 
-                <th style="width:14%">Customer</th>
+                <th style="width:14%;font-size: 12px;font-weight: normal;">Customer</th>
 
-                <th style="width:6%">Status</th>
+                <th style="width:6%;font-size: 12px;font-weight: normal;">Status</th>
 
-                <th style="width:4%">TOP</th>
+                <th style="width:4%;font-size: 12px;font-weight: normal;">TOP</th>
 
-                <th style="width:10%">Nilai Faktur</th>
-                <th style="width:10%">Outstanding</th>
+                <th style="width:10%;font-size: 12px;font-weight: normal;">Nilai Faktur</th>
+                <th style="width:10%;font-size: 12px;font-weight: normal;">Outstanding</th>
 
-                <th style="width:8%">Tunai</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">Tunai</th>
 
-                <th style="width:8%">Transfer</th>
+                <th style="width:8%;font-size: 12px;font-weight: normal;">Transfer</th>
 
-                <th style="width:7%">Remark</th>
+                <th style="width:7%;font-size: 12px;font-weight: normal;">Remark</th>
 
-                <th style="width:5%">Retur</th>
+                <th style="width:5%;font-size: 12px;font-weight: normal;">Retur</th>
             </tr>
         </thead>
         <tbody>
