@@ -584,6 +584,7 @@ Route::post('api/transaksi/delivery_order/getSoDetail', [TransactionDeliveryOrde
 Route::post('api/transaksi/sales_invoice/getData', [TransactionSalesInvoiceController::class, 'getData']);
 Route::post('api/transaksi/sales_invoice/getDataTagihan', [TransactionSalesInvoiceController::class, 'getDataTagihan']);
 Route::post('api/transaksi/sales_invoice/getDataFromSO', [TransactionSalesInvoiceController::class, 'getDataFromSO']);
+Route::post('api/transaksi/sales_invoice/getDataFromSOCanceled', [TransactionSalesInvoiceController::class, 'getDataFromSOCanceled']);
 Route::post('api/transaksi/sales_invoice/submit', [TransactionSalesInvoiceController::class, 'submit']);
 Route::post('api/transaksi/sales_invoice/delete', [TransactionSalesInvoiceController::class, 'delete']);
 Route::post('api/transaksi/sales_invoice/confirmDelete', [TransactionSalesInvoiceController::class, 'confirmDelete']);

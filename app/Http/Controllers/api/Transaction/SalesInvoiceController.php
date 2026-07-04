@@ -254,6 +254,70 @@ class SalesInvoiceController extends Controller
         return json_encode($data);
     }
 
+    public function getDataFromSOCanceled()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'so.so_number',
+                'so.so_date',
+                'w.name as warehouse_name',
+                'top.remarks as payment_terms',
+                DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('sales_order_headers as so', 'so.id', 'm.sales_order')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
+            // ->whereNull('m.deleted')
+            ->whereIn('m.status', ['CANCELLED', 'CANCELED'])
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('so.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function getDataDo()
     {
         DB::enableQueryLog();

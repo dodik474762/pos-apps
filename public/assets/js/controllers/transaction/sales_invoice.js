@@ -597,6 +597,193 @@ let SalesInvoice = {
             });
     },
 
+    getDataFromSOCanceled: async () => {
+        let tableData = $("table#table-data-canceled");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportInvoiceTagihan",
+                    action: newexportaction,
+                },
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesInvoice.moduleApi()) + `getDataFromSOCanceled`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+                },
+                data: function (d) {
+                    d.start_date = $("#start_date").val();
+                    d.end_date = $("#end_date").val();
+                }
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            // buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "so_number",
+                },
+                {
+                    data: "so_date",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "warehouse_name",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
+                    data: "total_amount",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "amount_paid",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "amount_remaining",
+                    render: function (data, type, row) {
+                        if (type === 'display' || type === 'filter') {
+                            return new Intl.NumberFormat('id-ID', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(data);
+                        }
+                        return data;
+                    }
+                },
+                {
+                    data: "payment_terms",
+                },
+                {
+                    data: "due_date",
+                },
+                {
+                    data: "print_date",
+                },
+                {
+                    data: "print_date",
+                    render: function (data, type, row) {
+                        if (data) {
+                            if (row.reprint == 1) {
+                                return "Belum Cetak";
+                            }
+                            return "Sudah Cetak";
+                        }
+                        return "Belum Cetak";
+                    },
+                },
+                {
+                    data: "reprint",
+                    render: function (data, type, row) {
+                        if (data == 1) {
+                            return "Ya";
+                        }
+                        return "Tidak";
+                    },
+                },
+                {
+                    data: "status",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        let html = "";
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
     getDataFromDO: async () => {
         let tableData = $("table#table-data-do");
 
@@ -1882,5 +2069,6 @@ $(function () {
     SalesInvoice.getData();
     SalesInvoice.getDataFromDO();
     SalesInvoice.getDataTagihan();
+    SalesInvoice.getDataFromSOCanceled();
     SalesInvoice.editReload();
 });
