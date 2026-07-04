@@ -410,6 +410,30 @@ class DeliveryOrderController extends Controller
                     // Item baru atau update
                     $detail = new DeliveryOrderDtl();
 
+                    /*cek stock */
+                    $stock = DB::table('product_stock')
+                        ->where('product', $item->product_id)
+                        ->where('warehouse', $data['warehouse_id'])
+                        ->first();
+                    if (empty($stock)) {
+                        $productsDb = Product::find($item->product_id);
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Stock ' . $productsDb->name . ' belum diisi, input di adjustment stock terlebih dahulu',
+                        ]);
+                    }
+
+
+                    if ($stock && ($stock->qty - $item->qty <= 0)) {
+                        $productsDb = Product::find($item->product_id);
+                        DB::rollBack();
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Stock ' . $productsDb->name  . ' habis',
+                        ]);
+                    }
+
                     $detail->do_id = $hdrId;
                     $detail->so_detail_id = $item->id;
                     $detail->product_id = $item->product_id;
