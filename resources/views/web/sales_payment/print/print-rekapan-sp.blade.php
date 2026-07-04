@@ -90,10 +90,7 @@
             </td>
         </tr>
     </table>
-
-    <br>
-
-    <h4>Detail {{ $user_group == 5 ? $salesmans->nik : '' }} </h4>
+    <h4 style="margin-top:-16px; margin-bottom:5px;">Detail {{ $user_group == 5 ? $salesmans->nik : '' }} </h4>
     <table class="table-detail">
         <thead>
             <tr>

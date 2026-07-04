@@ -90,10 +90,8 @@
         </tr>
     </table>
 
-    <br>
-
     {{-- INFORMASI PO --}}
-    <table class="no-border" style="width:100%;">
+    <table class="no-border" style="width:100%;margin-top:-5px;">
         <tr>
             <td><strong>NIK Salesman:</strong> {{ $salesman->nik }}</td>
             <td style="padding-left:40px;"><strong>Jabatan:</strong> {{ $salesman->jabatan }}</td>
