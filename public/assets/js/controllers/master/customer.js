@@ -381,7 +381,7 @@ let Customer = {
     },
 
     getData: async () => {
-        let tableData = $("table#table-data");
+        let tableData = $("table#table-data-customer");
 
         let updateAction = $("#update").val();
         let deleteAction = $("#delete").val();
@@ -419,7 +419,7 @@ let Customer = {
             createdRow: function (row, data, dataIndex) {
                 // console.log('row', $(row));
             },
-            dom: $('#akses_session').val() == 'superadmin' ? "Bftrip" : "-",
+            dom: "Bftrip",
             buttons: [
                 {
                     extend: "excel",

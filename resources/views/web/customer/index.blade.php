@@ -80,7 +80,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="list-data">
                                     <div class="table-responsive table-card mb-1">
-                                        <table class="table table-nowrap align-middle" id="table-data">
+                                        <table class="table table-nowrap align-middle" id="table-data-customer">
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
