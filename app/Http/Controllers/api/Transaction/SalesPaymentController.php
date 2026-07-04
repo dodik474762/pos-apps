@@ -213,6 +213,8 @@ class SalesPaymentController extends Controller
         DB::beginTransaction();
         try {
 
+            $users = Users::find($userId);
+
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
                 ->with('account') // kalau kamu pakai relasi
@@ -255,6 +257,9 @@ class SalesPaymentController extends Controller
             $header->remarks = $data['remarks'] ?? null;
             $header->coa_kas = $data['account_id'];
             $header->bulk = $data['bulk'];
+            $header->last_verificator = $users->user_group;
+            $header->verificator_id = $userId;
+            $header->verificator_date = date('Y-m-d H:i:s');
             $header->save();
 
             $hdrId = $header->id;
