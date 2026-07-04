@@ -339,7 +339,7 @@ class SalesPaymentController extends Controller
                 $invoice = SalesInvoiceHeader::find($value['invoice_id']);
                 $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
 
-                if ($totalInvoicePrev <= 0) {
+                if ($totalInvoicePrev <= 0 && $invoice->status == "PAID" && $header->created_by != $userId) {
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
