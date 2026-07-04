@@ -9,6 +9,7 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #000;
+            /* margin: 0 0 0 28px; */
             margin: 0;
             padding: 0;
         }
