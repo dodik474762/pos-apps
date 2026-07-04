@@ -172,24 +172,32 @@
                 <strong>Disetorkan Oleh</strong>
                 <br><br><br>
                 (__________________)
+                <br>
+                &nbsp;
             </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Diterima Oleh</strong>
                 <br><br><br>
                 (__________________)
+                <br>
+                Kasir
             </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Direview Oleh</strong>
                 <br><br><br>
                 (__________________)
+                <br>
+                Admin AR
             </td>
             <td class="text-center">
                 <br><br><br>
                 <strong>Diketahui Oleh</strong>
                 <br><br><br>
                 (__________________)
+                <br>
+                BOD
             </td>
         </tr>
     </table>
