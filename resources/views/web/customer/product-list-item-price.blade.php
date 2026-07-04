@@ -14,16 +14,18 @@
                         <th style="width: 10%;">Min Qty</th> <!-- 🔹 kolom baru -->
                         <th style="width: 10%;">Max Qty</th> <!-- 🔹 kolom baru -->
                         <th style="width: 10%;">Harga</th>
-                        <th style="width: 20%;">Tanggal Mulai Berlaku</th>                        
+                        <th style="width: 20%;">Tanggal Mulai Berlaku</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="7">
-                            <a href="javascript:;" class="btn btn-primary btn-sm"
-                                onclick="Customer.addItemPrice(this, event)">Add Item</a>
-                        </td>
-                    </tr>
+                    @if (strtolower($akses) == 'superadmin')
+                        <tr>
+                            <td colspan="7">
+                                <a href="javascript:;" class="btn btn-primary btn-sm"
+                                    onclick="Customer.addItemPrice(this, event)">Add Item</a>
+                            </td>
+                        </tr>
+                    @endif
 
                     @foreach ($product_prices as $v)
                         <tr class="input" data_id="{{ $v->id }}">
@@ -37,16 +39,18 @@
                                     <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                         onclick="Product.showDataProduct(this)">Pilih</button>
                                     <input id="product" name="product[]" type="text" class="form-control"
-                                        error="product" placeholder="Pilih Data product"
-                                        aria-label="Pilih Data Product" aria-describedby="button-addon1"
+                                        error="product" placeholder="Pilih Data product" aria-label="Pilih Data Product"
+                                        aria-describedby="button-addon1"
                                         value="{{ $v->product == '' ? '' : $v->product . '//' . $v->product_name }}">
                                 </div>
                             </td>
                             <td id="uom">{{ $v->unit }}-{{ $v->unit_name }}</td>
                             <td>
-                                <select id="type_price" name="type_price[]" class="form-control required" error="Type Price">
+                                <select id="type_price" name="type_price[]" class="form-control required"
+                                    error="Type Price">
                                     @foreach ($data_price_list as $item)
-                                        <option value="{{ $item->id }}" {{ $v->price_list == $item->id ? 'selected' : '' }}>
+                                        <option value="{{ $item->id }}"
+                                            {{ $v->price_list == $item->id ? 'selected' : '' }}>
                                             {{ $item->name }}
                                         </option>
                                     @endforeach
@@ -69,7 +73,7 @@
                             <td>
                                 <input type="date" id="date_start" name="date_start[]" class="form-control required"
                                     error="Tanggal Mulai" value="{{ $v->date_start }}">
-                            </td>                          
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
