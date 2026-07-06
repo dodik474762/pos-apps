@@ -176,19 +176,27 @@
             </div>
         </div>
         <div class="text-end">
-            <div>
+            @if (isset($data->id))
+                @if ($akses_session == 'superadmin')
+                    <button type="submit" onclick="AdjustmentStock.submit(this, event)"
+                        class="btn btn-success waves-effect waves-light me-1">
+                        Submit
+                    </button>
+                @endif
+            @else
                 <button type="submit" onclick="AdjustmentStock.submit(this, event)"
                     class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
-                <button type="reset" onclick="AdjustmentStock.cancel(this, event)" class="btn waves-effect">
-                    Cancel
-                </button>
-            </div>
+            @endif
+            <button type="reset" onclick="AdjustmentStock.cancel(this, event)" class="btn waves-effect">
+                Cancel
+            </button>
         </div>
-        <!-- end select2 -->
-
     </div>
+    <!-- end select2 -->
+
+</div>
 
 
 </div>

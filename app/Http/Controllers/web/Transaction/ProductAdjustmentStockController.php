@@ -68,6 +68,7 @@ class ProductAdjustmentStockController extends Controller
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['akses_session'] = strtolower(session('akses'));
         $view = view('web.adjustment_stock.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -83,9 +84,10 @@ class ProductAdjustmentStockController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-
+        $data['akses_session'] = strtolower(session('akses'));
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['akses_session'] = strtolower(session('akses'));
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
