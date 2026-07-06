@@ -576,14 +576,14 @@ class SalesPaymentController extends Controller
             // Jurnal: Kas (D) / Diskon Bayar (D) vs Piutang (K)
             // Piutang berkurang → Kredit piutang sebesar gross (net + disc)
             $grossAmount = $totalAmount + $disc_amount;
-            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, 'C', $grossAmount, $currency->id, '', $userId);
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, 'C', $grossAmount, $currency->id, '', $userId ?? 0);
 
             // Kas bertambah → Debit kas sebesar net (yang benar-benar diterima)
-            postingGL($reference, $kasAccount->id, $kasAccount->account_name, 'D', $net_amount, $currency->id, '', $userId);
+            postingGL($reference, $kasAccount->id, $kasAccount->account_name, 'D', $net_amount, $currency->id, '', $userId ?? 0);
 
             // Diskon bayar → Debit akun diskon (jika ada)
             if ($disc_amount > 0) {
-                postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, 'D', $disc_amount, $currency->id, '', $userId);
+                postingGL($reference, $discBayarAcc->account_id, $discBayarAcc->account->account_name, 'D', $disc_amount, $currency->id, '', $userId ?? 0);
             }
 
             DB::commit();

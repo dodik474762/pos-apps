@@ -895,6 +895,7 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $exist = GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
         ->where('dc', $dc)->first();
 
+    $userId = 0;
     $post = empty($exist) ? new GeneralLedger : $exist;
     $post->posting_date = $postingDate;
     $post->reference = $reference;
@@ -904,7 +905,7 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $post->amount = $amount;
     $post->currency = $currency;
     $post->description = $desc;
-    $post->created_by = $user_id == '' ? session('user_id') : $user_id;
+    $post->created_by = $user_id == '' ? $userId : $user_id;
     $post->save();
 }
 
