@@ -419,6 +419,7 @@ class SalesPaymentController extends Controller
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
             ->whereNull('sales_payment_detail.deleted')
+            ->where('pl.packing_date', '>', '2026-06-29')
             ->where('pl.driver_name', $nik)
             ->whereNull('sph.deleted')
             ->where(function ($q) use ($tanggal) {
