@@ -329,7 +329,7 @@
         <div class="text-end">
             <div>
                 @if (isset($view_detail))
-                    @if ($akses == 'supervisor sales' || $akses == 'admin supervisor')
+                    @if ($akses == 'supervisor sales' || $akses == 'admin supervisor' || $akses == 'superadmin')
                         <button type="submit" onclick="Customer.submit(this, event, 'update-sales')"
                             class="btn btn-success waves-effect waves-light me-1">
                             Update

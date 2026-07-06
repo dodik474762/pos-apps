@@ -202,7 +202,7 @@ class CustomerController extends Controller
         $api = new MasterCustomerController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['akses'] = session('akses');
+        $data['akses'] = strtolower(session('akses'));
         $data['company'] = session('id_company');
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['pasars'] = $this->getPasar();

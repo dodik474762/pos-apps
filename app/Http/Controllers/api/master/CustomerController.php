@@ -142,6 +142,9 @@ class CustomerController extends Controller
         $data = $request->all();
         $items_price = isset($data['items_price']) ? json_decode($data['items_price']) : [];
 
+        // echo '<pre>';
+        // print_r($data);
+        // die;
         $files_outlet = $request->file('photo_path');
         $files_ktp = $request->file('foto_ktp_path');
         $files_npwp = $request->file('foto_npwp_path');
