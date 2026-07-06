@@ -2,9 +2,16 @@
 
 namespace App\Http\Controllers\web\Transaction;
 
+use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\Dictionary;
+use App\Models\Master\Menu;
+use App\Models\Master\RoutingPermission;
+use App\Models\Master\RoutingReminder;
 use Illuminate\Http\Request;
 use App\Models\Master\Warehouse;
+use App\Models\Transaction\ProductAdjustmentStockDtl;
+use Illuminate\Support\Facades\DB;
 
 class ProductAdjustmentStockController extends Controller
 {
@@ -72,7 +79,7 @@ class ProductAdjustmentStockController extends Controller
 
     public function ubah(Request $request)
     {
-        $api = new MasterRoutingApprovalController();
+        $api = new TransactionProductAdjustmentStockController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
@@ -82,6 +89,14 @@ class ProductAdjustmentStockController extends Controller
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
+        $data['list_items'] = ProductAdjustmentStockDtl::where('product_adjustment_stock_dtl.header_id', $data['id'])
+            ->select([
+                'product_adjustment_stock_dtl.*',
+                'p.name as product_name',
+                DB::raw('(product_adjustment_stock_dtl.qty - product_adjustment_stock_dtl.qty_current) as qty_adjustment')
+            ])
+            ->join('product as p', 'p.id', 'product_adjustment_stock_dtl.product')
+            ->get()->toArray();
         $data['routing_item'] = RoutingPermission::where('routing_permission.routing_header', $data['id'])
             ->select(['routing_permission.*', 'k.nama_lengkap as name_user'])
             ->join('users as u', 'u.id', 'routing_permission.users')

@@ -76,7 +76,7 @@
                                     </thead>
                                     <tbody>
                                         @if (isset($data->id))
-                                            @foreach ($routing_item as $item)
+                                            @foreach ($list_items as $item)
                                                 <tr class="input" data_id="{{ $item['id'] }}">
                                                     <td>&nbsp;</td>
                                                     <td>
@@ -95,18 +95,22 @@
                                                     <td id="unit" data_id=""></td>
                                                     <td>
                                                         <input id="qty_current" type="number" readonly
-                                                            class="form-control" value="{{ isset($item['qty_current']) ? $item['qty_current'] : '' }}">
+                                                            class="form-control"
+                                                            value="{{ isset($item['qty_current']) ? $item['qty_current'] : '' }}">
                                                     </td>
                                                     <td>
                                                         <input id="qty" type="number"
                                                             class="form-control required" error="Qty"
                                                             placeholder="Pilih Data Qty" aria-label="Pilih Data Qty"
                                                             aria-describedby="button-addon1"
-                                                            value="{{ $item['qty'] }}" onkeyup="AdjustmentStock.calculateQty(this)" onchange="AdjustmentStock.calculateQty(this)">
+                                                            value="{{ $item['qty'] }}"
+                                                            onkeyup="AdjustmentStock.calculateQty(this)"
+                                                            onchange="AdjustmentStock.calculateQty(this)">
                                                     </td>
                                                     <td>
                                                         <input id="qty_adjustment" type="number" readonly
-                                                            class="form-control" value="{{ isset($item['qty_adjustment']) ? $item['qty_adjustment'] : '' }}">
+                                                            class="form-control"
+                                                            value="{{ isset($item['qty_adjustment']) ? $item['qty_adjustment'] : '' }}">
                                                     </td>
                                                     <td id="unit_price"></td>
                                                     <td class="text-center" id="action">
@@ -142,7 +146,9 @@
                                                     <input id="qty" type="number"
                                                         class="form-control required" error="Qty"
                                                         placeholder="Pilih Data Qty" aria-label="Pilih Data Qty"
-                                                        aria-describedby="button-addon1" value="" onkeyup="AdjustmentStock.calculateQty(this)" onchange="AdjustmentStock.calculateQty(this)">
+                                                        aria-describedby="button-addon1" value=""
+                                                        onkeyup="AdjustmentStock.calculateQty(this)"
+                                                        onchange="AdjustmentStock.calculateQty(this)">
                                                 </td>
                                                 <td>
                                                     <input id="qty_adjustment" type="number" readonly
