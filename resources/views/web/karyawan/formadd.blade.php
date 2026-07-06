@@ -78,8 +78,9 @@
                             <div class="mb-3">
                                 <label>Latitude</label>
                                 <div>
-                                    <input tabindex="11" type="text" id="latitude" class="form-control" error="Latitude"
-                                        placeholder="Latitude Ex : -6.200000" value="{{ isset($data->latitude) ? $data->latitude : '' }}">
+                                    <input tabindex="11" type="text" id="latitude" class="form-control"
+                                        error="Latitude" placeholder="Latitude Ex : -6.200000"
+                                        value="{{ isset($data->latitude) ? $data->latitude : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -126,17 +127,18 @@
                             <div class="mb-3">
                                 <label>Longitude</label>
                                 <div>
-                                    <input tabindex="12" type="text" id="longitude" class="form-control" error="Longitude"
-                                        placeholder="Longitude Ex : 106.816666" value="{{ isset($data->longitude) ? $data->longitude : '' }}">
+                                    <input tabindex="12" type="text" id="longitude" class="form-control"
+                                        error="Longitude" placeholder="Longitude Ex : 106.816666"
+                                        value="{{ isset($data->longitude) ? $data->longitude : '' }}">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <hr/>
+                    <hr />
 
                     <!-- Karyawan Group Table -->
-                    <div class="row">
+                    <div class="row d-none">
                         <div class="col-md-12">
                             <label>Karyawan Group </label>
                             <div class="table-responsive">
@@ -164,11 +166,14 @@
                                                         </select>
                                                     </td>
                                                     <td class="text-center">
-                                                        <input type="radio" onchange="Karyawan.changeDefault(this, event)" name="group-default" id="group-default"
+                                                        <input type="radio"
+                                                            onchange="Karyawan.changeDefault(this, event)"
+                                                            name="group-default" id="group-default"
                                                             {{ $item['default'] == 1 ? 'checked' : '' }}>
                                                     </td>
                                                     <td class="text-center" id="action">
-                                                        <button type="button" onclick="Karyawan.deleteItem(this, event)"
+                                                        <button type="button"
+                                                            onclick="Karyawan.deleteItem(this, event)"
                                                             class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i
                                                                 class="bx bx-trash-alt"></i></button>
                                                     </td>
@@ -187,7 +192,9 @@
                                                         </select>
                                                     </td>
                                                     <td class="text-center">
-                                                        <input type="radio" onchange="Karyawan.changeDefault(this, event)" name="group-default"  id="group-default">
+                                                        <input type="radio"
+                                                            onchange="Karyawan.changeDefault(this, event)"
+                                                            name="group-default" id="group-default">
                                                     </td>
                                                     <td class="text-center" id="action">
                                                         &nbsp;
@@ -207,7 +214,9 @@
                                                     </select>
                                                 </td>
                                                 <td class="text-center">
-                                                    <input type="radio" onchange="Karyawan.changeDefault(this, event)" name="group-default"  id="group-default">
+                                                    <input type="radio"
+                                                        onchange="Karyawan.changeDefault(this, event)"
+                                                        name="group-default" id="group-default">
                                                 </td>
                                                 <td class="text-center" id="action">
                                                     &nbsp;
@@ -227,10 +236,10 @@
                         </div>
                     </div>
 
-                    <hr/>
+                    <hr />
 
                     <!-- List Product Table -->
-                    @if(isset($id))
+                    @if (isset($id))
                         <div class="row mt-3">
                             <div class="col-md-12">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -253,12 +262,14 @@
                                         <tbody>
                                             @if (isset($data->id) && isset($karyawan_product) && !empty($karyawan_product))
                                                 @foreach ($karyawan_product as $item)
-                                                    <tr class="input" data_id="{{ $item['id'] }}" data-product-id="{{ $item['product_id'] ?? '' }}">
+                                                    <tr class="input" data_id="{{ $item['id'] }}"
+                                                        data-product-id="{{ $item['product_id'] ?? '' }}">
                                                         <td>&nbsp;</td>
                                                         <td>{{ $item['kode_product'] }}</td>
                                                         <td>{{ $item['nama_product'] }}</td>
                                                         <td class="text-center">
-                                                            <button type="button" onclick="Karyawan.deleteProduct(this, event)"
+                                                            <button type="button"
+                                                                onclick="Karyawan.deleteProduct(this, event)"
                                                                 class="btn btn-danger btn-sm waves-effect waves-light">
                                                                 <i class="bx bx-trash-alt"></i>
                                                             </button>
@@ -325,8 +336,11 @@
                         <option value="">-- Pilih Product --</option>
                         @isset($products)
                             @foreach ($products as $product)
-                                <option value="{{ $product->id }}" data-nama="{{ $product->name }}" data-harga-satuan-besar="{{ $product->harga_satuan_besar }}">
-                                    {{ $product->code }} - {{ $product->name }} - {{ $product->sku_name }} - {{ $product->nama_vendor }} (Rp {{ number_format($product->harga_satuan_besar ?? 0, 0, ',', '.') }})
+                                <option value="{{ $product->id }}" data-nama="{{ $product->name }}"
+                                    data-harga-satuan-besar="{{ $product->harga_satuan_besar }}">
+                                    {{ $product->code }} - {{ $product->name }} - {{ $product->sku_name }} -
+                                    {{ $product->nama_vendor }} (Rp
+                                    {{ number_format($product->harga_satuan_besar ?? 0, 0, ',', '.') }})
                                 </option>
                             @endforeach
                         @endisset
@@ -336,7 +350,8 @@
 
                 <div class="mb-3">
                     <label class="form-label">Harga Satuan Terbesar</label>
-                    <input type="text" class="form-control" id="modal-product-harga-satuan-besar" placeholder="Rp 0">
+                    <input type="text" class="form-control" id="modal-product-harga-satuan-besar"
+                        placeholder="Rp 0">
                 </div>
             </div>
 
@@ -344,8 +359,8 @@
                 <button type="button" class="btn btn-light waves-effect" data-bs-dismiss="modal">
                     <i class="bx bx-x me-1"></i> Batal
                 </button>
-                <button type="button" class="btn btn-primary waves-effect waves-light"
-                    id="btn-save-product" onclick="Karyawan.saveProduct(this, event)">
+                <button type="button" class="btn btn-primary waves-effect waves-light" id="btn-save-product"
+                    onclick="Karyawan.saveProduct(this, event)">
                     <i class="bx bx-save me-1"></i> Simpan
                 </button>
             </div>
