@@ -504,7 +504,7 @@ class SalesPaymentController extends Controller
             $kasAccount = Coa::find($data['account_id']);
 
             // === FIND INVOICE ===
-            $invoice = SalesInvoiceHeader::where('invoice_number', $invoice_number)->first();
+            $invoice = SalesInvoiceHeader::where('invoice_number', $invoice_number)->whereNull('deleted')->first();
             if (!$invoice) {
                 DB::rollBack();
                 return response()->json([
