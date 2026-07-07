@@ -67,9 +67,6 @@ class KecamatanController extends Controller
         try {
             //code...
             $roles = $data['id'] == '' ? new Region() : Region::find($data['id']);
-            if ($data['id'] == '') {
-                $roles->code = generateCodeRegion();
-            }
             $roles->parent = $data['kota'];
             $roles->name = $data['kecamatan'];
             $roles->type = 'KECAMATAN';
