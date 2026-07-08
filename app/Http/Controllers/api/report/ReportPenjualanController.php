@@ -151,7 +151,9 @@ class ReportPenjualanController extends Controller
                 return $q->on('sid.so_detail_id', 'sod.id')
                     ->whereNull('sid.deleted');
             })
-            ->join('sales_invoice_header as sih', 'sih.id', 'sid.invoice_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+            })
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('vendor as principal', 'principal.id', 'p.principal')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
@@ -368,7 +370,9 @@ class ReportPenjualanController extends Controller
                 return $q->on('sid.so_detail_id', 'sod.id')
                     ->whereNull('sid.deleted');
             })
-            ->join('sales_invoice_header as sih', 'sih.id', 'sid.invoice_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+            })
             ->join('unit as u', 'u.id', 'sod.unit')
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')

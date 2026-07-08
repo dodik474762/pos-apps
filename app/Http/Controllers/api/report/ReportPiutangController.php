@@ -63,7 +63,9 @@ class ReportPiutangController extends Controller
                 'sih.invoice_number'
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
-            ->join('sales_invoice_header as sih', 'sih.sales_order', 'm.id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
+            })
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
