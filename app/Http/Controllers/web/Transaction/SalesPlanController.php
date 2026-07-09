@@ -107,6 +107,7 @@ class SalesPlanController extends Controller
             ->select([
                 'sales_plan_detail_route.*',
                 'c.nama_customer',
+                'c.code as kode_customer',
             ])
             ->join('customer as c', 'c.id', 'sales_plan_detail_route.customer_id')
             ->get();

@@ -1061,7 +1061,26 @@ let SalesPlan = {
                             body: function (data, row, column, node) {
                                 // ambil dari data-search jika ada (kolom customer)
                                 const $td = $(node);
-                                return $td.attr("data-search") || $td.find("input").val() || $td.find("select option:selected").text() || data;
+                                // 1. Checkbox (Visit Day) -> 1/0
+                                const $checkbox = $td.find('input[type="checkbox"]');
+                                if ($checkbox.length) {
+                                    return $checkbox.is(':checked') ? '1' : '0';
+                                }
+
+                                // 2. Select (Type / Kategori) -> ambil text opsi terpilih
+                                const $select = $td.find('select');
+                                if ($select.length) {
+                                    return $select.find('option:selected').text().trim();
+                                }
+
+                                // 3. Input text/readonly (Note, Customer, dll)
+                                const $input = $td.find('input');
+                                if ($input.length) {
+                                    return $input.val();
+                                }
+
+                                // 4. Fallback terakhir: data-search attribute atau data asli
+                                return $td.attr("data-search") || data;
                             }
                         }
                     }

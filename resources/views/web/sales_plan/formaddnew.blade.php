@@ -104,6 +104,7 @@
                                 <table class="table table-bordered" id="table-items">
                                     <thead class="table-light">
                                         <tr>
+                                            <th>Kode Customer</th>
                                             <th>Customer</th>
                                             <th>Type</th>
                                             <th colspan="7" class="text-center">Visit Day</th>
@@ -114,7 +115,7 @@
                                             <th>Action</th>
                                         </tr>
                                         <tr>
-                                            <th colspan="2"></th>
+                                            <th colspan="3"></th>
                                             <th>Mon</th>
                                             <th>Tue</th>
                                             <th>Wed</th>
@@ -132,6 +133,7 @@
                                                 <tr class="input" data_id="{{ $item->id ?? '' }}">
 
                                                     <!-- Customer -->
+                                                    <td>{{ $item->kode_customer ?? '' }}</td>
                                                     <td>
                                                         <label for="customer_id"
                                                             class="d-none">{{ $item->customer_id }}//{{ $item->nama_customer }}</label>
@@ -207,6 +209,7 @@
                                             @endforeach
                                         @else
                                             <tr class="input">
+                                                <td>&nbsp;</td>
                                                 <td>
                                                     <div class="input-group">
                                                         <button class="btn btn-outline-primary" type="button"
