@@ -12,6 +12,7 @@
             /* margin: 0 0 0 28px; */
             margin: 0;
             padding: 0;
+            margin-left: 30px;
         }
 
         table {
