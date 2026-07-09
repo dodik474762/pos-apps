@@ -42,10 +42,13 @@ let TerimaUang = {
         table.each((index, elm) => {
             const $row = $(elm);
 
-            result.push({
-                invoice_id: $row.attr("invoice_id") || null,
-                amount_paid: $row.find("#amount_paid").val() || "",
-            });
+            const checked = $row.find("input.check-item").is(":checked");
+            if (checked) {
+                result.push({
+                    invoice_id: $row.attr("invoice_id") || null,
+                    amount_paid: $row.find("#amount_paid").val() || "",
+                });
+            }
         });
 
         return result;
@@ -67,6 +70,18 @@ let TerimaUang = {
         if (validation.runWithElement(form)) {
             let params = TerimaUang.getPostInput();
             params.type = type;
+
+            const itemsChecked = $('input.check-item:checked');
+            if (itemsChecked.length == 0) {
+                message.sweetError("Informasi", "Pilih Data Terlebih Dahulu");
+                return false;
+            }
+
+            params.items_checked = [];
+            itemsChecked.each(function (index) {
+                params.items_checked.push($(this).attr("data_id"));
+            });
+
             $.ajax({
                 type: "POST",
                 dataType: "json",
@@ -246,15 +261,13 @@ let TerimaUang = {
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
                             TerimaUang.module()
-                        )}cetak?id=${data}' data_id="${
-                            row.id
-                        }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        )}cetak?id=${data}' data_id="${row.id
+                            }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 TerimaUang.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -829,10 +842,9 @@ let TerimaUang = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="TerimaUang.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
@@ -956,7 +968,7 @@ let TerimaUang = {
             message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date+"&salesman="+salesman;
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman;
     },
 
     cetak: (elm) => {
@@ -971,7 +983,7 @@ let TerimaUang = {
             message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date+"&salesman="+salesman;
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman;
     },
 
     checkAll: (elm) => {

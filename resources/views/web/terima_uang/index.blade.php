@@ -97,6 +97,18 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="all-submit"
+                                        href="#list-data-submit" role="tab" aria-selected="false">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All Sudah Submit
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="all-posted"
+                                        href="#list-data-posted" role="tab" aria-selected="false">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All Sudah Posted
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -117,6 +129,10 @@
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
                                                     <th>Koresi Terima Uang</th>
+                                                    <th style="width: 40px;">
+                                                        <input type="checkbox" id="check-all"
+                                                            onchange="TerimaUang.checkAll(this)">
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
@@ -156,7 +172,153 @@
                                                                     id="amount_paid">
                                                             @endif
                                                         </td>
+                                                        <td>
+                                                            <input type="checkbox" data_id="{{ $item->invoice_id }}"
+                                                                class="check-item" value="{{ $item->invoice_id }}">
+                                                        </td>
                                                     </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-submit">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-submit">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Tanggal Rute</th>
+                                                    <th>Invoice Number</th>
+                                                    <th>Tanggal Invoice</th>
+                                                    <th>DO Number</th>
+                                                    <th>Tanggal DO</th>
+                                                    <th>Customer</th>
+                                                    <th>Tipe Pembayaran</th>
+                                                    <th>Tanggal Jatuh Tempo</th>
+                                                    <th>Status</th>
+                                                    <th>Tagihan (IDR)</th>
+                                                    <th>Koresi Terima Uang</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                                @php
+                                                    $no = 1;
+                                                @endphp
+                                                @foreach ($invoices as $item)
+                                                    @php
+                                                        $do_number =
+                                                            $item->do_number == ''
+                                                                ? $item->dohs_number
+                                                                : $item->do_number;
+                                                        $do_date =
+                                                            $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                                                        $total_bayar =
+                                                            $item->total_terbayar_rph == ''
+                                                                ? $item->total_terbayar
+                                                                : $item->total_terbayar_rph;
+                                                    @endphp
+                                                    @if ($item->status_received == 'PENDING')
+                                                        <tr class="input" invoice_id="{{ $item->invoice_id }}">
+                                                            <td>{{ $no++ }}</td>
+                                                            <td>{{ $tanggal }}</td>
+                                                            <td>{{ $item->invoice_number }}</td>
+                                                            <td>{{ $item->invoice_date }}</td>
+                                                            <td>{{ $do_date }}</td>
+                                                            <td>{{ $do_number }}</td>
+                                                            <td>{{ $item->customer_code }} -
+                                                                {{ $item->nama_customer }}
+                                                            </td>
+                                                            <td>{{ $item->top_customer }}</td>
+                                                            <td>{{ $item->due_date }}</td>
+                                                            <td>{{ $item->status }}</td>
+                                                            <td>{{ number_format($item->total_amount, 0, ',', '.') }}
+                                                            </td>
+                                                            <td value="{{ $total_bayar }}">
+                                                                {{ number_format($total_bayar, 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-posted">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-posted">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Tanggal Rute</th>
+                                                    <th>Invoice Number</th>
+                                                    <th>Tanggal Invoice</th>
+                                                    <th>DO Number</th>
+                                                    <th>Tanggal DO</th>
+                                                    <th>Customer</th>
+                                                    <th>Tipe Pembayaran</th>
+                                                    <th>Tanggal Jatuh Tempo</th>
+                                                    <th>Status</th>
+                                                    <th>Tagihan (IDR)</th>
+                                                    <th>Koresi Terima Uang</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                                @php
+                                                    $no = 1;
+                                                @endphp
+                                                @foreach ($invoices as $item)
+                                                    @php
+                                                        $do_number =
+                                                            $item->do_number == ''
+                                                                ? $item->dohs_number
+                                                                : $item->do_number;
+                                                        $do_date =
+                                                            $item->do_date == '' ? $item->dohs_date : $item->do_date;
+                                                        $total_bayar =
+                                                            $item->total_terbayar_rph == ''
+                                                                ? $item->total_terbayar
+                                                                : $item->total_terbayar_rph;
+                                                    @endphp
+                                                    @if ($item->status_received == 'POSTED')
+                                                        <tr class="input" invoice_id="{{ $item->invoice_id }}">
+                                                            <td>{{ $no++ }}</td>
+                                                            <td>{{ $tanggal }}</td>
+                                                            <td>{{ $item->invoice_number }}</td>
+                                                            <td>{{ $item->invoice_date }}</td>
+                                                            <td>{{ $do_date }}</td>
+                                                            <td>{{ $do_number }}</td>
+                                                            <td>{{ $item->customer_code }} -
+                                                                {{ $item->nama_customer }}
+                                                            </td>
+                                                            <td>{{ $item->top_customer }}</td>
+                                                            <td>{{ $item->due_date }}</td>
+                                                            <td>{{ $item->status }}</td>
+                                                            <td>{{ number_format($item->total_amount, 0, ',', '.') }}
+                                                            </td>
+                                                            <td value="{{ $total_bayar }}">
+                                                                {{ number_format($total_bayar, 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                 @endforeach
                                             </tbody>
                                         </table>

@@ -5,6 +5,7 @@
                 <th>No</th>
                 <th>NO FAKTUR</th>
                 <th>TANGGAL FAKTUR</th>
+                <th>KODE SALESMAN</th>
                 <th>NAMA SALESMAN</th>
                 <th>KODE CUSTOMER</th>
                 <th>NAMA CUSTOMER</th>

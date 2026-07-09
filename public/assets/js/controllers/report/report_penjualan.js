@@ -363,7 +363,7 @@ let ReportPenjualan = {
                     },
                 },
                 {
-                    data: "salesman_name",
+                    data: "salesman_nik",
                     title: "KODE SALESMAN",
                     render: function (data, type, row) {
                         return data;
@@ -1801,6 +1801,11 @@ let ReportPenjualan = {
                         }).format(v);
                     };
 
+                    const salesman_nik = rows.data().pluck("salesman_nik").toArray()[0];
+                    if (salesman_nik != group) {
+                        group = salesman_nik + " " + group;
+                    }
+
                     return $("<tr/>")
                         .append(
                             `<td colspan="7" class="group-salesman-header">
@@ -2004,6 +2009,13 @@ let ReportPenjualan = {
                 {
                     data: "invoice_date",
                     title: "TANGGAL FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "salesman_nik",
+                    title: "KODE SALESMAN",
                     render: function (data, type, row) {
                         return data;
                     },

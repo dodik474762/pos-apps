@@ -35,7 +35,8 @@ class ReportPenjualanController extends Controller
                 'm.remarks',
                 'm.check_in_time',
                 'm.check_out_time',
-                'usr.name as salesman_name',
+                'k.nama_lengkap as salesman_name',
+                'usr.name as salesman_nik',
                 'm.status',
                 'm.platform',
                 'p.code as product_code',
@@ -157,6 +158,7 @@ class ReportPenjualanController extends Controller
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('vendor as principal', 'principal.id', 'p.principal')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
             ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
@@ -282,7 +284,8 @@ class ReportPenjualanController extends Controller
                 'm.remarks',
                 'm.check_in_time',
                 'm.check_out_time',
-                'usr.name as salesman_name',
+                'k.nama_lengkap as salesman_name',
+                'usr.name as salesman_nik',
                 'm.status',
                 'm.platform',
                 'p.code as product_code',
@@ -376,6 +379,7 @@ class ReportPenjualanController extends Controller
             ->join('unit as u', 'u.id', 'sod.unit')
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
             ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')

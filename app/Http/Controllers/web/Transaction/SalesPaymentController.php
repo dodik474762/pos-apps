@@ -314,11 +314,14 @@ class SalesPaymentController extends Controller
 
     public function getListRekapanSalesman($customers, $tanggal)
     {
-        $rpdSub = DB::table('receive_payment_detail')
-            ->select('invoice_id', 'receive_id', DB::raw('SUM(amount_paid) as amount_paid'))
-            ->whereRaw('CAST(created_at as date) = ?', [$tanggal])
-            ->where('amount_paid', '>', 0)
-            ->groupBy('invoice_id', 'receive_id');
+        $rpdSub = DB::table('receive_payment_detail as rpd')
+            ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
+            ->join('receive_payment_header as rph', function ($q) {
+                return $q->on('rph.id', 'rpd.receive_id')->whereNull('rph.deleted');
+            })
+            ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
+            ->where('rpd.amount_paid', '>', 0)
+            ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
         $datadb = SalesPaymentDtl::select([
             'sales_payment_detail.id',
@@ -332,7 +335,8 @@ class SalesPaymentController extends Controller
             'sih.due_date',
             'sih.status',
             'sih.total_amount',
-            'sih.amount_paid',
+            // 'sih.amount_paid',
+            'sales_payment_detail.allocated_amount as amount_paid',
             'rpd.amount_paid as total_terbayar_rph',
             'rph.status as status_received',
             'sales_payment_detail.invoice_id'
@@ -370,11 +374,15 @@ class SalesPaymentController extends Controller
 
     public function getListRekapanDriver($nik, $tanggal)
     {
-        $rpdSub = DB::table('receive_payment_detail')
-            ->select('invoice_id', 'receive_id', DB::raw('SUM(amount_paid) as amount_paid'))
-            ->whereRaw('CAST(created_at as date) = ?', [$tanggal])
-            ->where('amount_paid', '>', 0)
-            ->groupBy('invoice_id', 'receive_id');
+        $rpdSub = DB::table('receive_payment_detail as rpd')
+            ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
+            ->join('receive_payment_header as rph', function ($q) {
+                return $q->on('rph.id', 'rpd.receive_id')->whereNull('rph.deleted');
+            })
+            ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
+            ->where('rpd.amount_paid', '>', 0)
+            ->groupBy('rpd.invoice_id', 'rpd.receive_id');
+
         $datadb = SalesPaymentDtl::select([
             'sales_payment_detail.id',
             'cc.nama_customer',
@@ -387,7 +395,8 @@ class SalesPaymentController extends Controller
             'sih.due_date',
             'sih.status',
             'sih.total_amount',
-            'sih.amount_paid',
+            // 'sih.amount_paid',
+            'sales_payment_detail.allocated_amount as amount_paid',
             'rpd.amount_paid as total_terbayar_rph',
             'rph.status as status_received',
             'sales_payment_detail.invoice_id'

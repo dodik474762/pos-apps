@@ -25,6 +25,9 @@ class TerimaUangController extends Controller
         $result = ['is_valid' => false];
 
 
+        // echo "<pre>";
+        // print_r($data);
+        // die;
         DB::beginTransaction();
         try {
 
@@ -72,7 +75,7 @@ class TerimaUangController extends Controller
             $header->receive_date = date('Y-m-d');
             $header->salesman = $data['salesman'];
             $header->visit_date = $data['visit_date'];
-            $header->total_amount = 0;
+            $header->total_amount = empty($exisReceived) ? 0 : $header->total_amount;
             $header->type_trans = 'salesman';
             $header->save();
 

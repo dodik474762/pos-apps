@@ -37,7 +37,8 @@ class ReportPiutangController extends Controller
                 'm.remarks',
                 'm.check_in_time',
                 'm.check_out_time',
-                'usr.name as salesman_name',
+                'k.nama_lengkap as salesman_name',
+                'usr.name as salesman_nik',
                 'm.status',
                 'm.platform',
                 'kec.name as kecamatan',
@@ -67,6 +68,7 @@ class ReportPiutangController extends Controller
                 return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
             })
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
             ->leftJoin('daily_visit as dv', function ($q) {
