@@ -270,6 +270,15 @@ let SalesPayment = {
                     data: "payment_date",
                 },
                 {
+                    data: "invoice_number",
+                },
+                {
+                    data: "do_number",
+                },
+                {
+                    data: "packing_list_no",
+                },
+                {
                     data: "nama_customer",
                 },
                 {

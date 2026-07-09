@@ -131,6 +131,9 @@
                                                     <th>No</th>
                                                     <th>No. Pembayaran</th>
                                                     <th>Tanggal Pembayaran</th>
+                                                    <th>Invoice Number</th>
+                                                    <th>DO No</th>
+                                                    <th>PL Delivery No.</th>
                                                     <th>Customer</th>
                                                     <th>Metode Pembayaran</th>
                                                     <th>Total </th>

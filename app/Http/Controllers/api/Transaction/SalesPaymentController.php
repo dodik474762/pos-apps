@@ -34,9 +34,26 @@ class SalesPaymentController extends Controller
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
+                'sih.invoice_number',
+                'doh.do_number',
+                'pl.packing_list_no',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->join('sales_payment_detail as spd', 'spd.payment_id', 'm.id')
+            ->join('sales_invoice_header as sih', 'sih.id', 'spd.invoice_id')
+            ->join('delivery_order_header as doh', function ($q) {
+                $q->on('doh.so_id', '=', 'sih.sales_order')
+                    ->whereNull('doh.deleted');
+            })
+            ->leftJoin('packing_list_do as pld', function ($q) {
+                return $q->on('pld.delivery_order_id', 'doh.id');
+            })
+            ->leftJoin('packing_list as pl', function ($q) {
+                return $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted')
+                    ->where('pl.packing_date', '>', '2026-06-29');
+            })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -58,6 +75,9 @@ class SalesPaymentController extends Controller
                     $query->orWhere('m.payment_date', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('doh.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('pl.packing_list_no', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
