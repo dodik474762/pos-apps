@@ -130,7 +130,7 @@
         <thead>
             <tr>
                 <th style="width:3%">No</th>
-                <th style="width:11%">No. DO</th>
+                <th style="width:6%">No. DO</th>
                 <th style="width:11%">No. Faktur</th>
                 <th style="width:10%">Kode Cust</th>
                 <th style="width:12%">Nama Customer</th>
@@ -141,6 +141,7 @@
                 <th style="width:6%">Tunai</th>
                 <th style="width:8%">Transfer</th>
                 <th style="width:5%">Remark</th>
+                <th style="width:5%">WH Check</th>
             </tr>
         </thead>
 
@@ -161,6 +162,7 @@
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
+                    <td>&nbsp;</td>
                 </tr>
             @endforeach
         </tbody>
@@ -171,6 +173,7 @@
                 <td class="text-right" colspan="2">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
+                <td>&nbsp;</td>
             </tr>
         </tfoot>
     </table>
