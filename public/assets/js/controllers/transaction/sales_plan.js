@@ -240,6 +240,9 @@ let SalesPlan = {
                     data: "created_by_name",
                 },
                 {
+                    data: "salesname_nik",
+                },
+                {
                     data: "salesname",
                 },
                 {

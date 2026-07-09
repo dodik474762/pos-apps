@@ -1,4 +1,3 @@
-
 @if (isset($akses->sales_plan))
     @if ($akses->sales_plan->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_plan->update }}">
@@ -90,6 +89,7 @@
                                                     <th>Description</th>
                                                     <th>Dibuat Oleh</th>
                                                     <th>Salesman</th>
+                                                    <th>Salesman Name</th>
                                                     <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>

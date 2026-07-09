@@ -34,10 +34,12 @@ class SalesPlanController extends Controller
             ->select([
                 'm.*',
                 'u.name as created_by_name',
-                'us.name as salesname',
+                'us.name as salesname_nik',
+                'k.nama_lengkap as salesname',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('users as us', 'us.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'us.nik')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
