@@ -163,6 +163,8 @@
                                                     <th>No</th>
                                                     <th>Invoice Number</th>
                                                     <th>Tanggal Invoice</th>
+                                                    <th>DO Number</th>
+                                                    <th>PL Delivery No.</th>
                                                     <th>SO Number</th>
                                                     <th>Tanggal SO</th>
                                                     <th>Customer Code</th>

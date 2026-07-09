@@ -255,6 +255,12 @@ let SalesInvoice = {
                     data: "invoice_date",
                 },
                 {
+                    data: "do_number",
+                },
+                {
+                    data: "packing_list_no",
+                },
+                {
                     data: "so_number",
                 },
                 {

@@ -195,6 +195,8 @@ class SalesInvoiceController extends Controller
                 'so.so_date',
                 'w.name as warehouse_name',
                 'top.remarks as payment_terms',
+                'pl.packing_list_no',
+                'do.do_number',
                 DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
@@ -202,6 +204,18 @@ class SalesInvoiceController extends Controller
             ->join('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.so_id', 'so.id')
+                    ->whereNull('do.deleted');
+            })
+            ->leftJoin('packing_list_do as pld', function ($q) {
+                return $q->on('pld.delivery_order_id', 'do.id');
+            })
+            ->leftJoin('packing_list as pl', function ($q) {
+                return $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted')
+                    ->where('pl.packing_date', '>', '2026-06-29');
+            })
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -231,6 +245,8 @@ class SalesInvoiceController extends Controller
                     $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('pl.packing_list_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_number', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
