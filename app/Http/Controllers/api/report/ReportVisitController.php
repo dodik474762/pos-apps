@@ -34,7 +34,8 @@ class ReportVisitController extends Controller
                 'm.remarks',
                 'm.check_in_time',
                 'm.check_out_time',
-                'usr.name as salesman_name',
+                'k.nama_lengkap as salesman_name',
+                'usr.name as salesman_nik',
                 'm.status',
                 'm.platform',
                 'pr.start_date as absen_time',
@@ -64,6 +65,7 @@ class ReportVisitController extends Controller
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('presence as pr', 'pr.creator', 'm.salesman')
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereDate('pr.presence_date', '=', $tanggal)
@@ -158,7 +160,8 @@ class ReportVisitController extends Controller
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
-                'usr.name as salesman_name',
+                'usr.name as salesman_nik',
+                'k.nama_lengkap as salesman_name',
                 'm.so_date',
                 'pr.start_date as jam_berangkat',
                 'dv.total_visit',
@@ -236,6 +239,7 @@ class ReportVisitController extends Controller
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+            ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('presence as pr', function ($join) use ($tanggal) {
                 $join->on('pr.creator', '=', 'm.salesman')
                     ->whereDate('pr.presence_date', '=', $tanggal);
@@ -253,7 +257,7 @@ class ReportVisitController extends Controller
             // ->where('usr.username', 'SLS-001')
             ->whereDate('m.so_date', '=', $tanggal)
             ->whereNull('m.deleted')
-            ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit')
+            ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'k.nama_lengkap')
             ->orderBy('usr.name', 'asc');
 
         if (isset($_POST)) {

@@ -241,8 +241,15 @@ let ReportVisit = {
                     },
                 },
                 {
-                    data: "salesman_name",
+                    data: "salesman_nik",
                     title: "Salesman",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "Nama Salesman",
                     render: function (data, type, row) {
                         return data;
                     },
@@ -966,10 +973,10 @@ let ReportVisit = {
                     $.each(resp.data, function (key, value) {
                         cityOption.append(
                             '<option value="' +
-                                value.id +
-                                '">' +
-                                value.name +
-                                "</option>",
+                            value.id +
+                            '">' +
+                            value.name +
+                            "</option>",
                         );
                     });
                 } else {
@@ -1139,8 +1146,16 @@ let ReportVisit = {
                 },
                 {
                     // Salesman
-                    data: "salesman_name",
+                    data: "salesman_nik",
                     title: "Salesman",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    // Salesman
+                    data: "salesman_name",
+                    title: "Nama Salesman",
                     render: function (data, type, row) {
                         return data ?? "-";
                     },
@@ -1305,51 +1320,51 @@ function newexportaction(e, dt, button, config) {
             } else if (button[0].className.indexOf("buttons-excel") >= 0) {
                 $.fn.dataTable.ext.buttons.excelHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.excelHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.excelFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-csv") >= 0) {
                 $.fn.dataTable.ext.buttons.csvHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.csvHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.csvFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-pdf") >= 0) {
                 $.fn.dataTable.ext.buttons.pdfHtml5.available(dt, config)
                     ? $.fn.dataTable.ext.buttons.pdfHtml5.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      )
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
                     : $.fn.dataTable.ext.buttons.pdfFlash.action.call(
-                          self,
-                          e,
-                          dt,
-                          button,
-                          config,
-                      );
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
             } else if (button[0].className.indexOf("buttons-print") >= 0) {
                 $.fn.dataTable.ext.buttons.print.action(e, dt, button, config);
             }
