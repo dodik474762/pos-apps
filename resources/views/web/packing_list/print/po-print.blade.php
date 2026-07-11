@@ -312,7 +312,7 @@
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
-                300,
+                250,
                 $y,
                 $text,
                 $font,
