@@ -70,8 +70,8 @@
 
 {{-- KEPADA --}}
 <div class="kepada-section">
-    <strong>Kepada :</strong><br>
-    {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }} &nbsp;&nbsp;
+    <strong>Kepada :</strong>
+    {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }} <br />
     {{ $data->customers->address ?? '-' }} &nbsp;&nbsp;
     {{ $kecamatan_name ?? '-' }}, {{ $kabupaten_name ?? '-' }}
 </div>
