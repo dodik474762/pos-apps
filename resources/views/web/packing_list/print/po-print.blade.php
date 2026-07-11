@@ -92,12 +92,12 @@
         }
 
         @page {
-            margin: 40px 10px 60px 10px;
+            margin: 40px 20px 60px 20px;
         }
 
-        @page :first {
+        /* @page :first {
             margin-top: 20px;
-        }
+        }*/
 
         .footer-page {
             position: fixed;
@@ -313,7 +313,7 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 60;
+            $y = $pdf->get_height() - 94;
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
