@@ -42,7 +42,7 @@ class SalesPaymentController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('sales_payment_detail as spd', 'spd.payment_id', 'm.id')
             ->join('sales_invoice_header as sih', 'sih.id', 'spd.invoice_id')
-            ->join('delivery_order_header as doh', function ($q) {
+            ->leftJoin('delivery_order_header as doh', function ($q) {
                 $q->on('doh.so_id', '=', 'sih.sales_order')
                     ->whereNull('doh.deleted');
             })
@@ -54,6 +54,7 @@ class SalesPaymentController extends Controller
                     ->whereNull('pl.deleted')
                     ->where('pl.packing_date', '>', '2026-06-29');
             })
+            // ->where('m.id', '1157')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {

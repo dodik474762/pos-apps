@@ -1,94 +1,83 @@
 {{-- HEADER --}}
-{{-- TABEL BARANG (header + kepada digabung ke dalam thead supaya ikut berulang) --}}
+<table class="header-outer">
+    <tr>
+        {{-- Kiri: logo + nama company + alamat --}}
+        <td style="vertical-align:middle;">
+            <table style="border-collapse:collapse; width:100%;">
+                <tr>
+                    <td style="border:none; padding:0; width:50pt; vertical-align:middle;">
+                        <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
+                    </td>
+                    <td style="border:none; padding:0 0 0 3pt; vertical-align:middle;">
+                        <div class="company-name">{{ $company->nama_company }}</div>
+                        <div class="company-address">{!! $company->alamat !!}</div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+
+        {{-- Kanan: judul + kotak info --}}
+        <td style="width:160pt; vertical-align:top; padding-left:4pt;;">
+            <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;">Faktur Penjualan
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:7.5pt;">
+                <tr>
+                    <td style="border:1px solid #000; padding:1.5pt 2pt; width:50%;">Tanggal</td>
+                    <td style="border:1px solid #000; padding:1.5pt 2pt; width:50%; border-left:none;">Nomor
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
+                        {{ date('d M Y', strtotime($data->invoice_date)) }}
+                    </td>
+                    <td
+                        style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;font-size:13px;">
+                        {{ $data->invoice_number }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
+                        Tgl. Jatuh Tempo
+                    </td>
+                    <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
+                        <strong>{{ date('d/m/Y', strtotime($data->due_date)) }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">Syarat Pembayaran
+                    </td>
+                    <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">PO
+                        No</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
+                        {{ $data->customers->top->remarks ?? 'CASH' }}
+                    </td>
+                    <td style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
+                        {{ $so_number }}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
+                        Penjual: <strong>{{ $salesman_name ?? '-' }}</strong>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{-- KEPADA --}}
+<div class="kepada-section">
+    <strong>Kepada :</strong><br>
+    {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }}<br>
+    {{ $data->customers->address ?? '-' }}<br>
+    {{ $kecamatan_name ?? '-' }}, {{ $kabupaten_name ?? '-' }}
+</div>
+
+{{-- TABEL BARANG --}}
 <table class="tabel-barang">
     <thead>
-        {{-- BARIS 1: HEADER perusahaan + info faktur --}}
-        <tr>
-            <td colspan="8" style="border:none; padding:0;">
-                <table class="header-outer">
-                    <tr>
-                        <td style="vertical-align:middle; border:none;">
-                            <table style="border-collapse:collapse; width:100%;">
-                                <tr>
-                                    <td style="border:none; padding:0; width:50pt; vertical-align:middle;">
-                                        <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
-                                    </td>
-                                    <td style="border:none; padding:0 0 0 3pt; vertical-align:middle;">
-                                        <div class="company-name">{{ $company->nama_company }}</div>
-                                        <div class="company-address">{!! $company->alamat !!}</div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                        <td style="width:160pt; vertical-align:top; padding-left:4pt; border:none;">
-                            <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;">
-                                Faktur Penjualan
-                            </div>
-                            <table style="width:100%; border-collapse:collapse; font-size:7.5pt;">
-                                <tr>
-                                    <td style="border:1px solid #000; padding:1.5pt 2pt; width:50%;">Tanggal</td>
-                                    <td style="border:1px solid #000; padding:1.5pt 2pt; width:50%; border-left:none;">
-                                        Nomor</td>
-                                </tr>
-                                <tr>
-                                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
-                                        {{ date('d M Y', strtotime($data->invoice_date)) }}
-                                    </td>
-                                    <td
-                                        style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;font-size:13px;">
-                                        {{ $data->invoice_number }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">Tgl. Jatuh
-                                        Tempo</td>
-                                    <td
-                                        style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
-                                        <strong>{{ date('d/m/Y', strtotime($data->due_date)) }}</strong>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">Syarat
-                                        Pembayaran</td>
-                                    <td
-                                        style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
-                                        PO No</td>
-                                </tr>
-                                <tr>
-                                    <td style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
-                                        {{ $data->customers->top->remarks ?? 'CASH' }}
-                                    </td>
-                                    <td
-                                        style="border:1px solid #000; border-top:none; border-left:none; padding:1.5pt 2pt;">
-                                        {{ $so_number }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2"
-                                        style="border:1px solid #000; border-top:none; padding:1.5pt 2pt;">
-                                        Penjual: <strong>{{ $salesman_name ?? '-' }}</strong>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-
-        {{-- BARIS 2: KEPADA --}}
-        <tr>
-            <td colspan="8" style="border:none; padding:0;">
-                <div class="kepada-section">
-                    <strong>Kepada :</strong><br>
-                    {{ $data->customers->code ?? '-' }} - {{ $data->customers->nama_customer ?? '-' }}<br>
-                    {{ $data->customers->address ?? '-' }}<br>
-                    {{ $kecamatan_name ?? '-' }}, {{ $kabupaten_name ?? '-' }}
-                </div>
-            </td>
-        </tr>
-
-        {{-- BARIS 3: JUDUL KOLOM TABEL --}}
         <tr>
             <th class="text-center" style="width:3%;">No</th>
             <th style="width:30%;" class="text-left">Nama Barang</th>
@@ -100,7 +89,6 @@
             <th style="width:15%;" class="text-right">Total Harga</th>
         </tr>
     </thead>
-
     <tbody>
         @php
             $totalDpp = 0;
@@ -127,7 +115,8 @@
                 $totalDpp += $dpp;
                 $totalPpn += $ppn;
 
-                $isPageBreakItem = ($i + 1) % 4 == 0 && $i + 1 != count($data->items);
+                //$isPageBreakItem = ($i + 1) % 4 == 0 && $i + 1 != count($data->items);
+                $isPageBreakItem = false;
             @endphp
             <tr @if ($isPageBreakItem) class="force-break" @endif>
                 <td class="text-center">{{ $i + 1 }}</td>
@@ -143,6 +132,7 @@
         @endforeach
     </tbody>
 </table>
+
 {{-- TERBILANG --}}
 @php
     // Fungsi terbilang tidak tersedia default, tampilkan saja angkanya

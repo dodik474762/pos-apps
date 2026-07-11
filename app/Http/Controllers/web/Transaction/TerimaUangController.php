@@ -249,7 +249,7 @@ class TerimaUangController extends Controller
             $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
             $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
-        $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal']);
+        $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal'], $usersdb->id);
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';

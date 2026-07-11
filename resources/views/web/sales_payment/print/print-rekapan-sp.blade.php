@@ -99,6 +99,7 @@
                 <th>No. Invoice</th>
                 <th>Pelanggan</th>
                 <th>Kecamatan</th>
+                <th>TOP</th>
                 <th>Metode Bayar</th>
                 <th>Tanggal Invoice</th>
                 <th>Tanggal Jatuh Tempo</th>
@@ -121,6 +122,7 @@
                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                         <td>{{ $item->kecamatan_name ?? '-' }}</td>
                         <td>{{ $item->top_name }}</td>
+                        <td>{{ $item->payment_method }}</td>
                         <td>{{ $item->invoice_date }}</td>
                         <td>{{ $item->due_date }}</td>
                         <td>{{ $item->status }}</td>
