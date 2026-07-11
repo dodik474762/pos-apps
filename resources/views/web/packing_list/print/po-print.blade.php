@@ -263,7 +263,7 @@
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}
-    <h4 style="margin-top: 20px;">Daftar Produk</h4>
+    <h4 style="margin-top: 10px;">Daftar Produk</h4>
 
     <table class="table-detail">
         <thead>
@@ -348,11 +348,11 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $x = $pdf->get_width() - 102; // 25 = margin kanan @page
-            $y = 57; // dekat pucuk halaman
+            $y = $pdf->get_height() - 40;
 
+            // x = 0, width = full page width, align = center
             $pdf->page_text(
-                $x,
+                250,
                 $y,
                 $text,
                 $font,
@@ -361,7 +361,7 @@
                 0.0,
                 0.0,
                 0.0,
-                "right"
+                "center"
             );
         }
     </script>
