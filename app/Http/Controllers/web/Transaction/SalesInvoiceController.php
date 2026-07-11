@@ -370,7 +370,9 @@ class SalesInvoiceController extends Controller
         }
 
         // $customPaper = [0, 0, 612.0, 792.0]; //Letter        
-        $customPaper = 'A4'; //A4
+        // $customPaper = 'A4'; //A4
+        // $customPaper = [0, 0, 595, 421]; // separo A4: lebar 210mm x tinggi 148.5mm
+        $customPaper = [0, 0, 595, 842];
         $pdf = Pdf::loadView('web.sales_invoice.print.po-printa4', compact(
             'data',
             'company',
@@ -489,7 +491,10 @@ class SalesInvoiceController extends Controller
             $data->provinsi_name = $provinsi_name;
         }
 
-        $customPaper = [0, 0, 612.0, 792.0]; //Letter
+        // $customPaper = [0, 0, 612.0, 792.0]; //Letter
+        // $customPaper = [0, 0, 684, 396];
+        // $customPaper = 'A4'; //A4 
+        $customPaper = [0, 0, 595, 842];
         $pdf = Pdf::loadView('web.sales_invoice.print.multipleprinta5', compact('invoices', 'company'))
             ->setPaper($customPaper, 'portrait');
 

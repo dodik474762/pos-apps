@@ -6,9 +6,12 @@
     <title>Multiple Invoice</title>
 
     <style>
-        @page {
+        /*@page {
             size: 210mm 297mm;
-            /* A4 portrait */
+            margin: 0;
+        }*/
+        @page {
+            size: 210mm 148.5mm;
             margin: 0;
         }
 
@@ -27,13 +30,19 @@
         /* =========================================
            WRAPPER: Satu faktur = setengah A4
            ========================================= */
-        .faktur-block {
+        /*.faktur-block {
             width: 194mm;
             height: auto;
-            /* Tepat setengah A4 */
             padding: 5mm 8mm 4mm 8mm;
             overflow: hidden;
             page-break-inside: avoid;
+        }*/
+
+        .faktur-block {
+            width: 194mm;
+            height: auto;
+            padding: 5mm 8mm 4mm 8mm;
+            overflow: hidden;
         }
 
         /* Garis potong di tengah halaman */
@@ -121,7 +130,7 @@
            INFO PELANGGAN
            ========================================= */
         .kepada-section {
-            font-size: 7pt;
+            font-size: 8pt;
             margin-bottom: 1mm;
             border-top: 1px solid #000;
             padding-top: 1mm;
@@ -226,20 +235,13 @@
             line-height: 1.4;
         }
 
-        .page-wrapper {
+        table.tabel-barang tr {
+            page-break-inside: avoid;
+        }
+
+        table.tabel-barang tr.force-break {
             page-break-after: always;
-        }
-
-        .page-wrapper:last-child {
-            page-break-after: avoid;
-        }
-
-        .page-info {
-            text-align: center;
-            font-size: 10px;
-            color: #555;
-            margin-top: 5px;
-            font-weight: bold;
+            page-break-inside: auto;
         }
     </style>
 </head>
@@ -247,30 +249,31 @@
 <body>
 
     @foreach ($invoices as $globalIndex => $data)
-        {{-- <div class="page-wrapper"> --}}
-        @php
-            $qr = '';
-            $do = empty($data->do) ? [] : $data->do;
-            $so = empty($data->do) ? $data->so : $do->so;
-            $salesman_name = $so->salesmans->username ?? '-';
+        <div class="page-wrapper">
+            @php
+                $qr = '';
+                $do = empty($data->do) ? [] : $data->do;
+                $so = empty($data->do) ? $data->so : $do->so;
+                $salesman_name = $so->salesmans->username ?? '-';
 
-        @endphp
+            @endphp
 
-        @include('web.sales_invoice.print.bodyprint4', [
-            'data' => $data,
-            'company' => $company,
-            'qr' => $qr,
-            'so' => $so,
-            'salesman_name' => $salesman_name,
-            'ppn_val' => $data->ppn_value,
-            'promo' => $data->promo ?? collect(),
-            'promo_item' => $data->promo_item ?? collect(),
-            'kecamatan_name' => $data->kecamatan_name,
-            'kabupaten_name' => $data->kabupaten_name,
-            'provinsi_name' => $data->provinsi_name,
-        ])
-
-        {{-- <div class="page-info">
+            @include('web.sales_invoice.print.bodyprint4', [
+                'data' => $data,
+                'company' => $company,
+                'qr' => $qr,
+                'so' => $so,
+                'salesman_name' => $salesman_name,
+                'ppn_val' => $data->ppn_value,
+                'promo' => $data->promo ?? collect(),
+                'promo_item' => $data->promo_item ?? collect(),
+                'kecamatan_name' => $data->kecamatan_name,
+                'kabupaten_name' => $data->kabupaten_name,
+                'provinsi_name' => $data->provinsi_name,
+            ])
+        </div>
+        {{-- 
+        <div class="page-info">
                 Invoice {{ $globalIndex + 1 }} / {{ $invoices->count() }}
             </div>
         </div> --}}

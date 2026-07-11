@@ -188,6 +188,8 @@ class SalesOrderController extends Controller
         $ppn_val = '';
         if (!empty($tax)) {
             $ppn_val = number_format($tax->rate, 0, ',', '.');
+        } else {
+            $ppn_val = 11;
         }
 
         // $rawQr = QrCode::format('png')->size(80)->generate($data->so_number);

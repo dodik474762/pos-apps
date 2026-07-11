@@ -92,7 +92,7 @@
         }
 
         @page {
-            margin: 40px 20px 60px 20px;
+            margin: 40px 10px 60px 10px;
         }
 
         /* @page :first {
