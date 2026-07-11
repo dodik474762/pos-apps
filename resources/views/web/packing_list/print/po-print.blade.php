@@ -87,7 +87,11 @@
         }
 
         @page {
-            margin: 100px 25px 60px 25px;
+            margin: 40px 25px 60px 25px;
+        }
+
+        @page :first {
+            margin-top: 100px;
         }
 
         .footer-page {
@@ -195,7 +199,7 @@
 
 
     {{-- SIGN --}}
-    <table class="no-border" style="width:100%;">
+    <table class="no-border" style="width:100%;margin-top: -20px;">
         <tr>
             <td class="text-center">
                 <br><br><br>
@@ -257,7 +261,7 @@
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}
-    <h4>Daftar Produk</h4>
+    <h4 style="margin-top: 10px;">Daftar Produk</h4>
 
     <table class="table-detail">
         <thead>
