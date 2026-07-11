@@ -167,10 +167,12 @@
         <tbody>
             @php $no = 1; @endphp
             @foreach ($details as $item)
-                <tr>
+                @php
+                    $isPageBreak = $no % 16 == 0 && $no != count($details);
+                @endphp
+                <tr @if ($isPageBreak) style="page-break-after: always;" @endif>
                     <td class="text-center">{{ $no++ }}</td>
                     <td>{{ $item->do_number }}</td>
-                    {{-- <td>{{ $item->do_date }}</td> --}}
                     <td>{{ $item->invoice_number }}</td>
                     <td>{{ $item->customer_code }}</td>
                     <td>{{ $item->nama_customer }}</td>
@@ -261,7 +263,7 @@
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}
-    <h4 style="margin-top: 10px;">Daftar Produk</h4>
+    <h4 style="margin-top: 20px;">Daftar Produk</h4>
 
     <table class="table-detail">
         <thead>
@@ -346,11 +348,11 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 40;
+            $x = $pdf->get_width() - 102; // 25 = margin kanan @page
+            $y = 57; // dekat pucuk halaman
 
-            // x = 0, width = full page width, align = center
             $pdf->page_text(
-                250,
+                $x,
                 $y,
                 $text,
                 $font,
@@ -359,7 +361,7 @@
                 0.0,
                 0.0,
                 0.0,
-                "center"
+                "right"
             );
         }
     </script>
