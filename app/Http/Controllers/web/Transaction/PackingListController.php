@@ -429,7 +429,8 @@ class PackingListController extends Controller
 
         $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem'))
             ->setOption('isPhpEnabled', true)
-            ->setPaper('a4', 'potrait');
+            ->setPaper([0, 0, 684, 792], 'portrait');
+        // ->setPaper('a4', 'potrait');
 
         return $pdf->stream('PL-' . $data->payment_code . '.pdf');
     }

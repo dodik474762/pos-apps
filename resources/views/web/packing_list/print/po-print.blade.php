@@ -148,7 +148,7 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <td style="width:6%;font-size: 10px;">No</td>
+                <td style="width:4%;font-size: 10px;">No</td>
                 <td style="width:7%;font-size: 10px;">DO</td>
                 <td style="width:9%;font-size: 10px;">No. Faktur</td>
                 <td style="width:8%;font-size: 10px;">Kode Cust</td>
@@ -157,7 +157,7 @@
                 <td style="width:9%;font-size: 10px;">Jth Tempo</td>
                 <td style="width:8%;font-size: 10px;">Total Faktur</td>
                 <td style="width:9%;font-size: 10px;">Outstanding</td>
-                <td style="width:6%;font-size: 10px;">Tunai</td>
+                <td style="width:8%;font-size: 10px;">Tunai</td>
                 <td style="width:8%;font-size: 10px;">Transfer</td>
                 <td style="width:7%;font-size: 10px;">Remark</td>
                 <td style="width:9%;font-size: 10px;">WH Check</td>
@@ -280,7 +280,10 @@
         <tbody>
             @php $p = 1; @endphp
             @foreach ($groupedItem as $d)
-                <tr>
+                @php
+                    $isPageBreakProduk = $p % 22 == 0 && $p != count($groupedItem);
+                @endphp
+                <tr @if ($isPageBreakProduk) style="page-break-after: always;" @endif>
                     <td class="text-center">{{ $p++ }}</td>
 
                     <td>{{ $d['product_code'] ?? '-' }}</td>
@@ -296,49 +299,6 @@
                     </td>
                 </tr>
             @endforeach
-
-            {{-- @foreach ($grouped as $item)
-                @foreach ($item as $items)
-                    @foreach ($items as $d)
-                        @php
-                            $assembly = '';
-                            if(isset($productLargest[$d->product->code]) && strtolower($d->deliveryDetail->units->name) != 'karton' && strtolower($d->deliveryDetail->units->name) != 'box'){
-                                if ($productLargest[$d->product->code] >= 1) {
-                                    $assembly = 'Assembly '. number_format($productLargest[$d->product->code], 0).' Karton/Box';
-                                }
-                            }
-                        @endphp
-                        <tr>
-                            <td>{{ $p++ }}</td>
-
-                            <td>{{ $d->product->code ?? '-' }}</td>
-                            <td>{{ $d->product->name ?? '-' }}</td>
-
-                            <td class="text-right">{{ number_format($d->qty_do, 2, ',', '.') }}</td>
-                            <td class="text-right">{{ number_format($d->qty_packed, 2, ',', '.') }}</td>
-
-                            <td>{{ $d->deliveryDetail->units->name ?? '-' }}</td>
-                            <td>{{ $d->remark ?? '-' }} {{ $assembly }}</td>
-                        </tr>
-                    @endforeach
-                @endforeach
-            @endforeach --}}
-
-            {{-- @foreach ($packingListDetail as $d)
-                    <tr>
-                        <td>{{ $p++ }}</td>
-                        <td>{{ $d->do_number }}</td>
-
-                        <td>{{ $d->product->code ?? '-' }}</td>
-                        <td>{{ $d->product->name ?? '-' }}</td>
-
-                        <td class="text-right">{{ number_format($d->qty_do, 2, ',', '.') }}</td>
-                        <td class="text-right">{{ number_format($d->qty_packed, 2, ',', '.') }}</td>
-
-                        <td>{{ $d->deliveryDetail->units->name ?? '-' }}</td>
-                        <td>{{ $d->remark ?? '-' }}</td>
-                    </tr>
-            @endforeach --}}
         </tbody>
     </table>
 
@@ -352,7 +312,7 @@
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
-                250,
+                300,
                 $y,
                 $text,
                 $font,
