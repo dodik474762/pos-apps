@@ -120,8 +120,8 @@
                 <small>{!! $company->alamat !!}</small>
             </td>
             <td style="text-align:right;">
-                <h4 style="margin:0; padding:0;">PACKING LIST</h4>
-                <small>No: {{ $data->packing_list_no }}</small>
+                <h3 style="margin:0; padding:0;">PACKING LIST</h3>
+                <label style="font-size: 14px;">No: {{ $data->packing_list_no }}</label>
             </td>
         </tr>
     </table>
@@ -129,16 +129,16 @@
     {{-- INFORMASI --}}
     <table class="no-border" style="width:100%;line-height: 0.5;">
         <tr>
-            <td><strong>No. Kendaraan:</strong> {{ $data->vehicle_no }}</td>
-            <td style="padding-left:40px;"><strong>Tanggal Packing:</strong>
+            <td>No. Kendaraan: {{ $data->vehicle_no }}</td>
+            <td style="padding-left:40px;">Tanggal Packing:
                 {{ date('d/m/Y', strtotime($data->packing_date)) }}</td>
         </tr>
         <tr>
-            <td><strong>Sopir:</strong> {{ $data->driver_name ?? '-' }}</td>
-            <td style="padding-left:40px;"><strong>Ekspedisi:</strong> {{ $data->expedition_name ?? '-' }}</td>
+            <td>Sopir: {{ $data->driver_name ?? '-' }}</td>
+            <td style="padding-left:40px;">Ekspedisi: {{ $data->expedition_name ?? '-' }}</td>
         </tr>
         <tr>
-            <td><strong>Keterangan:</strong> {{ $data->remarks ?? '-' }}</td>
+            <td>Keterangan: {{ $data->remarks ?? '-' }}</td>
         </tr>
     </table>
 
@@ -148,19 +148,19 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th style="width:6%">No</th>
-                <th style="width:7%">DO</th>
-                <th style="width:10%">No. Faktur</th>
-                <th style="width:8%">Kode Cust</th>
-                <th style="width:9%">Nama Customer</th>
-                <th style="width:5%">TOP</th>
-                <th style="width:10%">Jth Tempo</th>
-                <th style="width:8%">Total Faktur</th>
-                <th style="width:7%">Outstanding</th>
-                <th style="width:6%">Tunai</th>
-                <th style="width:8%">Transfer</th>
-                <th style="width:9%">Remark</th>
-                <th style="width:7%">WH Check</th>
+                <td style="width:6%">No</td>
+                <td style="width:7%">DO</td>
+                <td style="width:10%">No. Faktur</td>
+                <td style="width:8%">Kode Cust</td>
+                <td style="width:9%">Nama Customer</td>
+                <td style="width:5%">TOP</td>
+                <td style="width:10%">Jth Tempo</td>
+                <td style="width:8%">Total Faktur</td>
+                <td style="width:7%">Outstanding</td>
+                <td style="width:6%">Tunai</td>
+                <td style="width:8%">Transfer</td>
+                <td style="width:9%">Remark</td>
+                <td style="width:7%">WH Check</td>
             </tr>
         </thead>
 
@@ -266,12 +266,12 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th style="width:5%">No</th>
-                <th style="width:18%">Kode Produk</th>
-                <th style="width:35%">Nama Produk</th>
-                <th style="width:12%">Qty Pack</th>
-                <th style="width:10%">Satuan</th>
-                <th style="width:20%">Remark</th>
+                <td style="width:5%">No</td>
+                <td style="width:18%">Kode Produk</td>
+                <td style="width:35%">Nama Produk</td>
+                <td style="width:12%">Qty Pack</td>
+                <td style="width:10%">Satuan</td>
+                <td style="width:20%">Remark</td>
             </tr>
         </thead>
 
