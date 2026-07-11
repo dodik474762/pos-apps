@@ -137,7 +137,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="10" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>

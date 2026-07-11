@@ -71,7 +71,7 @@ class KelurahanController extends Controller
             //code...
             $roles = $data['id'] == '' ? new Region() : Region::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code = generateCodeRegion();
+                // $roles->code = generateCodeRegion();
             }
             $roles->parent = $data['kecamatan'];
             $roles->name = $data['kelurahan'];

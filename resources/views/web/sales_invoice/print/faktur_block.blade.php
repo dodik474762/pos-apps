@@ -154,7 +154,7 @@
 @endif
 
 {{-- FOOTER: TTD kiri + Summary kanan --}}
-<div class="footer-section" style="margin-top:1.5mm;">
+<div class="footer-section" style="margin-top:5mm;">
 
     {{-- Kiri: TTD + Bank --}}
     <div class="footer-left">

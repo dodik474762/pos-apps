@@ -20,7 +20,7 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 7pt;
+            font-size: 10pt;
             color: #000;
             margin: 0;
             padding: 0;
@@ -87,12 +87,12 @@
         }
 
         .company-name {
-            font-size: 9pt;
+            font-size: 10pt;
             font-weight: bold;
         }
 
         .company-address {
-            font-size: 6pt;
+            font-size: 8pt;
             line-height: 1.3;
         }
 
@@ -101,7 +101,7 @@
             border: 1px solid #000;
             width: 120pt;
             min-width: 120pt;
-            font-size: 6pt;
+            font-size: 10pt;
         }
 
         .faktur-info-box table {
@@ -129,7 +129,7 @@
            INFO PELANGGAN
            ========================================= */
         .kepada-section {
-            font-size: 8pt;
+            font-size: 9pt;
             margin-bottom: 1mm;
             border-top: 1px solid #000;
             padding-top: 1mm;
@@ -182,7 +182,7 @@
             display: table-cell;
             vertical-align: top;
             width: 55%;
-            font-size: 7pt;
+            font-size: 8pt;
         }
 
         .footer-right {
@@ -212,7 +212,7 @@
         .ttd-cell {
             display: table-cell;
             text-align: center;
-            font-size: 6pt;
+            font-size: 8pt;
             padding: 0 4pt;
         }
 
