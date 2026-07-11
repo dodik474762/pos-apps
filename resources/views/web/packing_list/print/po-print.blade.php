@@ -106,7 +106,7 @@
 <body>
 
     {{-- HEADER --}}
-    <table class="header-table" style="width:100%;margin-top: -40px;">
+    <table class="header-table" style="width:100%;margin-top: -100px;">
         <tr>
             <td style="width: 90px;">
                 <img src="{{ public_path('assets/images/logo-main-app.png') }}" class="logo">
@@ -342,7 +342,7 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 20;
+            $y = $pdf->get_height() - 30;
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
