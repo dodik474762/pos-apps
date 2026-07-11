@@ -123,7 +123,7 @@
     </table>
 
     {{-- INFORMASI --}}
-    <table class="no-border" style="width:100%;">
+    <table class="no-border" style="width:100%;line-height: 0.5;">
         <tr>
             <td><strong>No. Kendaraan:</strong> {{ $data->vehicle_no }}</td>
             <td style="padding-left:40px;"><strong>Tanggal Packing:</strong>
@@ -139,7 +139,7 @@
     </table>
 
     {{-- ==================== DATA DO ==================== --}}
-    <h4>Detail Delivery Order</h4>
+    <h4 style="line-height: 0.5;">Detail Delivery Order</h4>
 
     <table class="table-detail">
         <thead>
@@ -342,7 +342,7 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 30;
+            $y = $pdf->get_height() - 40;
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(

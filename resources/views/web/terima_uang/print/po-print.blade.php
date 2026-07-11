@@ -91,7 +91,7 @@
     </table>
 
     {{-- INFORMASI PO --}}
-    <table class="no-border" style="width:100%;margin-top:-5px;">
+    <table class="no-border" style="width:100%;margin-top:-5px;line-height: 0.5;">
         <tr>
             <td><strong>NIK Salesman:</strong> {{ $salesman->nik }}</td>
             <td style="padding-left:40px;"><strong>Jabatan:</strong> {{ $salesman->jabatan }}</td>
@@ -101,7 +101,7 @@
         </tr>
     </table>
 
-    <h4>Detail Penerimaan Uang</h4>
+    <h4 style="line-height: 0.5;">Detail Penerimaan Uang</h4>
     <table class="table-detail">
         <thead>
             <tr>
