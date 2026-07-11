@@ -12,7 +12,7 @@
         @page {
             size: 210mm 148.5mm;
             /*margin: 0;*/
-            margin: 5mm 2mm 0mm 2mm;
+            margin: 10mm 2mm 0mm 0mm;
         }
 
         * {
