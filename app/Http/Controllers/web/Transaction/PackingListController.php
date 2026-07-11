@@ -419,19 +419,6 @@ class PackingListController extends Controller
                 'assembly_name' => $assemblyNameNormalized
             ];
         }
-        // $productLargest = [];
-        // foreach ($grouped as $key => $value) {
-        //     foreach ($value as $items) {
-        //         foreach ($items as $item) {
-        //             if (strtolower($item->deliveryDetail->units->name) != 'karton' && strtolower($item->deliveryDetail->units->name) != 'box') {
-        //                 $largestUnit = getLargestUnit($item->product->id, $item->deliveryDetail->id, $item->qty_packed);
-        //                 $qtyLarge = $largestUnit['qty_in_largest_unit'];
-        //                 $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
-        //             }
-        //         }
-        //     }
-        // }
-        // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
 
 
@@ -441,7 +428,8 @@ class PackingListController extends Controller
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
         $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem'))
-            ->setPaper('a4', 'landscape');
+            ->setOption('isPhpEnabled', true)
+            ->setPaper('a4', 'potrait');
 
         return $pdf->stream('PL-' . $data->payment_code . '.pdf');
     }

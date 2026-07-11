@@ -85,6 +85,21 @@
         .page-break {
             page-break-before: always;
         }
+
+        @page {
+            margin: 100px 25px 60px 25px;
+        }
+
+        .footer-page {
+            position: fixed;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            height: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #333;
+        }
     </style>
 </head>
 
@@ -129,19 +144,19 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th style="width:3%">No</th>
-                <th style="width:6%">No. DO</th>
-                <th style="width:11%">No. Faktur</th>
-                <th style="width:10%">Kode Cust</th>
-                <th style="width:12%">Nama Customer</th>
+                <th style="width:6%">No</th>
+                <th style="width:7%">DO</th>
+                <th style="width:10%">No. Faktur</th>
+                <th style="width:8%">Kode Cust</th>
+                <th style="width:9%">Nama Customer</th>
                 <th style="width:5%">TOP</th>
-                <th style="width:9%">Jth Tempo</th>
-                <th style="width:9%">Total Faktur</th>
-                <th style="width:11%">Outstanding</th>
+                <th style="width:10%">Jth Tempo</th>
+                <th style="width:8%">Total Faktur</th>
+                <th style="width:7%">Outstanding</th>
                 <th style="width:6%">Tunai</th>
                 <th style="width:8%">Transfer</th>
-                <th style="width:5%">Remark</th>
-                <th style="width:5%">WH Check</th>
+                <th style="width:9%">Remark</th>
+                <th style="width:7%">WH Check</th>
             </tr>
         </thead>
 
@@ -178,6 +193,52 @@
         </tfoot>
     </table>
 
+
+    {{-- SIGN --}}
+    <table class="no-border" style="width:100%;">
+        <tr>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Dibuat Oleh</strong>
+                <br><br><br>
+                (__________________)
+                <br />
+                &nbsp;
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Kolektor</strong>
+                <br><br><br>
+                (__________________)
+                <br />
+                &nbsp;
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Kasir</strong>
+                <br><br><br>
+                (__________________)
+                <br />
+                &nbsp;
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Admin AR</strong>
+                <br><br><br>
+                (__________________)
+                <br />
+                &nbsp;
+            </td>
+            <td class="text-center">
+                <br><br><br>
+                <strong>Disetujui Oleh</strong>
+                <br><br><br>
+                (AYU RIFZKITA)
+                <br />
+                BOD
+            </td>
+        </tr>
+    </table>
 
     {{-- ==================== HITUNG TOTAL PRODUK ==================== --}}
     @php
@@ -275,42 +336,29 @@
         </tbody>
     </table>
 
-    {{-- SIGN --}}
-    <table class="no-border" style="width:100%;">
-        <tr>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Dibuat Oleh</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Kolektor</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Kasir</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Admin AR</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-            <td class="text-center">
-                <br><br><br>
-                <strong>Disetujui Oleh</strong>
-                <br><br><br>
-                (__________________)
-            </td>
-        </tr>
-    </table>
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("DejaVu Sans", "normal");
+            $size = 9;
+            $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
+            $y = $pdf->get_height() - 20;
+
+            // x = 0, width = full page width, align = center
+            $pdf->page_text(
+                250,
+                $y,
+                $text,
+                $font,
+                $size,
+                array(0, 0, 0),
+                0.0,
+                0.0,
+                0.0,
+                "center"
+            );
+        }
+    </script>
 </body>
 
 </html>
