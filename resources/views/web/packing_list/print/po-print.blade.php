@@ -82,6 +82,11 @@
             page-break-inside: avoid;
         }
 
+        .table-detail tr.force-break {
+            page-break-after: always;
+            page-break-inside: auto;
+        }
+
         .page-break {
             page-break-before: always;
         }
@@ -170,7 +175,7 @@
                 @php
                     $isPageBreak = $no % 16 == 0 && $no != count($details);
                 @endphp
-                <tr @if ($isPageBreak) style="page-break-after: always;" @endif>
+                <tr @if ($isPageBreak) class="force-break" @endif>
                     <td class="text-center">{{ $no++ }}</td>
                     <td>{{ $item->do_number }}</td>
                     <td>{{ $item->invoice_number }}</td>
@@ -263,7 +268,7 @@
 
 
     {{-- ==================== DAFTAR PRODUK ==================== --}}
-    <h4 style="margin-top: 10px;">Daftar Produk</h4>
+    <h4 style="margin-top: 5px;">Daftar Produk</h4>
 
     <table class="table-detail">
         <thead>
@@ -283,7 +288,7 @@
                 @php
                     $isPageBreakProduk = $p % 22 == 0 && $p != count($groupedItem);
                 @endphp
-                <tr @if ($isPageBreakProduk) style="page-break-after: always;" @endif>
+                <tr @if ($isPageBreakProduk) class="force-break" @endif>
                     <td class="text-center">{{ $p++ }}</td>
 
                     <td>{{ $d['product_code'] ?? '-' }}</td>
