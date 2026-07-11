@@ -87,7 +87,7 @@
         }
 
         @page {
-            margin: 40px 25px 60px 25px;
+            margin: 40px 10px 60px 10px;
         }
 
         @page :first {
@@ -148,19 +148,19 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <td style="width:6%">No</td>
-                <td style="width:7%">DO</td>
-                <td style="width:10%">No. Faktur</td>
-                <td style="width:8%">Kode Cust</td>
-                <td style="width:9%">Nama Customer</td>
-                <td style="width:5%">TOP</td>
-                <td style="width:10%">Jth Tempo</td>
-                <td style="width:8%">Total Faktur</td>
-                <td style="width:7%">Outstanding</td>
-                <td style="width:6%">Tunai</td>
-                <td style="width:8%">Transfer</td>
-                <td style="width:9%">Remark</td>
-                <td style="width:7%">WH Check</td>
+                <td style="width:6%;font-size: 10px;">No</td>
+                <td style="width:7%;font-size: 10px;">DO</td>
+                <td style="width:9%;font-size: 10px;">No. Faktur</td>
+                <td style="width:8%;font-size: 10px;">Kode Cust</td>
+                <td style="width:9%;font-size: 10px;">Customer</td>
+                <td style="width:5%;font-size: 10px;">TOP</td>
+                <td style="width:9%;font-size: 10px;">Jth Tempo</td>
+                <td style="width:8%;font-size: 10px;">Total Faktur</td>
+                <td style="width:9%;font-size: 10px;">Outstanding</td>
+                <td style="width:6%;font-size: 10px;">Tunai</td>
+                <td style="width:8%;font-size: 10px;">Transfer</td>
+                <td style="width:7%;font-size: 10px;">Remark</td>
+                <td style="width:9%;font-size: 10px;">WH Check</td>
             </tr>
         </thead>
 
@@ -348,7 +348,7 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 60;
+            $y = $pdf->get_height() - 80;
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
