@@ -17,8 +17,9 @@
         </td>
 
         {{-- Kanan: judul + kotak info --}}
-        <td style="width:160pt; vertical-align:top; padding-left:4pt;;">
-            <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;">Faktur Penjualan
+        <td style="width:160pt; vertical-align:top; padding-left:4pt;margin-top:-80px;">
+            <div style="font-size:10pt; font-weight:bold; text-align:right; margin-bottom:1mm;margin-top:-10px;">Faktur
+                Penjualan
             </div>
             <table style="width:100%; border-collapse:collapse; font-size:7.5pt;">
                 <tr>
@@ -154,8 +155,7 @@
 @endif
 
 {{-- FOOTER: TTD kiri + Summary kanan --}}
-<div class="footer-section" style="margin-top:5mm;">
-
+<div class="footer-section" style="">
     {{-- Kiri: TTD + Bank --}}
     <div class="footer-left">
         <div style="display:table; width:100%;">
