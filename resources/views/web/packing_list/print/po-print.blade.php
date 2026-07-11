@@ -96,7 +96,7 @@
         }
 
         @page :first {
-            margin-top: 40px;
+            margin-top: 20px;
         }
 
         .footer-page {
@@ -173,7 +173,7 @@
             @php $no = 1; @endphp
             @foreach ($details as $item)
                 @php
-                    $isPageBreak = $no % 16 == 0 && $no != count($details);
+                    $isPageBreak = $no % 15 == 0 && $no != count($details);
                 @endphp
                 <tr @if ($isPageBreak) class="force-break" @endif>
                     <td class="text-center">{{ $no++ }}</td>
@@ -313,7 +313,7 @@
             $size = 9;
             $text = "Halaman {PAGE_NUM} dari {PAGE_COUNT}";
 
-            $y = $pdf->get_height() - 50;
+            $y = $pdf->get_height() - 60;
 
             // x = 0, width = full page width, align = center
             $pdf->page_text(
