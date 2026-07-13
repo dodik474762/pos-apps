@@ -139,13 +139,13 @@
 
                                             <td class="text-center">
                                                 @if ($item->flag_cancel == '1')
-                                                    <i>Dibatalkan oleh Driver, Saat Kirim</i>
-                                                @else
-                                                    <button type="button" class="btn btn-sm btn-danger"
-                                                        onclick="SalesInvoice.removeRow(this)">
-                                                        <i class="bx bx-trash-alt"></i>
-                                                    </button>
+                                                    <i>Dibatalkan oleh Driver, Saat Kirim</i>&nbsp;
                                                 @endif
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="SalesInvoice.removeRow(this)">
+                                                    <i class="bx bx-trash-alt"></i>
+                                                </button>
+                                                {{-- @endif --}}
                                             </td>
                                         </tr>
                                     @endforeach
