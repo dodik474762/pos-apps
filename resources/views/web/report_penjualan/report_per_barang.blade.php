@@ -19,6 +19,7 @@
                 <th>KUANTITAS</th>
                 <th>SATUAN</th>
                 <th>HARGA</th>
+                <th>DISCOUNT</th>
                 <th>TOTAL HARGA</th>
                 <th>NAMA KATEGORI PELANGGAN</th>
                 <th>CHANNEL</th>

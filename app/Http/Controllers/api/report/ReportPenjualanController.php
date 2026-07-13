@@ -172,7 +172,7 @@ class ReportPenjualanController extends Controller
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '1040')
             ->where('sid.qty', '>', 0)
-            // ->where('sih.id', 177)
+            // ->where('sih.id', 1217)
             // ->where('usr.name', 'SLS-005')
             // ->where('sih.invoice_number', 'SI06260440')
             ->whereNull('m.deleted')
@@ -298,6 +298,7 @@ class ReportPenjualanController extends Controller
                 'kel.name as kelurahan',
                 'c.address as alamat',
                 'dv.cicle_type',
+                'm.discount_amount',
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
                 DB::raw('DAY(m.so_date) as day'),
                 DB::raw("ELT(DAYOFWEEK(m.so_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
@@ -363,6 +364,7 @@ class ReportPenjualanController extends Controller
                 'price_terkecil.price as price_terkecil',
                 'price_terbesar.price as price_terbesar'
             ])
+            ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
                 return $q->on('sod.sales_order_id', 'm.id')
@@ -415,12 +417,14 @@ class ReportPenjualanController extends Controller
             // ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             // ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '1034')
+            // ->where('p.id', '23')
             // ->where('sih.invoice_number', 'SI06260592')
+            // ->where('sih.id', 1217)
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
             ->where('sid.qty', '>', 0)
+            ->orderBy('sih.invoice_number', 'asc')
             ->orderBy('m.salesman', 'asc')
             ->orderBy('sih.invoice_date', 'asc');
 

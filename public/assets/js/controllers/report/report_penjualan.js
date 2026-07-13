@@ -1941,6 +1941,10 @@ let ReportPenjualan = {
 
         let deleteAction = $("#delete").val();
 
+        // variable untuk tracking invoice terakhir yang sudah tampil discount-nya
+        let lastInvoiceDiscount = null;
+        // tracking invoice terakhir untuk kolom TOTAL HARGA
+        let lastInvoiceTotal = null;
 
         var data = tableData.DataTable({
             processing: true,
@@ -1968,6 +1972,11 @@ let ReportPenjualan = {
                 $(".dataTables_paginate > .pagination").addClass(
                     "pagination-rounded",
                 );
+            },
+            // reset tracking tiap kali sebelum data digambar ulang (ganti page/filter/dll)
+            preDrawCallback: function () {
+                lastInvoiceDiscount = null;
+                lastInvoiceTotal = null;
             },
             ajax: {
                 url:
@@ -2126,16 +2135,58 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "discount_amount",
+                    title: "DISCOUNT",
+                    render: function (data, type, row) {
+                        // hanya proses logika grouping saat render tampilan (bukan sort/filter)
+                        if (type !== "display") return data;
+
+                        if (row.invoice_number === lastInvoiceDiscount) {
+                            return "0"; // kosongkan kalau invoice masih sama dengan baris sebelumnya
+                        }
+
+                        lastInvoiceDiscount = row.invoice_number;
+                        return data;
+                    },
+                },
+                // {
+                //     data: "subtotal",
+                //     title: "TOTAL HARGA",
+                //     render: function (data, type, row) {
+                //         let satuan = $("#filter-satuan").val() || "default";
+                //         console.log('satuan', satuan);
+                //         console.log("price_terkecil:", row.price_terkecil, "qty_terkecil:", row.qty_terkecil);
+                //         console.log("price_terbesar:", row.price_terbesar, "qty_terbesar:", row.qty_terbesar);
+                //         if (satuan === "terkecil") return row.price_terkecil * row.qty_terkecil;
+                //         if (satuan === "terbesar") return row.price_terbesar * row.qty_terbesar;
+                //         return data ?? 0;
+                //     },
+                // },
+                {
                     data: "subtotal",
                     title: "TOTAL HARGA",
                     render: function (data, type, row) {
                         let satuan = $("#filter-satuan").val() || "default";
-                        console.log('satuan', satuan);
-                        console.log("price_terkecil:", row.price_terkecil, "qty_terkecil:", row.qty_terkecil);
-                        console.log("price_terbesar:", row.price_terbesar, "qty_terbesar:", row.qty_terbesar);
-                        if (satuan === "terkecil") return row.price_terkecil * row.qty_terkecil;
-                        if (satuan === "terbesar") return row.price_terbesar * row.qty_terbesar;
-                        return data ?? 0;
+
+                        // hitung subtotal dasar sesuai satuan
+                        let baseTotal;
+                        if (satuan === "terkecil") {
+                            baseTotal = row.price_terkecil * row.qty_terkecil;
+                        } else if (satuan === "terbesar") {
+                            baseTotal = row.price_terbesar * row.qty_terbesar;
+                        } else {
+                            baseTotal = data ?? 0;
+                        }
+
+                        if (type !== "display") return baseTotal;
+
+                        // discount hanya dikurangi di baris pertama tiap invoice
+                        let isFirstRow = row.invoice_number !== lastInvoiceTotal;
+                        lastInvoiceTotal = row.invoice_number;
+
+                        let discount = isFirstRow ? (row.discount_amount ?? 0) : 0;
+
+                        return baseTotal - discount;
                     },
                 },
                 {
