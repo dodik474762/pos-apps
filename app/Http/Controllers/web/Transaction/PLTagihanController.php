@@ -152,6 +152,10 @@ class PLTagihanController extends Controller
             ->leftJoin('delivery_order_header as dohs', function ($q) {
                 return $q->on('dohs.so_id', 'soh.id')->whereNull('dohs.deleted');
             })
+            ->leftJoin('packing_list_do as pld', function ($q) {
+                return $q->on('pld.delivery_order_id', 'do.id');
+            })
+            ->whereNull('pld.id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
