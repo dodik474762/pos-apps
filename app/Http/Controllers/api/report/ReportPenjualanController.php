@@ -52,10 +52,10 @@ class ReportPenjualanController extends Controller
                 'c.address as alamat',
                 'dv.cicle_type',
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
-                DB::raw('DAY(m.so_date) as day'),
-                DB::raw("ELT(DAYOFWEEK(m.so_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
-                DB::raw('MONTH(m.so_date) as month'),
-                DB::raw('YEAR(m.so_date) as year'),
+                DB::raw('DAY(sih.invoice_date) as day'),
+                DB::raw("ELT(DAYOFWEEK(sih.invoice_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
+                DB::raw('MONTH(sih.invoice_date) as month'),
+                DB::raw('YEAR(sih.invoice_date) as year'),
                 'sih.invoice_number',
                 DB::raw("
     (
@@ -172,7 +172,7 @@ class ReportPenjualanController extends Controller
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '1040')
             ->where('sid.qty', '>', 0)
-            // ->where('sih.id', 1217)
+            // ->where('sih.id', 1143)
             // ->where('usr.name', 'SLS-005')
             // ->where('sih.invoice_number', 'SI06260440')
             ->whereNull('m.deleted')
@@ -419,7 +419,7 @@ class ReportPenjualanController extends Controller
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '23')
             // ->where('sih.invoice_number', 'SI06260592')
-            // ->where('sih.id', 1217)
+            // ->where('sih.id', 1143)
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
