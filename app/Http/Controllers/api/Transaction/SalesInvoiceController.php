@@ -1355,6 +1355,9 @@ class SalesInvoiceController extends Controller
                     DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount')
                 )
                 ->join('customer as c', 'c.id', '=', 'sih.customer_id')
+                ->join('sales_order_headers as soh', function ($q) {
+                    return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
+                })
                 ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
@@ -1364,6 +1367,7 @@ class SalesInvoiceController extends Controller
             if (isset($data['akses'])) {
                 if (strtolower($data['akses']) != 'driver' && strtolower($data['akses']) != 'administrator') {
                     $datadb->where('c.payment_terms', '!=', '3');
+                    $datadb->where('soh.salesman', $data['users']);
                 }
             }
 
