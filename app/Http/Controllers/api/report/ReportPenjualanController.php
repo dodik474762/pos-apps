@@ -102,7 +102,7 @@ class ReportPenjualanController extends Controller
     ) as qty_sold
 "),
                 'ppi.beban',
-                'sop.discount_amount',
+                // 'sop.discount_amount',
                 //                 DB::raw('
                 //     IFNULL((
                 //         SELECT SUM(sop2.discount_amount)
@@ -142,6 +142,7 @@ class ReportPenjualanController extends Controller
                 DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
                 DB::raw('(sid.qty * sid.price) AS gross_amount'),
             ])
+            ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_order_details as sod', function ($q) {
                 return $q->on('sod.sales_order_id', 'm.id')
@@ -170,16 +171,16 @@ class ReportPenjualanController extends Controller
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '1040')
-            ->where('sid.qty', '>', 0)
-            // ->where('sih.id', 1143)
+            // ->where('p.id', '121')
+            // ->where('sid.qty', '>', 0)
+            // ->where('sih.id', 880)
             // ->where('usr.name', 'SLS-005')
             // ->where('sih.invoice_number', 'SI06260440')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
-            ->where('m.total_amount', '>', 0)
-            ->orderBy('m.salesman', 'asc')
-            ->orderBy('m.so_number', 'asc');
+            ->where('m.total_amount', '>', 0);
+        // ->orderBy('m.salesman', 'asc')
+        // ->orderBy('m.so_number', 'asc');
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
