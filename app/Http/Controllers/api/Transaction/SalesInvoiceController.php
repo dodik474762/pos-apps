@@ -889,7 +889,7 @@ class SalesInvoiceController extends Controller
                     $sodb->save();
 
                     /*update do */
-                    $doHeaders = DeliveryOrderHeader::where('so_id', $so->id)->first();
+                    $doHeaders = DeliveryOrderHeader::where('so_id', $so->id)->whereNull('deleted')->first();
                     $doIdHeader = 0;
                     if (!empty($doHeaders)) {
                         // DB::rollBack();
