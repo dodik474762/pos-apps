@@ -786,7 +786,7 @@ class SalesInvoiceController extends Controller
                 $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
             }
             // echo '<pre>';
-            // print_r($soItems);
+            // print_r($so);
             // die;
 
             if ($batalItem) {
