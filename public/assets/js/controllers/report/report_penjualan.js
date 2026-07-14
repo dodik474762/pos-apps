@@ -2171,11 +2171,14 @@ let ReportPenjualan = {
                         // hitung subtotal dasar sesuai satuan
                         let baseTotal;
                         if (satuan === "terkecil") {
+                            console.log('price_terkecil', row.price_terkecil);
+                            console.log('qty_terkecil', row.qty_terkecil);
                             baseTotal = row.price_terkecil * row.qty_terkecil;
                         } else if (satuan === "terbesar") {
                             baseTotal = row.price_terbesar * row.qty_terbesar;
                         } else {
                             baseTotal = data ?? 0;
+                            console.log('data', data);
                         }
 
                         if (type !== "display") return baseTotal;

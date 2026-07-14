@@ -173,8 +173,8 @@ class ReportPenjualanController extends Controller
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '121')
             // ->where('sid.qty', '>', 0)
-            // ->where('sih.id', 880)
-            // ->where('usr.name', 'SLS-005')
+            // ->whereIn('sih.id', [1138, 1139])
+            // ->where('usr.name', 'SLS-009')
             // ->where('sih.invoice_number', 'SI06260440')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
@@ -299,7 +299,16 @@ class ReportPenjualanController extends Controller
                 'kel.name as kelurahan',
                 'c.address as alamat',
                 'dv.cicle_type',
-                'm.discount_amount',
+                DB::raw("
+                    (
+                        m.discount_amount + (
+                            SELECT SUM(inner_sid.discount)
+                            FROM sales_invoice_detail inner_sid
+                            WHERE inner_sid.invoice_id = sid.invoice_id
+                            AND inner_sid.deleted IS NULL
+                        )
+                    ) as discount_amount
+                "),
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
                 DB::raw('DAY(m.so_date) as day'),
                 DB::raw("ELT(DAYOFWEEK(m.so_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
@@ -398,7 +407,7 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('product_uom as pou_terkecil', function ($q) {
                 $q->on('pou_terkecil.product', 'sod.product_id')
-                    ->where('pou_terkecil.state', 'small')
+                    ->where('pou_terkecil.level', '1')
                     ->whereNull('pou_terkecil.deleted');
             })
             ->leftJoin('product_uom_price as price_terkecil', function ($q) {
@@ -420,7 +429,8 @@ class ReportPenjualanController extends Controller
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '23')
             // ->where('sih.invoice_number', 'SI06260592')
-            // ->where('sih.id', 1143)
+            // ->whereIn('sih.id', [1139])
+            // ->where('usr.name', 'SLS-009')
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)
