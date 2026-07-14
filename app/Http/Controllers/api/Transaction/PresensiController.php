@@ -19,7 +19,8 @@ class PresensiController extends Controller
         date_default_timezone_set('Asia/Jakarta');
     }
 
-    public function getDataPresensi(Request $request) {
+    public function getDataPresensi(Request $request)
+    {
         $data = $request->all();
         $date = date('Y-m-d');
         $result['is_valid'] = true;
@@ -33,10 +34,11 @@ class PresensiController extends Controller
         return response()->json($result);
     }
 
-    public function submitPresensi(Request $request) {
-         // Ambil data JSON
+    public function submitPresensi(Request $request)
+    {
+        // Ambil data JSON
         $data = json_decode($request->input('data'), true);
-            // Contoh ambil satu field dari JSON
+        // Contoh ambil satu field dari JSON
         $presensiDate = $data['presensi_date'] ?? null;
         $userId = $data['user_id'] ?? null;
         // 1. Parse ISO 8601 string langsung
@@ -75,9 +77,9 @@ class PresensiController extends Controller
                     ->select(['users.*', 'k.id as id_karyawan'])
                     ->join('karyawan as k', 'k.nik', 'users.nik')
                     ->first();
-                if(empty($karyawan)) {
+                if (empty($karyawan)) {
                     DB::rollBack();
-                    $result['message'] = 'Karyawan tidak ditemukan '.$userId;
+                    $result['message'] = 'Karyawan tidak ditemukan ' . $userId;
                     return response()->json($result);
                 }
 
@@ -125,7 +127,7 @@ class PresensiController extends Controller
         return response()->json($result);
     }
 
-     public function getTableName()
+    public function getTableName()
     {
         return "presence";
     }
@@ -144,7 +146,7 @@ class PresensiController extends Controller
             ->join('karyawan as k', 'k.id', 'm.karyawan')
             ->whereNull('m.deleted');
         $akses = strtolower(session('akses'));
-        $allowed = ['superadmin', 'admin pga', 'bod/boc'];
+        $allowed = ['superadmin', 'admin pga', 'bod/boc', 'operational manager', 'supervisor sales'];
 
         if (!in_array($akses, $allowed)) {
             $datadb->where('m.creator', session('user_id'));
@@ -243,7 +245,7 @@ class PresensiController extends Controller
         return json_encode($data);
     }
 
-     public function delete(Request $request)
+    public function delete(Request $request)
     {
         $data = $request->all();
         return view('web.presence.modal.confirmdelete', $data);

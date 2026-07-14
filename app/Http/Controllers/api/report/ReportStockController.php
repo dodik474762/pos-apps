@@ -522,7 +522,7 @@ class ReportStockController extends Controller
             ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
 
             ->whereDate('m.created_at', '<=', $tanggal)
-            // ->where('p.code', 'P26JAN0020')
+            ->where('p.code', '859290')
             ->where('m.id', '>', '2115')
             ->groupBy(
                 'm.product',
@@ -591,6 +591,9 @@ class ReportStockController extends Controller
 
         foreach ($datadb as &$value) {
 
+            // echo '<pre>';
+            // print_r($value);
+            // die;
             $stok_raw = (int) ($value['stok_tersedia_raw'] ?? 0);
             $price = (float) ($value['price'] ?? 0);
 

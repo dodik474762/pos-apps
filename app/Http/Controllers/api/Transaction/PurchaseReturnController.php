@@ -26,7 +26,7 @@ class PurchaseReturnController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -45,11 +45,11 @@ class PurchaseReturnController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.return_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -171,7 +171,7 @@ class PurchaseReturnController extends Controller
                 $amount = floatval($value['qty']) * floatval($value['unit_price']);
 
                 // Posting ke General Ledger
-                $reference = $returnNumber.'-ITEM-'.$value['item_id'];
+                $reference = $returnNumber . '-ITEM-' . $value['item_id'];
 
                 if ($data['return_type'] == 'FROM_INVOICE') {
                     // Return dari invoice
@@ -209,7 +209,7 @@ class PurchaseReturnController extends Controller
                 $qtyBaseUnit = getSmallestUnit($value['item_id'], $value['unit'], $value['qty']);
                 $productUomLevel1 = ProductUom::where('product', $value['item_id'])->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
-                stockUpdate($hdrId, $data['warehouse_id'], $value['item_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'min', 'purchase_return');
+                // stockUpdate($hdrId, $data['warehouse_id'], $value['item_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'min', 'purchase_return');
             }
 
             DB::commit();
@@ -262,16 +262,16 @@ class PurchaseReturnController extends Controller
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 // Tambahkan kembali stok (reverse dari "min")
-                stockUpdate(
-                    $hdrId,
-                    $hdr->warehouse,
-                    $detail->product,
-                    $productUomLevel1->unit_tujuan,
-                    $qtyBaseUnit,
-                    $detail,
-                    'add',
-                    'purchase_return_delete'
-                );
+                // stockUpdate(
+                //     $hdrId,
+                //     $hdr->warehouse,
+                //     $detail->product,
+                //     $productUomLevel1->unit_tujuan,
+                //     $qtyBaseUnit,
+                //     $detail,
+                //     'add',
+                //     'purchase_return_delete'
+                // );
 
                 // 🔹 Hapus jurnal GL terkait
                 $reference = $returnNumber . '-ITEM-' . $detail->product;
@@ -299,7 +299,7 @@ class PurchaseReturnController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'v.nama_vendor',
@@ -327,8 +327,12 @@ class PurchaseReturnController extends Controller
         if ($returnType === 'FROM_GR') {
             // Ambil semua Goods Receipt milik supplier ini
             $references = DB::table('goods_receipt_header')
-                ->select('goods_receipt_header.id', 'goods_receipt_header.gr_number as reference_number',
-                    'goods_receipt_header.received_date as reference_date', 'goods_receipt_header.total_amount')
+                ->select(
+                    'goods_receipt_header.id',
+                    'goods_receipt_header.gr_number as reference_number',
+                    'goods_receipt_header.received_date as reference_date',
+                    'goods_receipt_header.total_amount'
+                )
                 ->where('goods_receipt_header.vendor', $vendor)
                 ->join('purchase_order as po', 'po.id', '=', 'goods_receipt_header.purchase_order')
                 ->whereNotIn('po.status', ['invoiced', 'closed', 'canceled'])
