@@ -151,7 +151,8 @@ class ReportPenjualanController extends Controller
             ->join('product as p', 'p.id', 'sod.product_id')
             ->join('sales_invoice_detail as sid', function ($q) {
                 return $q->on('sid.so_detail_id', 'sod.id')
-                    ->whereNull('sid.deleted');
+                    ->whereNull('sid.deleted')
+                    ->whereNull('sid.flag_cancel');
             })
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
@@ -383,7 +384,8 @@ class ReportPenjualanController extends Controller
             ->join('product as p', 'p.id', 'sod.product_id')
             ->join('sales_invoice_detail as sid', function ($q) {
                 return $q->on('sid.so_detail_id', 'sod.id')
-                    ->whereNull('sid.deleted');
+                    ->whereNull('sid.deleted')
+                    ->whereNull('sid.flag_cancel');
             })
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
