@@ -20,6 +20,7 @@ use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
+use App\Models\Transaction\SalesOrderPromo;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
 use App\Models\User;
@@ -1056,6 +1057,11 @@ class PackingListController extends Controller
 
                                 $so_detail = SalesOrderDetail::find($invUpdate->so_detail_id);
                                 if ($so_detail) {
+                                    $so_promo = SalesOrderPromo::where('id', $so_detail->sales_order_id)->first();
+                                    if (!empty($so_promo)) {
+                                        DB::rollBack();
+                                        return response()->json(['is_valid' => false, 'message' => $data['invoice_number'] . ' Tidak bisa melakukan void, karena item ini terhubung dengan program promosi. silakan melalui admin']);
+                                    }
                                     $qtyBaseUnit      = getSmallestUnit($invUpdate->product_id, $so_detail->unit, $invUpdate->qty);
                                     $productUomLevel1 = ProductUom::where('product', $invUpdate->product_id)->where('level', '1')->first();
                                     if ($productUomLevel1) {
@@ -1150,6 +1156,19 @@ class PackingListController extends Controller
                                 // ✅ Hitung selisih untuk auto return
                                 $selisih = $dbOriginalQty - $newQty;
                                 if ($selisih > 0) {
+                                    $so_detail = SalesOrderDetail::find($invDtl->so_detail_id);
+                                    if ($so_detail) {
+                                        $so_promo = SalesOrderPromo::where('id', $so_detail->sales_order_id)->first();
+                                        if (!empty($so_promo)) {
+                                            DB::rollBack();
+                                            return response()->json(['is_valid' => false, 'message' => $data['invoice_number'] . ' Tidak bisa melakukan edit koreksi, karena item ini terhubung dengan program promosi. silakan melalui admin']);
+                                        }
+                                        $qtyBaseUnit      = getSmallestUnit($invDtl->product_id, $so_detail->unit, $selisih);
+                                        $productUomLevel1 = ProductUom::where('product', $invDtl->product_id)->where('level', '1')->first();
+                                        if ($productUomLevel1) {
+                                            stockUpdate($invoiceId, $invoice->warehouse_id, $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $value, 'add', 'sales_void');
+                                        }
+                                    }
                                     $editReturnItems[] = [
                                         'product' => $invDtl->product_id,
                                         'invoice_detail_id' => $invDtl->id,
