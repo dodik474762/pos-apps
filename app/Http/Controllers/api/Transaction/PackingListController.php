@@ -1066,6 +1066,8 @@ class PackingListController extends Controller
                                     $productUomLevel1 = ProductUom::where('product', $invUpdate->product_id)->where('level', '1')->first();
                                     if ($productUomLevel1) {
                                         stockUpdate($invoiceId, $invoice->warehouse_id, $invUpdate->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $value, 'add', 'sales_void');
+
+                                        recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit['qty_in_base_unit'], 0, $invUpdate->product_id);
                                     }
                                 }
 
@@ -1167,6 +1169,7 @@ class PackingListController extends Controller
                                         $productUomLevel1 = ProductUom::where('product', $invDtl->product_id)->where('level', '1')->first();
                                         if ($productUomLevel1) {
                                             stockUpdate($invoiceId, $invoice->warehouse_id, $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $value, 'add', 'sales_void');
+                                            recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit['qty_in_base_unit'], 0, $invDtl->product_id);
                                         }
                                     }
                                     $editReturnItems[] = [
