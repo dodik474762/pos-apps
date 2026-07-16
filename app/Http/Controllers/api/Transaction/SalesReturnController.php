@@ -439,6 +439,7 @@ class SalesReturnController extends Controller
                     'add',
                     'sales_return'
                 );
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $value['product_id']);
                 /*menambah stock gudang */
             }
 
@@ -729,6 +730,8 @@ class SalesReturnController extends Controller
                     'add',
                     'sales_return'
                 );
+
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $product_id);
             }
             /*menambah stock gudang */
 
@@ -817,6 +820,7 @@ class SalesReturnController extends Controller
                         'min',
                         'sales_return_cancel'
                     );
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $dt->product_id);
                     /*mengurangi stock gudang */
                 }
             }

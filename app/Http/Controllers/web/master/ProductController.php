@@ -642,6 +642,8 @@ class ProductController extends Controller
                 'add',
                 'generate stock'
             );
+
+            recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), 0, 0, $productId);
         }
 
         echo '<pre>';

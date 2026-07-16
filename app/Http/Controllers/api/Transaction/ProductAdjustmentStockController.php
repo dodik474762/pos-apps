@@ -119,6 +119,8 @@ class ProductAdjustmentStockController extends Controller
                         'add',
                         'adjustment stock'
                     );
+
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $product_id);
                 } else {
                     if ($value['id'] != '') {
                         ProductAdjustmentStockDtl::where('id', $value['id'])->delete();
