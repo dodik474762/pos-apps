@@ -255,7 +255,7 @@ class GoodReceiptController extends Controller
 
                     $value['price'] = $purchase_price;
                     stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
-                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $hdrId);
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $value['product']);
                     $grand_total += $subtotal;
 
                     $reference = $gr_number . '-' . $value['id'];
