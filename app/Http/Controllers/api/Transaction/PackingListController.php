@@ -1012,6 +1012,16 @@ class PackingListController extends Controller
                             ]);
                         }
 
+                        $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
+
+                        if ($totalInvoicePrev <= 0 && $invoice->status == "PAID") {
+                            DB::rollBack();
+                            return response()->json([
+                                'is_valid' => false,
+                                'message'  => 'Invoice ' . $invoice->invoice_number . ' sudah lunas.',
+                            ]);
+                        }
+
                         $invoiceId  = $invoice->id;
                         $currency   = Currency::where('code', 'IDR')->first();
                         $currencyId = $currency->id;
@@ -1279,6 +1289,16 @@ class PackingListController extends Controller
                         if (empty($invoicePayment)) {
                             DB::rollBack();
                             return response()->json(['is_valid' => false, 'message' => 'Invoice tidak ditemukan ' . $invoice_number]);
+                        }
+
+                        $totalInvoicePrev = $invoicePayment->total_amount - $invoicePayment->amount_paid;
+
+                        if ($totalInvoicePrev <= 0 && $invoicePayment->status == "PAID") {
+                            DB::rollBack();
+                            return response()->json([
+                                'is_valid' => false,
+                                'message'  => 'Invoice ' . $invoicePayment->invoice_number . ' sudah lunas.',
+                            ]);
                         }
 
                         $invoicePaymentId = $invoicePayment->id;
