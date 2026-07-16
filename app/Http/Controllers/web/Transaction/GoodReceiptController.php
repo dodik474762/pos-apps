@@ -55,6 +55,7 @@ class GoodReceiptController extends Controller
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
         // print_r($data);die;
+        // recalculateFrom('859290', '2026-06-01', '2026-07-17', '1', 0);
         $view = view('web.good_receipt.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -77,9 +78,9 @@ class GoodReceiptController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
-        ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
-        ->with(['vendors'])
-        ->get();
+            ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
+            ->with(['vendors'])
+            ->get();
         $data['data_item'] = [];
         $data['general_ledgers'] = [];
         $view = view('web.good_receipt.formadd', $data);
@@ -137,7 +138,7 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = GoodReceipt::with(['po','po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $data = GoodReceipt::with(['po', 'po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
         $qr = '';
         // echo '<pre>';

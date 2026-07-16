@@ -26,7 +26,7 @@ class GoodReceiptController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -43,10 +43,10 @@ class GoodReceiptController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.gr_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.received_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.gr_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.received_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -122,13 +122,14 @@ class GoodReceiptController extends Controller
             $roles->vendor = $data['vendor'];
             $roles->received_by = $data['received_by'];
             $roles->status = 'open';
+            $roles->warehouse = '1';
             $roles->total_qty = $data['total_qty'];
             $roles->currency = $currency->id;
             $roles->save();
             $hdrId = $roles->id;
             $gr_number = $roles->gr_number;
 
-            if($data['id'] != ''){
+            if ($data['id'] != '') {
                 cancelAllGL($gr_number);
             }
 
@@ -153,10 +154,10 @@ class GoodReceiptController extends Controller
                     $items = $value['id_detail'] == '' ? new GoodReceiptDtl : GoodReceiptDtl::find($value['id_detail']);
                     $status = $value['id_detail'] == '' ? '' : $items->status;
 
-                     $update = PurchaseOrderDetail::where('id', $value['id'])->first();
+                    $update = PurchaseOrderDetail::where('id', $value['id'])->first();
                     if (empty($update)) {
                         DB::rollBack();
-                        $result['message'] = 'Data PO Item '.$value['product'].' tidak ditemukan';
+                        $result['message'] = 'Data PO Item ' . $value['product'] . ' tidak ditemukan';
 
                         return response()->json($result);
                     }
@@ -224,7 +225,7 @@ class GoodReceiptController extends Controller
                     }
 
                     $total_oustanding_qty_po = $data['id'] == '' ? intval($value['qty_outstanding']) - intval($value['qty_received']) :
-                        intval($update->qty) - intval($value['qty_received']) ;
+                        intval($update->qty) - intval($value['qty_received']);
 
                     if ($total_oustanding_qty_po < 0) {
                         DB::rollBack();
@@ -255,7 +256,7 @@ class GoodReceiptController extends Controller
                     stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
                     $grand_total += $subtotal;
 
-                    $reference = $gr_number.'-'.$value['id'];
+                    $reference = $gr_number . '-' . $value['id'];
                     postingGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $subtotal, $update->currency);
                     postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($subtotal), $update->currency);
                 }
@@ -305,7 +306,7 @@ class GoodReceiptController extends Controller
             $menu = GoodReceipt::find($data['id']);
 
             $now = date('Y-m-d');
-            if($now > $menu->received_date){
+            if ($now > $menu->received_date) {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena tanggal sudah lewat';
                 return response()->json($result);
@@ -364,22 +365,22 @@ class GoodReceiptController extends Controller
                 $update = PurchaseOrderDetail::where('id', $value->purchase_order_detail)->first();
                 $update->qty_received = $update->qty_received - $value->qty_received;
 
-                if($update->qty - $update->qty_received == 0){
+                if ($update->qty - $update->qty_received == 0) {
                     $update->status = 'received';
                     $totalFullyReceived += 1;
                 }
 
-                if($update->qty - $update->qty_received > 0){
+                if ($update->qty - $update->qty_received > 0) {
                     $update->status = 'partial-received';
                     $totalPartlyReceived += 1;
                 }
-                if($update->qty_received == 0){
+                if ($update->qty_received == 0) {
                     $update->status = 'open';
                     $totalOpen += 1;
                 }
                 $update->save();
 
-                $reference = $menu->gr_number.'-'.$value->purchase_order_detail;
+                $reference = $menu->gr_number . '-' . $value->purchase_order_detail;
                 cancelGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $value->subtotal, $menu->currency);
                 cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $value->subtotal, $menu->currency);
             }
@@ -412,7 +413,7 @@ class GoodReceiptController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'po.code as po_code',

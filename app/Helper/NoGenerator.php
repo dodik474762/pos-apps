@@ -13,12 +13,19 @@ use App\Models\Master\RoutingPermission;
 use App\Models\Master\RoutingReminder;
 use App\Models\Master\Users;
 use App\Models\Master\UsersPermission;
+use App\Models\Transaction\DeliveryOrderDtl;
+use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\GeneralLedger;
+use App\Models\Transaction\GoodReceipt;
+use App\Models\Transaction\GoodReceiptDtl;
+use App\Models\Transaction\ProductAdjustmentStock;
+use App\Models\Transaction\ProductAdjustmentStockDtl;
 use App\Models\Transaction\ProductUomCost;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesReturnDtl;
 use App\Models\Transaction\SalesReturnHdr;
+use App\Models\Transaction\StockCard;
 use App\Models\Transaksi\NotificationCenter;
 use App\RequestCertificate;
 use GuzzleHttp\Client;
@@ -1620,4 +1627,405 @@ function sanitizeDecimal($value): float
     $clean = str_replace(',', '.', $clean);
 
     return doubleval($clean);
+}
+
+function recalculateFrom(
+    string $itemCode,
+    string $fromDate,
+    ?string $toDate = null,
+    string $wh_code = '1',
+    ?float $openingBalance = null
+): void {
+
+    // 1. Opening balance sebelum $fromDate
+    if ($openingBalance === null) {
+        $previousCard = StockCard::where('item_code', $itemCode)
+            ->where('wh_code', $wh_code)
+            ->where('type_stock', '1')
+            ->where('trans_date', '<', $fromDate)
+            ->orderByDesc('trans_date')
+            ->orderByDesc('id')
+            ->first();
+
+        $runningBalance = $previousCard->closing_balance ?? 0;
+    } else {
+        $runningBalance = $openingBalance;
+    }
+
+    // 2. Hapus stock_cards dalam rentang fromDate - toDate saja
+    StockCard::where('item_code', $itemCode)
+        ->where('trans_date', '>=', $fromDate)
+        ->where('wh_code', $wh_code)
+        ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
+        ->delete();
+
+    if ($openingBalance !== null) {
+        if ($openingBalance != 0) {
+            StockCard::create([
+                'item_code'        => $itemCode,
+                'opening_balance'  => $openingBalance,
+                'qty_in'           => 0,
+                'qty_out'          => 0,
+                'qty_adjust'       => 0,
+                'qty_transfer_out' => 0,
+                'qty_transfer_in'  => 0,
+                'qty_return_in'    => 0,
+                'trans_date'       => $fromDate,
+                'closing_balance'  => $openingBalance,
+                'reference_type'   => 'opening_balance',
+                'reference_id'     => 0,
+                'note'             => 'Opening Balance',
+                'wh_code'          => $wh_code,
+                'type_stock'       => '1',
+            ]);
+        }
+    }
+
+    // 2. Ambil baris stock_card yang SUDAH ADA dalam rentang, buat lookup reference-nya
+    $existingCards = StockCard::where('item_code', $itemCode)
+        ->where('wh_code', $wh_code)
+        ->where('type_stock', '1')
+        ->where('trans_date', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
+        ->get();
+
+    $existingKeys = $existingCards
+        ->filter(fn($c) => $c->reference_type && $c->reference_id)
+        ->mapWithKeys(fn($c) => [$c->reference_type . '|' . $c->reference_id => true]);
+
+    // 3. Fetch transaksi dari SEMUA tabel sumber dalam rentang yang sama
+    $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code);
+    $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
+    $adjustments = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
+    $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
+    // echo '<pre>';
+    // print_r($returns);
+    // die;
+    $sourceTransactions = collect()
+        ->merge($purchases)
+        ->merge($sales)
+        ->merge($adjustments)
+        ->merge($returns);
+
+    // 4. Insert HANYA yang belum ada (reference belum tercatat di stock_cards)
+    foreach ($sourceTransactions as $trx) {
+        $key = $trx['reference_type'] . '|' . $trx['reference_id'];
+
+        if (isset($existingKeys[$key])) {
+            continue; // sudah ada, skip
+        }
+
+        StockCard::create([
+            'item_code'        => $itemCode,
+            'opening_balance'  => 0, // sementara, akan dihitung ulang di step 5
+            'qty_in'           => $trx['qty_in'],
+            'qty_out'          => $trx['qty_out'],
+            'qty_adjust'       => $trx['qty_adjust'],
+            'qty_transfer_out' => $trx['qty_transfer_out'],
+            'qty_transfer_in'  => $trx['qty_transfer_in'],
+            'qty_return_in'    => $trx['qty_return_in'],
+            'trans_date'       => $trx['trans_date'],
+            'closing_balance'  => 0, // sementara
+            'reference_type'   => $trx['reference_type'],
+            'reference_id'     => $trx['reference_id'],
+            'wh_code'          => $wh_code,
+            'type_stock'       => '1',
+            'note'             => $trx['note'],
+        ]);
+    }
+
+    // 5. Ambil ULANG semua baris dalam rentang (existing + yang baru diinsert), recalculate balance
+    $allCards = StockCard::where('item_code', $itemCode)
+        ->where('wh_code', $wh_code)
+        ->where('type_stock', '1')
+        ->where('trans_date', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
+        ->orderBy('trans_date')
+        ->orderBy('id')
+        ->get();
+
+    foreach ($allCards as $card) {
+        $movement = $card->qty_in - $card->qty_out + $card->qty_adjust
+            - $card->qty_transfer_out + $card->qty_transfer_in + $card->qty_return_in;
+
+        $newClosing = $runningBalance + $movement;
+
+        $card->opening_balance = $runningBalance;
+        $card->closing_balance = $newClosing;
+        $card->save();
+
+        $runningBalance = $newClosing;
+    }
+
+    // 6. Kalau ada toDate, lanjutkan propagasi balance ke baris setelahnya
+    if ($toDate) {
+        propagateBalanceAfter($itemCode, $toDate, $runningBalance, $wh_code);
+    }
+}
+
+function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+{
+    return GoodReceiptDtl::query()
+        ->join('product as p', function ($q) {
+            return $q->on('p.id', '=', 'goods_receipt_detail.product');
+        })
+        ->join('goods_receipt_header as gr', function ($q) {
+            return $q->on('gr.id', '=', 'goods_receipt_detail.goods_receipt_header')
+                ->whereNull('gr.deleted');
+        })
+        ->join('product_uom as pu', function ($q) {
+            return $q->on('pu.product', '=', 'goods_receipt_detail.product')
+                ->on('pu.unit_tujuan', '=', 'goods_receipt_detail.unit');
+        })
+        ->where('p.code', $itemCode)
+        ->whereNull('goods_receipt_detail.deleted')
+        ->where(function ($q) use ($wh_code) {
+            if ($wh_code == '1') {
+                return $q->whereNull('gr.warehouse')
+                    ->orWhere('gr.warehouse', $wh_code);
+            }
+
+            return $q->where('gr.warehouse', $wh_code);
+        })
+        ->whereDate('gr.received_date', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('gr.received_date', '<=', $toDate))
+        ->select([
+            'gr.id',
+            'gr.gr_number',
+            'gr.created_at',
+            DB::raw('SUM(goods_receipt_detail.qty_received * pu.nilai_konversi_terkecil) as qty'),
+            'p.code as item_code',
+            'gr.received_date as trans_date',
+        ])
+        ->groupBy('gr.gr_number', 'p.code', 'gr.created_at', 'gr.received_date')
+        ->orderBy('gr.received_date')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date' => $p->trans_date,
+            'created_at' => $p->created_at,
+            'qty_in' => $p->qty,
+            'qty_out' => 0,
+            'qty_adjust' => 0,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in' => 0,
+            'qty_return_in' => 0,
+            'reference_type' => GoodReceipt::class,
+            'reference_id' => $p->id,
+            'note' => $p->gr_number,
+        ]);
+}
+
+function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+{
+    return DeliveryOrderDtl::query()
+        ->join('product as p', function ($q) {
+            return $q->on('p.id', '=', 'delivery_order_detail.product_id');
+        })
+        ->join('delivery_order_header as doh', function ($q) {
+            return $q->on('doh.id', '=', 'delivery_order_detail.do_id')
+                ->whereNull('doh.deleted');
+        })
+        ->join('product_uom as pu', function ($q) {
+            return $q->on('pu.product', '=', 'delivery_order_detail.product_id')
+                ->on('pu.unit_tujuan', '=', 'delivery_order_detail.uom');
+        })
+        ->join('sales_order_details as sod', function ($q) {
+            return $q->on('sod.id', '=', 'delivery_order_detail.so_detail_id')
+                ->whereNull('sod.deleted');
+        })
+        ->join('sales_order_headers as soh', function ($q) {
+            return $q->on('soh.id', '=', 'sod.sales_order_id')
+                ->whereNull('soh.deleted');
+        })
+        ->where('p.code', $itemCode)
+        ->whereNull('delivery_order_detail.deleted')
+        ->where(function ($q) use ($wh_code) {
+            if ($wh_code == '1') {
+                return $q->whereNull('doh.warehouse_id')
+                    ->orWhere('doh.warehouse_id', $wh_code);
+            }
+
+            return $q->where('doh.warehouse_id', $wh_code);
+        })
+        ->whereDate('doh.do_date', '>=', $fromDate)
+        ->where('doh.status', '!=', 'CANCELED')
+        ->when($toDate, fn($q) => $q->whereDate('doh.do_date', '<=', $toDate))
+        ->select([
+            'doh.id',
+            'doh.do_number',
+            'doh.created_at',
+            DB::raw('SUM(delivery_order_detail.qty * pu.nilai_konversi_terkecil) as qty'),
+            'p.code as item_code',
+            'doh.do_date as trans_date',
+        ])
+        ->groupBy('doh.do_number', 'p.code', 'doh.created_at', 'doh.do_date')
+        ->orderBy('doh.do_date')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date' => $p->trans_date,
+            'created_at' => $p->created_at,
+            'qty_in' => 0,
+            'qty_out' => $p->qty,
+            'qty_adjust' => 0,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in' => 0,
+            'qty_return_in' => 0,
+            'reference_type' => DeliveryOrderHeader::class,
+            'reference_id' => $p->id,
+            'note' => $p->do_number,
+        ]);
+}
+
+function mapAdjustments(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+{
+    return ProductAdjustmentStockDtl::query()
+        ->join('product as p', function ($q) {
+            return $q->on('p.id', '=', 'product_adjustment_stock_dtl.product');
+        })
+        ->join('product_adjustment_stock_header as poh', function ($q) {
+            return $q->on('poh.id', '=', 'product_adjustment_stock_dtl.header_id')
+                ->whereNull('poh.deleted');
+        })
+        ->join('product_uom as pu', function ($q) {
+            return $q->on('pu.product', '=', 'product_adjustment_stock_dtl.product')
+                ->on('pu.unit_tujuan', '=', 'product_adjustment_stock_dtl.unit');
+        })
+        ->where('p.code', $itemCode)
+        ->whereNull('poh.deleted')
+        ->where(function ($q) use ($wh_code) {
+            if ($wh_code == '1') {
+                return $q->whereNull('poh.warehouse')
+                    ->orWhere('poh.warehouse', $wh_code);
+            }
+
+            return $q->where('poh.warehouse', $wh_code);
+        })
+        ->whereDate('poh.created_at', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('poh.created_at', '<=', $toDate))
+        ->select([
+            'poh.id',
+            'poh.code as adj_number',
+            'poh.created_at',
+            DB::raw('SUM(product_adjustment_stock_dtl.qty * pu.nilai_konversi_terkecil) as qty'),
+            'p.code as item_code',
+            'poh.created_at as trans_date',
+        ])
+        ->groupBy('poh.id', 'poh.code', 'p.code', 'poh.created_at', 'poh.created_at')
+        ->orderBy('poh.created_at')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date' => $p->trans_date,
+            'created_at' => $p->created_at,
+            'qty_in' => 0,
+            'qty_out' => 0,
+            'qty_adjust' => $p->qty,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in' => 0,
+            'qty_return_in' => 0,
+            'reference_type' => ProductAdjustmentStock::class,
+            'reference_id' => $p->id,
+            'note' => $p->adj_number,
+        ]);
+}
+
+function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+{
+    return SalesReturnDtl::query()
+        ->join('product as p', function ($q) {
+            return $q->on('p.id', '=', 'sales_return_detail.product_id');
+        })
+        ->join('sales_return as sr', function ($q) {
+            return $q->on('sr.id', '=', 'sales_return_detail.return_id')
+                ->whereNull('sr.deleted');
+        })
+        ->join('sales_invoice_detail as sid', function ($q) {
+            return $q->on('sid.id', '=', 'sales_return_detail.invoice_detail_id')
+                ->whereNull('sid.deleted');
+        })
+        ->join('sales_invoice_header as sih', function ($q) {
+            return $q->on('sih.id', '=', 'sid.invoice_id')
+                ->whereNull('sih.deleted');
+        })
+        ->join('sales_order_details as sod', function ($q) {
+            return $q->on('sod.id', '=', 'sid.so_detail_id')
+                ->whereNull('sod.deleted');
+        })
+        ->join('sales_order_headers as soh', function ($q) {
+            return $q->on('soh.id', '=', 'sod.sales_order_id')
+                ->whereNull('soh.deleted');
+        })
+        ->join('product_uom as pu', function ($q) {
+            return $q->on('pu.product', '=', 'sales_return_detail.product_id')
+                ->on('pu.unit_tujuan', '=', 'sod.unit');
+        })
+        ->where('p.code', $itemCode)
+        ->whereNull('sr.deleted')
+        ->where(function ($q) use ($wh_code) {
+            if ($wh_code == '1') {
+                return $q->whereNull('sih.warehouse_id')
+                    ->orWhere('sih.warehouse_id', $wh_code);
+            }
+
+            return $q->where('sih.warehouse_id', $wh_code);
+        })
+        ->whereDate('sr.return_date', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('sr.return_date', '<=', $toDate))
+        ->select([
+            'sr.id',
+            'sr.return_number',
+            'sr.created_at',
+            DB::raw('SUM(sales_return_detail.qty_return * pu.nilai_konversi_terkecil) as qty'),
+            'p.code as item_code',
+            'sr.return_date as trans_date',
+        ])
+        ->groupBy('sr.id', 'sr.return_number', 'p.code', 'sr.return_date')
+        ->orderBy('sr.return_date')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date' => $p->trans_date,
+            'created_at' => $p->created_at,
+            'qty_in' => 0,
+            'qty_out' => 0,
+            'qty_adjust' => 0,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in' => 0,
+            'qty_return_in' => $p->qty,
+            'reference_type' => SalesReturnHdr::class,
+            'reference_id' => $p->id,
+            'note' => $p->return_number,
+        ]);
+}
+
+function propagateBalanceAfter(string $itemCode, string $afterDate, float $startingBalance, $wh_code = '01'): void
+{
+    $runningBalance = $startingBalance;
+
+    $cardsAfter = StockCard::where('item_code', $itemCode)
+        ->where('trans_date', '>', $afterDate)
+        ->where('wh_code', $wh_code)
+        ->orderBy('trans_date')
+        ->orderBy('id')
+        ->lockForUpdate()
+        ->get();
+
+    foreach ($cardsAfter as $card) {
+        // Kalau opening_balance sudah sama & closing_balance juga sudah sama,
+        // artinya rantai sudah konsisten dari titik ini -> bisa berhenti lebih awal (opsional optimasi)
+        $movement = $card->qty_in - $card->qty_out + $card->qty_adjust
+            - $card->qty_transfer_out + $card->qty_transfer_in + $card->qty_return_in;
+
+        $newClosing = $runningBalance + $movement;
+
+        if ($card->opening_balance == $runningBalance && $card->closing_balance == $newClosing) {
+            // sudah konsisten, dan karena semua baris setelahnya berantai dari sini,
+            // aman untuk berhenti di sini
+            break;
+        }
+
+        $card->opening_balance = $runningBalance;
+        $card->closing_balance = $newClosing;
+        $card->save();
+
+        $runningBalance = $newClosing;
+    }
 }
