@@ -1637,18 +1637,20 @@ function recalculateFrom(
     ?float $openingBalance = null
 ): void {
 
-    // 1. Opening balance sebelum $fromDate
+    // 1. Saldo awal sebelum $fromDate
+    // Kalau opening balance tidak dikirim, ambil dari stock card sebelumnya
+    // echo $openingBalance;die;
     if ($openingBalance === null) {
         $previousCard = StockCard::where('item_code', $itemCode)
-            ->where('wh_code', $wh_code)
-            ->where('type_stock', '1')
             ->where('trans_date', '<', $fromDate)
+            ->where('wh_code', $wh_code)
             ->orderByDesc('trans_date')
             ->orderByDesc('id')
             ->first();
 
         $runningBalance = $previousCard->closing_balance ?? 0;
     } else {
+        // Pakai opening balance dari parameter
         $runningBalance = $openingBalance;
     }
 
@@ -1659,65 +1661,56 @@ function recalculateFrom(
         ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
         ->delete();
 
-    if ($openingBalance !== null) {
-        if ($openingBalance != 0) {
-            StockCard::create([
-                'item_code'        => $itemCode,
-                'opening_balance'  => $openingBalance,
-                'qty_in'           => 0,
-                'qty_out'          => 0,
-                'qty_adjust'       => 0,
-                'qty_transfer_out' => 0,
-                'qty_transfer_in'  => 0,
-                'qty_return_in'    => 0,
-                'trans_date'       => $fromDate,
-                'closing_balance'  => $openingBalance,
-                'reference_type'   => 'opening_balance',
-                'reference_id'     => 0,
-                'note'             => 'Opening Balance',
-                'wh_code'          => $wh_code,
-                'type_stock'       => '1',
-            ]);
-        }
+    if ($openingBalance != 0) {
+        StockCard::create([
+            'item_code'        => $itemCode,
+            'opening_balance'  => $openingBalance,
+            'qty_in'           => 0,
+            'qty_out'          => 0,
+            'qty_adjust'       => 0,
+            'qty_transfer_out' => $openingRepairBalance ?? 0,
+            'qty_transfer_in'  => 0,
+            'qty_return_in'    => 0,
+            'trans_date'       => $fromDate,
+            'closing_balance'  => $openingBalance,
+            'reference_type'   => 'opening_balance',
+            'reference_id'     => 0,
+            'note'             => 'Opening Balance',
+            'wh_code'          => $wh_code,
+            'type_stock'       => 'rm',
+        ]);
     }
 
-    // 2. Ambil baris stock_card yang SUDAH ADA dalam rentang, buat lookup reference-nya
-    $existingCards = StockCard::where('item_code', $itemCode)
-        ->where('wh_code', $wh_code)
-        ->where('type_stock', '1')
-        ->where('trans_date', '>=', $fromDate)
-        ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
-        ->get();
-
-    $existingKeys = $existingCards
-        ->filter(fn($c) => $c->reference_type && $c->reference_id)
-        ->mapWithKeys(fn($c) => [$c->reference_type . '|' . $c->reference_id => true]);
-
-    // 3. Fetch transaksi dari SEMUA tabel sumber dalam rentang yang sama
+    // 3. Ambil ulang transaksi dari tabel sumber, dalam rentang tsb
     $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code);
     $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
-    $adjustments = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
+    $adjust = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
     $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
+
     // echo '<pre>';
-    // print_r($returns);
-    // die;
-    $sourceTransactions = collect()
+    // print_r($purchases);die;
+
+    $transactions = collect()
         ->merge($purchases)
         ->merge($sales)
-        ->merge($adjustments)
-        ->merge($returns);
+        ->merge($adjust)
+        ->merge($returns)
+        ->sortBy([
+            ['trans_date', 'asc'],
+            ['created_at', 'asc'],
+        ])
+        ->values();
 
-    // 4. Insert HANYA yang belum ada (reference belum tercatat di stock_cards)
-    foreach ($sourceTransactions as $trx) {
-        $key = $trx['reference_type'] . '|' . $trx['reference_id'];
+    // 4. Insert ulang dengan running balance
+    foreach ($transactions as $trx) {
+        $movement = $trx['qty_in'] - $trx['qty_out'] + $trx['qty_adjust']
+            - $trx['qty_transfer_out'] + $trx['qty_transfer_in'] + $trx['qty_return_in'];
 
-        if (isset($existingKeys[$key])) {
-            continue; // sudah ada, skip
-        }
+        $closingBalance = $runningBalance + $movement;
 
         StockCard::create([
             'item_code'        => $itemCode,
-            'opening_balance'  => 0, // sementara, akan dihitung ulang di step 5
+            'opening_balance'  => $runningBalance,
             'qty_in'           => $trx['qty_in'],
             'qty_out'          => $trx['qty_out'],
             'qty_adjust'       => $trx['qty_adjust'],
@@ -1725,42 +1718,86 @@ function recalculateFrom(
             'qty_transfer_in'  => $trx['qty_transfer_in'],
             'qty_return_in'    => $trx['qty_return_in'],
             'trans_date'       => $trx['trans_date'],
-            'closing_balance'  => 0, // sementara
+            'closing_balance'  => $closingBalance,
             'reference_type'   => $trx['reference_type'],
             'reference_id'     => $trx['reference_id'],
-            'wh_code'          => $wh_code,
-            'type_stock'       => '1',
             'note'             => $trx['note'],
+            'wh_code'          => $wh_code,
+            'type_stock'       => 'rm',
         ]);
-    }
 
-    // 5. Ambil ULANG semua baris dalam rentang (existing + yang baru diinsert), recalculate balance
-    $allCards = StockCard::where('item_code', $itemCode)
-        ->where('wh_code', $wh_code)
-        ->where('type_stock', '1')
-        ->where('trans_date', '>=', $fromDate)
-        ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
-        ->orderBy('trans_date')
-        ->orderBy('id')
-        ->get();
-
-    foreach ($allCards as $card) {
-        $movement = $card->qty_in - $card->qty_out + $card->qty_adjust
-            - $card->qty_transfer_out + $card->qty_transfer_in + $card->qty_return_in;
-
-        $newClosing = $runningBalance + $movement;
-
-        $card->opening_balance = $runningBalance;
-        $card->closing_balance = $newClosing;
-        $card->save();
-
-        $runningBalance = $newClosing;
+        $runningBalance = $closingBalance;
     }
 
     // 6. Kalau ada toDate, lanjutkan propagasi balance ke baris setelahnya
     if ($toDate) {
         propagateBalanceAfter($itemCode, $toDate, $runningBalance, $wh_code);
     }
+}
+
+function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $material = true, $type_stock = 'rm', $item_code = '')
+{
+    $itemCodes = StockCard::distinct()->where('type_stock', $type_stock)
+        ->when($item_code, fn($q) => $q->where('item_code', $item_code))
+        ->pluck('item_code');
+
+    $report = [];
+
+    foreach ($itemCodes as $itemCode) {
+        // Opening = closing terakhir sebelum periode
+        $prevCard = StockCard::where('item_code', $itemCode)
+            ->where('trans_date', '<', $dateStart)
+            ->orderByDesc('trans_date')->orderByDesc('id')
+            ->first();
+        $opening = $prevCard->closing_balance ?? 0;
+
+        // Sum mutasi dalam periode
+        $sum = StockCard::where('stock_cards.item_code', $itemCode)
+            ->whereBetween('stock_cards.trans_date', [$dateStart, $dateEnd])
+            ->selectRaw("
+            SUM(stock_cards.qty_in) as total_in,
+            SUM(stock_cards.qty_out) as total_out,
+            SUM(stock_cards.qty_adjust) as total_adjust,
+            SUM(stock_cards.qty_transfer_out) as total_transfer_out,
+            SUM(stock_cards.qty_transfer_in) as total_transfer_in,
+            SUM(stock_cards.qty_return_in) as total_return_in
+        ")
+            ->first();
+
+        // echo '<pre>';
+        // print_r($sum);die;
+
+        $itemMst = DB::table('product')
+            ->where('code', $itemCode)
+            ->first();
+
+
+        $closing = $material ? $opening
+            + $sum->total_in - $sum->total_out + $sum->total_adjust
+            - $sum->total_transfer_out + $sum->total_transfer_in + $sum->total_return_in :
+            $opening
+            + $sum->total_in - $sum->total_out + $sum->total_adjust
+            - $sum->total_transfer_out + $sum->total_transfer_in + $sum->total_return_in;
+
+        $report[] = [
+            'item_code' => $itemCode,
+            'date_start' => $dateStart,
+            'date_end' => $dateEnd,
+            'opening_balance' => $opening,
+            'total_in' => $sum->total_in,
+            'total_out' => $sum->total_out,
+            'total_adjust' => $sum->total_adjust,
+            'total_transfer_out' => $sum->total_transfer_out,
+            'total_transfer_in' => $sum->total_transfer_in,
+            'total_return_in' => $sum->total_return_in,
+            'closing_balance' => $closing,
+            'item_name' => $itemMst->Inv_Name ?? '',
+            'item_abbrev' => $itemMst->Inv_Abbrev ?? '',
+            'item_partno' => $itemMst->Inv_partno ?? '',
+        ];
+    }
+
+    return $report;
 }
 
 function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')

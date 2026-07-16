@@ -55,7 +55,11 @@ class GoodReceiptController extends Controller
         $data['akses'] = $this->akses_menu;
         // echo '<pre>';
         // print_r($data);die;
-        // recalculateFrom('859290', '2026-06-01', '2026-07-17', '1', 0);
+        // recalculateFrom('859290', '2026-06-01', '2026-07-16', '1', 0);
+        // $datadb = monthlyReportWithRangeDate('2026-06-01', '2026-07-16', true, 'rm', '859290');
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
         $view = view('web.good_receipt.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
