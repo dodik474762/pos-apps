@@ -11,8 +11,10 @@ use App\Models\Master\Warehouse;
 use App\Models\Transaction\GoodReceipt;
 use App\Models\Transaction\GoodReceiptDtl;
 use App\Models\Transaction\PurchaseOrder;
+use App\Models\Transaction\StockCard;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class GoodReceiptController extends Controller
@@ -59,6 +61,30 @@ class GoodReceiptController extends Controller
         // $datadb = monthlyReportWithRangeDate('2026-06-01', '2026-07-16', true, 'rm', '859290');
         // echo '<pre>';
         // print_r($datadb);
+        // die;
+        // $generateOpenStock = DB::table('product_stock as ps')
+        //     ->select(['ps.qty', 'p.code', 'ps.warehouse'])
+        //     ->join('product as p', 'p.id', 'ps.product')
+        //     ->get();
+        // foreach ($generateOpenStock as $key => $value) {
+        //     StockCard::create([
+        //         'item_code'        => $value->code,
+        //         'opening_balance'  => $value->qty,
+        //         'qty_in'           => 0,
+        //         'qty_out'          => 0,
+        //         'qty_adjust'       => 0,
+        //         'qty_transfer_out' => 0,
+        //         'qty_transfer_in'  => 0,
+        //         'qty_return_in'    => 0,
+        //         'trans_date'       => '2026-07-16',
+        //         'closing_balance'  => $value->qty,
+        //         'reference_type'   => 'opening_balance',
+        //         'reference_id'     => 0,
+        //         'note'             => 'Opening Balance',
+        //         'wh_code'          => $value->warehouse,
+        //         'type_stock'       => 'rm',
+        //     ]);
+        // }
         // die;
         $view = view('web.good_receipt.index', $data);
         $put['title_content'] = $this->getTitle();
