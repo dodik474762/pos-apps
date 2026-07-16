@@ -188,6 +188,7 @@ class GoodReceiptController extends Controller
                                 $valueRollback,
                                 'add' // karena sebelumnya 'add', rollback-nya kebalikannya
                             );
+                            recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnitOld, 0, $oldDetail->product);
                         }
                     }
 
@@ -254,6 +255,7 @@ class GoodReceiptController extends Controller
 
                     $value['price'] = $purchase_price;
                     stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $hdrId);
                     $grand_total += $subtotal;
 
                     $reference = $gr_number . '-' . $value['id'];
@@ -355,6 +357,8 @@ class GoodReceiptController extends Controller
                         $valueRollback,
                         'add' // karena sebelumnya 'add', rollback-nya kebalikannya
                     );
+
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnitOld, 0, $oldDetail->product);
                 }
 
 

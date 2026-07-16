@@ -1634,12 +1634,14 @@ function recalculateFrom(
     string $fromDate,
     ?string $toDate = null,
     string $wh_code = '1',
-    ?float $openingBalance = null
+    ?float $openingBalance = null,
+    ?string $productId = null
 ): void {
 
     // 1. Saldo awal sebelum $fromDate
     // Kalau opening balance tidak dikirim, ambil dari stock card sebelumnya
     // echo $openingBalance;die;
+    $itemCode = $productId === null ? $itemCode : DB::table('product')->where('id', $productId)->first()->code;
     if ($openingBalance === null) {
         $previousCard = StockCard::where('item_code', $itemCode)
             ->where('trans_date', '<', $fromDate)
