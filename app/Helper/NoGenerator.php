@@ -1836,7 +1836,7 @@ function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_c
             'p.code as item_code',
             'gr.received_date as trans_date',
         ])
-        ->groupBy('gr.gr_number', 'p.code', 'gr.created_at', 'gr.received_date')
+        ->groupBy('gr.id', 'gr.gr_number', 'p.code', 'gr.created_at', 'gr.received_date')
         ->orderBy('gr.received_date')
         ->get()
         ->map(fn($p) => [
@@ -1897,7 +1897,7 @@ function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code 
             'p.code as item_code',
             'doh.do_date as trans_date',
         ])
-        ->groupBy('doh.do_number', 'p.code', 'doh.created_at', 'doh.do_date')
+        ->groupBy('doh.id', 'doh.do_number', 'p.code', 'doh.created_at', 'doh.do_date')
         ->orderBy('doh.do_date')
         ->get()
         ->map(fn($p) => [
