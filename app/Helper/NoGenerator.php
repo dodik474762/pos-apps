@@ -2017,7 +2017,7 @@ function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_c
             'p.code as item_code',
             'sr.return_date as trans_date',
         ])
-        ->groupBy('sr.id', 'sr.return_number', 'p.code', 'sr.return_date')
+        ->groupBy('sr.id', 'sr.return_number', 'p.code', 'sr.created_at', 'sr.return_date')
         ->orderBy('sr.return_date')
         ->get()
         ->map(fn($p) => [
