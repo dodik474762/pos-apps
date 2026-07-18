@@ -1477,7 +1477,7 @@ class SalesOrderController extends Controller
             $header->remarks         = $data['remarks'];
             $header->total_amount    = 0;
             $header->platform        = 'mobile';
-            $header->photo_path      = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin . $fileCheckinName;
+            $header->photo_path      = $dbpathlampOutlet == '' ? null : $dbpathlampOutlet . $fileOutletName;
             $header->signature_path  = $dbpathlampSignature == '' ? null : $dbpathlampSignature . $fileTtdName;
             $header->checkin_path    = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin . $fileCheckinName;
             $header->owner_path      = $dbpathlampOwner   == '' ? null : $dbpathlampOwner   . $fileOwnerName;
