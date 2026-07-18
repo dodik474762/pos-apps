@@ -244,6 +244,7 @@ Route::get('transaksi/purchase-return/ubah', [PurchaseReturnController::class, '
 Route::get('transaksi/sales_order', [SalesOrderController::class, 'index']);
 Route::get('transaksi/sales_order/add', [SalesOrderController::class, 'add'])->name('sales-order-add');
 Route::get('transaksi/sales_order/ubah', [SalesOrderController::class, 'ubah'])->name('sales-order-edit');;
+Route::get('transaksi/sales_order/detail', [SalesOrderController::class, 'detail'])->name('sales-order-detail');;
 Route::get('transaksi/sales_order/cetak', [SalesOrderController::class, 'cetak'])->name('sales-order-print');
 Route::get('transaksi/sales_order/generateAll', [SalesOrderController::class, 'generateAll'])->name('sales-order-generate-all');
 

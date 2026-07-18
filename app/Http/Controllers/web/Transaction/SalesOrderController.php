@@ -145,6 +145,55 @@ class SalesOrderController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function detail(Request $request)
+    {
+        $api = new TransactionSalesOrderController;
+        $data = $request->all();
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : $data['data']->salesman;
+        // $data['customers'] = $data['customers'] = $data['salesman'] != '' ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+        //     ->select(['customer.*', 'top.nilai as top_value'])
+        //     ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+        //     ->get();
+        $data['customers'] = Customer::whereNull('customer.deleted')
+            ->select(['customer.*', 'top.nilai as top_value'])
+            ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+            ->get();
+
+
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['data_item'] = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['id'])
+            ->select([
+                'sales_order_details.*',
+                'p.id as product_id',
+                'p.name as product_name',
+                'u.name as unit_name',
+            ])
+            ->join('product as p', 'p.id', 'sales_order_details.product_id')
+            ->join('unit as u', 'u.id', 'sales_order_details.unit')
+            ->whereNull('sales_order_details.deleted')
+            ->orderBy('sales_order_details.id')
+            ->get();
+        // echo '<pre>';
+        // print_r($data['data_item']);die;
+
+        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
+        $data['currencies'] = Currency::whereNull('deleted')->get();
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $view = view('web.sales_order.form_detail', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function getCustomer($salesmanId)
     {
         $periodYear = intval(date('Y'));  // misal dari form input
