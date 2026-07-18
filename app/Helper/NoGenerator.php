@@ -1418,7 +1418,7 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
         }
         $countInvoiceOutstanding = $countInvoiceOutstanding->count();
 
-        if ($countInvoiceOutstanding >= $min_invoice) {
+        if ($countInvoiceOutstanding > $min_invoice) {
             return [
                 'status' => false,
                 'message' => 'Customer telah mencapai batas minimal invoice yaitu : ' . $min_invoice . ' dengan total invoice outstanding sebesar : ' . $countInvoiceOutstanding,
