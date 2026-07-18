@@ -11,23 +11,28 @@ class SalesInvoiceHeader extends Model
     protected $table = 'sales_invoice_header';
 
 
-    public function do(){
+    public function do()
+    {
         return $this->hasOne(DeliveryOrderHeader::class, 'id', 'do_id');
     }
 
-    public function so(){
+    public function so()
+    {
         return $this->hasOne(SalesOrderHeader::class, 'id', 'sales_order');
     }
 
-    public function customers(){
+    public function customers()
+    {
         return $this->hasOne(Customer::class, 'id', 'customer_id');
     }
 
-    public function warehouses(){
+    public function warehouses()
+    {
         return $this->hasOne(Warehouse::class, 'id', 'warehouse_id');
     }
 
-    public function items(){
-        return $this->hasMany(SalesInvoiceDtl::class, 'invoice_id', 'id')->whereNull('deleted');
+    public function items()
+    {
+        return $this->hasMany(SalesInvoiceDtl::class, 'invoice_id', 'id')->whereNull('deleted')->whereNull('flag_cancel');
     }
 }
