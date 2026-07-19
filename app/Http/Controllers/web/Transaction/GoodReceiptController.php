@@ -76,7 +76,7 @@ class GoodReceiptController extends Controller
         //         'qty_transfer_out' => 0,
         //         'qty_transfer_in'  => 0,
         //         'qty_return_in'    => 0,
-        //         'trans_date'       => '2026-07-16',
+        //         'trans_date'       => '2026-07-19',
         //         'closing_balance'  => $value->qty,
         //         'reference_type'   => 'opening_balance',
         //         'reference_id'     => 0,
