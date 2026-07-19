@@ -902,7 +902,7 @@ class ProductController extends Controller
                     'adjustment stock'
                 );
 
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $adjsId);
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $productId);
 
                 $imported += 1;
             }
