@@ -643,7 +643,7 @@ class ProductController extends Controller
                 'generate stock'
             );
 
-            recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), 0, 0, $productId);
+            recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $productId);
         }
 
         echo '<pre>';
