@@ -96,8 +96,11 @@ class DeliveryOrderController extends Controller
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
             })
+            ->leftJoin('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.so_id', 'm.id')->whereNull('doh.deleted');
+            })
+            ->whereNull('doh.id')
             ->whereNull('m.deleted')
-            // ->where('m.id', '991')
             ->whereIn('m.status', ['draft', 'partial', 'submited'])
             ->where('m.total_amount', '>', 0)
             ->orderBy('m.id', 'desc');
