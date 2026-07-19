@@ -1642,8 +1642,6 @@ function recalculateFrom(
     // Kalau opening balance tidak dikirim, ambil dari stock card sebelumnya
     // echo $openingBalance;die;
     $itemCode = $productId === null ? $itemCode : DB::table('product')->where('id', $productId)->first()->code;
-    echo $itemCode;
-    die;
     if ($openingBalance === null) {
         $previousCard = StockCard::where('item_code', $itemCode)
             ->where('trans_date', '<', $fromDate)
@@ -1690,9 +1688,6 @@ function recalculateFrom(
     $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
     $adjust = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
     $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
-
-    // echo '<pre>';
-    // print_r($purchases);die;
 
     $transactions = collect()
         ->merge($purchases)

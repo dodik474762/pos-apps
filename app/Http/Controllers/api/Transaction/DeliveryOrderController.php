@@ -324,7 +324,7 @@ class DeliveryOrderController extends Controller
                     'delivery_order'
                 );
 
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $item['product_id']);
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $data['warehouse_id'], null, $item['product_id']);
             }
 
             $total_item = collect($data['items'])->where('remove', 0)->count();
@@ -465,7 +465,7 @@ class DeliveryOrderController extends Controller
                     );
                     $totalQty += $item->qty;
 
-                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $item->product_id);
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $data['warehouse_id'], null, $item->product_id);
                 }
 
                 $total_item = count($value->items);
@@ -545,7 +545,7 @@ class DeliveryOrderController extends Controller
                     'cancel_delivery_order'
                 );
 
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $item->product_id);
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $wh_id, null, $item->product_id);
             }
 
             DeliveryOrderStatusLog::where('do_id', $data['id'])->delete();
