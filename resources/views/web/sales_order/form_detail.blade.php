@@ -35,19 +35,19 @@
                             <div class="mb-3">
                                 <label class="form-label">SO Number</label>
                                 <input type="text" id="so_number" class="form-control required" error="SO Number"
-                                    placeholder="Auto Generate" readonly
+                                    placeholder="Auto Generate" readonly disabled
                                     value="{{ isset($data->so_number) ? $data->so_number : 'AUTO' }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">SO Date</label>
                                 <input type="date" id="so_date" class="form-control required" error="SO Date"
-                                    value="{{ isset($data->so_date) ? $data->so_date : date('Y-m-d') }}">
+                                    disabled value="{{ isset($data->so_date) ? $data->so_date : date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Customer</label>
-                                <select class="form-control select2 required" id="customer_id" error="Customer"
+                                <select class="form-control select2 required" id="customer_id" error="Customer" disabled
                                     onchange="SalesOrder.changeCustomer(this)">
                                     <option value=""></option>
                                     @foreach ($customers as $customer)
@@ -64,7 +64,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Salesman</label>
-                                <select class="form-control select2" id="salesman" error="Salesman"
+                                <select class="form-control select2" id="salesman" error="Salesman" disabled
                                     {{-- onchange="SalesOrder.getCustomer(this)" --}}>
                                     <option value=""></option>
                                     @foreach ($salesmen as $s)
@@ -88,7 +88,7 @@
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Currency</label>
-                                <select class="form-control select2" id="currency">
+                                <select class="form-control select2" id="currency" disabled>
                                     @foreach ($currencies as $currency)
                                         <option value="{{ $currency->id }}"
                                             {{ isset($data->currency) && $data->currency == $currency->id ? 'selected' : '' }}>
@@ -100,7 +100,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Remarks</label>
-                                <textarea id="remarks" class="form-control" placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
+                                <textarea id="remarks" class="form-control" disabled placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Disc (%)</label>
@@ -200,19 +200,13 @@
                                 Barang
                             </button>
                         </li>
-                        {{-- <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tab-diskon-free" data-bs-toggle="tab" data-bs-target="#tab-pane-free"
-                                type="button" role="tab" aria-controls="tab-pane-free" aria-selected="false">
-                                Program Free Good
-                            </button>
-                        </li> --}}
                     </ul>
 
                     <div class="tab-content pt-3" id="barangTabContent">
                         <!-- Tab Diskon -->
                         <div class="tab-pane fade show active" id="tab-pane-barang" role="tabpanel"
                             aria-labelledby="tab-barang">
-                            <button id="btn-check-disc" class="btn btn-small btn-primary"
+                            <button id="btn-check-disc" class="btn btn-small btn-primary" disabled
                                 onclick="SalesOrder.checkDiscount(this, event)">Check Discount</button>
                             <br />
                             <div class="table-responsive">
@@ -237,31 +231,32 @@
                                                     <td>
                                                         <div class="input-group">
                                                             <button class="btn btn-outline-primary" type="button"
+                                                                disabled
                                                                 onclick="SalesOrder.showDataProduct(this)">Pilih</button>
-                                                            <input readonly type="text"
+                                                            <input readonly disabled type="text"
                                                                 class="form-control required" id="product"
                                                                 error="Product" value="">
                                                         </div>
                                                     </td>
                                                     <td data_id="" id="unit"></td>
                                                     <td><input type="number" class="form-control" id="qty"
-                                                            value="1" min="1"
+                                                            value="1" min="1" disabled
                                                             onkeyup="SalesOrder.recalculateAllRows(this)"></td>
                                                     <td><input type="text" class="form-control" id="unit_price"
-                                                            data_id="" readonly value="0"
+                                                            data_id="" readonly disabled value="0"
                                                             onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input type="text" class="form-control" id="disc_percent"
-                                                            readonly value="0"
+                                                            readonly disabled value="0"
                                                             onkeyup="SalesOrder.calcRow(this)"></td>
                                                     <td><input type="text" class="form-control" id="disc_amount"
-                                                            readonly value="0"
+                                                            readonly disabled value="0"
                                                             onkeyup="SalesOrder.calcRow(this)"></td>
-                                                    <td><input readonly type="text" class="form-control"
+                                                    <td><input readonly disabled type="text" class="form-control"
                                                             id="subtotal" value="0"></td>
-                                                    <td><input readonly type="text" class="form-control"
+                                                    <td><input readonly disabled type="text" class="form-control"
                                                             id="tax_amount" value=""></td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                        <button type="button" class="btn btn-sm btn-danger" disabled
                                                             onclick="SalesOrder.removeRow(this)"><i
                                                                 class="bx bx-trash-alt"></i></button>
                                                     </td>
@@ -274,9 +269,10 @@
                                                         <td>
                                                             <div class="input-group">
                                                                 <button {{ $item->is_free_good ? 'readonly' : '' }}
-                                                                    class="btn btn-outline-primary" type="button"
+                                                                    disabled class="btn btn-outline-primary"
+                                                                    type="button"
                                                                     onclick="SalesOrder.showDataProduct(this)">{{ $item->is_free_good ? 'Free' : 'Pilih' }}</button>
-                                                                <input readonly type="text" id="product"
+                                                                <input readonly disabled type="text" id="product"
                                                                     class="form-control required" error="Product"
                                                                     tax="{{ $item->tax }}"
                                                                     tax_rate="{{ $item->tax_rate }}"
@@ -288,34 +284,35 @@
                                                         </td>
                                                         <td data_id="{{ $item->unit }}" id="unit">
                                                             {{ $item->unit_name }}</td>
-                                                        <td><input type="number" class="form-control"
-                                                                {{ $item->is_free_good ? 'readonly' : '' }}
+                                                        <td><input type="number" class="form-control" disabled
                                                                 id="qty" value="{{ $item->qty }}"
                                                                 min="1"
                                                                 onkeyup="SalesOrder.recalculateAllRows(this)"></td>
                                                         <td><input type="text" class="form-control"
                                                                 id="unit_price" price="{{ $item->unit_price }}"
-                                                                readonly data_id=""
+                                                                readonly disabled data_id=""
                                                                 value="{{ $item->unit_price }}"
                                                                 onkeyup="SalesOrder.calcRow(this)"></td>
                                                         <td><input type="text" class="form-control"
-                                                                id="disc_percent" readonly
+                                                                id="disc_percent" readonly disabled
                                                                 value="{{ $item->discount_percent }}"
                                                                 onkeyup="SalesOrder.calcRow(this)"></td>
                                                         <td><input type="text" class="form-control"
                                                                 id="disc_amount"
                                                                 amount="{{ $item->discount_amount }}" readonly
-                                                                value="{{ $item->discount_amount }}"
+                                                                disabled value="{{ $item->discount_amount }}"
                                                                 onkeyup="SalesOrder.calcRow(this)"></td>
-                                                        <td><input readonly type="text" class="form-control"
-                                                                id="subtotal" subtotal="{{ $item->subtotal }}"
+                                                        <td><input readonly disabled type="text"
+                                                                class="form-control" id="subtotal"
+                                                                subtotal="{{ $item->subtotal }}"
                                                                 value="{{ $item->subtotal }}"></td>
-                                                        <td><input readonly type="text" class="form-control"
-                                                                id="tax_amount" amount="{{ $item->tax_amount }}"
+                                                        <td><input readonly disabled type="text"
+                                                                class="form-control" id="tax_amount"
+                                                                amount="{{ $item->tax_amount }}"
                                                                 value="{{ $item->tax_amount }}"></td>
                                                         <td class="text-center">
-                                                            <button {{ $item->is_free_good ? 'readonly' : '' }}
-                                                                type="button" class="btn btn-sm btn-danger"
+                                                            <button disabled type="button"
+                                                                class="btn btn-sm btn-danger"
                                                                 onclick="SalesOrder.removeRow(this)"><i
                                                                     class="bx bx-trash-alt"></i></button>
                                                         </td>
@@ -327,30 +324,34 @@
                                                 <td>
                                                     <div class="input-group">
                                                         <button class="btn btn-outline-primary" type="button"
+                                                            disabled
                                                             onclick="SalesOrder.showDataProduct(this)">Pilih</button>
-                                                        <input readonly type="text" class="form-control required"
-                                                            id="product" error="Product" value="">
+                                                        <input readonly disabled type="text"
+                                                            class="form-control required" id="product"
+                                                            error="Product" value="">
                                                     </div>
                                                 </td>
                                                 <td data_id="" id="unit"></td>
                                                 <td><input type="number" class="form-control" id="qty"
-                                                        value="1" min="1"
+                                                        value="1" min="1" disabled
                                                         onkeyup="SalesOrder.recalculateAllRows(this)"></td>
                                                 <td><input type="text" class="form-control" id="unit_price"
-                                                        data_id="" readonly value="0"
+                                                        data_id="" readonly disabled value="0"
                                                         onkeyup="SalesOrder.calcRow(this)"></td>
                                                 <td><input type="text" class="form-control" id="disc_percent"
-                                                        readonly value="0" onkeyup="SalesOrder.calcRow(this)">
+                                                        readonly disabled value="0"
+                                                        onkeyup="SalesOrder.calcRow(this)">
                                                 </td>
                                                 <td><input type="text" class="form-control" id="disc_amount"
-                                                        readonly value="0" onkeyup="SalesOrder.calcRow(this)">
+                                                        readonly disabled value="0"
+                                                        onkeyup="SalesOrder.calcRow(this)">
                                                 </td>
-                                                <td><input readonly type="text" class="form-control"
+                                                <td><input readonly disabled type="text" class="form-control"
                                                         id="subtotal" value="0"></td>
-                                                <td><input readonly type="text" class="form-control"
+                                                <td><input readonly disabled type="text" class="form-control"
                                                         id="tax_amount" value=""></td>
                                                 <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                    <button type="button" class="btn btn-sm btn-danger" disabled
                                                         onclick="SalesOrder.removeRow(this)"><i
                                                             class="bx bx-trash-alt"></i></button>
                                                 </td>
@@ -363,7 +364,8 @@
                     </div>
 
 
-                    <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesOrder.addRow()">+ Tambah
+                    <button type="button" class="btn btn-sm btn-primary mt-2" disabled
+                        onclick="SalesOrder.addRow()">+ Tambah
                         Barang</button>
 
                     <div class="text-end mt-4">
