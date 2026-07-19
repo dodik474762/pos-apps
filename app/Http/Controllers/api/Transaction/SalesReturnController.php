@@ -439,7 +439,7 @@ class SalesReturnController extends Controller
                     'add',
                     'sales_return'
                 );
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $value['product_id']);
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $value['product_id']);
                 /*menambah stock gudang */
             }
 
@@ -722,7 +722,7 @@ class SalesReturnController extends Controller
                 $value['product'] = trim($product_id);
                 stockUpdate(
                     $hdrId,
-                    1,
+                    $invoice->warehouse_id,
                     trim($product_id),
                     $productUomLevel1->unit_tujuan,
                     $qtyBaseUnit,
@@ -731,7 +731,7 @@ class SalesReturnController extends Controller
                     'sales_return'
                 );
 
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $product_id);
+                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $product_id);
             }
             /*menambah stock gudang */
 
@@ -820,7 +820,7 @@ class SalesReturnController extends Controller
                         'min',
                         'sales_return_cancel'
                     );
-                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $qtyBaseUnit, 0, $dt->product_id);
+                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $dt->product_id);
                     /*mengurangi stock gudang */
                 }
             }
