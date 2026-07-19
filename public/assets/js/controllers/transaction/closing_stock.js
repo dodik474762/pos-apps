@@ -239,6 +239,13 @@ let ClosingStock = {
                     },
                 },
                 {
+                    data: "item_code",
+                    title: "Product Code",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
                     data: "item_name",
                     title: "Product",
                     render: function (data, type, row) {

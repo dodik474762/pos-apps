@@ -103,6 +103,7 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>Product Code</th>
                                                     <th>Product</th>
                                                     <th>Warehouse</th>
                                                     <th>Trans Date</th>
