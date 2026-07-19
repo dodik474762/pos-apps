@@ -733,7 +733,7 @@ class SalesPlanController extends Controller
 
         // echo '<pre>';
         // print_r($rows);
-        // // print_r($users);
+        // print_r($users);
         // die;
 
         DB::beginTransaction();
@@ -755,7 +755,7 @@ class SalesPlanController extends Controller
 
             $hdrId = $header->id;
 
-            // $hdrId = 33;
+            // $hdrId = 36;
 
             // Item baru atau update
             foreach ($rows as $key => $item) {
@@ -763,6 +763,7 @@ class SalesPlanController extends Controller
                 $detail = new SalesPlanDetailRoute();
                 $cust_id = isset($masterCustomer[$item['customer_code']]->id) ? $masterCustomer[$item['customer_code']]->id : 0;
                 $item['visit_type'] = isset($masterCircle[$item['id_circle_kunjungan']]->id) ? $masterCircle[$item['id_circle_kunjungan']]->id : 0;
+
                 // $item['visit_type'] = isset($masterCircle[$item['visit_type']]->id) ? $masterCircle[$item['visit_type']]->id : 0;
                 $itemVisit = $item['visit_type'];
                 if ($item['visit_type'] == '13') {
@@ -779,6 +780,7 @@ class SalesPlanController extends Controller
                 $detail->header_id = $hdrId;
                 $detail->customer_id = $cust_id;
                 $detail->visit_circle = $itemVisit;
+                $detail->outlet_status = isset($item['status_outlet']) ? $item['status_outlet'] : "REGULER";
                 $detail->visit_mon = (isset($item['visit_mon']) && $item['visit_mon'] == '1') || (isset($item['senin']) && $item['senin'] == 'Y') ? 1 : 0;
                 $detail->visit_tue = (isset($item['visit_tue']) && $item['visit_tue'] == '1') || (isset($item['selasa']) && $item['selasa'] == 'Y') ? 1 : 0;
                 $detail->visit_wed = (isset($item['visit_wed']) && $item['visit_wed'] == '1') || (isset($item['rabu']) && $item['rabu'] == 'Y') ? 1 : 0;
@@ -791,6 +793,10 @@ class SalesPlanController extends Controller
                 if ($item['status_pjp'] == 'EXTRA CALL') {
                     $detail->date_extra_call = date('Y-m-d');
                 }
+
+                // echo '<pre>';
+                // print_r($detail);
+                // die;
                 $detail->save();
                 $productRowsImport += 1;
             }
