@@ -1,11 +1,11 @@
-<button type="button" id="btn-show-modal" style="display: none;"
-        data-bs-toggle="modal" data-bs-target="#data-modal-product"></button>
+<button type="button" id="btn-show-modal" style="display: none;" data-bs-toggle="modal"
+    data-bs-target="#data-modal-product"></button>
 
 <div id="content-modal-form"></div>
 
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 <input type="hidden" id="url"
-       value="{{ isset($id) ? route('delivery-order-edit') : route('delivery-order-add') }}">
+    value="{{ isset($id) ? route('delivery-order-edit') : route('delivery-order-add') }}">
 
 <!-- Start Page Title -->
 <div class="row">
@@ -41,25 +41,24 @@
                             <div class="mb-3">
                                 <label class="form-label">DO Number</label>
                                 <input type="text" id="do_number" class="form-control"
-                                       value="{{ $data->do_number ?? 'AUTO' }}" readonly>
+                                    value="{{ $data->do_number ?? 'AUTO' }}" readonly>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">DO Date</label>
                                 <input type="date" id="do_date" class="form-control required" error="DO Date"
-                                       value="{{ $data->do_date ?? date('Y-m-d') }}">
+                                    value="{{ $data->do_date ?? date('Y-m-d') }}">
                             </div>
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Faktur</label>
                                 <div class="input-group">
                                     <button type="button" class="btn btn-outline-primary"
-                                            onclick="DeliveryOrder.showModalSO(this)">
+                                        onclick="DeliveryOrder.showModalSO(this)">
                                         Pilih
                                     </button>
                                     <input disabled type="text" id="so_number" class="form-control required"
-                                        value="{{ $data->so_number ?? '' }}"
-                                        data_id="{{ $data->so_id ?? '' }}"
+                                        value="{{ $data->so_number ?? '' }}" data_id="{{ $data->so_id ?? '' }}"
                                         error="Faktur">
                                 </div>
                             </div>
@@ -71,11 +70,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Customer</label>
-                                <input type="text" disabled id="customer_id" class="form-control required" error="Customer"
-                                       value="{{ isset($data->customer_id) ? $data->customer_id.'//'.$data->nama_customer : '' }}">
+                                <input type="text" disabled id="customer_id" class="form-control required"
+                                    error="Customer"
+                                    value="{{ isset($data->customer_id) ? $data->customer_id . '//' . $data->nama_customer : '' }}">
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3 d-none">
                                 <label class="form-label">Warehouse</label>
                                 <select class="form-control select2 required" id="warehouse_id" error="Warehouse">
                                     @foreach ($warehouses as $w)
@@ -108,12 +108,17 @@
 
                                 @if (!empty($details))
                                     @foreach ($details as $item)
-                                        <tr class="input" data_id="{{ $item->id }}" so_detail_id="{{ $item->so_detail_id }}">
-                                            <td id="product" data_id="{{ $item->product_id }}">{{ $item->product_code }} - {{ $item->product_name }}</td>
-                                            <td id="uom" data_id="{{ $item->unit }}">{{ $item->unit_name }}</td>
+                                        <tr class="input" data_id="{{ $item->id }}"
+                                            so_detail_id="{{ $item->so_detail_id }}">
+                                            <td id="product" data_id="{{ $item->product_id }}">
+                                                {{ $item->product_code }} - {{ $item->product_name }}</td>
+                                            <td id="uom" data_id="{{ $item->unit }}">{{ $item->unit_name }}
+                                            </td>
                                             <td id="qty">{{ $item->qty }}</td>
                                             <td>
-                                                <input {{ $item->note == 'FREE GOOD' ? 'disabled' : '' }} type="text" id="note" class="form-control" value="{{ $item->note }}">
+                                                <input {{ $item->note == 'FREE GOOD' ? 'disabled' : '' }}
+                                                    type="text" id="note" class="form-control"
+                                                    value="{{ $item->note }}">
                                             </td>
                                             <td class="text-center">
                                                 {{-- <button type="button" class="btn btn-sm btn-danger"
@@ -124,7 +129,6 @@
                                         </tr>
                                     @endforeach
                                 @else
-
                                     <tr class="input" data_id="" so_detail_id="">
                                         <td id="product" data_id=""></td>
                                         <td id="uom" data_id=""></td>
@@ -165,18 +169,17 @@
         <div class="text-end">
             @php
                 $disabled = '';
-                if(isset($id)){
-                    if($data->status != 'DRAFT'){
+                if (isset($id)) {
+                    if ($data->status != 'DRAFT') {
                         $disabled = 'disabled';
                     }
                 }
             @endphp
             <button {{ $disabled }} type="submit" onclick="DeliveryOrder.submit(this, event)"
-                    class="btn btn-success waves-effect waves-light me-1">
+                class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
-            <button type="reset" onclick="DeliveryOrder.back(this, event)"
-                    class="btn btn-secondary waves-effect">
+            <button type="reset" onclick="DeliveryOrder.back(this, event)" class="btn btn-secondary waves-effect">
                 Cancel
             </button>
         </div>
@@ -185,5 +188,7 @@
 </div>
 
 <style>
-    .freegood { background-color:#f5f7ff }
+    .freegood {
+        background-color: #f5f7ff
+    }
 </style>

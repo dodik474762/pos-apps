@@ -219,7 +219,8 @@ class DeliveryOrderController extends Controller
         $result = ['is_valid' => false];
 
         // echo '<pre>';
-        // print_r($data);die;
+        // print_r($data);
+        // die;
         DB::beginTransaction();
         try {
 
@@ -235,6 +236,9 @@ class DeliveryOrderController extends Controller
             }
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
+
+            $sales_orderdb = SalesOrderHeader::find($data['so_id']);
+            $data['warehouse_id'] = $sales_orderdb->warehouse;
 
             $header->do_date = $data['do_date'];
             $header->so_id = $data['so_id'];
@@ -395,6 +399,9 @@ class DeliveryOrderController extends Controller
                 $header->do_number = generateNoDO(); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
+
+                $sales_orderdb = SalesOrderHeader::find($value->id);
+                $data['warehouse_id'] = $sales_orderdb->warehouse;
 
                 $cust_id = $value->customer_id;
                 $header->do_date = $data['do_date'];
