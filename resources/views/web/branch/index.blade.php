@@ -1,7 +1,7 @@
-@if (isset($akses->warehouse))
-    @if ($akses->warehouse->view == 1)
-        <input type="hidden" id="update" value="{{ $akses->warehouse->update }}">
-        <input type="hidden" id="delete" value="{{ $akses->warehouse->delete }}">
+@if (isset($akses->branch))
+    @if ($akses->branch->view == 1)
+        <input type="hidden" id="update" value="{{ $akses->branch->update }}">
+        <input type="hidden" id="delete" value="{{ $akses->branch->delete }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
@@ -30,11 +30,11 @@
                                 <h5 class="card-title mb-0">{{ $title }} History</h5>
                             </div>
                             <div class="col-sm-auto">
-                                @if ($akses->warehouse->insert == 1)
+                                @if ($akses->branch->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
                                             id="create-btn" href="javascript:void(0);"
-                                            onclick="Warehouse.add(this, event)"><i
+                                            onclick="Branch.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
                                     </div>
                                 @endif

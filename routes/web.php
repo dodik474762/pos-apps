@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\master\BranchController as MasterBranchController;
 use App\Http\Controllers\api\master\CityController as MasterCityController;
 use App\Http\Controllers\api\master\CoaController as MasterCoaController;
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionCl
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
+use App\Http\Controllers\web\master\BranchController;
 use App\Http\Controllers\web\master\CityController;
 use App\Http\Controllers\web\master\CoaController;
 use App\Http\Controllers\web\master\CompanyController;
@@ -151,6 +153,10 @@ Route::get('master/item/ubah', [ItemController::class, 'ubah']);
 Route::get('master/warehouse', [MasterWarehouseController::class, 'index']);
 Route::get('master/warehouse/add', [MasterWarehouseController::class, 'add']);
 Route::get('master/warehouse/ubah', [MasterWarehouseController::class, 'ubah']);
+
+Route::get('master/branch', [BranchController::class, 'index']);
+Route::get('master/branch/add', [BranchController::class, 'add']);
+Route::get('master/branch/ubah', [BranchController::class, 'ubah']);
 
 Route::get('master/menu', [MenuController::class, 'index']);
 Route::get('master/menu/add', [MenuController::class, 'add']);
@@ -414,6 +420,11 @@ Route::post('api/master/warehouse/getData', [WarehouseController::class, 'getDat
 Route::post('api/master/warehouse/submit', [WarehouseController::class, 'submit']);
 Route::post('api/master/warehouse/delete', [WarehouseController::class, 'delete']);
 Route::post('api/master/warehouse/confirmDelete', [WarehouseController::class, 'confirmDelete']);
+
+Route::post('api/master/branch/getData', [MasterBranchController::class, 'getData']);
+Route::post('api/master/branch/submit', [MasterBranchController::class, 'submit']);
+Route::post('api/master/branch/delete', [MasterBranchController::class, 'delete']);
+Route::post('api/master/branch/confirmDelete', [MasterBranchController::class, 'confirmDelete']);
 
 Route::post('api/master/menu/getData', [MasterMenuController::class, 'getData']);
 Route::post('api/master/menu/submit', [MasterMenuController::class, 'submit']);
