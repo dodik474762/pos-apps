@@ -95,6 +95,7 @@ let SalesOrder = {
             payment_term: $("#payment_term").val() || null,
             currency: $("#currency").val() || null,
             remarks: $("#remarks").val() || "",
+            branch: $("#branch").val() || null,
             discount_percent_header: $("#discount_percent_header").val() || 0,
             discount_amount_header:
                 $("#discount_amount_header").attr("amount") || 0,
@@ -209,6 +210,9 @@ let SalesOrder = {
                 },
                 {
                     data: "so_number",
+                },
+                {
+                    data: "branch_name",
                 },
                 {
                     data: "so_date",

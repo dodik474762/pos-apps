@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\api\Transaction\SalesPlanController;
+use App\Models\Master\Branch;
 
 class SalesOrderController extends Controller
 {
@@ -86,6 +87,7 @@ class SalesOrderController extends Controller
         $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
+        $data['data_branch'] = Branch::whereNull('deleted')->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -135,6 +137,7 @@ class SalesOrderController extends Controller
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['data_branch'] = Branch::whereNull('deleted')->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -182,6 +185,7 @@ class SalesOrderController extends Controller
 
         $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
+        $data['data_branch'] = Branch::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_order.form_detail', $data);

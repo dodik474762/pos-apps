@@ -99,6 +99,18 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Branch</label>
+                                <select class="form-control select2" disabled id="branch">
+                                    @foreach ($data_branch as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ isset($data->branch) && $data->branch == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Remarks</label>
                                 <textarea id="remarks" class="form-control" disabled placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>

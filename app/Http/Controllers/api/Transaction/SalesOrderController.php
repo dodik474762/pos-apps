@@ -56,11 +56,13 @@ class SalesOrderController extends Controller
                 'cc.nama_customer',
                 'c.code as currency_code',
                 'cc.code as customer_code',
+                'b.name as branch_name',
                 DB::raw('ROUND((m.total_amount - COALESCE(m.discount_amount,0)), 2) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
+            ->leftJoin('branch as b', 'b.id', 'm.branch')
             ->leftJoin('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')
                     ->whereNull('sih.deleted');
@@ -94,6 +96,7 @@ class SalesOrderController extends Controller
                     $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('b.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -546,6 +549,7 @@ class SalesOrderController extends Controller
             $header->salesman     = $data['salesman']     ?? null;
             $header->currency     = $data['currency'];
             $header->remarks      = $data['remarks']      ?? null;
+            $header->branch    = $data['branch']       ?? null;
             $header->total_amount = 0;
             $header->platform     = $platform;
 
@@ -1334,6 +1338,8 @@ class SalesOrderController extends Controller
         $files_checkin = $request->file('files_checkin');
         $files_owner   = $request->file('files_owner');
         $users_id      = $data['user_id'];
+        $usersdb       = Users::where('id', $users_id)->first();
+        $branchId      = $usersdb->branch;
 
         $periode = Carbon::parse($data['so_date'])->setTimezone('Asia/Jakarta');
         $so_date = $periode->format('Y-m-d H:i:s');
@@ -1485,6 +1491,7 @@ class SalesOrderController extends Controller
             $header->longitude       = $data['longitude'];
             $header->check_in_time   = $check_in_time;
             $header->check_out_time  = $check_out_time;
+            $header->branch          = $branchId;
 
             if (!empty($calculatePromo['discount_header'])) {
                 $totalDiscAmount          = array_sum(array_column($calculatePromo['discount_header'], 'discount_amount'));
