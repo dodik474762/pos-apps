@@ -36,6 +36,7 @@ class SalesPaymentController extends Controller
                 'cc.nama_customer',
                 'sih.invoice_number',
                 'doh.do_number',
+                'doh.id as do_id',
                 'pl.packing_list_no',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
@@ -47,16 +48,25 @@ class SalesPaymentController extends Controller
                     ->whereNull('doh.deleted');
             })
             ->leftJoin('packing_list_do as pld', function ($q) {
-                return $q->on('pld.delivery_order_id', 'doh.id');
+                $q->on('pld.delivery_order_id', '=', 'doh.id')
+                    ->whereExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('packing_list as pl2')
+                            ->whereColumn('pl2.id', 'pld.packing_list_id')
+                            ->whereNull('pl2.deleted')
+                            ->where('pl2.packing_date', '>', '2026-06-29');
+                    });
             })
             ->leftJoin('packing_list as pl', function ($q) {
-                return $q->on('pl.id', 'pld.packing_list_id')
+                $q->on('pl.id', '=', 'pld.packing_list_id')
                     ->whereNull('pl.deleted')
                     ->where('pl.packing_date', '>', '2026-06-29');
             })
             // ->where('m.id', '1157')
+            // ->where('sih.invoice_number', 'SI07260237')
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
+
         if (isset($_POST)) {
 
             if (isset($_POST['status'])) {
