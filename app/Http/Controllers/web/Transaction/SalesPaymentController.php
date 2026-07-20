@@ -378,7 +378,8 @@ class SalesPaymentController extends Controller
 
     public function getListRekapanDriver($nik, $tanggal)
     {
-        $tanggalPackingDate = date('Y-m-d', strtotime($tanggal . ' -1 day'));
+        $isMonday = date('l', strtotime($tanggal)) == 'Monday';
+        $tanggalPackingDate = $isMonday ? date('Y-m-d', strtotime($tanggal . ' -2 day')) : date('Y-m-d', strtotime($tanggal . ' -1 day'));
         $rpdSub = DB::table('receive_payment_detail as rpd')
             ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
             ->join('receive_payment_header as rph', function ($q) {
