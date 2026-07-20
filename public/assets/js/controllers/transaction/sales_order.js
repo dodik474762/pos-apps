@@ -96,6 +96,7 @@ let SalesOrder = {
             currency: $("#currency").val() || null,
             remarks: $("#remarks").val() || "",
             branch: $("#branch").val() || null,
+            warehouse: $("#warehouse").val() || 1,
             discount_percent_header: $("#discount_percent_header").val() || 0,
             discount_amount_header:
                 $("#discount_amount_header").attr("amount") || 0,
@@ -213,6 +214,9 @@ let SalesOrder = {
                 },
                 {
                     data: "branch_name",
+                },
+                {
+                    data: "warehouse_name",
                 },
                 {
                     data: "so_date",

@@ -162,6 +162,7 @@
                                                     <th>No</th>
                                                     <th>SO Number</th>
                                                     <th>Branch</th>
+                                                    <th>Warehouse</th>
                                                     <th>Tanggal SO</th>
                                                     <th>Kode Customer</th>
                                                     <th>Customer</th>

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\api\Transaction\SalesPlanController;
 use App\Models\Master\Branch;
+use App\Models\Master\Warehouse;
 
 class SalesOrderController extends Controller
 {
@@ -88,6 +89,7 @@ class SalesOrderController extends Controller
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
         $data['data_branch'] = Branch::whereNull('deleted')->get();
+        $data['data_wh'] = Warehouse::whereNull('deleted')->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -138,6 +140,7 @@ class SalesOrderController extends Controller
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_branch'] = Branch::whereNull('deleted')->get();
+        $data['data_wh'] = Warehouse::whereNull('deleted')->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -188,6 +191,7 @@ class SalesOrderController extends Controller
         $data['data_branch'] = Branch::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['data_wh'] = Warehouse::whereNull('deleted')->get();
         $view = view('web.sales_order.form_detail', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

@@ -57,12 +57,14 @@ class SalesOrderController extends Controller
                 'c.code as currency_code',
                 'cc.code as customer_code',
                 'b.name as branch_name',
+                'w.name as warehouse_name',
                 DB::raw('ROUND((m.total_amount - COALESCE(m.discount_amount,0)), 2) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
             ->leftJoin('branch as b', 'b.id', 'm.branch')
+            ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
             ->leftJoin('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')
                     ->whereNull('sih.deleted');
@@ -97,6 +99,7 @@ class SalesOrderController extends Controller
                     $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('b.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -550,6 +553,7 @@ class SalesOrderController extends Controller
             $header->currency     = $data['currency'];
             $header->remarks      = $data['remarks']      ?? null;
             $header->branch    = $data['branch']       ?? null;
+            $header->warehouse    = $data['warehouse']      ?? null;
             $header->total_amount = 0;
             $header->platform     = $platform;
 
@@ -1489,6 +1493,7 @@ class SalesOrderController extends Controller
             $header->owner_path      = $dbpathlampOwner   == '' ? null : $dbpathlampOwner   . $fileOwnerName;
             $header->latitude        = $data['latitude'];
             $header->longitude       = $data['longitude'];
+            $header->warehouse       = 1;
             $header->check_in_time   = $check_in_time;
             $header->check_out_time  = $check_out_time;
             $header->branch          = $branchId;

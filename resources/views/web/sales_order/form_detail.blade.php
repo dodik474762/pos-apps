@@ -111,6 +111,18 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Warehouse</label>
+                                <select class="form-control select2" disabled id="warehouse">
+                                    @foreach ($data_wh as $wh)
+                                        <option value="{{ $wh->id }}"
+                                            {{ isset($data->warehouse) && $data->warehouse == $wh->id ? 'selected' : '' }}>
+                                            {{ $wh->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Remarks</label>
                                 <textarea id="remarks" class="form-control" disabled placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>
