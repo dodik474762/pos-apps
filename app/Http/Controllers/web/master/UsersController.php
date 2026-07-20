@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web\master;
 
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\Controller;
+use App\Models\Master\Branch;
 use App\Models\Master\Roles;
 use Illuminate\Http\Request;
 
@@ -60,6 +61,7 @@ class UsersController extends Controller
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')->get()->toArray();
+        $data['data_branch'] = Branch::whereNull('deleted')->get();
         $view = view('web.users.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -77,6 +79,7 @@ class UsersController extends Controller
         $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')->get()->toArray();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['data_branch'] = Branch::whereNull('deleted')->get();
         $view = view('web.users.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

@@ -44,6 +44,7 @@ let Users = {
             roles: $("#roles").val(),
             password: $("#password").val(),
             username: $("#username").val(),
+            branch: $("#branch").val(),
             // 'nama_user': $('#nama_user').val(),
         };
 
@@ -154,15 +155,17 @@ let Users = {
                     data: "nama_lengkap",
                 },
                 {
+                    data: "branch_name",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 Users.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             html += `<button type="button" data_id="${row.id}" onclick="Users.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;

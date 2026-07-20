@@ -87,6 +87,7 @@
                                                     <th>Nama Roles</th>
                                                     <th>Nik</th>
                                                     <th>Nama Lengkap</th>
+                                                    <th>Branch</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

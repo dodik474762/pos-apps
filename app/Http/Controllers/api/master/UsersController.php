@@ -12,44 +12,49 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UsersController extends Controller
 {
-    public function getTableName(){
+    public function getTableName()
+    {
         return "users";
     }
 
-    public function getData(){
+    public function getData()
+    {
         DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-            'ug.group',
-            'p.nik',
-            'p.nama_lengkap'
-        ])
-        ->join('users_group as ug', 'ug.id', 'm.user_group')
-        ->join('karyawan as p', 'p.nik', 'm.nik')
-        ->whereNull('m.deleted');
-        if(isset($_POST)){
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'ug.group',
+                'p.nik',
+                'p.nama_lengkap',
+                'b.name as branch_name'
+            ])
+            ->join('users_group as ug', 'ug.id', 'm.user_group')
+            ->join('karyawan as p', 'p.nik', 'm.nik')
+            ->leftJoin('branch as b', 'b.id', 'm.branch')
+            ->whereNull('m.deleted');
+        if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
-            if(isset($_POST['search']['value'])){
+            if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                $datadb->where(function($query) use ($keyword){
-                    $query->where('ug.group', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.nik', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.nama_lengkap', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('ug.group', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.nik', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.nama_lengkap', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('b.name', 'LIKE', '%' . $keyword . '%');
                 });
             }
-            if(isset($_POST['order'][0]['column'])){
+            if (isset($_POST['order'][0]['column'])) {
                 $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
             }
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            if(isset($_POST['length'])){
+            if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
-            if(isset($_POST['start'])){
+            if (isset($_POST['start'])) {
                 $datadb->offset($_POST['start']);
             }
         }
@@ -61,7 +66,8 @@ class UsersController extends Controller
         return json_encode($data);
     }
 
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -72,6 +78,7 @@ class UsersController extends Controller
             $roles->user_group = $data['roles'];
             $roles->username = $data['username'];
             $roles->name = strtoupper($data['username']);
+            $roles->branch = $data['branch'];
             $roles->password = Hash::make($request->get('password'));
             $roles->nik = trim($nik);
             $roles->save();
@@ -94,7 +101,8 @@ class UsersController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDelete(Request $request){
+    public function confirmDelete(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -114,23 +122,26 @@ class UsersController extends Controller
         return response()->json($result);
     }
 
-    public function getDetailData($id){
+    public function getDetailData($id)
+    {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])->where('m.id', $id);
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $data = $request->all();
         return view('web.users.modal.confirmdelete', $data);
     }
 
-    public function showDataKaryawan(Request $request){
+    public function showDataKaryawan(Request $request)
+    {
         $data = $request->all();
         return view('web.users.modal.datakaryawan', $data);
     }

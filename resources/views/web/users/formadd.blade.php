@@ -1,6 +1,6 @@
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-  data-bs-target="#data-modal-karyawan"></button>
+    data-bs-target="#data-modal-karyawan"></button>
 <div id="content-modal-form"></div>
 
 <!-- start page title -->
@@ -33,16 +33,18 @@
                                 <div class="input-group">
                                     <button class="btn btn-outline-primary" type="button" id="button-addon1"
                                         onclick="Users.showDataKaryawan(this)">Pilih</button>
-                                    <input readonly id="nik" type="text" class="form-control required" error="Karyawan"
-                                        placeholder="Pilih Data Karyawan" aria-label="Pilih Data Karyawan"
-                                        aria-describedby="button-addon1" value="{{ isset($data->nik) ? $data->nik.'//'.$data->username : '' }}">
+                                    <input readonly id="nik" type="text" class="form-control required"
+                                        error="Karyawan" placeholder="Pilih Data Karyawan"
+                                        aria-label="Pilih Data Karyawan" aria-describedby="button-addon1"
+                                        value="{{ isset($data->nik) ? $data->nik . '//' . $data->username : '' }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Username</label>
                                 <div>
                                     <input type="text" id="username" class="form-control required" error="Username"
-                                        placeholder="Username" value="{{ isset($data->username) ? $data->username : '' }}">
+                                        placeholder="Username"
+                                        value="{{ isset($data->username) ? $data->username : '' }}">
                                 </div>
                             </div>
                             {{-- <div class="mb-3">
@@ -52,6 +54,17 @@
                                         placeholder="Nama User" value="{{ isset($data->name) ? $data->name : '' }}">
                                 </div>
                             </div> --}}
+                            <div class="mb-3">
+                                <label class="form-label">Branch</label>
+                                <select class="form-control select2" id="branch">
+                                    @foreach ($data_branch as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ isset($data->branch) && $data->branch == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="col-lg-6">
@@ -90,8 +103,7 @@
                     class="btn btn-success waves-effect waves-light me-1">
                     Submit
                 </button>
-                <button type="reset" onclick="Users.cancel(this, event)"
-                    class="btn waves-effect">
+                <button type="reset" onclick="Users.cancel(this, event)" class="btn waves-effect">
                     Cancel
                 </button>
             </div>
