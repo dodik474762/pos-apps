@@ -360,6 +360,12 @@ let PackingList = {
                                 PackingList.module(),
                             )}ubah?id=${data}' data_id="${row.id
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            if (row.status == null || row.status != 'RECEIVED') {
+                                html += `<a href='${url.base_url(
+                                    PackingList.module(),
+                                )}receive?id=${data}' data_id="${row.id
+                                    }" class="btn btn-primary editable-submit btn-sm waves-effect waves-light"><i class="bx bx-check"></i> Receive</a>&nbsp;`;
+                            }
                             // html += `<a href='${url.base_url(
                             //     PackingList.module(),
                             // )}cetakSj?id=${data}' data_id="${row.id
@@ -763,7 +769,7 @@ let PackingList = {
         });
     },
 
-    showModalSR: (elm) => {
+    showModalDO: (elm) => {
         let params = {};
         const payment_method = $("#payment_method").val();
         if (payment_method == "") {
@@ -778,7 +784,7 @@ let PackingList = {
             type: "POST",
             dataType: "html",
             data: params,
-            url: url.base_url(PackingList.modulePrApi()) + "showModalSR",
+            url: url.base_url(PackingList.moduleApi()) + "showModalDO",
             headers: {
                 "X-CSRF-TOKEN": PackingList.csrf_token(),
             },
@@ -797,7 +803,95 @@ let PackingList = {
                 $("#content-modal-form").html(resp);
                 $("#btn-show-modal").trigger("click");
                 elmChoose = elm;
-                PackingList.getDataSR();
+                PackingList.getDataDO();
+            },
+        });
+    },
+
+    receive: (elm) => {
+        let params = {
+            do_id: $(elm).attr("data_id"),
+            do_number: $(elm).attr("do_number"),
+            customer_name: $(elm).attr("customer_name"),
+            id: $('#id').val(),
+            receive_wh_date: $(elm).attr("receive_wh_date"),
+        };
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "receive",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-modal-form").html(resp);
+                $("#btn-show-modal").trigger("click");
+            },
+        });
+    },
+
+    confirmReceive: (elm) => {
+        let params = {};
+        params.id = $('#id').val();
+        params.do_id = $(elm).attr("data_id");
+        const itemsReceived = [];
+
+        $('#table-data-item-receive tbody tr').each(function () {
+            let product_id = $(this).attr("product_id");
+            let qty_received = $(this).find("input#qty_receive").val();
+            let unit_id = $(this).attr("unit_id");
+            const id = $(this).attr("data_id");
+            itemsReceived.push({
+                id: id,
+                product_id: product_id,
+                qty_received: qty_received,
+                unit_id: unit_id
+            });
+        });
+        params.itemsReceived = itemsReceived;
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "confirmReceive",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess(
+                        "Informasi",
+                        "Data Berhasil Diproses",
+                    );
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
             },
         });
     },

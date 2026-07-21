@@ -303,6 +303,7 @@ Route::get('transaksi/return_cs/cetak', [ReturnConsigmentController::class, 'cet
 Route::get('transaksi/packing_list', [PackingListController::class, 'index']);
 Route::get('transaksi/packing_list/add', [PackingListController::class, 'add'])->name('packing-list-add');
 Route::get('transaksi/packing_list/ubah', [PackingListController::class, 'ubah'])->name('packing-list-edit');
+Route::get('transaksi/packing_list/receive', [PackingListController::class, 'receive'])->name('packing-list-receive');
 Route::get('transaksi/packing_list/cetak', [PackingListController::class, 'cetak'])->name('packing-list-print');
 Route::get('transaksi/packing_list/cetakSj', [PackingListController::class, 'cetakSj'])->name('packing-list-print-sj');
 
@@ -659,6 +660,8 @@ Route::post('api/transaksi/packing_list/submit', [TransactionPackingListControll
 Route::post('api/transaksi/packing_list/delete', [TransactionPackingListController::class, 'delete']);
 Route::post('api/transaksi/packing_list/confirmDelete', [TransactionPackingListController::class, 'confirmDelete']);
 Route::post('api/transaksi/packing_list/showModalDO', [TransactionPackingListController::class, 'showModalDO']);
+Route::post('api/transaksi/packing_list/receive', [TransactionPackingListController::class, 'receive']);
+Route::post('api/transaksi/packing_list/confirmReceive', [TransactionPackingListController::class, 'confirmReceive']);
 Route::post('api/transaksi/packing_list/getDataDO', [TransactionPackingListController::class, 'getDataDO']);
 Route::post('api/transaksi/packing_list/getDOConfirmed', [TransactionPackingListController::class, 'getDOConfirmed']);
 Route::post('api/transaksi/packing_list/getDODetailConfirmed', [TransactionPackingListController::class, 'getDODetailConfirmed']);

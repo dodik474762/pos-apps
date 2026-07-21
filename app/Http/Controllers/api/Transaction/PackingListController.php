@@ -625,6 +625,80 @@ class PackingListController extends Controller
         }
     }
 
+    public function confirmReceive(Request $request)
+    {
+        $data = $request->all();
+        $id = $data['id'];
+
+        // echo '<pre>';
+        // print_r($data);
+        // echo '</pre>';
+        // die();
+        DB::beginTransaction();
+
+        try {
+            $userId = session('user_id');
+
+            // ====== HEADER ======
+            $header = PackingList::find($id);
+
+            if (!$header) {
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data tidak ditemukan'
+                ]);
+            }
+
+            /*PL DO */
+            $plDo = PackingListDo::where('packing_list_id', $id)->where('delivery_order_id', $data['do_id'])->first();
+            $plDo->receive_wh = session('user_id');
+            $plDo->receive_wh_date = now();
+            $plDo->save();
+
+
+            /*PL DTL */
+            $idsPl = collect($data['itemsReceived'])->pluck('id')->toArray();
+            $plDtl = PackingListDtl::where('packing_list_id', $id)->whereIn('id', $idsPl)->get();
+            foreach ($plDtl as $key => $value) {
+                $ids = array_search($value->id, array_column($data['itemsReceived'], 'id'));
+
+                $value->qty_received = $data['itemsReceived'][$ids]['qty_received'];
+                $value->receive_wh = session('user_id');
+                $value->receive_wh_date = now();
+                $value->save();
+            }
+
+            $plDoRows = PackingListDo::where('packing_list_id', $id)
+                ->get();
+            $totalDoReceived = collect($plDoRows)->where('receive_wh', '!=', null)->count();
+            $totalPlDo = $plDoRows->count();
+            if ($totalDoReceived == $totalPlDo) {
+                $pl = PackingList::find($id);
+                $pl->status = 'RECEIVED';
+                $pl->save();
+            } else {
+                $pl = PackingList::find($id);
+                $pl->status = 'PARTIALLY RECEIVED';
+                $pl->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'is_valid' => true,
+                'message' => 'Packing List berhasil diterima'
+            ]);
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'is_valid' => false,
+                'message' => $e->getMessage() . ' LINE ' . $e->getLine()
+            ]);
+        }
+    }
+
     public function confirmCancel(Request $request)
     {
         $data = $request->all();
@@ -698,6 +772,21 @@ class PackingListController extends Controller
         $data = $request->all();
 
         return view('web.packing_list.modal.datado', $data);
+    }
+
+    public function receive(Request $request)
+    {
+        $data = $request->all();
+        $datadtl = PackingListDtl::where('packing_list_detail.packing_list_id', $data['id'])
+            ->select(['packing_list_detail.*', 'p.name as product_name', 'p.code as product_code', 'u.name as unit_name', 'u.id as unit_id'])
+            ->join('product as p', 'p.id', 'packing_list_detail.product_id')
+            ->join('delivery_order_detail as dod', 'dod.id', 'packing_list_detail.delivery_detail_id')
+            ->join('unit as u', 'u.id', 'dod.uom')
+            ->where('packing_list_detail.delivery_order_id', $data['do_id'])
+            ->get();
+        $data['datadtl'] = $datadtl;
+
+        return view('web.packing_list.modal.datareceive', $data);
     }
 
     public function showModalSR(Request $request)

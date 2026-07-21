@@ -188,7 +188,13 @@
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td>
+                        @if ($item->receive_wh_date != null)
+                            {{ date('d/m/Y', strtotime($item->receive_wh_date)) }}
+                        @else
+                            -
+                        @endif
+                    </td>
                 </tr>
             @endforeach
         </tbody>

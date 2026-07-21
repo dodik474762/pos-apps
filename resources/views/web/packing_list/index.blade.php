@@ -1,4 +1,3 @@
-
 @if (isset($akses->packing_list))
     @if ($akses->packing_list->view == 1)
         <input type="hidden" id="update" value="{{ $akses->packing_list->update }}">
@@ -75,6 +74,12 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                {{-- <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="pl-receive"
+                                        href="#pl-receive-data" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> PL Receive {{ $title }}
+                                    </a>
+                                </li> --}}
                             </ul>
 
                             <div class="tab-content">

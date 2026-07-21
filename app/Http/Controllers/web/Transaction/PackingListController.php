@@ -205,6 +205,61 @@ class PackingListController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function receive(Request $request)
+    {
+        $api = new TransactionPackingListController;
+        $data = $request->all();
+        $data['list_kendaraan'] = $this->getKendaraan();
+
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['taxes'] = Tax::where('is_active', 1)
+            ->whereNull('deleted')
+            ->where('tax_type', 'Output')
+            ->orderBy('tax_name')
+            ->get(['id', 'tax_name', 'rate']);
+        $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
+            ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'c.id as customer_id'])
+            ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
+            ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
+            ->leftJoin('customer as c', 'c.id', 'doh.customer_id')
+            ->get();
+        // $data['grouped'] = $data['details']
+        //     ->pluck('detail')
+        //     ->flatten()
+        //     ->groupBy([
+        //         fn($item) => $item->product->product_code,
+        //         fn($item) => $item->deliveryDetail->units->name ?? '',
+        //     ]);
+        $data['grouped'] = $data['details']
+            ->pluck('detail')
+            ->flatten()
+            ->unique(function ($item) {
+                return $item->packing_list_id . '-'
+                    . $item->delivery_order_id . '-'
+                    . $item->product_id . '-'
+                    . $item->qty_do . '-'
+                    . $item->qty_packed . '-'
+                    . $item->delivery_detail_id;
+            })
+            ->values()
+            ->groupBy([
+                fn($item) => $item->product->product_code,
+                fn($item) => $item->deliveryDetail->units->name ?? '',
+            ]);
+        $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
+
+        $data['title'] = 'Form ' . $this->getTitle();
+        $data['title_parent'] = $this->getTitleParent();
+        $view = view('web.packing_list.form-receive', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
     public function ubah_sr(Request $request)
     {
         $api = new TransactionPackingListController;
