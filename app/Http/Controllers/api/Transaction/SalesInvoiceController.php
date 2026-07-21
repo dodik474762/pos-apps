@@ -1364,6 +1364,7 @@ class SalesInvoiceController extends Controller
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
             $datadb->whereIn('sih.customer_id', $customers);
+            // $datadb->whereIn('sih.customer_id', [290]);
 
             if (isset($data['akses'])) {
                 if (strtolower($data['akses']) != 'driver' && strtolower($data['akses']) != 'administrator') {
@@ -1377,6 +1378,10 @@ class SalesInvoiceController extends Controller
             }
 
             $datadb = $datadb->get();
+
+            // echo '<pre>';
+            // print_r($datadb);
+            // die;
 
             foreach ($datadb as $invoice) {
                 $invoice->detail_item = DB::table('sales_invoice_detail as sid')
