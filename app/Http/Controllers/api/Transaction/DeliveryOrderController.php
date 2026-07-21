@@ -384,6 +384,7 @@ class DeliveryOrderController extends Controller
 
             $so = SalesOrderHeader::whereIn('sales_order_headers.id', $soIds)
                 ->select(['sales_order_headers.*'])
+                ->whereNull('sales_order_headers.deleted')
                 ->with(['items'])
                 ->get();
 
