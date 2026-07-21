@@ -505,7 +505,8 @@ class DeliveryOrderController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
-            $result['is_valid'] = $th->getMessage();
+            $result['is_valid'] = false;
+            $result['message'] = $th->getMessage();
         }
 
         return response()->json($result);
