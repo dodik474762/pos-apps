@@ -832,6 +832,7 @@ class SalesInvoiceController extends Controller
                     $so_payload['currency'] = $so->currency;
                     $so_payload['salesman'] = $so->salesman;
                     $so_payload['payment_term'] = $so->payment_term;
+                    $so_payload['warehouse'] = $so->warehouse;
                     $so_payload['remarks'] = 'KOREKSI INVOICE NO ' . $header->invoice_number;
 
                     // Ambil SO detail, exclude yang dibatal, override qty yang berubah
