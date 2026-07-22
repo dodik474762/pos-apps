@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class CreditNoteController extends Controller
 {
-     public function getTableName()
+    public function getTableName()
     {
         return 'credit_note';
     }
@@ -24,7 +24,7 @@ class CreditNoteController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -41,12 +41,12 @@ class CreditNoteController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.note_type', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.credit_note_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.credit_note_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('i.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.note_type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.credit_note_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.credit_note_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('i.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -88,9 +88,11 @@ class CreditNoteController extends Controller
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.id', 'm.do_id')->whereNull('do.deleted');
+            })
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
-            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PAID'])
+            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PAID', 'PACKED'])
             ->where('m.customer_id', $data['customer'])
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
@@ -99,14 +101,14 @@ class CreditNoteController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.invoice_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.invoice_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('do.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.due_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('w.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.invoice_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('do.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.due_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -157,13 +159,13 @@ class CreditNoteController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('soh.so_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('soh.so_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.do_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.nama_customer', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('cc.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('soh.so_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('soh.so_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.do_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -230,14 +232,14 @@ class CreditNoteController extends Controller
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('po.code', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.po_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('po.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('uom.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.name', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('p.code', 'LIKE', '%'.$keyword.'%');
+                    $query->where('po.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.po_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('po.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('uom.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('p.code', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -352,7 +354,6 @@ class CreditNoteController extends Controller
                             $invoice->credit_note_amount = $cn_amount;
                             $invoice->save();
                         }
-
                     }
 
                     continue;
@@ -386,7 +387,6 @@ class CreditNoteController extends Controller
                 $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
                 $invoice->credit_note_amount = $totalCnAmount;
                 $invoice->save();
-
             }
 
             $updateHdr = CreditNoteHdr::find($hdrId);
@@ -480,7 +480,6 @@ class CreditNoteController extends Controller
                 'is_valid' => true,
                 'message' => 'Credit Note berhasil dibatalkan.',
             ]);
-
         } catch (\Throwable $th) {
 
             DB::rollBack();
@@ -495,7 +494,7 @@ class CreditNoteController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'c.nama_customer',
@@ -579,7 +578,6 @@ class CreditNoteController extends Controller
             DB::commit();
 
             $result['is_valid'] = true;
-
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();
