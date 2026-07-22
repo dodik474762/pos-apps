@@ -92,12 +92,17 @@ class SalesReturnController extends Controller
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
-            ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.id', 'm.do_id')->whereNull('do.deleted');
+            })
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
-            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PAID'])
+            ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PAID', 'PACKED'])
             ->where('m.customer_id', $data['customer'])
             ->whereNull('m.deleted')
             ->orderBy('m.id', 'desc');
+        // echo '<pre>';
+        // print_r($datadb->toSql());
+        // die;
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {

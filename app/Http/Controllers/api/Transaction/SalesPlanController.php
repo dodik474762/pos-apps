@@ -563,6 +563,7 @@ class SalesPlanController extends Controller
             ->leftJoinSub($invoiceSubquery, 'inv', function ($join) {
                 $join->on('inv.customer_id', '=', 'c.id');
             })
+            ->leftJoin('pasar as p', 'p.id', '=', 'c.pasar')
             ->where($dayColumn, 1)
             ->where(function ($q) use ($weekNow, $weekOfMonth, $date) {
                 // =========================
@@ -629,7 +630,8 @@ class SalesPlanController extends Controller
                 'c.longitude',
                 'c.payment_terms',
                 'top.code as top_code',
-                'top.nilai as top_nilai'
+                'top.nilai as top_nilai',
+                'p.nama_pasar'
             );
         if ($salesmanId != 'all') {
             $datadb->where('sph.salesman', $salesmanId);
