@@ -32,8 +32,9 @@
                             <div class="col-sm-auto">
                                 @if ($akses->presensi->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
-                                        <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn"
-                                            href="javascript:void(0);" onclick="Presensi.add(this, event)"><i
+                                        <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
+                                            id="create-btn" href="javascript:void(0);"
+                                            onclick="Presensi.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Clocking</a>
                                     </div>
                                 @endif
@@ -41,19 +42,27 @@
                         </div>
                     </div>
                     <div class="card-body border border-dashed border-end-0 border-start-0">
-                        <form class="d-none">
+                        <form class="">
                             <div class="row g-3">
                                 <!--end col-->
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <input type="text" class="form-control" data-provider="flatpickr"
-                                            data-date-format="d M, Y" data-range-date="true" id="search-datepicker"
+                                        <input type="date" class="form-control" data-provider="flatpickr"
+                                            data-date-format="d M, Y" data-range-date="true" id="date-start"
+                                            placeholder="Select date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <input type="date" class="form-control" data-provider="flatpickr"
+                                            data-date-format="d M, Y" data-range-date="true" id="date-end"
                                             placeholder="Select date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="SearchData();"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            onclick="Presensi.getData();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -68,8 +77,8 @@
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All" href="#list-data"
-                                        role="tab" aria-selected="true">
+                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
+                                        href="#list-data" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>

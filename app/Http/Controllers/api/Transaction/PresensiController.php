@@ -132,9 +132,13 @@ class PresensiController extends Controller
         return "presence";
     }
 
-    public function getData()
+    public function getData(Request $request)
     {
         DB::enableQueryLog();
+        $request = $request->all();
+        $request['date_start'] = $request['date_start'] ?? date('Y-m-01');
+        $request['date_end'] = $request['date_end'] ?? date('Y-m-d');
+
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -144,7 +148,8 @@ class PresensiController extends Controller
                 'k.nama_lengkap as karyawan_name',
             ])
             ->join('karyawan as k', 'k.id', 'm.karyawan')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->whereBetween('m.presence_date', [$request['date_start'], $request['date_end']]);
         $akses = strtolower(session('akses'));
         $allowed = ['superadmin', 'admin pga', 'bod/boc', 'operational manager', 'supervisor sales'];
 
