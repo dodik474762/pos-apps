@@ -372,9 +372,9 @@ let PackingList = {
                             //     }" class="btn btn-secondary btn-sm editable-submit btn-sm waves-effect waves-light">Cetak SJ</a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
-                            if (row.status != "CONFIRMED") {
-                                html += `<button type="button" data_id="${row.id}" onclick="PackingList.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
-                            }
+                            // if (row.status != "RECEIVED") {
+                            html += `<button type="button" data_id="${row.id}" onclick="PackingList.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
+                            // }
                         }
                         return html;
                     },
