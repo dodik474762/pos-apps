@@ -1885,6 +1885,7 @@ function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code 
         })
         ->whereDate('doh.do_date', '>=', $fromDate)
         ->where('doh.status', '!=', 'CANCELED')
+        ->whereNull('doh.deleted')
         ->when($toDate, fn($q) => $q->whereDate('doh.do_date', '<=', $toDate))
         ->select([
             'doh.id',

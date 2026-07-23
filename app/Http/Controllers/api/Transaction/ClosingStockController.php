@@ -367,13 +367,14 @@ class ClosingStockController extends Controller
             // print_r($stockCards);
             // die;
             foreach ($stockCards as $stockCard) {
-                $productStock = ProductStock::where('product', $stockCard->product)
-                    ->where('warehouse', $stockCard->wh_code)
-                    ->first();
-                if (!empty($productStock)) {
-                    $productStock->qty = $stockCard->closing_balance;
-                    $productStock->save();
-                }
+                recalculateFrom('0', $params['tanggal_awal'], $params['tanggal'], $stockCard->wh_code, null, $stockCard->product);
+                // $productStock = ProductStock::where('product', $stockCard->product)
+                //     ->where('warehouse', $stockCard->wh_code)
+                //     ->first();
+                // if (!empty($productStock)) {
+                //     $productStock->qty = $stockCard->closing_balance;
+                //     $productStock->save();
+                // }
             }
 
 
