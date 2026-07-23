@@ -400,7 +400,7 @@ class CustomerController extends Controller
             $roles->platform = 'mobile';
             $roles->payment_terms = 3;
             $roles->users = $users_id;
-            $roles->channel = 'RETAIL UMUM';
+            $roles->channel_outlet = 'RETAIL UMUM';
             $roles->sub_channel_outlet = 'RT-RETAIL UMUM';
             $roles->save();
 
