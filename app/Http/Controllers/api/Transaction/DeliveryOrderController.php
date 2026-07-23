@@ -282,6 +282,7 @@ class DeliveryOrderController extends Controller
                 $stock = DB::table('product_stock')
                     ->where('product', $item['product_id'])
                     ->where('warehouse', $data['warehouse_id'])
+                    ->lockForUpdate()
                     ->first();
                 if (empty($stock)) {
                     $productsDb = Product::find($item['product_id']);
@@ -427,6 +428,7 @@ class DeliveryOrderController extends Controller
                     $stock = DB::table('product_stock')
                         ->where('product', $item->product_id)
                         ->where('warehouse', $data['warehouse_id'])
+                        ->lockForUpdate()
                         ->first();
                     if (empty($stock)) {
                         $productsDb = Product::find($item->product_id);
