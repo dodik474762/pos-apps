@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction\StockClosing;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ClosingStockController extends Controller
@@ -47,6 +48,7 @@ class ClosingStockController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['date_start'] = Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
         $data['closing'] = StockClosing::where('closing_date', $data['tanggal'])->first();
         $view = view('web.closing_stock.index', $data);
         $put['title_content'] = $this->getTitle();

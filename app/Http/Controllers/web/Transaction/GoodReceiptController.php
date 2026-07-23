@@ -55,6 +55,7 @@ class GoodReceiptController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        // recalculateFrom('0', '2026-07-20', date('Y-m-d'), '1', null, 52);
         // echo '<pre>';
         // print_r($data);die;
         // recalculateFrom('0', '2026-06-01', '2026-07-16', '1', 0, 3);

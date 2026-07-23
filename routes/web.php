@@ -704,6 +704,7 @@ Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProduct
 
 Route::post('api/transaksi/closing-stock/getData', [TransactionClosingStockController::class, 'getStockCardLogDetail']);
 Route::post('api/transaksi/closing-stock/closing', [TransactionClosingStockController::class, 'closing']);
+Route::post('api/transaksi/closing-stock/recalculate', [TransactionClosingStockController::class, 'recalculate']);
 
 Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
 Route::post('api/report/report_stock/getDataStock', [ApiReportStockController::class, 'getDataStock']);

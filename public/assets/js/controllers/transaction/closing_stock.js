@@ -140,6 +140,44 @@ let ClosingStock = {
         });
     },
 
+    recalculate: (elm, e) => {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                tanggal_awal: $("#filter-tanggal-awal").val(),
+                tanggal: $("#filter-tanggal").val(),
+            },
+            headers: {
+                "X-CSRF-TOKEN": ClosingStock.csrf_token(),
+            },
+            url: url.base_url(ClosingStock.moduleApi()) + "recalculate",
+            beforeSend: () => {
+                message.loadingProses("Proses Recalculate Stock...");
+            },
+            error: function (err) {
+                message.closeLoading();
+                message.sweetError(
+                    "Informasi",
+                    "Gagal Melakukan Recalculate Stock - " + err.statusText,
+                );
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
     submitMom: (elm, e) => {
         e.preventDefault();
         let params = ClosingStock.getPostInputMom();
@@ -220,6 +258,7 @@ let ClosingStock = {
                 },
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.date_start = $("#filter-tanggal-awal").val();
                 },
             },
             deferRender: true,
@@ -1412,7 +1451,8 @@ let ClosingStock = {
     filter: (elm) => {
         const tanggal = $("#filter-tanggal").val();
         const route = $(elm).attr("route");
-        window.location.href = route + "?tanggal=" + tanggal;
+        const tanggal_awal = $("#filter-tanggal-awal").val();
+        window.location.href = route + "?tanggal=" + tanggal + "&date_start=" + tanggal_awal;
     },
 };
 

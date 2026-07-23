@@ -24,7 +24,7 @@ class ClosingStockController extends Controller
         $data['recordsFiltered'] = 0;
 
         $dateStart = $_POST['date_start'] ?? date('Y-m-01');
-        $dateEnd   = $_POST['date_end']   ?? date('Y-m-d');
+        $dateEnd   = $_POST['tanggal']   ?? date('Y-m-d');
         $typeStock = $_POST['type_stock'] ?? 'rm';
         $itemCode  = $_POST['item_code']  ?? '';
 
@@ -98,6 +98,7 @@ class ClosingStockController extends Controller
 
                 'p.name as item_name',
             ])
+            // ->where('p.id', 52)
             ->orderBy('p.name');
 
         if (isset($_POST)) {
@@ -204,8 +205,8 @@ class ClosingStockController extends Controller
                 'sc.reference_type'
             ])
             ->where('sc.type_stock', $typeStock)
-            ->where('trans_date', $dateNow)
-            // ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
+            // ->where('trans_date', $dateNow)
+            ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
             ->when($itemCode, fn($q) => $q->where('sc.item_code', $itemCode))
             ->orderBy('sc.item_code')
             ->orderBy('sc.trans_date')
@@ -322,6 +323,66 @@ class ClosingStockController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = 'Gagal Melakukan Closing Stock - ' . $th->getMessage() . ' LINE - ' . $th->getLine();
+        }
+
+        // $query = DB::getQueryLog();
+        // $result['query'] = $query;
+        return response()->json($result);
+    }
+
+    public function recalculate(Request $request)
+    {
+        DB::enableQueryLog();
+        $params = $request->all();
+        $result['is_valid'] = false;
+        $result['message'] = 'Gagal Melakukan Recalculate Stock.';
+
+        DB::beginTransaction();
+        try {
+            $closing = StockClosing::where('closing_date', $params['tanggal'])->first();
+            $stockClosing = new StockClosing();
+            $stockClosing->closing_date = $params['tanggal'];
+            $stockClosing->created_by = session('user_id');
+            $stockClosing->save();
+
+
+            /*update stock cards close_date */
+            $stockCards = StockCard::whereBetween('stock_cards.trans_date', [$params['tanggal_awal'], $params['tanggal']])
+                ->select([
+                    'stock_cards.item_code',
+                    'p.id as product',
+                    'stock_cards.wh_code',
+                    'stock_cards.closing_balance',
+                ])
+                ->leftJoin('product as p', 'p.code', '=', 'stock_cards.item_code')
+                ->whereIn('stock_cards.id', function ($q) use ($params) {
+                    $q->selectRaw('MAX(id)')
+                        ->from('stock_cards')
+                        ->whereBetween('trans_date', [$params['tanggal_awal'], $params['tanggal']])
+                        ->groupBy('item_code');
+                })
+                ->get();
+
+            // echo '<pre>';
+            // print_r($stockCards);
+            // die;
+            foreach ($stockCards as $stockCard) {
+                $productStock = ProductStock::where('product', $stockCard->product)
+                    ->where('warehouse', $stockCard->wh_code)
+                    ->first();
+                if (!empty($productStock)) {
+                    $productStock->qty = $stockCard->closing_balance;
+                    $productStock->save();
+                }
+            }
+
+
+            $result['is_valid'] = true;
+            $result['message'] = 'Berhasil Melakukan Recalculate Stock.';
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = 'Gagal Melakukan Recalculate Stock - ' . $th->getMessage() . ' LINE - ' . $th->getLine();
         }
 
         // $query = DB::getQueryLog();

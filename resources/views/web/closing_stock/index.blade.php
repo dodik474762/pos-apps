@@ -41,6 +41,12 @@
                                 <!--end col-->
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
+                                        <input type="date" class="form-control" id="filter-tanggal-awal"
+                                            value="{{ $date_start }}" placeholder="Select date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
                                         <input type="date" class="form-control" id="filter-tanggal"
                                             value="{{ $tanggal }}" placeholder="Select date">
                                     </div>
@@ -48,8 +54,7 @@
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" route="{{ route('closing-stock') }}"
-                                            class="btn btn-primary w-100" onclick="ClosingStock.filter(this);"> <i
-                                                class="ri-equalizer-fill me-1 align-bottom"></i>
+                                            class="btn btn-primary w-100" onclick="ClosingStock.filter(this);">
                                             Filters
                                         </button>
                                     </div>
@@ -57,9 +62,17 @@
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-success w-100"
-                                            onclick="ClosingStock.closing(this, event);"> <i
-                                                class="ri-arrow-left-right-fill me-1 align-bottom"></i>
+                                            onclick="ClosingStock.closing(this, event);">
                                             Closing
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <button type="button" class="btn btn-warning w-100"
+                                            onclick="ClosingStock.recalculate(this, event);"> <i
+                                                class="ri-arrow-left-right-fill me-1 align-bottom"></i>
+                                            Recalculate
                                         </button>
                                     </div>
                                 </div>
