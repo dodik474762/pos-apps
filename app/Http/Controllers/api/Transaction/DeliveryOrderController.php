@@ -299,7 +299,7 @@ class DeliveryOrderController extends Controller
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Stock ' . $productsDb->name  . ' habis',
+                        'message' => 'Stock ' . $productsDb->name  . ' habis, qty order : ' . $item['qty'] . ' ' . $item['uom'] . ', stok tersedia : ' . $stock->qty . ' ',
                     ]);
                 }
 
@@ -445,7 +445,7 @@ class DeliveryOrderController extends Controller
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
-                            'message' => 'Stock ' . $productsDb->name  . ' habis',
+                            'message' => 'Stock ' . $productsDb->name  . ' habis, qty order : ' . $item->qty . ' ' . $item->unit . ', stok tersedia : ' . $stock->qty . ' ',
                         ]);
                     }
 
