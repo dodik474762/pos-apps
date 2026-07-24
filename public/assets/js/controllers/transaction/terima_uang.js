@@ -983,7 +983,28 @@ let TerimaUang = {
             message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman;
+
+        const checkListId = document.querySelectorAll(".check-item:checked");
+        if (checkListId.length === 0) {
+            message.sweetError("Informasi", "Pilih Data Terlebih Dahulu");
+            return;
+        }
+
+        const invoice_ids = [];
+        const amount_paids = [];
+        $.each(checkListId, (i, e) => {
+            const invoice_id = $(e).closest("tr").attr("invoice_id");
+            const amount_paid = $(e).closest("tr").find("#amount_paid").val();
+
+            invoice_ids.push(invoice_id);
+            amount_paids.push(amount_paid);
+        });
+
+        console.log("invoice_ids", invoice_ids);
+        console.log("amount_paids", amount_paids);
+        const idsJoin = invoice_ids.join(",");
+        const amountsJoin = amount_paids.join(",");
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&invoice_ids=" + idsJoin;
     },
 
     checkAll: (elm) => {

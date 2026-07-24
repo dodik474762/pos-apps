@@ -233,6 +233,7 @@ class TerimaUangController extends Controller
     {
         $salesPayment = new SalesPaymentController();
         $plTagihan = new PLTagihanController();
+        $ids = explode(',', $request->invoice_ids);
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
         $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
@@ -250,6 +251,11 @@ class TerimaUangController extends Controller
             $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
         $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal'], $usersdb->id);
+        // echo '<pre>';
+        // print_r($invoices);
+        // echo '</pre>';
+        // die;
+        $invoices = $invoices->whereIn('invoice_id', $ids);
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
