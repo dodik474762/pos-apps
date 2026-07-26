@@ -92,8 +92,15 @@
                                 <label class="form-label">Return Type</label>
                                 <select id="return_type" class="form-control select2 required">
                                     <option value=""></option>
-                                    <option value="REFUND" {{ isset($data->return_type) && $data->return_type == 'REFUND' ? 'selected' : '' }}>REFUND</option>
-                                    <option value="DEPOSIT" {{ isset($data->return_type) && $data->return_type == 'DEPOSIT' ? 'selected' : '' }}>DEPOSIT</option>
+                                    <option value="RETURN"
+                                        {{ isset($data->return_type) && $data->return_type == 'RETURN' ? 'selected' : '' }}>
+                                        RETURN</option>
+                                    <option value="REFUND"
+                                        {{ isset($data->return_type) && $data->return_type == 'REFUND' ? 'selected' : '' }}>
+                                        REFUND</option>
+                                    <option value="DEPOSIT"
+                                        {{ isset($data->return_type) && $data->return_type == 'DEPOSIT' ? 'selected' : '' }}>
+                                        DEPOSIT</option>
                                     {{-- <option value="CORRECTION" {{ isset($data->return_type) &&
                                         $data->return_type=='CORRECTION' ? 'selected' : '' }}>CORRECTION</option> --}}
                                 </select>
@@ -140,23 +147,28 @@
                             </thead>
 
                             <tbody id="detail-body">
-                                @if(!empty($details))
-                                    @foreach($details as $d)
-                                        <tr data_id="{{ $d->id }}" invoice_detail_id="{{ $d->invoice_detail_id }}">
+                                @if (!empty($details))
+                                    @foreach ($details as $d)
+                                        <tr data_id="{{ $d->id }}"
+                                            invoice_detail_id="{{ $d->invoice_detail_id }}">
                                             <td id="product_id" data_id="{{ $d->product_id }}">
-                                                {{ $d->product_code . ' - ' . $d->product_name  }}
+                                                {{ $d->product_code . ' - ' . $d->product_name }}
                                             </td>
 
                                             <td>
-                                                <input type="number" qty_return_old="{{ $d->qty_return }}" qty_invoice="{{ $d->qty }}" id="qty_return" step="0.01" class="form-control"
-                                                    value="{{ $d->qty_return }}" max="{{ $d->qty - $d->qty_return }}"
+                                                <input type="number" qty_return_old="{{ $d->qty_return }}"
+                                                    qty_invoice="{{ $d->qty }}" id="qty_return" step="0.01"
+                                                    class="form-control" value="{{ $d->qty_return }}"
+                                                    max="{{ $d->qty - $d->qty_return }}"
                                                     onkeyup="SalesReturn.changeQtyRetur(this)">
                                             </td>
 
                                             <td id="unit_price">{{ $d->unit_price }}</td>
-                                            <td id="discount_amount" discount_return="{{ $d->discount_return }}">{{ $d->discount }}</td>
-                                            <td id="tax" type_tax="{{ $d->type_tax }}" data_id="{{ $d->tax }}"
-                                                tax_rate="{{ $d->tax_rate }}" tax_amount="{{ $d->tax_amount }}">{{ $d->tax_amount_invoice }}</td>
+                                            <td id="discount_amount" discount_return="{{ $d->discount_return }}">
+                                                {{ $d->discount }}</td>
+                                            <td id="tax" type_tax="{{ $d->type_tax }}"
+                                                data_id="{{ $d->tax }}" tax_rate="{{ $d->tax_rate }}"
+                                                tax_amount="{{ $d->tax_amount }}">{{ $d->tax_amount_invoice }}</td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger"
                                                     onclick="SalesReturn.removeRow(this)">
@@ -209,7 +221,7 @@
                     </button>
                 @else
                     @php
-                        $disabled = 'disabled'
+                        $disabled = 'disabled';
                     @endphp
                 @endif
             @endif
