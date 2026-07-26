@@ -1079,7 +1079,6 @@ class PackingListController extends Controller
 
             // ====== CORET FAKTUR ======
             if ($data['state'] == 'delivered') {
-
                 $invoice     = null;
                 $invoiceId   = null;
                 $idDtlCancel = [];
