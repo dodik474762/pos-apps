@@ -45,6 +45,12 @@
                                             value="{{ date('Y-m-d') }}" placeholder="Select date">
                                     </div>
                                 </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <input type="date" class="form-control" id="filter-tanggal-end"
+                                            value="{{ date('Y-m-d') }}" placeholder="Select date">
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"

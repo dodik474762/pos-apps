@@ -221,7 +221,8 @@ let ReportVisit = {
                     "X-CSRF-TOKEN": ReportVisit.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.tanggal = $("#filter-tanggal").val();
+                    d.tanggal_end = $("#filter-tanggal-end").val();
                 },
             },
             deferRender: true,
@@ -1123,6 +1124,7 @@ let ReportVisit = {
                 },
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val();
+                    d.tanggal_end = $("#filter-tanggal-end").val();
                 },
             },
             deferRender: true,

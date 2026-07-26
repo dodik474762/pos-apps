@@ -21,6 +21,7 @@ class ReportVisitController extends Controller
         $data['recordsFiltered'] = 0;
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
@@ -67,11 +68,15 @@ class ReportVisitController extends Controller
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('presence as pr', 'pr.creator', 'm.salesman')
-            ->whereDate('m.so_date', '=', $tanggal)
-            ->whereDate('pr.presence_date', '=', $tanggal)
+            ->where(function ($q) use ($tanggal, $tanggal_end) {
+                $q->whereDate('m.so_date', '>=', $tanggal)
+                    ->whereDate('m.so_date', '<=', $tanggal_end);
+            })
+            ->where(function ($q) use ($tanggal, $tanggal_end) {
+                $q->whereDate('pr.presence_date', '>=', $tanggal)
+                    ->whereDate('pr.presence_date', '<=', $tanggal_end);
+            })
             ->whereNull('m.deleted')
-            // ->where('usr.username', 'SLS-001')
-            // ->where('c.code', 'CUST.01087')
             ->orderBy('usr.name', 'asc')
             ->orderBy('m.check_in_time', 'asc');
 
@@ -157,6 +162,7 @@ class ReportVisitController extends Controller
         $data['recordsFiltered'] = 0;
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
@@ -240,9 +246,9 @@ class ReportVisitController extends Controller
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
-            ->leftJoin('presence as pr', function ($join) use ($tanggal) {
+            ->leftJoin('presence as pr', function ($join) use ($tanggal, $tanggal_end) {
                 $join->on('pr.creator', '=', 'm.salesman')
-                    ->whereDate('pr.presence_date', '=', $tanggal);
+                    ->whereBetween('pr.presence_date', [$tanggal, $tanggal_end]);
             })
             ->leftJoin('daily_visit as dv', function ($q) {
                 return $q->on('dv.date_visit', 'm.so_date')
@@ -255,7 +261,9 @@ class ReportVisitController extends Controller
                     ->on('dvd.customer', '=', 'm.customer_id');
             })
             // ->where('usr.username', 'SLS-001')
-            ->whereDate('m.so_date', '=', $tanggal)
+            ->where(function ($q) use ($tanggal, $tanggal_end) {
+                return $q->whereBetween('m.so_date', [$tanggal, $tanggal_end]);
+            })
             ->whereNull('m.deleted')
             ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'k.nama_lengkap')
             ->orderBy('usr.name', 'asc');
