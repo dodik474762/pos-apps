@@ -657,30 +657,36 @@ class PackingListController extends Controller
 
 
             /*PL DTL */
-            $idsPl = collect($data['itemsReceived'])->pluck('id')->toArray();
-            $plDtl = PackingListDtl::where('packing_list_id', $id)->whereIn('id', $idsPl)->get();
-            foreach ($plDtl as $key => $value) {
-                $ids = array_search($value->id, array_column($data['itemsReceived'], 'id'));
+            $idsPl = empty($data['itemsReceived']) ? [] : collect($data['itemsReceived'])->pluck('id')->toArray();
+            if (!empty($data['itemsReceived'])) {
+                $plDtl = PackingListDtl::where('packing_list_id', $id)->whereIn('id', $idsPl)->get();
+                foreach ($plDtl as $key => $value) {
+                    $ids = array_search($value->id, array_column($data['itemsReceived'], 'id'));
 
-                $value->qty_received = $data['itemsReceived'][$ids]['qty_received'];
-                $value->receive_wh = session('user_id');
-                $value->receive_wh_date = now();
-                $value->save();
-            }
-
-            $plDoRows = PackingListDo::where('packing_list_id', $id)
-                ->get();
-            $totalDoReceived = collect($plDoRows)->where('receive_wh', '!=', null)->count();
-            $totalPlDo = $plDoRows->count();
-            if ($totalDoReceived == $totalPlDo) {
+                    $value->qty_received = $data['itemsReceived'][$ids]['qty_received'];
+                    $value->receive_wh = session('user_id');
+                    $value->receive_wh_date = now();
+                    $value->save();
+                }
+                $plDoRows = PackingListDo::where('packing_list_id', $id)
+                    ->get();
+                $totalDoReceived = collect($plDoRows)->where('receive_wh', '!=', null)->count();
+                $totalPlDo = $plDoRows->count();
+                if ($totalDoReceived == $totalPlDo) {
+                    $pl = PackingList::find($id);
+                    $pl->status = 'RECEIVED';
+                    $pl->save();
+                } else {
+                    $pl = PackingList::find($id);
+                    $pl->status = 'PARTIALLY RECEIVED';
+                    $pl->save();
+                }
+            } else {
                 $pl = PackingList::find($id);
                 $pl->status = 'RECEIVED';
                 $pl->save();
-            } else {
-                $pl = PackingList::find($id);
-                $pl->status = 'PARTIALLY RECEIVED';
-                $pl->save();
             }
+
 
             DB::commit();
 
