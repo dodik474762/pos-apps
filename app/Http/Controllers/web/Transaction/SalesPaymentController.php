@@ -363,6 +363,8 @@ class SalesPaymentController extends Controller
                     ->where('rph.visit_date', $tanggal)
                     ->whereNull('rph.deleted');
             })
+            ->join('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+            ->where('usr_payment.user_group', '!=', '5')
             ->whereIn('sih.customer_id', $customers)
             ->whereNull('sales_payment_detail.deleted')
             ->whereNull('sph.deleted')
@@ -434,11 +436,13 @@ class SalesPaymentController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
+            ->join('users as usr_payment', 'usr_payment.id', 'sph.created_by')
             ->whereNull('sales_payment_detail.deleted')
             ->where(function ($q) use ($tanggalPackingDate, $tanggal) {
                 return $q->where('pl.packing_date', $tanggalPackingDate)
                     ->orWhere('pl.packing_date',  $tanggal);
             })
+            ->where('usr_payment.user_group', 5)
             ->where('pl.driver_name', $nik)
             ->whereNull('sph.deleted')
             ->where(function ($q) use ($tanggal, $tanggalPackingDate) {

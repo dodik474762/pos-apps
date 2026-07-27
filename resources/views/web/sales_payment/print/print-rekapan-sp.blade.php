@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <title>Rekapan Sales Payment - {{ $data['date'] }}</title>
     <style>
+        @page {
+            margin: 8mm 6mm;
+        }
+
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
@@ -95,17 +99,18 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th>Salesman</th>
-                <th>No. Invoice</th>
+                <th>Sales</th>
+                <th>Invoice</th>
                 <th>Pelanggan</th>
-                <th>Kecamatan</th>
+                <th>Kec.</th>
                 <th>TOP</th>
-                <th>Metode Bayar</th>
-                <th>Tanggal Invoice</th>
-                <th>Tanggal Jatuh Tempo</th>
-                <th>Status Invoice</th>
-                <th>Jumlah Belum Dibayar</th>
-                <th>Jumlah Dibayar</th>
+                <th>Bayar</th>
+                <th>Tgl Inv</th>
+                <th>Jth Tempo</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Sisa</th>
+                <th>Dibayar</th>
             </tr>
         </thead>
         <tbody>
@@ -126,6 +131,7 @@
                         <td>{{ $item->invoice_date }}</td>
                         <td>{{ $item->due_date }}</td>
                         <td>{{ $item->status }}</td>
+                        <td>{{ $item->total_amount }}</td>
                         <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->amount_paid, 0, ',', '.') }}</td>
                     </tr>
@@ -137,7 +143,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
+                <td colspan="12" class="text-right"><strong>Sub Total</strong></td>
                 <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
