@@ -120,9 +120,14 @@
             @endphp
             @if (!empty($data['data_payment']))
                 @foreach ($data['data_payment'] as $item)
+                    @php
+                        $sales_return = !empty($data_return)
+                            ? collect($data_return)->where('invoice_id', $item->invoice_id)->first()
+                            : [];
+                    @endphp
                     <tr>
                         <td>{{ $no++ }}</td>
-                        <td>{{ $item->salesman_name }}</td>
+                        <td>{{ $item->salesman_name }} - {{ $item->invoice_id }}</td>
                         <td>{{ $item->invoice_number }}</td>
                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                         <td>{{ $item->kecamatan_name ?? '-' }}</td>
@@ -135,6 +140,23 @@
                         <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->amount_paid, 0, ',', '.') }}</td>
                     </tr>
+                    @if (!empty($sales_return))
+                        <tr>
+                            <td>{{ $no++ }}</td>
+                            <td>{{ $item->salesman_name }}</td>
+                            <td>{{ $sales_return->return_number }}</td>
+                            <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
+                            <td>{{ $item->kecamatan_name ?? '-' }}</td>
+                            <td>{{ $item->top_name }}</td>
+                            <td>{{ $item->payment_method }}</td>
+                            <td>{{ $item->invoice_date }}</td>
+                            <td>{{ $item->due_date }}</td>
+                            <td>{{ $item->status }}</td>
+                            <td>{{ $sales_return->refund_amount }}</td>
+                            <td>0</td>
+                            <td class="text-right">0</td>
+                        </tr>
+                    @endif
                     @php
                         $total += $item->amount_paid ?? 0;
                     @endphp

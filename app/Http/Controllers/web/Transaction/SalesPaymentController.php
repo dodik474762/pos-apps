@@ -12,6 +12,7 @@ use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
+use App\Models\Transaction\SalesReturnHdr;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -457,6 +458,22 @@ class SalesPaymentController extends Controller
         return $datadb;
     }
 
+    public function getListSalesReturn($invoice_ids = [])
+    {
+        $datadb = SalesReturnHdr::whereNull('sales_return.deleted')
+            ->select([
+                'sales_return.id',
+                'sales_return.return_number',
+                'sales_return.invoice_id',
+                'sales_return.refund_amount'
+            ])
+            ->where('sales_return.status', '!=', 'CANCELLED')
+            ->where('sales_return.return_type', 'RETURN');
+        $datadb = $datadb->get();
+
+        return $datadb;
+    }
+
     public function cetakRekapan(Request $request)
     {
         $data = $request->all();
@@ -489,7 +506,10 @@ class SalesPaymentController extends Controller
             // echo '<pre>';
             // print_r($salesPayment);
             // die;
+            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+            $salesReturns = $this->getListSalesReturn($invoice_ids);
             $data['data_payment'] = $salesPayment;
+            $data['data_return'] = $salesReturns;
         }
 
         if ($salesmans == '') {
@@ -504,16 +524,25 @@ class SalesPaymentController extends Controller
             }
             $salesPayment = $this->getListRekapanSalesman($customers, $data['tanggal']);
             $data['data_payment'] = $salesPayment;
+            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+            $salesReturns = $this->getListSalesReturn($invoice_ids);
+            $data['data_return'] = $salesReturns;
         }
 
         if ($salesmans != '' && $user_group == 5) {
             $data['tanggal'] = $data['date'] ?? date('Y-m-d');
             $salesPayment = $this->getListRekapanDriver($salesmans->nik, $data['tanggal']);
             $data['data_payment'] = $salesPayment;
+            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+            $salesReturns = $this->getListSalesReturn($invoice_ids);
+            // echo '<pre>';
+            // print_r($salesReturns);
+            // die;
+            $data['data_return'] = $salesReturns;
         }
 
         // echo '<pre>';
-        // print_r($data['data_payment']);
+        // print_r($data['data_return']);
         // die;
         $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr', 'salesmans', 'user_group'))
             ->setPaper('a4', 'portrait');
