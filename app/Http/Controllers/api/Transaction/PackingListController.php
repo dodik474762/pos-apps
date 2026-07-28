@@ -1098,7 +1098,7 @@ class PackingListController extends Controller
                 if ($data['customer_id'] != '') {
                     if (trim($data['invoice_number']) != '') {
 
-                        $invoice = SalesInvoiceHeader::where('invoice_number', trim($data['invoice_number']))->first();
+                        $invoice = SalesInvoiceHeader::where('invoice_number', trim($data['invoice_number']))->whereNull('deleted')->first();
                         if (empty($invoice)) {
                             DB::rollBack();
                             return response()->json([
@@ -1380,7 +1380,7 @@ class PackingListController extends Controller
                         $disc_total  = 0;
                         $net_total   = 0;
 
-                        $invoicePayment = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->first();
+                        $invoicePayment = SalesInvoiceHeader::where('invoice_number', trim($invoice_number))->whereNull('deleted')->first();
                         if (empty($invoicePayment)) {
                             DB::rollBack();
                             return response()->json(['is_valid' => false, 'message' => 'Invoice tidak ditemukan ' . $invoice_number]);
