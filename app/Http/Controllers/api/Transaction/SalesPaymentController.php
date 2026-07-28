@@ -911,7 +911,8 @@ class SalesPaymentController extends Controller
                 )
                 ->join('customer as c', 'c.id', '=', 'sih.customer_id')
                 ->leftJoin('term_of_payment as top', 'top.id', '=', 'c.payment_terms')
-                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
+                // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
+                ->whereNotIn('sih.status', ['CANCELED'])       // hanya invoice yang sudah diposting
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
