@@ -349,7 +349,14 @@ class SalesPaymentController extends Controller
                 'rpd.amount_paid as total_terbayar_rph',
                 'rph.status as status_received',
                 'sales_payment_detail.invoice_id',
-                'sph.payment_method'
+                'sph.payment_method',
+                'do.do_number',
+                'dohs.do_number as dohs_number',
+                'do.do_date',
+                'dohs.do_date as dohs_date',
+                'sales_payment_detail.allocated_amount as total_terbayar',
+                'rpd.amount_paid as total_terbayar_rph',
+                'tp.remarks as top_customer',
             ])
             ->distinct()
             ->join('users as u', 'u.id', 'm.created_by')
@@ -500,6 +507,7 @@ class SalesPaymentController extends Controller
                 'rph.status as status_received',
                 'sales_payment_detail.invoice_id',
                 'sph.payment_method',
+                'doh.do_number'
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'pl.id')
             ->join('delivery_order_header as doh', function ($q) {
