@@ -259,6 +259,9 @@ class SalesPaymentController extends Controller
             ->whereNull('sales_payment_detail.deleted')
             ->orderBy('sales_payment_detail.id')
             ->get();
+        echo '<pre>';
+        print_r($data['details']);
+        die;
 
         $data['payment_method'] = $data['data']->payment_method;
         $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
