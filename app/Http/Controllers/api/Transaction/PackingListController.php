@@ -960,7 +960,7 @@ class PackingListController extends Controller
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
             })
             ->where('m.packing_date', '>=', '2026-07-01')
-            ->whereNotIn('m.status', ['CANCELLED', 'NOT DELIVERED', 'RECEIVED'])
+            // ->whereNotIn('m.status', ['CANCELLED', 'NOT DELIVERED', 'RECEIVED'])
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
         $users = User::where('id', $data['users'])->first();

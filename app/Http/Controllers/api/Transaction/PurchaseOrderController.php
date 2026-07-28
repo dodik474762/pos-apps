@@ -277,7 +277,7 @@ class PurchaseOrderController extends Controller
         try {
             //code...
             $menu = PurchaseOrder::find($data['id']);
-            if ($menu->status != 'DRAFT') {
+            if (strtoupper($menu->status) != 'DRAFT') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
                 return response()->json($result);
