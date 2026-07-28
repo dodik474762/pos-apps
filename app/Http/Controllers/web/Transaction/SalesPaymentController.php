@@ -440,6 +440,7 @@ class SalesPaymentController extends Controller
             ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
             ->join('users as usr_payment', 'usr_payment.id', 'sph.created_by')
             ->whereNull('sales_payment_detail.deleted')
+            // ->where('sih.invoice_number', 'SI07261307')
             ->where(function ($q) use ($tanggalPackingDate, $tanggal) {
                 return $q->where('pl.packing_date', $tanggalPackingDate)
                     ->orWhere('pl.packing_date',  $tanggal);
