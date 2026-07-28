@@ -6,6 +6,7 @@ use App\Http\Controllers\api\Transaction\SalesPlanController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
+use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -64,7 +65,7 @@ class PLTagihanController extends Controller
             $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
 
-        $invoices = $this->getAllInvoiceCetak($customers);
+        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id);
         $data['invoices'] = $invoices;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
         $view = view('web.pl_tagihan.index', $data);
@@ -121,7 +122,7 @@ class PLTagihanController extends Controller
         return $dailyVisit;
     }
 
-    public function getAllInvoiceCetak($customers = [], $date = null)
+    public function getAllInvoiceCetak($customers = [], $date = null, $salesman = null)
     {
         $date = $date ?? date('Y-m-d');
         $datadb = empty($customers) ? [] : DB::table('sales_invoice_header as m')
@@ -165,6 +166,9 @@ class PLTagihanController extends Controller
             ->whereRaw('(m.total_amount - m.amount_paid) > 0')
             // ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])
             ->whereIn('cc.id', $customers)
+            ->when($salesman != '', function ($q) use ($salesman) {
+                return $q->where('soh.salesman', $salesman);
+            })
             // ->where('m.invoice_number', 'SI06261030')
             // ->where('m.invoice_date', '>=', $date)
             ->orderBy('m.id', 'desc');
@@ -247,7 +251,13 @@ class PLTagihanController extends Controller
             $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
             $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
-        $invoices = $this->getAllInvoiceCetak($customers);
+        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id);
+        foreach ($invoices as $key => $value) {
+            $inv_update = SalesInvoiceHeader::where('id', $value->id)->first();
+            $inv_update->pl_date = $data['tanggal'];
+            $inv_update->pl_by = $salesman->id;
+            $inv_update->save();
+        }
 
         if (isset($data['ids'])) {
             $invoices = $invoices->whereIn('id', explode(',', $data['ids']));

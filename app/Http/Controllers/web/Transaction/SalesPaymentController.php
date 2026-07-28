@@ -328,59 +328,141 @@ class SalesPaymentController extends Controller
             ->where('rpd.amount_paid', '>', 0)
             ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
-        $datadb = SalesPaymentDtl::select([
-            'sales_payment_detail.id',
-            'cc.nama_customer',
-            'cc.code as customer_code',
-            'sih.invoice_number',
-            'usr.name as salesman_name',
-            'kec.name as kecamatan_name',
-            'tp.remarks as top_name',
-            'sih.invoice_date',
-            'sih.due_date',
-            'sih.status',
-            'sih.total_amount',
-            // 'sih.amount_paid',
-            'sales_payment_detail.allocated_amount as amount_paid',
-            'rpd.amount_paid as total_terbayar_rph',
-            'rph.status as status_received',
-            'sales_payment_detail.invoice_id',
-            'sph.payment_method'
-        ])
+        // echo '<pre>';
+        // print_r($customers);
+        // die;
+
+        $datadb = DB::table('sales_invoice_header as m')
+            ->select([
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'm.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'm.invoice_date',
+                'm.due_date',
+                'm.status',
+                'm.total_amount',
+                'sales_payment_detail.allocated_amount as amount_paid',
+                'rpd.amount_paid as total_terbayar_rph',
+                'rph.status as status_received',
+                'sales_payment_detail.invoice_id',
+                'sph.payment_method'
+            ])
             ->distinct()
-            ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.id', 'sales_payment_detail.invoice_id')
-                    ->whereNull('sih.deleted');
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->leftJoin('delivery_order_header as do', function ($q) {
+                return $q->on('do.id', 'm.do_id')->whereNull('do.deleted');
             })
-            ->join('sales_order_headers as soh', function ($q) {
-                return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
+            ->leftJoin('sales_order_headers as soh', function ($q) {
+                return $q->on('soh.id', 'do.id')->orOn('soh.id', 'm.sales_order');
             })
-            ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
-            ->join('customer as cc', 'cc.id', 'sih.customer_id')
-            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
-            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
-            ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
+            ->leftJoin('delivery_order_header as dohs', function ($q) {
+                return $q->on('dohs.so_id', 'soh.id')->whereNull('dohs.deleted');
+            })
+            ->leftJoin('packing_list_do as pld', function ($q) {
+                return $q->on('pld.delivery_order_id', 'do.id');
+            })
+            ->leftJoin('sales_payment_detail', function ($q) {
+                return $q->on('sales_payment_detail.invoice_id', 'm.id')
+                    ->whereNull('sales_payment_detail.deleted');
+            })
+            ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
+                return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                    ->whereNull('sph.deleted')
+                    ->where('sph.payment_date', $tanggal);
+            })
             ->leftJoinSub($rpdSub, 'rpd', function ($q) {
-                return $q->on('rpd.invoice_id', '=', 'sih.id');
+                return $q->on('rpd.invoice_id', '=', 'm.id');
             })
             ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
                 return $q->on('rph.id', 'rpd.receive_id')
                     ->where('rph.visit_date', $tanggal)
                     ->whereNull('rph.deleted');
             })
-            ->join('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-            ->where('usr_payment.user_group', '!=', '5')
-            ->whereIn('sih.customer_id', $customers)
-            ->whereNull('sales_payment_detail.deleted')
-            ->whereNull('sph.deleted')
-            ->where(function ($q) use ($tanggal) {
-                return $q->where('sph.payment_date', $tanggal);
+            // ->where('m.invoice_number', 'SI07261305')
+            ->whereNull('pld.id')
+            ->join('warehouse as w', 'w.id', 'm.warehouse_id')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+            // ->where('m.invoice_date', $date)
+            ->whereNull('m.deleted')
+            ->where('m.pl_date', $tanggal)
+            ->when($salesman != '', function ($q) use ($salesman) {
+                return $q->where('m.pl_by', $salesman);
             })
+            // ->whereRaw('(m.total_amount - m.amount_paid) > 0')
+            // ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])
+            // ->whereIn('cc.id', $customers)
             ->when($salesman != '', function ($q) use ($salesman) {
                 return $q->where('soh.salesman', $salesman);
-            })
-            ->get();
+            });
+        // ->where('m.invoice_number', 'SI06261030')
+        // ->where('m.invoice_date', '>=', $date)
+        // ->orderBy('m.id', 'desc');
+
+        $datadb = $datadb->get();
+        // echo '<pre>';
+        // print_r($datadb);
+        // die;
         return $datadb;
+        // $datadb = SalesPaymentDtl::select([
+        //     'sales_payment_detail.id',
+        //     'cc.nama_customer',
+        //     'cc.code as customer_code',
+        //     'sih.invoice_number',
+        //     'usr.name as salesman_name',
+        //     'kec.name as kecamatan_name',
+        //     'tp.remarks as top_name',
+        //     'sih.invoice_date',
+        //     'sih.due_date',
+        //     'sih.status',
+        //     'sih.total_amount',
+        //     // 'sih.amount_paid',
+        //     'sales_payment_detail.allocated_amount as amount_paid',
+        //     'rpd.amount_paid as total_terbayar_rph',
+        //     'rph.status as status_received',
+        //     'sales_payment_detail.invoice_id',
+        //     'sph.payment_method'
+        // ])
+        //     ->distinct()
+        //     ->join('sales_invoice_header as sih', function ($q) {
+        //         return $q->on('sih.id', 'sales_payment_detail.invoice_id')
+        //             ->whereNull('sih.deleted');
+        //     })
+        //     ->join('sales_order_headers as soh', function ($q) {
+        //         return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
+        //     })
+        //     ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+        //     ->join('customer as cc', 'cc.id', 'sih.customer_id')
+        //     ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+        //     ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+        //     ->join('sales_payment_header as sph', 'sph.id', 'sales_payment_detail.payment_id')
+        //     ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+        //         return $q->on('rpd.invoice_id', '=', 'sih.id');
+        //     })
+        //     ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+        //         return $q->on('rph.id', 'rpd.receive_id')
+        //             ->where('rph.visit_date', $tanggal)
+        //             ->whereNull('rph.deleted');
+        //     })
+        //     ->join('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+        //     ->where('usr_payment.user_group', '!=', '5')
+        //     ->whereIn('sih.customer_id', $customers)
+        //     ->whereNull('sales_payment_detail.deleted')
+        //     ->whereNull('sph.deleted')
+        //     ->where(function ($q) use ($tanggal) {
+        //         return $q->where('sph.payment_date', $tanggal);
+        //     })
+        //     ->when($salesman != '', function ($q) use ($salesman) {
+        //         return $q->where('soh.salesman', $salesman);
+        //     })
+        //     ->get();
+        // return $datadb;
     }
 
     public function getListRekapanDriver($nik, $tanggal)

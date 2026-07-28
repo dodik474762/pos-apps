@@ -998,8 +998,8 @@ let PLTagihan = {
         });
 
         if (ids.length === 0) {
-            message.sweetError("Informasi", "Pilih minimal 1 invoice untuk dicetak.");
-            return;
+            // message.sweetError("Informasi", "Pilih minimal 1 invoice untuk dicetak.");
+            // return;
         }
         window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&ids=" + ids.join(",");
     },

@@ -106,7 +106,7 @@
                                                     <th>Giro/Transfer</th>
                                                     <th>Remark</th>
                                                     <th>Retur</th>
-                                                    <th style="width: 40px;">
+                                                    <th style="width: 40px;" class="d-none">
                                                         <input type="checkbox" id="check-all"
                                                             onchange="PLTagihan.checkAll(this)">
                                                     </th>
@@ -145,7 +145,7 @@
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
-                                                        <td>
+                                                        <td class="d-none">
                                                             <input type="checkbox" data_id="{{ $item->id }}"
                                                                 class="check-item" value="{{ $item->id }}">
                                                         </td>
