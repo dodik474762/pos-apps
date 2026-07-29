@@ -65,7 +65,7 @@ class PLTagihanController extends Controller
             $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
 
-        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id);
+        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id ?? null);
         $data['invoices'] = $invoices;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
         $view = view('web.pl_tagihan.index', $data);
