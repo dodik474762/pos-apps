@@ -125,6 +125,7 @@
         </tr>
         <tr>
             <td><strong>Warehouse:</strong> {{ empty($invoices) ? '' : $invoices[0]->warehouse_name }}</td>
+            <td style="padding-left:40px;"><strong>PL No:</strong> {{ $plTagihan->packing_list_no }}</td>
         </tr>
     </table>
 

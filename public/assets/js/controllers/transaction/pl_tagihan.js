@@ -36,30 +36,17 @@ let PLTagihan = {
     },
 
     getPostItem: () => {
-        const table = $("table#table-items tbody tr.input");
+        const table = $("table#table-data tbody tr");
         let result = [];
 
         table.each((index, elm) => {
             const $row = $(elm);
 
-            result.push({
-                id: $row.attr("data_id") || null,
-                so_detail_id: $row.attr("so_detail_id") || null,
-                product_id: $row.find("#product").attr("data_id") || null,
-
-                // kembali pakai TEXT
-                qty: parseFloat($row.find("#qty").text()) || 0,
-                price: parseFloat($row.find("#price").text()) || 0,
-                discount: parseFloat($row.find("#discount").text()) || 0,
-                tax_amount: parseFloat($row.find("#tax").text()) || 0,
-                tax: parseFloat($row.find("#tax").attr("data_id")) || 0,
-                type_tax: $row.find("#tax").attr("type_tax") || "",
-                tax_rate: parseFloat($row.find("#tax").attr("rate")) || 0,
-                subtotal: parseFloat($row.find("#subtotal").text()) || 0,
-
-                note: $row.find("#note").val() || "",
-                remove: $row.hasClass("remove") ? 1 : 0,
-            });
+            if ($row.find(".check-item").is(":checked")) {
+                result.push({
+                    invoice_id: $row.find(".check-item").attr('data_id') || 0,
+                });
+            }
         });
 
         return result;
@@ -67,99 +54,12 @@ let PLTagihan = {
 
     getPostInput: () => {
         let data = {
-            id: $("#id").val() || null,
-            invoice_number: $("#invoice_number").val() || null,
-            invoice_date: $("#invoice_date").val() || null,
-            do_id: $("#do_number").attr("data_id") || null,
-            customer_id: $("#customer_id").val() || null,
-            subtotal: parseFloat($("#subtotal").val()) || 0,
-            discount_amount: parseFloat($("#discount_amount").val()) || 0,
-            tax: $("#tax").val() || 0,
-            tax_base: parseFloat($("#tax option:selected").attr("rate")) || 0,
-            total_amount: parseFloat($("#grand-total").text()) || 0,
-
+            pl_date: $('#filterDate').val(),
+            salesman: $('#salesman').val(),
             items: PLTagihan.getPostItem(),
         };
 
         return data;
-    },
-
-    submit: (elm, e) => {
-        e.preventDefault();
-        let form = $(elm).closest("div.row");
-        if (validation.runWithElement(form)) {
-            let params = PLTagihan.getPostInput();
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                data: params,
-                url: url.base_url(PLTagihan.moduleApi()) + "submit",
-                headers: {
-                    "X-CSRF-TOKEN": PLTagihan.csrf_token(),
-                },
-                beforeSend: () => {
-                    message.loadingProses("Proses Simpan Data...");
-                },
-                error: function () {
-                    message.closeLoading();
-                    message.sweetError("Informasi", "Gagal");
-                },
-
-                success: function (resp) {
-                    message.closeLoading();
-                    if (resp.is_valid) {
-                        message.sweetSuccess();
-                        setTimeout(function () {
-                            // window.location.reload();
-                            PLTagihan.back();
-                        }, 1000);
-                    } else {
-                        message.sweetError("Informasi", resp.message);
-                    }
-                },
-            });
-        } else {
-            message.sweetError("Informasi", "Data Belum Lengkap");
-        }
-    },
-
-    posted: (elm, e) => {
-        e.preventDefault();
-        let form = $(elm).closest("div.row");
-        if (validation.runWithElement(form)) {
-            let params = PLTagihan.getPostInput();
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                data: params,
-                url: url.base_url(PLTagihan.moduleApi()) + "posted",
-                headers: {
-                    "X-CSRF-TOKEN": PLTagihan.csrf_token(),
-                },
-                beforeSend: () => {
-                    message.loadingProses("Proses Simpan Data...");
-                },
-                error: function () {
-                    message.closeLoading();
-                    message.sweetError("Informasi", "Gagal");
-                },
-
-                success: function (resp) {
-                    message.closeLoading();
-                    if (resp.is_valid) {
-                        message.sweetSuccess();
-                        setTimeout(function () {
-                            // window.location.reload();
-                            PLTagihan.back();
-                        }, 1000);
-                    } else {
-                        message.sweetError("Informasi", resp.message);
-                    }
-                },
-            });
-        } else {
-            message.sweetError("Informasi", "Data Belum Lengkap");
-        }
     },
 
     back: (elm) => {
@@ -167,7 +67,7 @@ let PLTagihan = {
     },
 
     getData: async () => {
-        let tableData = $("table#table-data");
+        let tableData = $("table#table-data-pl");
 
         let updateAction = $("#update").val();
         let deleteAction = $("#delete").val();
@@ -191,7 +91,7 @@ let PLTagihan = {
             },
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
-                    "pagination-rounded"
+                    "pagination-rounded",
                 );
             },
             ajax: {
@@ -214,86 +114,39 @@ let PLTagihan = {
                     },
                 },
                 {
-                    data: "invoice_number",
+                    data: "packing_list_no",
                 },
                 {
-                    data: "invoice_date",
+                    data: "packing_date",
                 },
                 {
-                    data: "do_number",
+                    data: "kode_sales",
                 },
                 {
-                    data: "do_date",
-                },
-                {
-                    data: "nama_customer",
-                },
-                {
-                    data: "warehouse_name",
+                    data: "salesman_name",
                 },
                 {
                     data: "created_by_name",
                 },
                 {
-                    data: "due_date",
-                },
-                {
-                    data: "print_date",
-                },
-                {
-                    data: "print_date",
-                    render: function (data, type, row) {
-                        if (data) {
-                            if (row.reprint == 1) {
-                                return "Belum Cetak";
-                            }
-                            return "Sudah Cetak";
-                        }
-                        return "Belum Cetak";
-                    },
-                },
-                {
-                    data: "reprint",
-                    render: function (data, type, row) {
-                        if (data == 1) {
-                            return "Ya";
-                        }
-                        return "Tidak";
-                    },
-                },
-                {
-                    data: "status",
-                },
-                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<a href='${url.base_url(
-                            PLTagihan.module()
+                            PLTagihan.module(),
                         )}cetak?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
-                        if (updateAction == 1) {
-                            html += `<a href='${url.base_url(
-                                PLTagihan.module()
-                            )}ubah?id=${data}' data_id="${row.id
-                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
-                        }
-                        if (deleteAction == 1) {
-                            if (row.status == "DRAFT") {
-                                html += `<button type="button" data_id="${row.id}" onclick="PLTagihan.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
-                            }
-                        }
                         return html;
                     },
                 },
             ],
         });
 
-        data
+        (data
             .buttons()
             .container()
             .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
             $(".dataTables_length select").addClass(
-                "form-select form-select-sm"
+                "form-select form-select-sm",
             ),
             $("#selection-datatable").DataTable({
                 select: {
@@ -307,10 +160,10 @@ let PLTagihan = {
                 },
                 drawCallback: function () {
                     $(".dataTables_paginate > .pagination").addClass(
-                        "pagination-rounded"
+                        "pagination-rounded",
                     );
                 },
-            });
+            }));
     },
 
     delete: (elm, e) => {
@@ -1004,6 +857,44 @@ let PLTagihan = {
         window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&ids=" + ids.join(",");
     },
 
+    generatePL: (elm) => {
+        let params = PLTagihan.getPostInput();
+        if (params.items.length == 0) {
+            message.sweetError("Informasi", "Data Belum Lengkap");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(PLTagihan.moduleApi()) + "generatePL",
+            headers: {
+                "X-CSRF-TOKEN": PLTagihan.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        // window.location.reload();
+                        PLTagihan.back();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
     checkAll: (elm) => {
         let checked = $(elm).is(":checked");
         document.querySelectorAll(".check-item").forEach((el) => {
@@ -1028,9 +919,12 @@ let PLTagihan = {
         const url = $(elm).attr("url");
         window.open(url + "?ids=" + ids.join(","), "_blank");
     },
+
+
 };
 
 $(function () {
+    PLTagihan.getData();
     PLTagihan.setSelect2();
     PLTagihan.editReload();
 });

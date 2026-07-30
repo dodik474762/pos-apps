@@ -60,7 +60,7 @@
                                         Print All Invoice
                                     </button>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 d-none">
                                     <button type="button" class="btn btn-success w-100"
                                         url="{{ route('pl-tagihan-print') }}" onclick="PLTagihan.cetak(this);"> <i
                                             class="ri-equalizer-fill me-1 align-bottom"></i>
@@ -78,13 +78,24 @@
                                 <li class="nav-item">
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
                                         href="#list-data" role="tab" aria-selected="true">
-                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All Rute Salesman
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link list-tagihan py-3" data-bs-toggle="tab" id="tab-list-tagihan"
+                                        href="#list-tagihan" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Daftar PL Tagihan
                                     </a>
                                 </li>
                             </ul>
 
                             <div class="tab-content">
                                 <div class="tab-pane active" id="list-data">
+                                    <div>
+                                        <button class="btn btn-success" onclick="PLTagihan.generatePL(this)">Generate
+                                            PL</button>
+                                    </div>
+                                    <br />
                                     <div class="table-responsive table-card mb-1">
                                         <table class="table table-nowrap align-middle" id="table-data">
                                             <thead class="text-muted table-light">
@@ -106,7 +117,7 @@
                                                     <th>Giro/Transfer</th>
                                                     <th>Remark</th>
                                                     <th>Retur</th>
-                                                    <th style="width: 40px;" class="d-none">
+                                                    <th style="width: 40px;" class="">
                                                         <input type="checkbox" id="check-all"
                                                             onchange="PLTagihan.checkAll(this)">
                                                     </th>
@@ -145,12 +156,41 @@
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
                                                         <td>&nbsp;</td>
-                                                        <td class="d-none">
+                                                        <td class="">
                                                             <input type="checkbox" data_id="{{ $item->id }}"
                                                                 class="check-item" value="{{ $item->id }}">
                                                         </td>
                                                     </tr>
                                                 @endforeach
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-tagihan">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-pl">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>PL No</th>
+                                                    <th>Tanggal</th>
+                                                    <th>Kode Sales</th>
+                                                    <th>Salesman</th>
+                                                    <th>Dibuat Oleh</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+
                                             </tbody>
                                         </table>
                                         <div class="noresult" style="display: none">

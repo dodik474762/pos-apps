@@ -297,6 +297,25 @@ function generateNoPL()
     return $no;
 }
 
+function generateNoPLTagihan()
+{
+    $no = 'PT' . strtoupper(date('m')) . date('y');
+    $data = DB::table('packing_list_salesman')->where('packing_list_no', 'LIKE', '%' . $no . '%')->orderBy('packing_list_no', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->packing_list_no);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    // dd($no);
+    return $no;
+}
+
 function generateNoReceivedCashier()
 {
     $no = 'RCC' . strtoupper(date('m')) . date('y');

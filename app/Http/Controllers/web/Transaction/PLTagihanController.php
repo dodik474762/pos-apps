@@ -6,6 +6,8 @@ use App\Http\Controllers\api\Transaction\SalesPlanController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
 use App\Models\Master\Karyawan;
+use App\Models\Transaction\PackingListSalesman;
+use App\Models\Transaction\PackingListSalesmanInvoice;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\User;
@@ -241,33 +243,60 @@ class PLTagihanController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
+        $plTagihan = PackingListSalesman::where('id', $data['id'])->first();
+        $data['salesman'] = $plTagihan->salesman;
+        $data['tanggal'] = $plTagihan->packing_date;
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $routeplan = $this->getRoutePlanSales($data);
-        $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        // $routeplan = $this->getRoutePlanSales($data);
+        // $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
-        if (isset($data['salesman'])) {
-            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
-            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-        }
-        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id);
-        foreach ($invoices as $key => $value) {
-            $inv_update = SalesInvoiceHeader::where('id', $value->id)->first();
-            $inv_update->pl_date = $data['tanggal'];
-            $inv_update->pl_by = $salesman->id;
-            $inv_update->save();
-        }
+        // if (isset($data['salesman'])) {
+        //     $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
+        //     $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        // }
+        // $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id);
+        // foreach ($invoices as $key => $value) {
+        //     $inv_update = SalesInvoiceHeader::where('id', $value->id)->first();
+        //     $inv_update->pl_date = $data['tanggal'];
+        //     $inv_update->pl_by = $salesman->id;
+        //     $inv_update->save();
+        // }
 
-        if (isset($data['ids'])) {
-            $invoices = $invoices->whereIn('id', explode(',', $data['ids']));
-        }
+        $invoices = PackingListSalesmanInvoice::where('packing_list_salesman_invoice.packing_list_id', $data['id'])
+            ->select([
+                'sih.total_amount',
+                'sih.amount_paid',
+                'doh.do_date',
+                'doh.do_date as dohs_date',
+                'doh.do_number',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.due_date',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.status',
+                'tp.remarks as top_name'
+            ])
+            ->join('sales_invoice_header as sih', 'sih.id', 'packing_list_salesman_invoice.invoice_id')
+            ->join('customer as cc', 'cc.id', 'sih.customer_id')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('delivery_order_header as doh', 'doh.so_id', 'sih.sales_order')
+            ->get();
+        // echo '<pre>';
+        // print_r($invoices);
+        // die;
+
+        // if (isset($data['ids'])) {
+        //     $invoices = $invoices->whereIn('id', explode(',', $data['ids']));
+        // }
 
         $invoices = $invoices->values();
 
 
         $tanggal_rute = $data['tanggal'];
-        $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
+        $pdf = Pdf::loadView('web.pl_tagihan.print.po-print', compact('invoices', 'plTagihan',  'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
             ->setPaper('a4', 'landscape');
 
         return $pdf->stream('PL-' . $salesman_name . '.pdf');

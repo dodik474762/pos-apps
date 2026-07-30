@@ -49,6 +49,7 @@ use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as Tra
 use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
 use App\Http\Controllers\api\report\ReportVisitController as ReportReportVisitController;
 use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionClosingStockController;
+use App\Http\Controllers\api\Transaction\PLTagihanController as TransactionPLTagihanController;
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\DashboardController;
@@ -669,6 +670,9 @@ Route::post('api/transaksi/packing_list/cancelPl', [TransactionPackingListContro
 Route::post('api/transaksi/packing_list/confirmCancel', [TransactionPackingListController::class, 'confirmCancel']);
 Route::post('api_mobile/transaksi/packing_list/getData', [TransactionPackingListController::class, 'getDataPackingList']);
 Route::post('api_mobile/transaksi/packing_list/confirmDeliver', [TransactionPackingListController::class, 'confirmDeliver']);
+
+Route::post('api/transaksi/pl_tagihan/getData', [TransactionPLTagihanController::class, 'getData']);
+Route::post('api/transaksi/pl_tagihan/generatePL', [TransactionPLTagihanController::class, 'generatePL']);
 
 Route::post('api/transaksi/packing_list_pr/getData', [TransactionPackingListController::class, 'getDataSr']);
 Route::post('api/transaksi/packing_list_pr/submit', [TransactionPackingListController::class, 'submitSr']);
