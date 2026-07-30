@@ -200,10 +200,10 @@
                         {{ number_format($promoInclude, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
-            <tr>
+            {{-- <tr>
                 <td>Diskon</td>
                 <td class="text-right">{{ number_format($discountInclude, 0, ',', '.') }}</td>
-            </tr>
+            </tr> --}}
             <tr>
                 <td>PPN ({{ $taxRate }}%)</td>
                 <td class="text-right">{{ number_format($taxAmount, 0, ',', '.') }}</td>
