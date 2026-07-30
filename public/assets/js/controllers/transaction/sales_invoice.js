@@ -1051,16 +1051,27 @@ let SalesInvoice = {
         let params = {};
         params.id = $(elm).attr("data_id");
 
+        // ambil options salesman dari select yang sudah ada di halaman
+        let salesmanOptions = $('#salesman').html();
+
         Swal.fire({
-            title: 'Tanggal Tagihan',
+            title: 'Tagihkan Invoice',
             html: `
-            <div class="input-group input-group-sm text-center">
-            <input 
-                type="date" 
-                id="tgl_tagihan" 
-                class="form-control" 
-                value="${new Date().toISOString().split('T')[0]}"
-            >
+            <div class="text-start mb-2">
+                <label for="swal_salesman" class="form-label mb-1">Salesman</label>
+                <select id="swal_salesman" class="form-select form-select-sm">
+                    <option value="">-- Pilih Salesman --</option>
+                    ${salesmanOptions}
+                </select>
+            </div>
+            <div class="text-start">
+                <label for="tgl_tagihan" class="form-label mb-1">Tanggal Tagihan</label>
+                <input 
+                    type="date" 
+                    id="tgl_tagihan" 
+                    class="form-control form-control-sm" 
+                    value="${new Date().toISOString().split('T')[0]}"
+                >
             </div>
         `,
             showCancelButton: true,
@@ -1070,16 +1081,24 @@ let SalesInvoice = {
             cancelButtonColor: '#d33',
             preConfirm: () => {
                 const tgl = document.getElementById('tgl_tagihan').value;
+                const salesman = document.getElementById('swal_salesman').value;
+
+                if (!salesman) {
+                    Swal.showValidationMessage('Salesman wajib dipilih');
+                    return false;
+                }
                 if (!tgl) {
                     Swal.showValidationMessage('Tanggal tagihan wajib diisi');
                     return false;
                 }
-                return tgl;
+
+                return { salesman: salesman, tgl_tagihan: tgl };
             }
         }).then((result) => {
             if (!result.isConfirmed) return;
 
-            params.tgl_tagihan = result.value;
+            params.salesman = result.value.salesman;
+            params.tgl_tagihan = result.value.tgl_tagihan;
 
             $.ajax({
                 type: "POST",

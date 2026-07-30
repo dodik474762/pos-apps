@@ -63,10 +63,11 @@ class PLTagihanController extends Controller
         $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
         if (isset($data['salesman'])) {
             $salesman = User::where('id', $data['salesman'])->first();
-            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $salesman->id)->get();
-            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         }
 
+        // echo '<pre>';
+        // print_r($salesman);
+        // die;
         $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id ?? null);
         $data['invoices'] = $invoices;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
@@ -127,7 +128,11 @@ class PLTagihanController extends Controller
     public function getAllInvoiceCetak($customers = [], $date = null, $salesman = null)
     {
         $date = $date ?? date('Y-m-d');
-        $datadb = empty($customers) ? [] : DB::table('sales_invoice_header as m')
+        $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $date)->where('salesman_id', $salesman)->get();
+        $invoices = $tagihanOther->pluck('invoice_id')->unique()->toArray();
+
+        // query tetap dijalankan kalau ada customers ATAU ada invoices dari tagihan
+        $datadb = (empty($customers) && empty($invoices)) ? [] : DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -163,20 +168,28 @@ class PLTagihanController extends Controller
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
-            // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
             ->whereRaw('(m.total_amount - m.amount_paid) > 0')
-            // ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])
-            ->whereIn('cc.id', $customers)
-            ->when($salesman != '', function ($q) use ($salesman) {
-                return $q->where('soh.salesman', $salesman);
+            // ==== bagian yang diubah ====
+            ->where(function ($q) use ($customers, $salesman, $invoices) {
+                // kondisi normal: customer harus in $customers, dan kalau ada filter salesman, harus cocok
+                $q->where(function ($q2) use ($customers, $salesman) {
+                    $q2->whereIn('cc.id', $customers)
+                        ->when($salesman != '', function ($q3) use ($salesman) {
+                            return $q3->where('soh.salesman', $salesman);
+                        });
+                });
+
+                // kondisi tambahan: kalau invoice sudah pernah ditagihkan (ada di $invoices),
+                // tampilkan tanpa peduli customer_id maupun soh.salesman
+                $q->when($invoices != [], function ($qOr) use ($invoices) {
+                    return $qOr->orWhereIn('m.id', $invoices);
+                });
             })
-            // ->where('m.invoice_number', 'SI06261030')
-            // ->where('m.invoice_date', '>=', $date)
+            // ==== selesai bagian yang diubah ====
             ->orderBy('m.id', 'desc');
 
-
-        $datadb = empty($customers) ?  [] : $datadb->get();
+        $datadb = (empty($customers) && empty($invoices)) ? [] : $datadb->get();
 
         // echo '<pre>';
         // print_r($datadb);

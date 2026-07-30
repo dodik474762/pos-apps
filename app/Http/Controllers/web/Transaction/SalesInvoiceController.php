@@ -14,6 +14,7 @@ use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesOrderHeader;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,7 @@ class SalesInvoiceController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses');
+        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
         $view = view('web.sales_invoice.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();

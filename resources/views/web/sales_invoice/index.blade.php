@@ -22,6 +22,19 @@
             </div>
         </div>
 
+        <div class="row d-none">
+            <div class="col-xxl-3 col-sm-6">
+                <div>
+                    <label for="" class="form-label">Salesman</label>
+                    <select name="salesman" id="salesman" class="form-control">
+                        @foreach ($salesmans as $salesman)
+                            <option value="{{ $salesman->id }}">{{ $salesman->nik }} - {{ $salesman->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="card" id="orderList">

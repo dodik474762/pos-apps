@@ -1150,7 +1150,7 @@ class SalesInvoiceController extends Controller
             $newTagihan->invoice_id = $data['id'];
             $newTagihan->tgl_tagih = $tgl_tagihan;
             $newTagihan->customer_id = $menu->customer_id;
-            $newTagihan->salesman_id = $sales_order->salesman;
+            $newTagihan->salesman_id = $data['salesman'];
             $newTagihan->save();
 
             DB::commit();
