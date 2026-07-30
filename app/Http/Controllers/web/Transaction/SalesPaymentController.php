@@ -357,6 +357,7 @@ class SalesPaymentController extends Controller
                 'sales_payment_detail.allocated_amount as total_terbayar',
                 'rpd.amount_paid as total_terbayar_rph',
                 'tp.remarks as top_customer',
+                'w.name as warehouse_name',
             ])
             ->distinct()
             ->join('users as u', 'u.id', 'm.created_by')
@@ -507,7 +508,8 @@ class SalesPaymentController extends Controller
                 'rph.status as status_received',
                 'sales_payment_detail.invoice_id',
                 'sph.payment_method',
-                'doh.do_number'
+                'doh.do_number',
+                'w.name as warehouse_name',
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'pl.id')
             ->join('delivery_order_header as doh', function ($q) {
@@ -536,6 +538,7 @@ class SalesPaymentController extends Controller
                 return $q->on('rph.id', 'rpd.receive_id')
                     ->where('rph.visit_date', $tanggal);
             })
+            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
             ->join('customer as cc', 'cc.id', 'sih.customer_id')
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
