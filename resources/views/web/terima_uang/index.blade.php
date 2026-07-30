@@ -40,7 +40,9 @@
                                 <div class="col-md-4">
                                     <input type="date" class="form-control" data-provider="flatpickr"
                                         data-date-format="d M, Y" data-range-date="true" id="filterDate"
-                                        placeholder="Select date" value="{{ isset($tanggal) ? $tanggal : '' }}">
+                                        onchange="TerimaUang.reloadTable(this)"
+                                        route="{{ route('terima-uang-print-all') }}" placeholder="Select date"
+                                        value="{{ isset($tanggal) ? $tanggal : '' }}">
                                 </div>
                                 <div class="col-md-4">
                                     <select name="salesman" id="salesman" class="form-control select2">
@@ -49,6 +51,18 @@
                                             <option
                                                 {{ isset($salesman) ? ($salesman == $item['id'] ? 'selected' : '') : '' }}
                                                 value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="packing_list" id="packing_list" class="form-control select2">
+                                        <option value="">Packing List</option>
+                                        @foreach ($packing_lists as $item)
+                                            <option value="{{ $item['packing_list_no'] }}"
+                                                {{ $packing_list == $item['packing_list_no'] ? 'selected' : '' }}>
+                                                {{ $item['packing_list_no'] }} -
+                                                {{ $item['driver_name'] }} - {{ $item['pl_type'] }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -141,6 +155,7 @@
                                                 @endphp
                                                 @foreach ($invoices as $item)
                                                     @php
+                                                        $item = (object) $item;
                                                         $do_number =
                                                             $item->do_number == ''
                                                                 ? $item->dohs_number
@@ -216,6 +231,7 @@
                                                 @endphp
                                                 @foreach ($invoices as $item)
                                                     @php
+                                                        $item = (object) $item;
                                                         $do_number =
                                                             $item->do_number == ''
                                                                 ? $item->dohs_number
@@ -287,6 +303,7 @@
                                                 @endphp
                                                 @foreach ($invoices as $item)
                                                     @php
+                                                        $item = (object) $item;
                                                         $do_number =
                                                             $item->do_number == ''
                                                                 ? $item->dohs_number

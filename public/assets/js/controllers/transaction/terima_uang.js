@@ -960,29 +960,35 @@ let TerimaUang = {
         const url = $(elm).attr("url");
         const date = $("#filterDate").val();
         const salesman = $("#salesman").val();
+        const packing_list = $('#packing_list').val();
         if (date == "") {
             message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
             return;
         }
-        if (salesman == "") {
-            message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
+        if (packing_list == "") {
+            message.sweetError("Informasi", "Pilih PL terlebih dahulu");
             return;
         }
-        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman;
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&packing_list=" + packing_list;
     },
 
     cetak: (elm) => {
         const url = $(elm).attr("url");
         const date = $("#filterDate").val();
         const salesman = $("#salesman").val();
+        const packing_list = $('#packing_list').val();
         if (date == "") {
             message.sweetError("Informasi", "Pilih tanggal terlebih dahulu");
             return;
         }
-        if (salesman == "") {
-            message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
+        if (packing_list == "") {
+            message.sweetError("Informasi", "Pilih PL terlebih dahulu");
             return;
         }
+        // if (salesman == "") {
+        //     message.sweetError("Informasi", "Pilih Salesman terlebih dahulu");
+        //     return;
+        // }
 
         const checkListId = document.querySelectorAll(".check-item:checked");
         if (checkListId.length === 0) {
@@ -1004,7 +1010,7 @@ let TerimaUang = {
         console.log("amount_paids", amount_paids);
         const idsJoin = invoice_ids.join(",");
         const amountsJoin = amount_paids.join(",");
-        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&invoice_ids=" + idsJoin;
+        window.location.href = url + "?tanggal=" + date + "&salesman=" + salesman + "&invoice_ids=" + idsJoin + '&packing_list=' + packing_list;
     },
 
     checkAll: (elm) => {
@@ -1031,6 +1037,12 @@ let TerimaUang = {
         const url = $(elm).attr("url");
         window.open(url + "?ids=" + ids.join(","), "_blank");
     },
+
+    reloadTable: (elm) => {
+        const tanggal = $('#filterDate').val();
+        const route = $(elm).attr('route');
+        window.location.href = route + "?tanggal=" + tanggal;
+    }
 };
 
 $(function () {

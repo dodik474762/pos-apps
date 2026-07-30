@@ -61,6 +61,7 @@ class SalesPaymentController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['tanggal'] = $data['tanggal'] ?? date('Y-m-d');
+        $data['packing_list'] = isset($data['packing_list']) ? $data['packing_list'] : '';
         // echo '<pre>';
         // print_r($data);die;
         $data['akses_roles'] = session('akses');
@@ -644,7 +645,12 @@ class SalesPaymentController extends Controller
                 'sales_payment_detail.invoice_id',
                 'sph.payment_method',
                 'doh.do_number',
+                'doh.do_date',
                 'w.name as warehouse_name',
+                'sales_payment_detail.allocated_amount as total_terbayar',
+                'tp.remarks as top_customer',
+                'sih.id as invoice_id',
+                'usr.id as salesman_id'
             ])
             ->join('packing_list_do as pld', 'pld.packing_list_id', 'packing_list.id')
             ->join('delivery_order_header as doh', function ($q) {
@@ -705,6 +711,8 @@ class SalesPaymentController extends Controller
                 'rpd.amount_paid as total_terbayar_rph',
                 'tp.remarks as top_customer',
                 'w.name as warehouse_name',
+                'sih.id as invoice_id',
+                'usr.id as salesman_id'
             ])
             ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
             ->join('packing_list_salesman_invoice as pld', 'pld.packing_list_id', 'packing_list_salesman.id')

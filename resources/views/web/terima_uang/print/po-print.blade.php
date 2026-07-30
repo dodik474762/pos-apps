@@ -126,6 +126,7 @@
             @endphp
             @foreach ($invoices as $item)
                 @php
+                    $item = (object) $item;
                     //$out = $item->total_amount - $item->amount_paid;
                     $out = $item->total_amount;
                     $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;

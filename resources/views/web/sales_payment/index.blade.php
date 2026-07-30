@@ -74,7 +74,8 @@
                                     <select name="packing_list" id="packing_list" class="form-control select2">
                                         <option value="">Packing List</option>
                                         @foreach ($packing_lists as $item)
-                                            <option value="{{ $item['packing_list_no'] }}">
+                                            <option value="{{ $item['packing_list_no'] }}"
+                                                {{ $packing_list == $item['packing_list_no'] ? 'selected' : '' }}>
                                                 {{ $item['packing_list_no'] }} -
                                                 {{ $item['driver_name'] }} - {{ $item['pl_type'] }}
                                             </option>

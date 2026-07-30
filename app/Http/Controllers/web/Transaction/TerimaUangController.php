@@ -50,7 +50,9 @@ class TerimaUangController extends Controller
         $salesPayment = new SalesPaymentController();
         $plTagihan = new PLTagihanController();
         $data = $request->all();
+        $data['packing_list'] = isset($data['packing_list']) ? $data['packing_list'] : '';
         $data['tanggal'] = isset($data['tanggal']) ? $data['tanggal'] : date('Y-m-d');
+        $data['date'] = $data['tanggal'];
         $data['salesman'] = isset($data['salesman']) ? $data['salesman'] : 0;
         $data['data'] = [];
         $data['title'] = $this->getTitle();
@@ -59,24 +61,29 @@ class TerimaUangController extends Controller
         $data['akses_user'] = session('akses');
 
         $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
-        $akses = 6;
-        if (!empty($usersdb)) {
-            $akses = $usersdb->user_group;
-        }
-        $routeplan = $akses == 6 || $akses == 4 ? $plTagihan->getRoutePlanSales($data) : [];
-        // echo "<pre>";
-        // print_r($routeplan);
-        // die;
-        $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        if ($akses == 6 || $akses == 4) {
-            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
-            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-        }
-        $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal']);
+        $data['packing_lists'] = $salesPayment->getListPackingList($data);
+        // $akses = 6;
+        // if (!empty($usersdb)) {
+        //     $akses = $usersdb->user_group;
+        // }
+        // $routeplan = $akses == 6 || $akses == 4 ? $plTagihan->getRoutePlanSales($data) : [];
+        // // echo "<pre>";
+        // // print_r($routeplan);
+        // // die;
+        // $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        // if ($akses == 6 || $akses == 4) {
+        //     $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
+        //     $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        // }
+        // $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal']);
         // echo '<pre>';
         // print_r($invoices);
         // die;
+        $invoices = $salesPayment->getListRekapan($data);
         $data['invoices'] = $invoices;
+        // echo '<pre>';
+        // print_r($invoices);
+        // die;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
         $view = view('web.terima_uang.index', $data);
         $put['title_content'] = $this->getTitle();
@@ -238,27 +245,37 @@ class TerimaUangController extends Controller
         $plTagihan = new PLTagihanController();
         $ids = explode(',', $request->invoice_ids);
         $data = $request->all();
+        $data['date'] = $data['tanggal'];
+        $packing_list = $data['packing_list'];
         $company = CompanyModel::where('id', session('id_company'))->first();
         $usersdb = isset($data['salesman']) ? User::where('id', $data['salesman'])->first() : null;
-        $akses = 6;
-        if (!empty($usersdb)) {
-            $akses = $usersdb->user_group;
-        }
-        $routeplan = $akses == 6 || $akses == 4 ? $plTagihan->getRoutePlanSales($data) : [];
-        // echo "<pre>";
-        // print_r($routeplan);
-        // die;
-        $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-        if ($akses == 6 || $akses == 4) {
-            $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
-            $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-        }
-        $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal'], $usersdb->id);
+        // $akses = 6;
+        // if (!empty($usersdb)) {
+        //     $akses = $usersdb->user_group;
+        // }
+        // $routeplan = $akses == 6 || $akses == 4 ? $plTagihan->getRoutePlanSales($data) : [];
+        // // echo "<pre>";
+        // // print_r($routeplan);
+        // // die;
+        // $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        // if ($akses == 6 || $akses == 4) {
+        //     $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['tanggal'])->where('salesman_id', $data['salesman'])->get();
+        //     $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        // }
+        // $invoices = $akses == 5 ? $salesPayment->getListRekapanDriver($usersdb->nik, $data['tanggal']) :   $salesPayment->getListRekapanSalesman($customers, $data['tanggal'], $usersdb->id);
         // echo '<pre>';
         // print_r($invoices);
         // echo '</pre>';
         // die;
-        $invoices = $invoices->whereIn('invoice_id', $ids);
+        $invoices = $salesPayment->getListRekapan($data);
+        $invoices = collect($invoices)
+            ->whereIn('invoice_id', $ids)
+            ->values()
+            ->toArray();
+        $data['salesman'] = collect($invoices)->pluck('salesman_id')->unique()->first();
+        // echo '<pre>';
+        // print_r($data['salesman']);
+        // die;
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
@@ -268,7 +285,7 @@ class TerimaUangController extends Controller
         // die;
 
         $tanggal_rute = $data['tanggal'];
-        $pdf = Pdf::loadView('web.terima_uang.print.po-print', compact('invoices', 'routeplan', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
+        $pdf = Pdf::loadView('web.terima_uang.print.po-print', compact('invoices', 'company', 'qr', 'salesman', 'salesman_name', 'tanggal_rute'))
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream('PL-' . $salesman_name . '.pdf');
