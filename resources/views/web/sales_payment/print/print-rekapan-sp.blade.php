@@ -121,13 +121,14 @@
             @if (!empty($data['data_payment']))
                 @foreach ($data['data_payment'] as $item)
                     @php
+                        $item = (object) $item;
                         $sales_return = !empty($data_return)
                             ? collect($data_return)->where('invoice_id', $item->invoice_id)->first()
                             : [];
                     @endphp
                     <tr>
                         <td>{{ $no++ }}</td>
-                        <td>{{ $item->salesman_name }} - {{ $item->invoice_id }}</td>
+                        <td>{{ $item->salesman_name }}</td>
                         <td>{{ $item->invoice_number }}</td>
                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                         <td>{{ $item->kecamatan_name ?? '-' }}</td>

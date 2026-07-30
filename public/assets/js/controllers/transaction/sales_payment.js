@@ -1515,8 +1515,14 @@ let SalesPayment = {
         const date = $("#filter-date").val();
         const url = $("input#url-print").val();
         const salesman = $('#salesman').val();
+        const packing_list = $('#packing_list').val();
+        if (packing_list == '') {
+            message.sweetError('Gagal!', 'Packing List tidak boleh kosong');
+            return false;
+        }
 
-        window.location.href = url + "?date=" + date + "&salesman=" + salesman;
+        // window.location.href = url + "?date=" + date + "&salesman=" + salesman;
+        window.location.href = url + "?date=" + date + "&salesman=" + salesman + "&packing_list=" + packing_list;
     },
 
     confirmPayment: () => {
@@ -1552,6 +1558,12 @@ let SalesPayment = {
             }
         });
     },
+
+    reloadTable: (elm) => {
+        const tanggal = $('#filter-date').val();
+        const route = $(elm).attr('route');
+        window.location.href = route + "?tanggal=" + tanggal;
+    }
 };
 
 function newexportaction(e, dt, button, config) {

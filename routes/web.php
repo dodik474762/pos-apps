@@ -277,7 +277,7 @@ Route::get('transaksi/sales_invoice/cetak', [SalesInvoiceController::class, 'cet
 Route::get('transaksi/sales_invoice/cetakAll', [SalesInvoiceController::class, 'cetakAll'])->name('sales-invoice-print-all');;
 Route::get('transaksi/sales_invoice/multiplePrint', [SalesInvoiceController::class, 'multiplePrint'])->name('sales-invoice-print-multiple');;
 
-Route::get('transaksi/sales_payment', [SalesPaymentController::class, 'index']);
+Route::get('transaksi/sales_payment', [SalesPaymentController::class, 'index'])->name('sales-payment-index');
 Route::get('transaksi/sales_payment/add', [SalesPaymentController::class, 'add'])->name('sales-payment-add');
 Route::get('transaksi/sales_payment/addAll', [SalesPaymentController::class, 'addAll'])->name('sales-payment-add-all');
 Route::get('transaksi/sales_payment/ubah', [SalesPaymentController::class, 'ubah'])->name('sales-payment-edit');;

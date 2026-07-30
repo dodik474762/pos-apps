@@ -8,6 +8,7 @@ use App\Models\Master\CompanyModel;
 use App\Models\Master\Tax;
 use App\Models\Transaction\PackingList;
 use App\Models\Transaction\PackingListDo;
+use App\Models\Transaction\PackingListSalesman;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\Transaction\SalesPaymentDtl;
@@ -52,16 +53,19 @@ class SalesPaymentController extends Controller
         return 'Sales Payment';
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $data = $request->all();
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['tanggal'] = $data['tanggal'] ?? date('Y-m-d');
         // echo '<pre>';
         // print_r($data);die;
         $data['akses_roles'] = session('akses');
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
+        $data['packing_lists'] = $this->getListPackingList($data);
         $view = view('web.sales_payment.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -70,6 +74,37 @@ class SalesPaymentController extends Controller
         $put['header_data'] = $this->getHeaderCss();
 
         return view('web.template.main', $put);
+    }
+
+    public function getListPackingList($params)
+    {
+        $start = date('Y-m-d', strtotime($params['tanggal'] . ' -2 days'));
+        $end = date('Y-m-d', strtotime($params['tanggal']));
+        $packingLists = PackingList::whereBetween('packing_date', [$start, $end])
+            ->select([
+                'packing_list_no',
+                'driver_name',
+                DB::raw("'delivery' as pl_type")
+            ])
+            ->where('status', '!=', 'CANCELED')
+            ->whereNull('deleted')
+            ->get()->toArray();
+
+        $packingListSales = PackingListSalesman::whereBetween('packing_list_salesman.packing_date', [$start, $end])
+            ->select([
+                'packing_list_salesman.packing_list_no',
+                'usr.name as driver_name',
+                DB::raw("'sales' as pl_type")
+            ])
+            ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
+            ->whereNull('packing_list_salesman.deleted')
+            ->get()->toArray();
+
+        $plMerge = array_merge($packingLists, $packingListSales);
+        // echo '<pre>';
+        // print_r($plMerge);
+        // die;
+        return $plMerge;
     }
 
     public function getListKasBank($payment_method = 'CASH')
@@ -574,9 +609,148 @@ class SalesPaymentController extends Controller
         return $datadb;
     }
 
+    public function getListRekapan($params)
+    {
+        $tanggal = date('Y-m-d', strtotime($params['date']));
+        $pl_no = $params['packing_list'];
+        $rpdSub = DB::table('receive_payment_detail as rpd')
+            ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
+            ->join('receive_payment_header as rph', function ($q) {
+                return $q->on('rph.id', 'rpd.receive_id')->whereNull('rph.deleted');
+            })
+            ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
+            ->where('rpd.amount_paid', '>', 0)
+            ->groupBy('rpd.invoice_id', 'rpd.receive_id');
+
+        $packingLists = PackingList::where('packing_list.packing_list_no', $pl_no)
+            ->select([
+                'packing_list.packing_list_no',
+                'packing_list.driver_name',
+                'pld.delivery_order_id',
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'sih.invoice_date',
+                'sih.due_date',
+                'sih.status',
+                'sih.total_amount',
+                'sales_payment_detail.allocated_amount as amount_paid',
+                'rpd.amount_paid as total_terbayar_rph',
+                'rph.status as status_received',
+                'sales_payment_detail.invoice_id',
+                'sph.payment_method',
+                'doh.do_number',
+                'w.name as warehouse_name',
+            ])
+            ->join('packing_list_do as pld', 'pld.packing_list_id', 'packing_list.id')
+            ->join('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
+            })
+            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'doh.so_id')->whereNull('sih.deleted');
+            })
+            ->leftJoin('sales_payment_detail', function ($q) {
+                return $q->on('sales_payment_detail.invoice_id', 'sih.id')
+                    ->whereNull('sales_payment_detail.deleted');
+            })
+            ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
+                return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                    ->whereNull('sph.deleted')
+                    ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
+            })
+            ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+                return $q->on('rpd.invoice_id', '=', 'sih.id');
+            })
+            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                return $q->on('rph.id', 'rpd.receive_id')
+                    ->where('rph.visit_date', $tanggal);
+            })
+            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
+            ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+            ->join('customer as cc', 'cc.id', 'sih.customer_id')
+            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+            ->whereNull('packing_list.deleted')
+            ->get()->toArray();
+
+        $packingListSales = PackingListSalesman::where('packing_list_salesman.packing_list_no', $pl_no)
+            ->select([
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'sih.invoice_date',
+                'sih.due_date',
+                'sih.status',
+                'sih.total_amount',
+                'sales_payment_detail.allocated_amount as amount_paid',
+                'rpd.amount_paid as total_terbayar_rph',
+                'rph.status as status_received',
+                'sales_payment_detail.invoice_id',
+                'sph.payment_method',
+                'doh.do_number',
+                'doh.do_number as dohs_number',
+                'doh.do_date',
+                'doh.do_date as dohs_date',
+                'sales_payment_detail.allocated_amount as total_terbayar',
+                'rpd.amount_paid as total_terbayar_rph',
+                'tp.remarks as top_customer',
+                'w.name as warehouse_name',
+            ])
+            ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
+            ->join('packing_list_salesman_invoice as pld', 'pld.packing_list_id', 'packing_list_salesman.id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'pld.invoice_id')->whereNull('sih.deleted');
+            })
+            ->join('sales_order_headers as soh', 'soh.id', 'sih.sales_order')
+            ->join('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
+            })
+            ->leftJoin('sales_payment_detail', function ($q) {
+                return $q->on('sales_payment_detail.invoice_id', 'sih.id')
+                    ->whereNull('sales_payment_detail.deleted');
+            })
+            ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
+                return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                    ->whereNull('sph.deleted')
+                    ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
+            })
+            ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+                return $q->on('rpd.invoice_id', '=', 'sih.id');
+            })
+            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                return $q->on('rph.id', 'rpd.receive_id')
+                    ->where('rph.visit_date', $tanggal);
+            })
+            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
+            ->join('customer as cc', 'cc.id', 'sih.customer_id')
+            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+            ->whereNull('packing_list_salesman.deleted')
+            ->get()->toArray();
+
+        $plMerge = array_merge($packingLists, $packingListSales);
+        // echo '<pre>';
+        // print_r($plMerge);
+        // die;
+        return $plMerge;
+    }
+
     public function cetakRekapan(Request $request)
     {
         $data = $request->all();
+        $packing_list = $data['packing_list'];
+
         $company = CompanyModel::where('id', session('id_company'))->first();
         $qr = '';
 
@@ -592,57 +766,57 @@ class SalesPaymentController extends Controller
 
         // Filter salesman sebelum get()
         $data['data_payment'] = [];
-        if ($salesmans != '' && $user_group != 5) {
-            $plTagihan = new PLTagihanController();
-            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
-            $routeplan = $plTagihan->getRoutePlanSales($data);
-            $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-            if (isset($data['salesman'])) {
-                $salesman = User::where('id', $data['salesman'])->first();
-                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
-                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-            }
-            $salesPayment = $this->getListRekapanSalesman($customers, $data['tanggal'], $salesmans->id);
-            // echo '<pre>';
-            // print_r($salesPayment);
-            // die;
-            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
-            $salesReturns = $this->getListSalesReturn($invoice_ids);
-            $data['data_payment'] = $salesPayment;
-            $data['data_return'] = $salesReturns;
-        }
+        // if ($salesmans != '' && $user_group != 5) {
+        //     $plTagihan = new PLTagihanController();
+        //     $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+        //     $routeplan = $plTagihan->getRoutePlanSales($data);
+        //     $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        //     if (isset($data['salesman'])) {
+        //         $salesman = User::where('id', $data['salesman'])->first();
+        //         $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
+        //         $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        //     }
+        //     $salesPayment = $this->getListRekapanSalesman($customers, $data['tanggal'], $salesmans->id);
+        //     // echo '<pre>';
+        //     // print_r($salesPayment);
+        //     // die;
+        //     $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+        //     $salesReturns = $this->getListSalesReturn($invoice_ids);
+        //     $data['data_payment'] = $salesPayment;
+        //     $data['data_return'] = $salesReturns;
+        // }
 
-        if ($salesmans == '') {
-            $plTagihan = new PLTagihanController();
-            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
-            $routeplan = $plTagihan->getRoutePlanSalesAll($data);
-            $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
-            if (isset($data['salesman'])) {
-                $salesman = User::where('id', $data['salesman'])->first();
-                $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
-                $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
-            }
-            $salesPayment = $this->getListRekapanSalesman($customers, $data['tanggal']);
-            $data['data_payment'] = $salesPayment;
-            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
-            $salesReturns = $this->getListSalesReturn($invoice_ids);
-            $data['data_return'] = $salesReturns;
-        }
+        // if ($salesmans == '') {
+        $plTagihan = new PLTagihanController();
+        $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+        // $routeplan = $plTagihan->getRoutePlanSalesAll($data);
+        // $customers = empty($routeplan) ? [] : collect($routeplan)->pluck('customer_id')->unique()->toArray();
+        // if (isset($data['salesman'])) {
+        //     $salesman = User::where('id', $data['salesman'])->first();
+        //     $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $data['date'])->where('salesman_id', $salesman->id)->get();
+        //     $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
+        // }
+        $salesPayment = $this->getListRekapan($data);
+        $data['data_payment'] = $salesPayment;
+        $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+        $salesReturns = $this->getListSalesReturn($invoice_ids);
+        $data['data_return'] = $salesReturns;
+        // }
 
-        if ($salesmans != '' && $user_group == 5) {
-            $data['tanggal'] = $data['date'] ?? date('Y-m-d');
-            $salesPayment = $this->getListRekapanDriver($salesmans->nik, $data['tanggal']);
-            $data['data_payment'] = $salesPayment;
-            $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
-            $salesReturns = $this->getListSalesReturn($invoice_ids);
-            // echo '<pre>';
-            // print_r($salesReturns);
-            // die;
-            $data['data_return'] = $salesReturns;
-        }
+        // if ($salesmans != '' && $user_group == 5) {
+        //     $data['tanggal'] = $data['date'] ?? date('Y-m-d');
+        //     $salesPayment = $this->getListRekapanDriver($salesmans->nik, $data['tanggal']);
+        //     $data['data_payment'] = $salesPayment;
+        //     $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
+        //     $salesReturns = $this->getListSalesReturn($invoice_ids);
+        //     // echo '<pre>';
+        //     // print_r($salesReturns);
+        //     // die;
+        //     $data['data_return'] = $salesReturns;
+        // }
 
         // echo '<pre>';
-        // print_r($data['data_return']);
+        // print_r($data['data_payment']);
         // die;
         $pdf = Pdf::loadView('web.sales_payment.print.print-rekapan-sp', compact('data',  'company', 'qr', 'salesmans', 'user_group'))
             ->setPaper('a4', 'portrait');

@@ -53,8 +53,10 @@
                                 <!--end col-->
                                 <div class="col-md-3">
                                     <div>
-                                        <input type="date" class="form-control" id="filter-date" value=""
-                                            placeholder="Print Tanggal">
+                                        <input route="{{ route('sales-payment-index') }}" type="date"
+                                            class="form-control" id="filter-date"
+                                            value="{{ isset($tanggal) ? $tanggal : '' }}" placeholder="Print Tanggal"
+                                            onchange="SalesPayment.reloadTable(this)">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -64,6 +66,17 @@
                                             <option
                                                 {{ isset($salesman) ? ($salesman == $item['id'] ? 'selected' : '') : '' }}
                                                 value="{{ $item['id'] }}">{{ $item['nik'] }} - {{ $item['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="packing_list" id="packing_list" class="form-control select2">
+                                        <option value="">Packing List</option>
+                                        @foreach ($packing_lists as $item)
+                                            <option value="{{ $item['packing_list_no'] }}">
+                                                {{ $item['packing_list_no'] }} -
+                                                {{ $item['driver_name'] }} - {{ $item['pl_type'] }}
                                             </option>
                                         @endforeach
                                     </select>
