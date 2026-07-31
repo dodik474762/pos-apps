@@ -58,6 +58,7 @@
                                 <div class="col-md-3">
                                     <select name="packing_list" id="packing_list" class="form-control select2">
                                         <option value="">Packing List</option>
+                                        <option value="admin">NO PL</option>
                                         @foreach ($packing_lists as $item)
                                             <option value="{{ $item['packing_list_no'] }}"
                                                 {{ $packing_list == $item['packing_list_no'] ? 'selected' : '' }}>
