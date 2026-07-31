@@ -723,9 +723,10 @@ class SalesPaymentController extends Controller
             ->join('delivery_order_header as doh', function ($q) {
                 return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
             })
-            ->leftJoin('sales_payment_detail', function ($q) {
+            ->leftJoin('sales_payment_detail', function ($q) use ($tanggal) {
                 return $q->on('sales_payment_detail.invoice_id', 'sih.id')
-                    ->whereNull('sales_payment_detail.deleted');
+                    ->whereNull('sales_payment_detail.deleted')
+                    ->whereRaw('DATE(sales_payment_detail.created_at) = ?', $tanggal);
             })
             ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
                 return $q->on('sph.id', 'sales_payment_detail.payment_id')
