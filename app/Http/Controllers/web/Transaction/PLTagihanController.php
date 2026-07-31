@@ -292,10 +292,16 @@ class PLTagihanController extends Controller
                 'sih.status',
                 'tp.remarks as top_name'
             ])
-            ->join('sales_invoice_header as sih', 'sih.id', 'packing_list_salesman_invoice.invoice_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'packing_list_salesman_invoice.invoice_id')
+                    ->whereNull('sih.deleted');
+            })
             ->join('customer as cc', 'cc.id', 'sih.customer_id')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
-            ->leftJoin('delivery_order_header as doh', 'doh.so_id', 'sih.sales_order')
+            ->leftJoin('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.so_id', 'sih.sales_order')
+                    ->whereNull('doh.deleted');
+            })
             ->get();
         // echo '<pre>';
         // print_r($invoices);
