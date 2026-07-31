@@ -685,35 +685,34 @@ class SalesPaymentController extends Controller
             ->whereNull('packing_list.deleted')
             ->get()->toArray();
 
-        $packingListSales = PackingListSalesman::where('packing_list_salesman.packing_list_no', $pl_no)
-            ->select([
-                'sales_payment_detail.id',
-                'cc.nama_customer',
-                'cc.code as customer_code',
-                'sih.invoice_number',
-                'usr.name as salesman_name',
-                'kec.name as kecamatan_name',
-                'tp.remarks as top_name',
-                'sih.invoice_date',
-                'sih.due_date',
-                'sih.status',
-                'sih.total_amount',
-                'sales_payment_detail.allocated_amount as amount_paid',
-                'rpd.amount_paid as total_terbayar_rph',
-                'rph.status as status_received',
-                'sales_payment_detail.invoice_id',
-                'sph.payment_method',
-                'doh.do_number',
-                'doh.do_number as dohs_number',
-                'doh.do_date',
-                'doh.do_date as dohs_date',
-                'sales_payment_detail.allocated_amount as total_terbayar',
-                'rpd.amount_paid as total_terbayar_rph',
-                'tp.remarks as top_customer',
-                'w.name as warehouse_name',
-                'sih.id as invoice_id',
-                'usr.id as salesman_id'
-            ])
+        $packingListSales = PackingListSalesman::select([
+            'sales_payment_detail.id',
+            'cc.nama_customer',
+            'cc.code as customer_code',
+            'sih.invoice_number',
+            'usr.name as salesman_name',
+            'kec.name as kecamatan_name',
+            'tp.remarks as top_name',
+            'sih.invoice_date',
+            'sih.due_date',
+            'sih.status',
+            'sih.total_amount',
+            'sales_payment_detail.allocated_amount as amount_paid',
+            'rpd.amount_paid as total_terbayar_rph',
+            'rph.status as status_received',
+            'sales_payment_detail.invoice_id',
+            'sph.payment_method',
+            'doh.do_number',
+            'doh.do_number as dohs_number',
+            'doh.do_date',
+            'doh.do_date as dohs_date',
+            'sales_payment_detail.allocated_amount as total_terbayar',
+            'rpd.amount_paid as total_terbayar_rph',
+            'tp.remarks as top_customer',
+            'w.name as warehouse_name',
+            'sih.id as invoice_id',
+            'usr.id as salesman_id'
+        ])
             ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
             ->join('packing_list_salesman_invoice as pld', 'pld.packing_list_id', 'packing_list_salesman.id')
             ->join('sales_invoice_header as sih', function ($q) {
@@ -745,9 +744,14 @@ class SalesPaymentController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-            ->whereNull('packing_list_salesman.deleted')
-            ->get()->toArray();
+            ->whereNull('packing_list_salesman.deleted');
+        if ($pl_no != 'admin') {
+            $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
+        } else {
+            $packingListSales->whereNotIn('usr_payment.user_group', [5, 6]);
+        }
 
+        $packingListSales = $packingListSales->get()->toArray();
         $plMerge = array_merge($packingLists, $packingListSales);
         // echo '<pre>';
         // print_r($plMerge);
