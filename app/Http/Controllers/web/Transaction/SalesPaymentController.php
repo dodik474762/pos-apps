@@ -752,7 +752,72 @@ class SalesPaymentController extends Controller
         }
 
         $packingListSales = $packingListSales->get()->toArray();
-        $plMerge = array_merge($packingLists, $packingListSales);
+
+        $packingAdmin = SalesInvoiceHeader::from('sales_invoice_header as sih')
+            ->select([
+                'sales_payment_detail.id',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'sih.invoice_number',
+                'usr.name as salesman_name',
+                'kec.name as kecamatan_name',
+                'tp.remarks as top_name',
+                'sih.invoice_date',
+                'sih.due_date',
+                'sih.status',
+                'sih.total_amount',
+                'sales_payment_detail.allocated_amount as amount_paid',
+                'rpd.amount_paid as total_terbayar_rph',
+                'rph.status as status_received',
+                'sales_payment_detail.invoice_id',
+                'sph.payment_method',
+                'doh.do_number',
+                'doh.do_number as dohs_number',
+                'doh.do_date',
+                'doh.do_date as dohs_date',
+                'sales_payment_detail.allocated_amount as total_terbayar',
+                'rpd.amount_paid as total_terbayar_rph',
+                'tp.remarks as top_customer',
+                'w.name as warehouse_name',
+                'sih.id as invoice_id',
+                'usr.id as salesman_id'
+            ])
+            ->leftJoin('packing_list_salesman_invoice as pld', 'pld.invoice_id', 'sih.id')
+            ->leftJoin('packing_list_salesman', function ($q) {
+                return $q->on('packing_list_salesman.id', 'pld.packing_list_id')
+                    ->whereNull('packing_list_salesman.deleted');
+            })
+            ->join('sales_order_headers as soh', 'soh.id', 'sih.sales_order')
+            ->join('users as usr', 'usr.id', 'soh.salesman')
+            ->join('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
+            })
+            ->join('sales_payment_detail', function ($q) use ($tanggal) {
+                return $q->on('sales_payment_detail.invoice_id', 'sih.id')
+                    ->whereNull('sales_payment_detail.deleted')
+                    ->whereRaw('DATE(sales_payment_detail.created_at) = ?', $tanggal);
+            })
+            ->join('sales_payment_header as sph', function ($q) use ($tanggal) {
+                return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                    ->whereNull('sph.deleted')
+                    ->where('sph.payment_date', $tanggal);
+            })
+            ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+                return $q->on('rpd.invoice_id', '=', 'sih.id');
+            })
+            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                return $q->on('rph.id', 'rpd.receive_id')
+                    ->where('rph.visit_date', $tanggal);
+            })
+            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
+            ->join('customer as cc', 'cc.id', 'sih.customer_id')
+            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+            ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+            ->whereNull('sih.deleted')->get()->toArray();
+
+
+        $plMerge = array_merge($packingLists, $packingListSales, $packingAdmin);
         // echo '<pre>';
         // print_r($plMerge);
         // die;

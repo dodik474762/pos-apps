@@ -137,7 +137,7 @@
                         <td>{{ $item->invoice_date }}</td>
                         <td>{{ $item->due_date }}</td>
                         <td>{{ $item->status }}</td>
-                        <td>{{ $item->total_amount }}</td>
+                        <td>{{ number_format($item->total_amount, 0, ',', '.') }}</td>
                         <td>{{ number_format($item->total_amount - $item->amount_paid, 0, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->amount_paid, 0, ',', '.') }}</td>
                     </tr>
