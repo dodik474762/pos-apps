@@ -124,6 +124,9 @@ let Product = {
                     },
                 },
                 {
+                    data: "id",
+                },
+                {
                     data: "nama_vendor",
                 },
                 {

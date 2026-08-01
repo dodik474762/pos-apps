@@ -95,6 +95,7 @@
                                             <thead class="text-muted table-light">
                                                 <tr class="text-uppercase">
                                                     <th>No</th>
+                                                    <th>ID</th>
                                                     <th>Vendor</th>
                                                     <th>Principal</th>
                                                     <th>Kategori Barang</th>
