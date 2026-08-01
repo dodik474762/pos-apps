@@ -135,13 +135,61 @@ let SalesInvoice = {
                             SalesInvoice.back();
                         }, 1000);
                     } else {
-                        message.sweetError("Informasi", resp.message);
+                        if (resp.message == 'Invoice sudah ada pembayaran. tidak dapat mengedit invoice.') {
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Informasi",
+                                text: resp.message,
+                                showCancelButton: true,
+                                confirmButtonText: "Lanjut Koreksi",
+                                cancelButtonText: "Batal",
+                                reverseButtons: true,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    SalesInvoice.lanjutKoreksi(); // ganti sesuai fungsi/aksi yang mau dijalankan
+                                }
+                            });
+                        } else {
+                            message.sweetError("Informasi", resp.message);
+                        }
                     }
                 },
             });
         } else {
             message.sweetError("Informasi", "Data Belum Lengkap");
         }
+    },
+
+    lanjutKoreksi: () => {
+        let params = SalesInvoice.getPostInput();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesInvoice.moduleApi()) + "lanjutKoreksi",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Simpan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
     },
 
     posted: (elm, e) => {

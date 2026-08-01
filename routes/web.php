@@ -613,6 +613,7 @@ Route::post('api/transaksi/sales_invoice/getDataSo', [TransactionSalesInvoiceCon
 Route::post('api/transaksi/sales_invoice/getDoDetail', [TransactionSalesInvoiceController::class, 'getDoDetail']);
 Route::post('api/transaksi/sales_invoice/getSoDetail', [TransactionSalesInvoiceController::class, 'getSoDetail']);
 Route::post('api/transaksi/sales_invoice/posted', [TransactionSalesInvoiceController::class, 'posted']);
+Route::post('api/transaksi/sales_invoice/lanjutKoreksi', [TransactionSalesInvoiceController::class, 'lanjutKoreksi']);
 Route::post('api/transaksi/sales_invoice/tagihkan', [TransactionSalesInvoiceController::class, 'tagihkan']);
 Route::post('api/transaksi/sales_invoice/cancelTagihan', [TransactionSalesInvoiceController::class, 'cancelTagihan']);
 Route::post('api_mobile/transaksi/sales_invoice/getOutstandingInvoice', [TransactionSalesInvoiceController::class, 'getOutstandingInvoice']);

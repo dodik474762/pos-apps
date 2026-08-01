@@ -16,6 +16,7 @@ use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesInvoiceTagihan;
 use App\Models\Transaction\SalesOrderHeader;
 use App\Models\Transaction\SalesOrderDetail;
+use App\Models\Transaction\SalesPaymentDtl;
 use Illuminate\Support\Facades\DB;
 
 class SalesInvoiceController extends Controller
@@ -1090,6 +1091,55 @@ class SalesInvoiceController extends Controller
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();
+            DB::commit();
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+            DB::rollBack();
+        }
+
+        return response()->json($result);
+    }
+
+    public function lanjutKoreksi(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        $salesPayment = new SalesPaymentController();
+
+        DB::beginTransaction();
+        try {
+            $menu = SalesInvoiceHeader::find($data['id']);
+
+            $salesPaymentDtl = SalesPaymentDtl::where('sales_payment_detail.invoice_id', $menu->id)
+                ->join('sales_payment_header', 'sales_payment_header.id', '=', 'sales_payment_detail.payment_id')
+                ->select(['sales_payment_header.id as payment_id', 'sales_payment_header.payment_code', 'sales_payment_header.verificator_id'])
+                ->whereNull('sales_payment_detail.deleted')
+                ->whereNull('sales_payment_header.deleted')
+                ->get();
+
+            foreach ($salesPaymentDtl as $value) {
+                if ($value->verificator_id != '') {
+                    DB::rollBack();
+                    $result['message'] = 'Payment ' . $value->payment_code . ' sudah terverifikasi';
+                    return response()->json($result);
+                }
+
+                $payload['id'] = $value->payment_id;
+                $request_cancel = new Request();
+                $request_cancel->replace($payload);
+
+                $response = $salesPayment->confirmDelete($request_cancel);
+
+                // Ambil hasil response jika perlu
+                $resultCancel = json_decode($response->getContent(), true);
+                if (!$resultCancel['is_valid']) {
+                    DB::rollBack();
+                    $result['message'] = $resultCancel['message'];
+                    return response()->json($result);
+                }
+            }
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
