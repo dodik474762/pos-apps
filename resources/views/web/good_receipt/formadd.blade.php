@@ -96,8 +96,8 @@
                         <table class="table table-bordered" id="table-items">
                             @php
                                 $displaySubTotal = '';
-                                if ($akses != 'superadmin') {
-                                    $displaySubTotal = 'display: none;';
+                                if (strtolower($akses) != 'superadmin') {
+                                    $displaySubTotal = 'd-none';
                                 }
                             @endphp
                             <thead class="table-light">
@@ -183,7 +183,10 @@
 
                 </form>
 
-                @include('web.general_ledger.list_general_ledger')
+
+                @if (strtolower($akses) == 'superadmin')
+                    @include('web.general_ledger.list_general_ledger')
+                @endif
             </div>
         </div>
 
