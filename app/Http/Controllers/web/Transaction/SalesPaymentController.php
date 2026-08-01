@@ -814,8 +814,11 @@ class SalesPaymentController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-            ->whereNull('sih.deleted')->get()->toArray();
-
+            ->whereNull('sih.deleted');
+        if (isset($params['salesman']) && $params['salesman'] != '') {
+            $packingAdmin->where('usr.id', $params['salesman']);
+        }
+        $packingAdmin = $packingAdmin->get()->toArray();
 
         $plMerge = array_merge($packingLists, $packingListSales, $packingAdmin);
         // echo '<pre>';
