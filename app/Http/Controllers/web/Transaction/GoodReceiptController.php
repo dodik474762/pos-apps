@@ -100,6 +100,7 @@ class GoodReceiptController extends Controller
     {
         $data['data'] = [];
         $data['code'] = generateNoPO();
+        $data['akses'] = strtolower(session('akses'));
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
@@ -127,6 +128,7 @@ class GoodReceiptController extends Controller
     {
         $api = new TransactionGoodReceiptController();
         $data = $request->all();
+        $data['akses'] = strtolower(session('akses'));
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();

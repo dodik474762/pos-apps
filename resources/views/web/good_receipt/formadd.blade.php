@@ -1,5 +1,5 @@
 <button type="button" id="btn-show-modal" class="" style="display: none;" data-bs-toggle="modal"
-  data-bs-target="#data-modal-item"></button>
+    data-bs-target="#data-modal-item"></button>
 <div id="content-modal-form"></div>
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 
@@ -29,24 +29,27 @@
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Nomor GR</label>
-                                <input type="text" id="gr_number" class="form-control required"
-                                    error="Nomor GR" placeholder="Auto Generate" disabled
+                                <input type="text" id="gr_number" class="form-control required" error="Nomor GR"
+                                    placeholder="Auto Generate" disabled
                                     value="{{ isset($data->gr_number) ? $data->gr_number : 'AUTO' }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Purchase Order</label>
-                                <select class="form-control select2 required" id="purchase_order" error="Purchase Order" onchange="GoodReceipt.getListItemOutstandingPO(this)">
+                                <select class="form-control select2 required" id="purchase_order" error="Purchase Order"
+                                    onchange="GoodReceipt.getListItemOutstandingPO(this)">
                                     <option value=""></option>
                                     @if (isset($id))
-                                        <option selected value="{{ $data->purchase_order }}">{{ $data->po_code }} - {{ $data->nama_vendor }} / {{ $data->status_po }}</option>
+                                        <option selected value="{{ $data->purchase_order }}">{{ $data->po_code }} -
+                                            {{ $data->nama_vendor }} / {{ $data->status_po }}</option>
                                     @else
                                         @foreach ($purchase_orders as $po)
                                             <option value="{{ $po->id }}"
                                                 {{ isset($data->purchase_order) && $data->purchase_order == $po->id ? 'selected' : '' }}
                                                 vendor="{{ $po->vendor }}"
                                                 vendor_name="{{ $po->vendors->nama_vendor }}">
-                                                {{ $po->code }} - {{ $po->vendors->nama_vendor }} / {{ $po->status }}
+                                                {{ $po->code }} - {{ $po->vendors->nama_vendor }} /
+                                                {{ $po->status }}
                                             </option>
                                         @endforeach
                                     @endif
@@ -55,8 +58,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Vendor</label>
-                                <input type="text" id="vendor" class="form-control required"
-                                    error="Vendor" placeholder="Vendor" disabled
+                                <input type="text" id="vendor" class="form-control required" error="Vendor"
+                                    placeholder="Vendor" disabled
                                     data_id="{{ isset($data->vendor) ? $data->vendor : '' }}"
                                     value="{{ isset($data->nama_vendor) ? $data->nama_vendor : '' }}">
                             </div>
@@ -77,7 +80,7 @@
                                     value="{{ session('nama_lengkap') ?? 'User Aktif' }}" readonly>
                             </div>
 
-                              <div class="mb-3">
+                            <div class="mb-3">
                                 <label class="form-label">Keterangan</label>
                                 <textarea id="remarks" class="form-control" placeholder="Catatan (opsional)">{{ isset($data->remarks) ? $data->remarks : '' }}</textarea>
                             </div>
@@ -91,6 +94,12 @@
 
                     <div class="table-responsive">
                         <table class="table table-bordered" id="table-items">
+                            @php
+                                $displaySubTotal = '';
+                                if ($akses != 'superadmin') {
+                                    $displaySubTotal = 'display: none;';
+                                }
+                            @endphp
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 25%">PO Detail</th>
@@ -98,46 +107,66 @@
                                     <th style="width: 10%">Unit</th>
                                     <th style="width: 15%">Lot Number</th>
                                     <th style="width: 15%">Expired Date</th>
-                                    <th style="width: 10%">Subtotal</th>
+                                    <th class="{{ $displaySubTotal }}" style="width: 10%">Subtotal</th>
                                     <th style="width: 5%"></th>
                                 </tr>
                             </thead>
                             <tbody id="detail-body">
                                 @if (!empty($data_item))
                                     @foreach ($data_item as $item)
-                                        <tr class="input" data_id="{{ $item->purchase_order_detail }}" id_detail="{{ $item->id }}">
+                                        <tr class="input" data_id="{{ $item->purchase_order_detail }}"
+                                            id_detail="{{ $item->id }}">
                                             <td>
-                                                <input disabled id="po_detail" data_id="{{ $item->product }}" name="po_detail" type="text" class="form-control required" error="PO Detail"
-                                                    placeholder="Pilih Item dari PO" aria-label="Pilih Item" aria-describedby="button-addon1"
+                                                <input disabled id="po_detail" data_id="{{ $item->product }}"
+                                                    name="po_detail" type="text" class="form-control required"
+                                                    error="PO Detail" placeholder="Pilih Item dari PO"
+                                                    aria-label="Pilih Item" aria-describedby="button-addon1"
                                                     price="{{ $item->purchase_price }}"
                                                     value="{{ $item->product_code }} / {{ $item->product_name }}">
                                             </td>
-                                            <td><input type="number" class="form-control" id="qty_received" value="{{ $item->qty_received }}" min="1" max="{{ $item->qty_received }}"
-                                                onkeyup="GoodReceipt.calcRow(this)"></td>
-                                            <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}</td>
-                                            <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot" value="{{ $item->lot_number }}"></td>
-                                            <td><input type="date" class="form-control required" error="Expired Date" id="expired_date" value="{{ $item->expired_date }}"></td>
-                                            <td><input disabled type="text" class="form-control" id="subtotal" value="{{ $item->subtotal }}"></td>
+                                            <td><input type="number" class="form-control" id="qty_received"
+                                                    value="{{ $item->qty_received }}" min="1"
+                                                    max="{{ $item->qty_received }}"
+                                                    onkeyup="GoodReceipt.calcRow(this)"></td>
+                                            <td data_id="{{ $item->unit }}" id="unit">{{ $item->unit_name }}
+                                            </td>
+                                            <td><input type="text" class="form-control" id="lot_number"
+                                                    placeholder="Nomor Lot" value="{{ $item->lot_number }}"></td>
+                                            <td><input type="date" class="form-control required"
+                                                    error="Expired Date" id="expired_date"
+                                                    value="{{ $item->expired_date }}"></td>
+                                            <td class="{{ $displaySubTotal }}"><input disabled type="text"
+                                                    class="form-control" id="subtotal"
+                                                    value="{{ $item->subtotal }}"></td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                                <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="GoodReceipt.removeRow(this)"><i
+                                                        class="bx bx-trash-alt"></i></button>
                                             </td>
                                         </tr>
                                     @endforeach
                                 @else
                                     <tr class="input" data_id="" id_detail="">
                                         <td>
-                                            <input disabled id="po_detail" data_id="" name="po_detail" type="text" class="form-control required" error="PO Detail"
-                                                    placeholder="Pilih Item dari PO" aria-label="Pilih Item" aria-describedby="button-addon1"
-                                                    price=""
-                                                    value="">
+                                            <input disabled id="po_detail" data_id="" name="po_detail"
+                                                type="text" class="form-control required" error="PO Detail"
+                                                placeholder="Pilih Item dari PO" aria-label="Pilih Item"
+                                                aria-describedby="button-addon1" price="" value="">
                                         </td>
-                                        <td><input type="number" class="form-control" id="qty_received" value="1" min="1" onkeyup="GoodReceipt.calcRow(this)"></td>
+                                        <td><input type="number" class="form-control" id="qty_received"
+                                                value="1" min="1" onkeyup="GoodReceipt.calcRow(this)">
+                                        </td>
                                         <td data_id="" id="unit"></td>
-                                        <td><input type="text" class="form-control" id="lot_number" placeholder="Nomor Lot"></td>
-                                        <td><input type="date" class="form-control required" error="Expired Date" id="expired_date"></td>
-                                        <td><input disabled type="text" class="form-control" id="subtotal" value="0"></td>
+                                        <td><input type="text" class="form-control" id="lot_number"
+                                                placeholder="Nomor Lot"></td>
+                                        <td><input type="date" class="form-control required" error="Expired Date"
+                                                id="expired_date"></td>
+                                        <td class="{{ $displaySubTotal }}"><input disabled type="text"
+                                                class="form-control" id="subtotal" value="0"></td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="GoodReceipt.removeRow(this)"><i class="bx bx-trash-alt"></i></button>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                onclick="GoodReceipt.removeRow(this)"><i
+                                                    class="bx bx-trash-alt"></i></button>
                                         </td>
                                     </tr>
                                 @endif
@@ -148,7 +177,8 @@
                     {{-- <button type="button" class="btn btn-sm btn-primary mt-2" onclick="GoodReceipt.addRow()">+ Tambah Barang</button> --}}
 
                     <div class="text-end mt-4">
-                        <h5>Total Qty: <span id="total-qty">{{ isset($data->total_qty) ? $data->total_qty : 0 }}</span></h5>
+                        <h5>Total Qty: <span
+                                id="total-qty">{{ isset($data->total_qty) ? $data->total_qty : 0 }}</span></h5>
                     </div>
 
                 </form>
@@ -162,7 +192,8 @@
             @php
                 $disabled = '';
             @endphp
-            <button type="submit" {{ $disabled }} onclick="GoodReceipt.submit(this, event)" class="btn btn-success waves-effect waves-light me-1">
+            <button type="submit" {{ $disabled }} onclick="GoodReceipt.submit(this, event)"
+                class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
             <button type="reset" onclick="GoodReceipt.back(this, event)" class="btn btn-secondary waves-effect">
