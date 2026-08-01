@@ -745,11 +745,11 @@ class SalesPaymentController extends Controller
             ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
             ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
             ->whereNull('packing_list_salesman.deleted');
-        if ($pl_no != 'admin') {
-            $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
-        } else {
-            $packingListSales->whereNotIn('usr_payment.user_group', [5, 6]);
-        }
+        // if ($pl_no != 'admin') {
+        $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
+        // } else {
+        //     $packingListSales->whereNotIn('usr_payment.user_group', [5, 6]);
+        // }
 
         $packingListSales = $packingListSales->get()->toArray();
 
