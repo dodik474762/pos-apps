@@ -149,12 +149,12 @@ let Customer = {
 
         let photo_ktp = $("#foto_ktp_path")[0].files[0];
         if (photo_ktp) {
-            formData.append("foto_ktp_path", photo);
+            formData.append("foto_ktp_path", photo_ktp);
         }
 
         let photo_npwp = $("#foto_npwp_path")[0].files[0];
         if (photo_npwp) {
-            formData.append("foto_npwp_path", photo);
+            formData.append("foto_npwp_path", photo_npwp);
         }
 
         return formData;
