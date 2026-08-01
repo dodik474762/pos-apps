@@ -151,7 +151,7 @@ class PresensiController extends Controller
             ->whereNull('m.deleted')
             ->whereBetween('m.presence_date', [$request['date_start'], $request['date_end']]);
         $akses = strtolower(session('akses'));
-        $allowed = ['superadmin', 'admin pga', 'bod/boc', 'operational manager', 'supervisor sales'];
+        $allowed = ['superadmin', 'admin pga', 'bod/boc', 'operational manager', 'supervisor sales', 'admin supervisor'];
 
         if (!in_array($akses, $allowed)) {
             $datadb->where('m.creator', session('user_id'));
