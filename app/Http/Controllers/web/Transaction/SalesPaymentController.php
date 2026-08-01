@@ -594,8 +594,12 @@ class SalesPaymentController extends Controller
         return $datadb;
     }
 
-    public function getListSalesReturn($invoice_ids = [])
+    public function getListSalesReturn($invoice_ids = [], $date = '')
     {
+        $date = $date != '' ? date('Y-m-d', strtotime($date)) : date('Y-m-d');
+        if (empty($invoice_ids)) {
+            return collect();
+        }
         $datadb = SalesReturnHdr::whereNull('sales_return.deleted')
             ->select([
                 'sales_return.id',
@@ -603,9 +607,15 @@ class SalesPaymentController extends Controller
                 'sales_return.invoice_id',
                 'sales_return.refund_amount'
             ])
+            ->whereIn('sales_return.invoice_id', $invoice_ids)
+            ->where('sales_return.return_date', $date)
             ->where('sales_return.status', '!=', 'CANCELLED')
             ->where('sales_return.return_type', 'RETURN');
         $datadb = $datadb->get();
+
+        // echo "<pre>";
+        // print_r($datadb);
+        // die;
 
         return $datadb;
     }
@@ -878,9 +888,12 @@ class SalesPaymentController extends Controller
         //     $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
         // }
         $salesPayment = $this->getListRekapan($data);
+        // echo "<pre>";
+        // print_r($salesPayment);
+        // die;
         $data['data_payment'] = $salesPayment;
         $invoice_ids = collect($salesPayment)->pluck('invoice_id')->unique()->toArray();
-        $salesReturns = $this->getListSalesReturn($invoice_ids);
+        $salesReturns = $this->getListSalesReturn($invoice_ids, $data['tanggal']);
         $data['data_return'] = $salesReturns;
         // }
 

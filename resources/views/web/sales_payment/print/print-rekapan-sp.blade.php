@@ -122,8 +122,8 @@
                 @foreach ($data['data_payment'] as $item)
                     @php
                         $item = (object) $item;
-                        $sales_return = !empty($data_return)
-                            ? collect($data_return)->where('invoice_id', $item->invoice_id)->first()
+                        $sales_return = !empty($data['data_return'])
+                            ? collect($data['data_return'])->where('invoice_id', $item->invoice_id)->first()
                             : [];
                     @endphp
                     <tr>
@@ -149,7 +149,7 @@
                             <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                             <td>{{ $item->kecamatan_name ?? '-' }}</td>
                             <td>{{ $item->top_name }}</td>
-                            <td>{{ $item->payment_method }}</td>
+                            <td>RETURN</td>
                             <td>{{ $item->invoice_date }}</td>
                             <td>{{ $item->due_date }}</td>
                             <td>{{ $item->status }}</td>
@@ -159,7 +159,11 @@
                         </tr>
                     @endif
                     @php
-                        $total += $item->amount_paid ?? 0;
+                        if (!empty($sales_return)) {
+                            $total += $item->amount_paid - $sales_return->refund_amount;
+                        } else {
+                            $total += $item->amount_paid;
+                        }
                     @endphp
                 @endforeach
             @endif
