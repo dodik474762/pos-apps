@@ -1307,12 +1307,12 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $productCost = ProductUomCost::where('product', $data['id'])->get();
-            if (!empty($productCost)) {
-                DB::rollBack();
-                $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di cost list';
-                return response()->json($result);
-            }
+            // $productCost = ProductUomCost::where('product', $data['id'])->get();
+            // if (!empty($productCost)) {
+            //     DB::rollBack();
+            //     $result['message'] = 'Data tidak bisa dihapus karena masih digunakan di cost list';
+            //     return response()->json($result);
+            // }
 
             $menu = Product::find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
