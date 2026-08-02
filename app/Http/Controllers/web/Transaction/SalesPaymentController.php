@@ -805,8 +805,7 @@ class SalesPaymentController extends Controller
                 })
                 ->join('sales_payment_detail', function ($q) use ($tanggal) {
                     return $q->on('sales_payment_detail.invoice_id', 'sih.id')
-                        ->whereNull('sales_payment_detail.deleted')
-                        ->whereRaw('DATE(sales_payment_detail.created_at) = ?', $tanggal);
+                        ->whereNull('sales_payment_detail.deleted');
                 })
                 ->join('sales_payment_header as sph', function ($q) use ($tanggal) {
                     return $q->on('sph.id', 'sales_payment_detail.payment_id')
@@ -825,7 +824,12 @@ class SalesPaymentController extends Controller
                 ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
                 ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+                // ->where('sih.invoice_number', 'SI07261491')
                 ->whereNull('sih.deleted');
+            // echo '<pre>';
+            // print_r($packingAdmin->get()->toArray());
+            // die;
+
             if (isset($params['salesman']) && $params['salesman'] != '') {
                 $packingAdmin->where('usr.id', $params['salesman']);
             }
