@@ -763,6 +763,7 @@ class SalesPaymentController extends Controller
 
         $packingListSales = $packingListSales->get()->toArray();
 
+
         if ($pl_no == 'admin') {
             $packingAdmin = SalesInvoiceHeader::from('sales_invoice_header as sih')
                 ->select([
@@ -830,10 +831,21 @@ class SalesPaymentController extends Controller
             // print_r($packingAdmin->get()->toArray());
             // die;
 
+            // echo '<pre>';
+            // print_r($params['salesman']);
+            // echo '</pre>';
+            // die;            
             if (isset($params['salesman']) && $params['salesman'] != '') {
-                $packingAdmin->where('usr.id', $params['salesman']);
+                if ($params['salesman'] != '0') {
+                    $packingAdmin->where('usr.id', $params['salesman']);
+                }
             }
             $packingAdmin = $packingAdmin->get()->toArray();
+
+            // echo '<pre>';
+            // print_r($packingAdmin);
+            // echo '</pre>';
+            // die;
         } else {
             $packingAdmin = [];
         }

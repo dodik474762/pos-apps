@@ -81,9 +81,6 @@ class TerimaUangController extends Controller
         // die;
         $invoices = $salesPayment->getListRekapan($data);
         $data['invoices'] = $invoices;
-        // echo '<pre>';
-        // print_r($invoices);
-        // die;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
         $view = view('web.terima_uang.index', $data);
         $put['title_content'] = $this->getTitle();
@@ -273,9 +270,6 @@ class TerimaUangController extends Controller
             ->values()
             ->toArray();
         $data['salesman'] = collect($invoices)->pluck('salesman_id')->unique()->first();
-        // echo '<pre>';
-        // print_r($data['salesman']);
-        // die;
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
         $qr = '';
