@@ -337,13 +337,17 @@ class ClosingStockController extends Controller
         $result['is_valid'] = false;
         $result['message'] = 'Gagal Melakukan Recalculate Stock.';
 
+        // echo '<pre>';
+        // print_r($params);
+        // die;
+
         DB::beginTransaction();
         try {
-            $closing = StockClosing::where('closing_date', $params['tanggal'])->first();
-            $stockClosing = new StockClosing();
-            $stockClosing->closing_date = $params['tanggal'];
-            $stockClosing->created_by = session('user_id');
-            $stockClosing->save();
+            // $closing = StockClosing::where('closing_date', $params['tanggal'])->first();
+            // $stockClosing = new StockClosing();
+            // $stockClosing->closing_date = $params['tanggal'];
+            // $stockClosing->created_by = session('user_id');
+            // $stockClosing->save();
 
 
             /*update stock cards close_date */

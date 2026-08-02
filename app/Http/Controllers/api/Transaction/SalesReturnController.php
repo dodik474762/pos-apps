@@ -444,7 +444,7 @@ class SalesReturnController extends Controller
                     'add',
                     'sales_return'
                 );
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $value['product_id']);
+                // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $value['product_id']);
                 /*menambah stock gudang */
             }
 
@@ -736,7 +736,7 @@ class SalesReturnController extends Controller
                     'sales_return'
                 );
 
-                recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $product_id);
+                // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $product_id);
             }
             /*menambah stock gudang */
 
@@ -825,7 +825,7 @@ class SalesReturnController extends Controller
                         'min',
                         'sales_return_cancel'
                     );
-                    recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $dt->product_id);
+                    // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $invoice->warehouse_id, null, $dt->product_id);
                     /*mengurangi stock gudang */
                 }
             }
