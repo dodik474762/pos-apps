@@ -1707,12 +1707,17 @@ function recalculateFrom(
     $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
     $adjust = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
     $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
+    $cancelDo = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code);
+    // echo '<pre>';
+    // print_r($sales);
+    // die;
 
     $transactions = collect()
         ->merge($purchases)
         ->merge($sales)
         ->merge($adjust)
         ->merge($returns)
+        ->merge($cancelDo)
         ->sortBy([
             ['trans_date', 'asc'],
             ['created_at', 'asc'],
@@ -1872,65 +1877,143 @@ function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_c
 
 function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
 {
-    return DeliveryOrderDtl::query()
-        ->join('product as p', function ($q) {
-            return $q->on('p.id', '=', 'delivery_order_detail.product_id');
-        })
-        ->join('delivery_order_header as doh', function ($q) {
-            return $q->on('doh.id', '=', 'delivery_order_detail.do_id')
-                ->whereNull('doh.deleted');
-        })
-        ->join('product_uom as pu', function ($q) {
-            return $q->on('pu.product', '=', 'delivery_order_detail.product_id')
-                ->on('pu.unit_tujuan', '=', 'delivery_order_detail.uom');
-        })
-        ->join('sales_order_details as sod', function ($q) {
-            return $q->on('sod.id', '=', 'delivery_order_detail.so_detail_id')
-                ->whereNull('sod.deleted');
-        })
-        ->join('sales_order_headers as soh', function ($q) {
-            return $q->on('soh.id', '=', 'sod.sales_order_id')
-                ->whereNull('soh.deleted');
-        })
-        ->where('p.code', $itemCode)
-        ->whereNull('delivery_order_detail.deleted')
-        ->where(function ($q) use ($wh_code) {
-            if ($wh_code == '1') {
-                return $q->whereNull('doh.warehouse_id')
-                    ->orWhere('doh.warehouse_id', $wh_code);
-            }
+    // return DeliveryOrderDtl::query()
+    //     ->join('product as p', function ($q) {
+    //         return $q->on('p.id', '=', 'delivery_order_detail.product_id');
+    //     })
+    //     ->join('delivery_order_header as doh', function ($q) {
+    //         return $q->on('doh.id', '=', 'delivery_order_detail.do_id')
+    //             ->whereNull('doh.deleted');
+    //     })
+    //     ->join('product_uom as pu', function ($q) {
+    //         return $q->on('pu.product', '=', 'delivery_order_detail.product_id')
+    //             ->on('pu.unit_tujuan', '=', 'delivery_order_detail.uom');
+    //     })
+    //     ->join('sales_order_details as sod', function ($q) {
+    //         return $q->on('sod.id', '=', 'delivery_order_detail.so_detail_id')
+    //             ->whereNull('sod.deleted');
+    //     })
+    //     ->join('sales_order_headers as soh', function ($q) {
+    //         return $q->on('soh.id', '=', 'sod.sales_order_id')
+    //             ->whereNull('soh.deleted');
+    //     })
+    //     ->where('p.code', $itemCode)
+    //     ->whereNull('delivery_order_detail.deleted')
+    //     ->where(function ($q) use ($wh_code) {
+    //         if ($wh_code == '1') {
+    //             return $q->whereNull('doh.warehouse_id')
+    //                 ->orWhere('doh.warehouse_id', $wh_code);
+    //         }
 
-            return $q->where('doh.warehouse_id', $wh_code);
-        })
-        ->whereDate('doh.do_date', '>=', $fromDate)
-        ->where('doh.status', '!=', 'CANCELED')
-        ->whereNull('doh.deleted')
-        ->when($toDate, fn($q) => $q->whereDate('doh.do_date', '<=', $toDate))
+    //         return $q->where('doh.warehouse_id', $wh_code);
+    //     })
+    //     ->whereDate('doh.do_date', '>=', $fromDate)
+    //     ->where('doh.status', '!=', 'CANCELED')
+    //     ->whereNull('doh.deleted')
+    //     ->when($toDate, fn($q) => $q->whereDate('doh.do_date', '<=', $toDate))
+    //     ->select([
+    //         'doh.id',
+    //         'doh.do_number',
+    //         'doh.created_at',
+    //         DB::raw('SUM(delivery_order_detail.qty * pu.nilai_konversi_terkecil) as qty'),
+    //         'p.code as item_code',
+    //         'doh.do_date as trans_date',
+    //     ])
+    //     ->groupBy('doh.id', 'doh.do_number', 'p.code', 'doh.created_at', 'doh.do_date')
+    //     ->orderBy('doh.do_date')
+    //     ->get()
+    //     ->map(fn($p) => [
+    //         'trans_date' => $p->trans_date,
+    //         'created_at' => $p->created_at,
+    //         'qty_in' => 0,
+    //         'qty_out' => $p->qty,
+    //         'qty_adjust' => 0,
+    //         'qty_transfer_out' => 0,
+    //         'qty_transfer_in' => 0,
+    //         'qty_return_in' => 0,
+    //         'reference_type' => DeliveryOrderHeader::class,
+    //         'reference_id' => $p->id,
+    //         'note' => $p->do_number,
+    //     ]);
+
+    return DB::table('product_stock_move as psm')
+        ->join('product as p', 'p.id', '=', 'psm.product')
+        ->join('product_stock as ps', 'ps.product', '=', 'p.id')
+        ->join('delivery_order_header as doh', 'doh.id', '=', 'psm.reference_id')
+        ->where('p.code', $itemCode)
+        ->whereDate('psm.created_at', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('psm.created_at', '<=', $toDate))
         ->select([
-            'doh.id',
-            'doh.do_number',
-            'doh.created_at',
-            DB::raw('SUM(delivery_order_detail.qty * pu.nilai_konversi_terkecil) as qty'),
+            'psm.reference_id',
+            'p.name as product_name',
             'p.code as item_code',
-            'doh.do_date as trans_date',
+            'psm.product',
+            'psm.created_at',
+            'doh.do_number',
+            'ps.qty as opening_stock',
+            DB::raw('SUM(psm.qty_in) as qty_in'),
+            DB::raw('SUM(psm.qty_out) as qty_out'),
+            DB::raw('SUM(psm.qty_in - psm.qty_out) as current_stock'),
         ])
-        ->groupBy('doh.id', 'doh.do_number', 'p.code', 'doh.created_at', 'doh.do_date')
-        ->orderBy('doh.do_date')
+        ->where('psm.move_type', 'delivery_order')
+        ->groupBy('psm.product', 'doh.do_number', 'psm.reference_id', 'p.code', 'p.name', 'ps.qty', 'psm.created_at')
+        ->orderBy('psm.created_at')
         ->get()
         ->map(fn($p) => [
-            'trans_date' => $p->trans_date,
-            'created_at' => $p->created_at,
-            'qty_in' => 0,
-            'qty_out' => $p->qty,
-            'qty_adjust' => 0,
+            'trans_date'       => $p->created_at,
+            'created_at'       => $p->created_at,
+            'qty_in'           => 0,
+            'qty_out'          => $p->qty_out,
+            'qty_adjust'       => 0,
             'qty_transfer_out' => 0,
-            'qty_transfer_in' => 0,
-            'qty_return_in' => 0,
-            'reference_type' => DeliveryOrderHeader::class,
-            'reference_id' => $p->id,
-            'note' => $p->do_number,
+            'qty_transfer_in'  => 0,
+            'qty_return_in'    => 0,
+            'reference_type'   => DeliveryOrderHeader::class,
+            'reference_id'     => $p->reference_id,
+            'note'             => 'Out : ' . $p->do_number,
         ]);
 }
+
+function mapCancelDo(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+{
+    return DB::table('product_stock_move as psm')
+        ->join('product as p', 'p.id', '=', 'psm.product')
+        ->join('product_stock as ps', 'ps.product', '=', 'p.id')
+        ->join('delivery_order_header as doh', 'doh.id', '=', 'psm.reference_id')
+        ->where('p.code', $itemCode)
+        ->whereDate('psm.created_at', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('psm.created_at', '<=', $toDate))
+        ->select([
+            'psm.reference_id',
+            'p.name as product_name',
+            'p.code as item_code',
+            'psm.product',
+            'psm.created_at',
+            'doh.do_number',
+            'ps.qty as opening_stock',
+            DB::raw('SUM(psm.qty_in) as qty_in'),
+            DB::raw('SUM(psm.qty_out) as qty_out'),
+            DB::raw('SUM(psm.qty_in - psm.qty_out) as current_stock'),
+        ])
+        ->where('psm.move_type', 'cancel_delivery_order')
+        ->groupBy('psm.product', 'doh.do_number', 'psm.reference_id', 'p.code', 'p.name', 'ps.qty', 'psm.created_at')
+        ->orderBy('psm.created_at')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date'       => $p->created_at,
+            'created_at'       => $p->created_at,
+            'qty_in'           => $p->qty_in,
+            'qty_out'          => 0,
+            'qty_adjust'       => 0,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in'  => 0,
+            'qty_return_in'    => 0,
+            'reference_type'   => DeliveryOrderHeader::class,
+            'reference_id'     => $p->reference_id,
+            'note'             => 'Cancel DO : ' . $p->do_number,
+        ]);
+}
+
 
 function mapAdjustments(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
 {
