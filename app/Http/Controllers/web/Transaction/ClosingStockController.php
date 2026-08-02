@@ -43,12 +43,15 @@ class ClosingStockController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
+        $lastClosing = StockClosing::orderBy('closing_date', 'desc')->first();
         $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
-        $data['date_start'] = Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
+        if (!isset($data['date_start'])) {
+            $data['date_start'] = !empty($lastClosing) ? Carbon::parse($lastClosing->closing_date)->format('Y-m-d') : Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
+        }
         $data['closing'] = StockClosing::where('closing_date', $data['tanggal'])->first();
         $view = view('web.closing_stock.index', $data);
         $put['title_content'] = $this->getTitle();

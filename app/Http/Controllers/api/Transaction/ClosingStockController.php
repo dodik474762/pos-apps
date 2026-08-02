@@ -261,6 +261,9 @@ class ClosingStockController extends Controller
         $data['draw'] = (int) ($_POST['draw'] ?? 1);
 
         $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);
+        // die;
         return json_encode($data);
     }
 
@@ -287,34 +290,34 @@ class ClosingStockController extends Controller
 
 
             /*update stock cards close_date */
-            $stockCards = StockCard::where('stock_cards.trans_date', $params['tanggal'])
-                ->select([
-                    'stock_cards.item_code',
-                    'p.id as product',
-                    'stock_cards.wh_code',
-                    'stock_cards.closing_balance',
-                ])
-                ->leftJoin('product as p', 'p.code', '=', 'stock_cards.item_code')
-                ->whereIn('stock_cards.id', function ($q) use ($params) {
-                    $q->selectRaw('MAX(id)')
-                        ->from('stock_cards')
-                        ->where('trans_date', $params['tanggal'])
-                        ->groupBy('item_code');
-                })
-                ->get();
+            // $stockCards = StockCard::where('stock_cards.trans_date', $params['tanggal'])
+            //     ->select([
+            //         'stock_cards.item_code',
+            //         'p.id as product',
+            //         'stock_cards.wh_code',
+            //         'stock_cards.closing_balance',
+            //     ])
+            //     ->leftJoin('product as p', 'p.code', '=', 'stock_cards.item_code')
+            //     ->whereIn('stock_cards.id', function ($q) use ($params) {
+            //         $q->selectRaw('MAX(id)')
+            //             ->from('stock_cards')
+            //             ->where('trans_date', $params['tanggal'])
+            //             ->groupBy('item_code');
+            //     })
+            //     ->get();
 
             // echo '<pre>';
             // print_r($stockCards);
             // die;
-            foreach ($stockCards as $stockCard) {
-                $productStock = ProductStock::where('product', $stockCard->product)
-                    ->where('warehouse', $stockCard->wh_code)
-                    ->first();
-                if (!empty($productStock)) {
-                    $productStock->qty = $stockCard->closing_balance;
-                    $productStock->save();
-                }
-            }
+            // foreach ($stockCards as $stockCard) {
+            //     $productStock = ProductStock::where('product', $stockCard->product)
+            //         ->where('warehouse', $stockCard->wh_code)
+            //         ->first();
+            //     if (!empty($productStock)) {
+            //         $productStock->qty = $stockCard->closing_balance;
+            //         $productStock->save();
+            //     }
+            // }
 
 
             $result['is_valid'] = true;
@@ -337,9 +340,7 @@ class ClosingStockController extends Controller
         $result['is_valid'] = false;
         $result['message'] = 'Gagal Melakukan Recalculate Stock.';
 
-        // echo '<pre>';
-        // print_r($params);
-        // die;
+        $params['tanggal_awal'] = date('Y-m-d', strtotime($params['tanggal_awal'] . ' +1 day'));
 
         DB::beginTransaction();
         try {
@@ -351,36 +352,39 @@ class ClosingStockController extends Controller
 
 
             /*update stock cards close_date */
-            $stockCards = StockCard::whereBetween('stock_cards.trans_date', [$params['tanggal_awal'], $params['tanggal']])
-                ->select([
-                    'stock_cards.item_code',
-                    'p.id as product',
-                    'stock_cards.wh_code',
-                    'stock_cards.closing_balance',
-                ])
-                ->leftJoin('product as p', 'p.code', '=', 'stock_cards.item_code')
-                ->whereIn('stock_cards.id', function ($q) use ($params) {
-                    $q->selectRaw('MAX(id)')
-                        ->from('stock_cards')
-                        ->whereBetween('trans_date', [$params['tanggal_awal'], $params['tanggal']])
-                        ->groupBy('item_code');
-                })
-                ->get();
+            // $stockCards = StockCard::whereBetween('stock_cards.trans_date', [$params['tanggal_awal'], $params['tanggal']])
+            //     ->select([
+            //         'stock_cards.item_code',
+            //         'p.id as product',
+            //         'stock_cards.wh_code',
+            //         'stock_cards.closing_balance',
+            //     ])
+            //     ->leftJoin('product as p', 'p.code', '=', 'stock_cards.item_code')
+            //     ->whereIn('stock_cards.id', function ($q) use ($params) {
+            //         $q->selectRaw('MAX(id)')
+            //             ->from('stock_cards')
+            //             ->whereBetween('trans_date', [$params['tanggal_awal'], $params['tanggal']])
+            //             ->groupBy('item_code');
+            //     })
+            //     ->get();
 
+            // foreach ($stockCards as $stockCard) {
+            //     recalculateFrom('0', $params['tanggal_awal'], $params['tanggal'], $stockCard->wh_code, null, $stockCard->product);
+            // }
+
+            $product_stock = ProductStock::select([
+                'product_stock.product',
+                'p.code as product_code'
+            ])
+                ->join('product as p', 'p.id', '=', 'product_stock.product')
+                ->whereNull('p.deleted')->get();
             // echo '<pre>';
-            // print_r($stockCards);
+            // print_r($product_stock);
             // die;
-            foreach ($stockCards as $stockCard) {
-                recalculateFrom('0', $params['tanggal_awal'], $params['tanggal'], $stockCard->wh_code, null, $stockCard->product);
-                // $productStock = ProductStock::where('product', $stockCard->product)
-                //     ->where('warehouse', $stockCard->wh_code)
-                //     ->first();
-                // if (!empty($productStock)) {
-                //     $productStock->qty = $stockCard->closing_balance;
-                //     $productStock->save();
-                // }
-            }
 
+            foreach ($product_stock as $key => $value) {
+                recalculateFrom($value->product_code, $params['tanggal_awal'], $params['tanggal'], 1, null, null);
+            }
 
             $result['is_valid'] = true;
             $result['message'] = 'Berhasil Melakukan Recalculate Stock.';
