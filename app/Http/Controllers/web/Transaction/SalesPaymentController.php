@@ -633,11 +633,74 @@ class SalesPaymentController extends Controller
             ->where('rpd.amount_paid', '>', 0)
             ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
-        $packingLists = PackingList::where('packing_list.packing_list_no', $pl_no)
-            ->select([
-                'packing_list.packing_list_no',
-                'packing_list.driver_name',
-                'pld.delivery_order_id',
+        if (substr($pl_no, 0, 2) == 'PL') {
+            $packingLists = PackingList::where('packing_list.packing_list_no', $pl_no)
+                ->select([
+                    'packing_list.packing_list_no',
+                    'packing_list.driver_name',
+                    'pld.delivery_order_id',
+                    'sales_payment_detail.id',
+                    'cc.nama_customer',
+                    'cc.code as customer_code',
+                    'sih.invoice_number',
+                    'usr.name as salesman_name',
+                    'kec.name as kecamatan_name',
+                    'tp.remarks as top_name',
+                    'sih.invoice_date',
+                    'sih.due_date',
+                    'sih.status',
+                    'sih.total_amount',
+                    'sales_payment_detail.allocated_amount as amount_paid',
+                    'rpd.amount_paid as total_terbayar_rph',
+                    'rph.status as status_received',
+                    'sales_payment_detail.invoice_id',
+                    'sph.payment_method',
+                    'doh.do_number',
+                    'doh.do_date',
+                    'w.name as warehouse_name',
+                    'sales_payment_detail.allocated_amount as total_terbayar',
+                    'tp.remarks as top_customer',
+                    'sih.id as invoice_id',
+                    'usr.id as salesman_id'
+                ])
+                ->join('packing_list_do as pld', 'pld.packing_list_id', 'packing_list.id')
+                ->join('delivery_order_header as doh', function ($q) {
+                    return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
+                })
+                ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
+                ->join('sales_invoice_header as sih', function ($q) {
+                    return $q->on('sih.sales_order', 'doh.so_id')->whereNull('sih.deleted');
+                })
+                ->leftJoin('sales_payment_detail', function ($q) {
+                    return $q->on('sales_payment_detail.invoice_id', 'sih.id')
+                        ->whereNull('sales_payment_detail.deleted');
+                })
+                ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
+                    return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                        ->whereNull('sph.deleted')
+                        ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
+                })
+                ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+                    return $q->on('rpd.invoice_id', '=', 'sih.id');
+                })
+                ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                    return $q->on('rph.id', 'rpd.receive_id')
+                        ->where('rph.visit_date', $tanggal);
+                })
+                ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
+                ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
+                ->join('customer as cc', 'cc.id', 'sih.customer_id')
+                ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+                ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+                ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+                ->whereNull('packing_list.deleted')
+                ->get()->toArray();
+        } else {
+            $packingLists = [];
+        }
+
+        if (substr($pl_no, 0, 2) == 'PT') {
+            $packingListSales = PackingListSalesman::select([
                 'sales_payment_detail.id',
                 'cc.nama_customer',
                 'cc.code as customer_code',
@@ -655,113 +718,58 @@ class SalesPaymentController extends Controller
                 'sales_payment_detail.invoice_id',
                 'sph.payment_method',
                 'doh.do_number',
+                'doh.do_number as dohs_number',
                 'doh.do_date',
-                'w.name as warehouse_name',
+                'doh.do_date as dohs_date',
                 'sales_payment_detail.allocated_amount as total_terbayar',
+                'rpd.amount_paid as total_terbayar_rph',
                 'tp.remarks as top_customer',
+                'w.name as warehouse_name',
                 'sih.id as invoice_id',
                 'usr.id as salesman_id'
             ])
-            ->join('packing_list_do as pld', 'pld.packing_list_id', 'packing_list.id')
-            ->join('delivery_order_header as doh', function ($q) {
-                return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
-            })
-            ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
-            ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.sales_order', 'doh.so_id')->whereNull('sih.deleted');
-            })
-            ->leftJoin('sales_payment_detail', function ($q) {
-                return $q->on('sales_payment_detail.invoice_id', 'sih.id')
-                    ->whereNull('sales_payment_detail.deleted');
-            })
-            ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
-                return $q->on('sph.id', 'sales_payment_detail.payment_id')
-                    ->whereNull('sph.deleted')
-                    ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
-            })
-            ->leftJoinSub($rpdSub, 'rpd', function ($q) {
-                return $q->on('rpd.invoice_id', '=', 'sih.id');
-            })
-            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
-                return $q->on('rph.id', 'rpd.receive_id')
-                    ->where('rph.visit_date', $tanggal);
-            })
-            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
-            ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
-            ->join('customer as cc', 'cc.id', 'sih.customer_id')
-            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
-            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
-            ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-            ->whereNull('packing_list.deleted')
-            ->get()->toArray();
+                ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
+                ->join('packing_list_salesman_invoice as pld', 'pld.packing_list_id', 'packing_list_salesman.id')
+                ->join('sales_invoice_header as sih', function ($q) {
+                    return $q->on('sih.id', 'pld.invoice_id')->whereNull('sih.deleted');
+                })
+                ->join('sales_order_headers as soh', 'soh.id', 'sih.sales_order')
+                ->join('delivery_order_header as doh', function ($q) {
+                    return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
+                })
+                ->leftJoin('sales_payment_detail', function ($q) use ($tanggal) {
+                    return $q->on('sales_payment_detail.invoice_id', 'sih.id')
+                        ->whereNull('sales_payment_detail.deleted')
+                        ->whereRaw('DATE(sales_payment_detail.created_at) = ?', $tanggal);
+                })
+                ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
+                    return $q->on('sph.id', 'sales_payment_detail.payment_id')
+                        ->whereNull('sph.deleted')
+                        ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
+                })
+                ->leftJoinSub($rpdSub, 'rpd', function ($q) {
+                    return $q->on('rpd.invoice_id', '=', 'sih.id');
+                })
+                ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
+                    return $q->on('rph.id', 'rpd.receive_id')
+                        ->where('rph.visit_date', $tanggal);
+                })
+                ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
+                ->join('customer as cc', 'cc.id', 'sih.customer_id')
+                ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
+                ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
+                ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
+                ->whereNull('packing_list_salesman.deleted');
+            // if ($pl_no != 'admin') {
+            $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
+            // } else {
+            //     $packingListSales->whereNotIn('usr_payment.user_group', [5, 6]);
+            // }
 
-        $packingListSales = PackingListSalesman::select([
-            'sales_payment_detail.id',
-            'cc.nama_customer',
-            'cc.code as customer_code',
-            'sih.invoice_number',
-            'usr.name as salesman_name',
-            'kec.name as kecamatan_name',
-            'tp.remarks as top_name',
-            'sih.invoice_date',
-            'sih.due_date',
-            'sih.status',
-            'sih.total_amount',
-            'sales_payment_detail.allocated_amount as amount_paid',
-            'rpd.amount_paid as total_terbayar_rph',
-            'rph.status as status_received',
-            'sales_payment_detail.invoice_id',
-            'sph.payment_method',
-            'doh.do_number',
-            'doh.do_number as dohs_number',
-            'doh.do_date',
-            'doh.do_date as dohs_date',
-            'sales_payment_detail.allocated_amount as total_terbayar',
-            'rpd.amount_paid as total_terbayar_rph',
-            'tp.remarks as top_customer',
-            'w.name as warehouse_name',
-            'sih.id as invoice_id',
-            'usr.id as salesman_id'
-        ])
-            ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
-            ->join('packing_list_salesman_invoice as pld', 'pld.packing_list_id', 'packing_list_salesman.id')
-            ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.id', 'pld.invoice_id')->whereNull('sih.deleted');
-            })
-            ->join('sales_order_headers as soh', 'soh.id', 'sih.sales_order')
-            ->join('delivery_order_header as doh', function ($q) {
-                return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
-            })
-            ->leftJoin('sales_payment_detail', function ($q) use ($tanggal) {
-                return $q->on('sales_payment_detail.invoice_id', 'sih.id')
-                    ->whereNull('sales_payment_detail.deleted')
-                    ->whereRaw('DATE(sales_payment_detail.created_at) = ?', $tanggal);
-            })
-            ->leftJoin('sales_payment_header as sph', function ($q) use ($tanggal) {
-                return $q->on('sph.id', 'sales_payment_detail.payment_id')
-                    ->whereNull('sph.deleted')
-                    ->where('sph.payment_date', $tanggal); // dipindah ke ON, bukan WHERE
-            })
-            ->leftJoinSub($rpdSub, 'rpd', function ($q) {
-                return $q->on('rpd.invoice_id', '=', 'sih.id');
-            })
-            ->leftJoin('receive_payment_header as rph', function ($q) use ($tanggal) {
-                return $q->on('rph.id', 'rpd.receive_id')
-                    ->where('rph.visit_date', $tanggal);
-            })
-            ->join('warehouse as w', 'w.id', 'sih.warehouse_id')
-            ->join('customer as cc', 'cc.id', 'sih.customer_id')
-            ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
-            ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
-            ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-            ->whereNull('packing_list_salesman.deleted');
-        // if ($pl_no != 'admin') {
-        $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
-        // } else {
-        //     $packingListSales->whereNotIn('usr_payment.user_group', [5, 6]);
-        // }
-
-        $packingListSales = $packingListSales->get()->toArray();
+            $packingListSales = $packingListSales->get()->toArray();
+        } else {
+            $packingListSales = [];
+        }
 
 
         if ($pl_no == 'admin') {
