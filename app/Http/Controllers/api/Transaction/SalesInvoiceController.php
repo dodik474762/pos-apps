@@ -1409,7 +1409,8 @@ class SalesInvoiceController extends Controller
                 ->join('sales_order_headers as soh', function ($q) {
                     return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
                 })
-                ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
+                // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
+                ->whereNotIn('sih.status', ['CANCELED'])
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
