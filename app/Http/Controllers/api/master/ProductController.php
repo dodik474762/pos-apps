@@ -1128,8 +1128,8 @@ class ProductController extends Controller
                             $product_uom_price->date_start = $data['date_start'][$i];
                             $product_uom_price->min_qty    = $data['min_qty'][$i];
                             $product_uom_price->max_qty    = $data['max_qty'][$i];
-                            $product_uom_price->channel    = $data['channel'][$i];
-                            $product_uom_price->sub_channel = $data['sub_channel'][$i];
+                            $product_uom_price->channel    = $data['channel'][$i] ?? 'RETAIL UMUM';
+                            $product_uom_price->sub_channel = $data['sub_channel'][$i] ?? 'RT-RETAIL UMUM';
 
                             if ($data['customer'][$i] != '') {
                                 list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
@@ -1157,8 +1157,8 @@ class ProductController extends Controller
                                 $sub->date_start       = $data['date_start'][$i];
                                 $sub->min_qty          = $data['min_qty'][$i];
                                 $sub->max_qty          = $data['max_qty'][$i];
-                                $sub->channel          = $data['channel'][$i];
-                                $sub->sub_channel      = $data['sub_channel'][$i];
+                                $sub->channel          = $data['channel'][$i] ?? 'RETAIL UMUM';
+                                $sub->sub_channel      = $data['sub_channel'][$i] ?? 'RT-RETAIL UMUM';
 
                                 if ($data['customer'][$i] != '') {
                                     list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
@@ -1181,8 +1181,8 @@ class ProductController extends Controller
                             $product_uom_price->date_start  = $data['date_start'][$i];
                             $product_uom_price->min_qty     = $data['min_qty'][$i];
                             $product_uom_price->max_qty     = $data['max_qty'][$i];
-                            $product_uom_price->channel     = $data['channel'][$i];
-                            $product_uom_price->sub_channel = $data['sub_channel'][$i];
+                            $product_uom_price->channel     = $data['channel'][$i] ?? 'RETAIL UMUM';
+                            $product_uom_price->sub_channel = $data['sub_channel'][$i] ?? 'RT-RETAIL UMUM';
 
                             if ($data['customer'][$i] != '') {
                                 list($id_cust, $name_cust) = explode('//', $data['customer'][$i]);
