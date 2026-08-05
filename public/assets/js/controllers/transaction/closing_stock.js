@@ -257,8 +257,8 @@ let ClosingStock = {
                     "X-CSRF-TOKEN": ClosingStock.csrf_token(),
                 },
                 data: function (d) {
-                    d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
-                    d.date_start = $("#filter-tanggal-awal").val();
+                    d.date_start = $("#filter-tanggal-awal").val(); // ambil dari input tanggal
+                    d.date_end = $("#filter-tanggal").val();
                 },
             },
             deferRender: true,
@@ -1452,7 +1452,7 @@ let ClosingStock = {
         const tanggal = $("#filter-tanggal").val();
         const route = $(elm).attr("route");
         const tanggal_awal = $("#filter-tanggal-awal").val();
-        window.location.href = route + "?tanggal=" + tanggal + "&date_start=" + tanggal_awal;
+        window.location.href = route + "?tanggal=" + tanggal_awal + "&date_start=" + tanggal;
     },
 };
 

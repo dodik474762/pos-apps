@@ -61,4 +61,26 @@ class ClosingStockController extends Controller
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
     }
+
+    public function stockCard(Request $request)
+    {
+        $data = $request->all();
+        $lastClosing = StockClosing::orderBy('closing_date', 'desc')->first();
+        $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');
+        $data['data'] = [];
+        $data['title'] = 'Stock Card';
+        $data['title_parent'] = 'Report';
+        $data['akses'] = $this->akses_menu;
+        if (!isset($data['date_start'])) {
+            $data['date_start'] = !empty($lastClosing) ? Carbon::parse($lastClosing->closing_date)->format('Y-m-d') : Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
+        }
+        $data['closing'] = StockClosing::where('closing_date', $data['tanggal'])->first();
+        $view = view('web.closing_stock.stock-card', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
 }

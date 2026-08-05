@@ -1,7 +1,7 @@
-@if (isset($akses->closing_stock))
-    @if ($akses->closing_stock->view == 1)
-        <input type="hidden" id="update" value="{{ $akses->closing_stock->update }}">
-        <input type="hidden" id="delete" value="{{ $akses->closing_stock->delete }}">
+@if (isset($akses->stock_card))
+    @if ($akses->stock_card->view == 1)
+        <input type="hidden" id="update" value="{{ $akses->stock_card->update }}">
+        <input type="hidden" id="delete" value="{{ $akses->stock_card->delete }}">
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
@@ -30,7 +30,7 @@
                                 <h5 class="card-title mb-0">{{ $title }} History</h5>
                             </div>
                             <div class="col-sm-auto">
-                                @if ($akses->closing_stock->insert == 1)
+                                @if ($akses->stock_card->insert == 1)
                                 @endif
                             </div>
                         </div>
@@ -42,8 +42,7 @@
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <input type="date" class="form-control" id="filter-tanggal-awal"
-                                            value="{{ $tanggal }}" min="{{ $tanggal }}"
-                                            placeholder="Select date">
+                                            value="{{ $tanggal }}" placeholder="Select date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
@@ -54,26 +53,9 @@
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" route="{{ route('closing-stock') }}"
+                                        <button type="button" route="{{ route('stock-card') }}"
                                             class="btn btn-primary w-100" onclick="ClosingStock.filter(this);">
                                             Filters
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-xxl-1 col-sm-4">
-                                    <div>
-                                        <button type="button" class="btn btn-success w-100"
-                                            onclick="ClosingStock.closing(this, event);">
-                                            Closing
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-xxl-2 col-sm-4">
-                                    <div>
-                                        <button type="button" class="btn btn-warning w-100"
-                                            onclick="ClosingStock.recalculate(this, event);"> <i
-                                                class="ri-arrow-left-right-fill me-1 align-bottom"></i>
-                                            Recalculate
                                         </button>
                                     </div>
                                 </div>
@@ -84,11 +66,6 @@
                     </div>
                     <div class="card-body pt-0">
                         <br />
-                        @if (isset($closing))
-                            <div class="alert alert-success" role="alert">
-                                <strong>Success!</strong> Closing {{ $closing->closing_date }} already exist
-                            </div>
-                        @endif
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">

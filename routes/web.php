@@ -330,6 +330,7 @@ Route::get('transaksi/adjustment_stock/add', [ProductAdjustmentStockController::
 Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController::class, 'ubah']);
 
 Route::get('transaksi/closing-stock', [ClosingStockController::class, 'index'])->name('closing-stock');;
+Route::get('report/stock-card', [ClosingStockController::class, 'stockCard'])->name('stock-card');;
 
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
