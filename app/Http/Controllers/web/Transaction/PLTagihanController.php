@@ -68,7 +68,8 @@ class PLTagihanController extends Controller
         // echo '<pre>';
         // print_r($salesman);
         // die;
-        $invoices = $this->getAllInvoiceCetak($customers, null, $salesman->id ?? null);
+        $data['tanggal'] = $data['tanggal'] ?? date('Y-m-d');
+        $invoices = $this->getAllInvoiceCetak($customers, $data['tanggal'], $salesman->id ?? null);
         $data['invoices'] = $invoices;
         $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
         $view = view('web.pl_tagihan.index', $data);
@@ -130,6 +131,9 @@ class PLTagihanController extends Controller
         $date = $date ?? date('Y-m-d');
         $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $date)->where('salesman_id', $salesman)->get();
         $invoices = $tagihanOther->pluck('invoice_id')->unique()->toArray();
+        // echo '<pre>';
+        // print_r($invoices);
+        // die;
 
         // query tetap dijalankan kalau ada customers ATAU ada invoices dari tagihan
         $datadb = (empty($customers) && empty($invoices)) ? [] : DB::table('sales_invoice_header as m')
@@ -169,6 +173,7 @@ class PLTagihanController extends Controller
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->whereNull('m.deleted')
+            // ->where('m.invoice_number', 'SI06260805')
             ->whereRaw('(m.total_amount - m.amount_paid) > 0')
             // ==== bagian yang diubah ====
             ->where(function ($q) use ($customers, $salesman, $invoices) {
