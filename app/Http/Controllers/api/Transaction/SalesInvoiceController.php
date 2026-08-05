@@ -1359,6 +1359,7 @@ class SalesInvoiceController extends Controller
         }
 
         $invoicesIds = [];
+        $plIds = [];
         if ($customerId == '0' || empty($customers)) {
             /*driver invoice */
             $pl = new PackingListController();
@@ -1367,6 +1368,7 @@ class SalesInvoiceController extends Controller
                 foreach ($packingListCustomer['data'] as $key => $value) {
                     $customers[] = $value->customer_id;
                     $invoicesIds[] = $value->invoice_id;
+                    $plIds[] = $value->id;
                 }
 
                 $customers = array_unique($customers);
@@ -1409,11 +1411,23 @@ class SalesInvoiceController extends Controller
                 ->join('sales_order_headers as soh', function ($q) {
                     return $q->on('soh.id', 'sih.sales_order')->whereNull('soh.deleted');
                 })
+                ->join('delivery_order_header as doh', function ($q) {
+                    return $q->on('doh.so_id', 'soh.id')->whereNull('doh.deleted');
+                })
                 // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNotIn('sih.status', ['CANCELED'])
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
+            // echo '<pre>';
+            // print_r($plIds);
+            // die;
+            if (!empty($plIds)) {
+                $datadb->join('packing_list_do as pld', function ($q) {
+                    return $q->on('pld.delivery_order_id', 'doh.id');
+                });
+                $datadb->whereIn('pld.id', $plIds);
+            }
             $datadb->whereIn('sih.customer_id', $customers);
             // $datadb->whereIn('sih.customer_id', [290]);
 
