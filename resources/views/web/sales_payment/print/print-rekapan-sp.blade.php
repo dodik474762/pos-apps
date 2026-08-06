@@ -6,7 +6,7 @@
     <title>Rekapan Sales Payment - {{ $data['date'] }}</title>
     <style>
         @page {
-            margin: 8mm 6mm;
+            margin: 5mm 4mm;
         }
 
         body {
