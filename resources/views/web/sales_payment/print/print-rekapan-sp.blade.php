@@ -115,7 +115,7 @@
                 <th>Pelanggan</th>
                 <th>Kec.</th>
                 <th>TOP</th>
-                <th>Bayar</th>
+                <th>Metode Bayar</th>
                 <th>Tgl Inv</th>
                 <th>Jth Tempo</th>
                 <th>Status</th>
