@@ -181,8 +181,8 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="12" class="text-right"><strong>Sub Total</strong></td>
-                <td class="text-right"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
+                <td colspan="11" class="text-right"><strong>Sub Total</strong></td>
+                <td class="text-right" colspan="2"><strong>{{ number_format($total, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>
