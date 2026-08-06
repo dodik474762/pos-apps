@@ -60,14 +60,25 @@
         }
 
         /* 🔹 Ukuran font kecil untuk tabel detail barang */
+        .table-detail {
+            table-layout: fixed;
+        }
+
         .table-detail th,
         .table-detail td {
             font-size: 10px;
             padding: 5px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .table-detail th {
             background: #f8f8f8;
+        }
+
+        /* 🔹 Kolom Sales diperkecil supaya nama panjang tidak menabrak kolom lain */
+        .table-detail .col-sales {
+            width: 45px;
         }
     </style>
 </head>
@@ -98,8 +109,8 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Sales</th>
+                <th class="col-sales">No</th>
+                <th class="col-sales">Sales</th>
                 <th>Invoice</th>
                 <th>Pelanggan</th>
                 <th>Kec.</th>
@@ -128,7 +139,7 @@
                     @endphp
                     <tr>
                         <td>{{ $no++ }}</td>
-                        <td>{{ $item->salesman_name }}</td>
+                        <td class="col-sales">{{ $item->salesman_name }}</td>
                         <td>{{ $item->invoice_number }}</td>
                         <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                         <td>{{ $item->kecamatan_name ?? '-' }}</td>
@@ -144,7 +155,7 @@
                     @if (!empty($sales_return))
                         <tr>
                             <td>{{ $no++ }}</td>
-                            <td>{{ $item->salesman_name }}</td>
+                            <td class="col-sales">{{ $item->salesman_name }}</td>
                             <td>{{ $sales_return->return_number }}</td>
                             <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                             <td>{{ $item->kecamatan_name ?? '-' }}</td>
