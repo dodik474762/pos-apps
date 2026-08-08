@@ -4402,7 +4402,7 @@ class SalesOrderController extends Controller
                     'price' => doubleval(trim($product_unit[1])),
                     'has_channel_price' => $customers['has_channel_price']
                 ];
-                if (!$is_channel_price || !$is_motoris) {
+                if (!in_array($products, $productChannels)) {
                     $productIds[] = $products[0];
                 }
             }
@@ -4493,14 +4493,15 @@ class SalesOrderController extends Controller
                     'price' => doubleval(trim($i['unit_price'])),
                     'has_channel_price' => $customers['has_channel_price']
                 ];
-                if (!$is_channel_price || !$is_motoris) {
+
+                if (!in_array($products, $productChannels)) {
                     $productIds[] = $products;
                 }
             }
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
             // echo '<pre>';
-            // print_r($productChannels);
+            // print_r($productIds);
             // die;
             // echo $is_channel_price;
             // die;
