@@ -1452,7 +1452,7 @@ let ClosingStock = {
         const tanggal = $("#filter-tanggal").val();
         const route = $(elm).attr("route");
         const tanggal_awal = $("#filter-tanggal-awal").val();
-        window.location.href = route + "?tanggal=" + tanggal_awal + "&date_start=" + tanggal;
+        window.location.href = route + "?tanggal=" + tanggal + "&date_start=" + tanggal_awal;
     },
 };
 
