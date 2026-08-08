@@ -1,0 +1,459 @@
+/* ==========================================================
+   ACCURATE SIDEBAR — RAIL + FLYOUT PANEL (responsive)
+   ========================================================== */
+
+:root {
+    --acc-rail-width: 76px;
+    --acc-panel-width: 300px;
+    --acc-panel-gap: 10px;
+}
+
+/* ---------- RAIL (kolom ikon paling kiri) ---------- */
+.accurate-sidebar {
+    position: relative;
+    z-index: 1050;
+}
+
+.accurate-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--acc-rail-width);
+    background: var(--vz-vertical-menu-bg, #212529);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1051;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, .08);
+}
+
+.accurate-rail-logo {
+    padding: 14px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.accurate-rail-logo .rail-logo-sm {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.accurate-rail-items {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px 24px;
+    scrollbar-width: thin;
+}
+
+.accurate-rail-items::-webkit-scrollbar {
+    width: 4px;
+}
+
+.accurate-rail-items::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .2);
+    border-radius: 4px;
+}
+
+.rail-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, .65);
+    text-align: center;
+    transition: background .2s ease, color .2s ease;
+}
+
+.rail-item i {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.rail-item-label {
+    font-size: 10px;
+    line-height: 1.1;
+    max-width: 62px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.rail-item:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+.rail-item.active {
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+}
+
+.rail-item.active i {
+    color: var(--vz-primary, #405189);
+}
+
+/* ---------- OVERLAY DI BELAKANG PANEL ---------- */
+.accurate-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    backdrop-filter: blur(1px);
+    z-index: 1052;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease;
+}
+
+.accurate-panel-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ---------- WRAPPER PANEL (menampung banyak level flyout) ---------- */
+.accurate-panel-wrapper {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--acc-rail-width);
+    z-index: 1053;
+    pointer-events: none;
+    /* biar klik tembus kalau semua panel tertutup */
+}
+
+/* ---------- SATU PANEL FLYOUT ---------- */
+.accurate-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--acc-panel-width);
+    max-width: 90vw;
+    background: var(--vz-secondary-bg, #fff);
+    box-shadow: 4px 0 18px rgba(15, 23, 42, .15);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-110%);
+    opacity: 0;
+    transition: transform .28s ease, opacity .28s ease;
+    pointer-events: none;
+}
+
+/* panel level ke-2, ke-3 dst geser ke kanan panel sebelumnya */
+.accurate-panel[data-level="2"] {
+    left: var(--acc-panel-width);
+}
+
+.accurate-panel[data-level="3"] {
+    left: calc(var(--acc-panel-width) * 2);
+}
+
+.accurate-panel[data-level="4"] {
+    left: calc(var(--acc-panel-width) * 3);
+}
+
+.accurate-panel.show {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.accurate-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--vz-border-color, #e9ebec);
+    flex-shrink: 0;
+}
+
+.accurate-panel-header h5 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.acc-panel-close {
+    border: none;
+    background: var(--vz-light, #f3f6f9);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vz-secondary-color, #878a99);
+    transition: background .2s ease, color .2s ease;
+}
+
+.acc-panel-close:hover {
+    background: #f06548;
+    color: #fff;
+}
+
+/* ---------- SEARCH BOX DI DALAM PANEL ---------- */
+.accurate-panel-search {
+    position: relative;
+    flex-shrink: 0;
+    padding: 12px 16px 4px;
+}
+
+.acc-search-icon {
+    position: absolute;
+    left: 26px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: var(--vz-secondary-color, #878a99);
+    pointer-events: none;
+}
+
+.acc-search-input {
+    width: 100%;
+    padding: 8px 32px 8px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--vz-border-color, #e9ebec);
+    background: var(--vz-light, #f3f6f9);
+    font-size: 13px;
+    color: var(--vz-body-color, #495057);
+    outline: none;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.acc-search-input:focus {
+    border-color: var(--vz-primary, #405189);
+    background: #fff;
+}
+
+.acc-search-clear {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--vz-secondary-color, #878a99);
+    font-size: 15px;
+    display: none;
+    line-height: 1;
+    padding: 2px;
+}
+
+.acc-search-clear:hover {
+    color: #f06548;
+}
+
+.accurate-panel-search.has-value .acc-search-clear {
+    display: inline-flex;
+}
+
+/* kartu yang tersaring hilang dari layout, bukan cuma disembunyikan visual */
+.acc-card.acc-hidden {
+    display: none !important;
+}
+
+/* ---------- GRID KARTU MENU (responsive) ---------- */
+.accurate-panel-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-content: start;
+    scrollbar-width: thin;
+}
+
+.accurate-panel-grid::-webkit-scrollbar {
+    width: 5px;
+}
+
+.accurate-panel-grid::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .15);
+    border-radius: 5px;
+}
+
+.acc-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--vz-border-color, #e9ebec);
+    background: var(--vz-light, #f8f9fb);
+    color: var(--vz-body-color, #495057);
+    min-height: 92px;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    text-decoration: none;
+}
+
+.acc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, .10);
+    background: #fff;
+}
+
+.acc-card-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.acc-card-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.acc-card-parent {
+    position: relative;
+}
+
+.acc-card-chevron {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 14px;
+    opacity: .5;
+}
+
+/* warna variatif opsional */
+.acc-primary {
+    border-color: rgba(64, 81, 137, .25);
+}
+
+.acc-secondary {
+    border-color: rgba(53, 119, 241, .25);
+}
+
+.acc-success {
+    border-color: rgba(10, 179, 156, .25);
+}
+
+.acc-info {
+    border-color: rgba(41, 156, 219, .25);
+}
+
+.acc-warning {
+    border-color: rgba(247, 184, 75, .25);
+}
+
+.acc-danger {
+    border-color: rgba(240, 101, 72, .25);
+}
+
+.acc-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px 10px;
+    color: var(--vz-secondary-color, #878a99);
+    font-size: 13px;
+}
+
+/* ---------- CONTENT UTAMA: kasih margin sebesar rail ---------- */
+.main-content {
+    margin-left: var(--acc-rail-width) !important;
+}
+
+/* ---------- HEADER & FOOTER: samakan offset dengan lebar rail ----------
+   Tema aslinya masih pakai left: var(--vz-vertical-menu-width) (250px),
+   padahal sidebar kita cuma selebar rail (76px). Ini yang bikin header
+   "kepotong"/nggak sejajar dengan rail. */
+#page-topbar {
+    left: var(--acc-rail-width) !important;
+    top: 0 !important;
+    right: 0;
+    z-index: 1049;
+    /* di bawah rail (1051) & overlay, tapi di atas konten */
+}
+
+.footer {
+    left: var(--acc-rail-width) !important;
+}
+
+/* pastikan tidak ada sidebar bawaan tema yang ikut kepakai & bikin dobel offset */
+.navbar-menu {
+    display: none !important;
+}
+
+/* ==========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================== */
+
+/* Tablet */
+@media (max-width: 991.98px) {
+    :root {
+        --acc-panel-width: 260px;
+    }
+
+    .accurate-panel-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Mobile: panel full width, tumpuk penuh satu layar, rail tetap kecil di kiri */
+@media (max-width: 575.98px) {
+    :root {
+        --acc-rail-width: 64px;
+    }
+
+    .rail-item-label {
+        display: none;
+    }
+
+    /* biar rail makin ramping di HP */
+    .rail-item {
+        padding: 12px 2px;
+    }
+
+    .accurate-panel-wrapper {
+        left: 0;
+    }
+
+    .accurate-panel {
+        width: calc(100vw - var(--acc-rail-width));
+        max-width: 100vw;
+        left: var(--acc-rail-width) !important;
+        /* semua level numpuk full-screen, bukan menyamping */
+    }
+
+    .accurate-panel-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .main-content {
+        margin-left: var(--acc-rail-width) !important;
+    }
+
+    #page-topbar {
+        left: var(--acc-rail-width) !important;
+    }
+
+    .footer {
+        left: var(--acc-rail-width) !important;
+    }
+}
+
+/* Layar besar: boleh kasih ruang kartu lebih lega */
+@media (min-width: 1400px) {
+    .accurate-panel-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
