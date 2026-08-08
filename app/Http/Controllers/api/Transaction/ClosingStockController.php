@@ -340,7 +340,11 @@ class ClosingStockController extends Controller
         $result['is_valid'] = false;
         $result['message'] = 'Gagal Melakukan Recalculate Stock.';
 
-        $params['tanggal_awal'] = date('Y-m-d', strtotime($params['tanggal_awal'] . ' +1 day'));
+        // $params['tanggal_awal'] = date('Y-m-d', strtotime($params['tanggal_awal'] . ' +1 day'));
+
+        // echo '<pre>';
+        // print_r($params);
+        // die;
 
         DB::beginTransaction();
         try {

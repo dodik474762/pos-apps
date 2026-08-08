@@ -42,8 +42,7 @@
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <input type="date" class="form-control" id="filter-tanggal-awal"
-                                            value="{{ $date_start }}" min="{{ $date_start }}"
-                                            placeholder="Select date">
+                                            value="{{ $date_start }}" {{-- min="{{ $date_start }}" --}} placeholder="Select date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
