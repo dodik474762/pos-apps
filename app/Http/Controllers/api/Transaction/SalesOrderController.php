@@ -4358,6 +4358,7 @@ class SalesOrderController extends Controller
         try {
             $is_motoris = false;
             $is_channel_price = false;
+            $productChannels = [];
             foreach ($data['details'] as $i) {
                 [$products, $product_unit] = explode(':', $i['product_id']);
                 $products = explode('/', $products);
@@ -4383,6 +4384,7 @@ class SalesOrderController extends Controller
                         }
 
                         $product_unit[1] = $channel_price->price;
+                        $productChannels[] = $channel_price->product;
                         $is_channel_price = true;
                     }
                 }
@@ -4400,18 +4402,21 @@ class SalesOrderController extends Controller
                     'price' => doubleval(trim($product_unit[1])),
                     'has_channel_price' => $customers['has_channel_price']
                 ];
-                $productIds[] = $products[0];
+                if (!$is_channel_price || !$is_motoris) {
+                    $productIds[] = $products[0];
+                }
             }
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
 
             $result['is_valid'] = true;
-            $result['data'] =  $is_motoris || $is_channel_price ? [
-                'discount_header' => [],
-                'discount_item'   => 0,
-                'grand_total'     => 0,
-                'result_items' => []
-            ]  : $calculatePromo;
+            $result['data'] = $calculatePromo;
+            // $result['data'] =  $is_motoris || $is_channel_price ? [
+            //     'discount_header' => [],
+            //     'discount_item'   => 0,
+            //     'grand_total'     => 0,
+            //     'result_items' => []
+            // ]  : $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
         }
@@ -4437,6 +4442,7 @@ class SalesOrderController extends Controller
             $data['customer'] = $customersId;
             $is_motoris = false;
             $is_channel_price = false;
+            $productChannels = [];
             foreach ($data['details'] as $i) {
                 $products = $i['product_id'];
                 $product_unit = $i['unit_id'];
@@ -4462,6 +4468,7 @@ class SalesOrderController extends Controller
                         }
 
                         $i['unit_price'] = $channel_price->price;
+                        $productChannels[] = $channel_price->product;
                         $is_channel_price = true;
                     }
                 }
@@ -4486,21 +4493,26 @@ class SalesOrderController extends Controller
                     'price' => doubleval(trim($i['unit_price'])),
                     'has_channel_price' => $customers['has_channel_price']
                 ];
-                $productIds[] = $products;
+                if (!$is_channel_price || !$is_motoris) {
+                    $productIds[] = $products;
+                }
             }
             $promoItem = $this->getPromoItemAll($productIds);
             $calculatePromo = $this->calculatePromoV2($items, $promoItem, $productIds, $customersId);
             // echo '<pre>';
-            // print_r($calculatePromo);
+            // print_r($productChannels);
+            // die;
+            // echo $is_channel_price;
             // die;
 
             $result['is_valid'] = true;
-            $result['data'] =  $is_motoris || $is_channel_price ? [
-                'discount_header' => [],
-                'discount_item'   => 0,
-                'grand_total'     => 0,
-                'result_items' => []
-            ]  : $calculatePromo;
+            $result['data'] = $calculatePromo;
+            // $result['data'] =  $is_motoris || $is_channel_price ? [
+            //     'discount_header' => [],
+            //     'discount_item'   => 0,
+            //     'grand_total'     => 0,
+            //     'result_items' => []
+            // ]  : $calculatePromo;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
         }
