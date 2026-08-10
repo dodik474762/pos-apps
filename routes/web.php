@@ -338,6 +338,8 @@ Route::get('report/summary_visit', [ReportVisitController::class, 'summary']);
 Route::get('report/report_penjualan', [ReportPenjualanController::class, 'index']);
 Route::get('report/report_piutang', [ReportPiutangController::class, 'index']);
 
+Route::get('report/customer', [CustomerController::class, 'report']);
+
 /*API */
 
 Route::post('api/dashboard/getGrafikPenjualan', [DashboardController::class, 'getGrafikPenjualan']);
@@ -356,6 +358,7 @@ Route::post('api/master/customer_category/delete', [MasterCustomerCategoryContro
 Route::post('api/master/customer_category/confirmDelete', [MasterCustomerCategoryController::class, 'confirmDelete']);
 
 Route::post('api/master/customer/getData', [MasterCustomerController::class, 'getData']);
+Route::post('api/master/customer/getDataReport', [MasterCustomerController::class, 'getDataReport']);
 Route::post('api/master/customer/getDataAcc', [MasterCustomerController::class, 'getDataAcc']);
 Route::post('api/master/customer/submit', [MasterCustomerController::class, 'submit']);
 Route::post('api/master/customer/approve', [MasterCustomerController::class, 'approve']);

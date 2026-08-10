@@ -67,6 +67,24 @@ class CustomerController extends Controller
         return view('web.template.main', $put);
     }
 
+    public function report()
+    {
+        $data['data'] = [];
+        $data['title'] = $this->getTitle();
+        $data['title_parent'] = 'Report';
+        $data['akses'] = $this->akses_menu;
+        $data['akses_session'] = session('akses');
+        // echo '<pre>';
+        // print_r(session()->all());die;
+        $view = view('web.customer.report', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+        return view('web.template.main', $put);
+    }
+
     public function index_acc()
     {
         $data['data'] = [];

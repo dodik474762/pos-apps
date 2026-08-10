@@ -215,7 +215,7 @@ let Customer = {
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Ya",
-            cancelButtonText: "Tidak",
+            cancelButtonText: "-",
         }).then((result) => {
             if (result.value) {
                 Customer.approve(elm, e, 'rej', result.value);
@@ -481,6 +481,172 @@ let Customer = {
                         return html;
                     },
                 },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
+    getDataReport: async () => {
+        let tableData = $("table#table-data-customer-report");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(Customer.moduleApi()) + `getDataReport`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": Customer.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "Report Customer",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "code",
+                },
+                {
+                    data: "numbering_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "customer_category_name",
+                },
+                {
+                    data: "pic",
+                },
+                {
+                    data: "email",
+                },
+                {
+                    data: "phone",
+                },
+                {
+                    data: "channel_outlet",
+                },
+                {
+                    data: "sub_channel_outlet",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
+                    data: "visit_pattern_name",
+                },
+                {
+                    data: "salesman_name",
+                },
+                {
+                    data: "nama_lengkap",
+                },
+                {
+                    data: "visit_mon",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_tue",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_wed",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_thu",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_fri",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_sat",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                },
+                {
+                    data: "visit_sun",
+                    render: function (data, type, row) {
+                        return data == 1 ? "Ya" : "-";
+                    }
+                }
             ],
         });
 
@@ -983,5 +1149,6 @@ function newexportaction(e, dt, button, config) {
 $(function () {
     Customer.setSelect2();
     Customer.getData();
+    Customer.getDataReport();
     Customer.getDataAcc();
 });
