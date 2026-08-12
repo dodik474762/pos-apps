@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web\Transaction;
 use App\Http\Controllers\api\Transaction\SalesInvoiceController as TransactionSalesInvoiceController;
 use App\Http\Controllers\Controller;
 use App\Models\Master\CompanyModel;
+use App\Models\Master\Customer;
 use App\Models\Master\Karyawan;
 use App\Models\Master\Product;
 use App\Models\Master\Region;
@@ -53,8 +54,9 @@ class SalesInvoiceController extends Controller
         return 'Sales Invoice';
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $data = $request->all();
         $data['data'] = [];
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -304,6 +306,11 @@ class SalesInvoiceController extends Controller
         $provinsi = Region::where('id', $data->customers->provinsi)->first();
         $provinsi_name = $provinsi->name ?? '-';
 
+        $max_print_faktur = Customer::where('id', $data->customers->id)->first();
+        if ($data->print_total >= $max_print_faktur->max_print_invoice) {
+            return redirect()->back()->with('error', 'Faktur ' . $data->invoice_number . ' sudah dicetak ' . $data->print_total . ' kali');
+        }
+
         $promo_item = DB::table('sales_order_promo_item as sopi')
             ->where('sales_order_id', $data->so->id)
             ->get();
@@ -418,6 +425,10 @@ class SalesInvoiceController extends Controller
             $dataItems = $data->items;
             foreach ($dataItems as $key => $value) {
                 $invoice = SalesInvoiceHeader::find($value->invoice_id);
+                $max_print_faktur = Customer::where('id', $invoice->customer_id)->first();
+                if ($invoice->print_total >= $max_print_faktur->max_print_invoice) {
+                    return redirect()->back()->with('error', 'Faktur ' . $invoice->invoice_number . ' sudah dicetak ' . $invoice->print_total . ' kali');
+                }
                 /*cek stock */
                 // $stock = DB::table('product_stock')
                 //     ->where('product', $value['product_id'])

@@ -60,6 +60,11 @@
                             </div>
                         </div>
                     </div>
+                    @if (session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <div class="card-body border border-dashed border-end-0 border-start-0">
                         <form class="">
                             <div class="row g-3">
@@ -134,6 +139,7 @@
                             <!--end row-->
                         </form>
                     </div>
+
                     <div class="card-body pt-0">
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">

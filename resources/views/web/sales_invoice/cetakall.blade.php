@@ -1,4 +1,3 @@
-
 @if (isset($akses->sales_invoice))
     @if ($akses->sales_invoice->view == 1)
         <input type="hidden" id="update" value="{{ $akses->sales_invoice->update }}">
@@ -43,6 +42,11 @@
                             </div>
                         </div>
                     </div>
+                    @if (session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <div class="card-body pt-0">
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
@@ -72,7 +76,8 @@
                                                     <th>Waktu Print</th>
                                                     <th>Status Invoice</th>
                                                     <th style="width: 40px;">
-                                                        <input type="checkbox" id="check-all" onchange="SalesInvoice.checkAll(this)">
+                                                        <input type="checkbox" id="check-all"
+                                                            onchange="SalesInvoice.checkAll(this)">
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -94,7 +99,8 @@
                                                         <td>{{ $item->print_date }}</td>
                                                         <td>{{ $item->status }}</td>
                                                         <td>
-                                                              <input type="checkbox" class="check-item" value="{{ $item->id }}">
+                                                            <input type="checkbox" class="check-item"
+                                                                value="{{ $item->id }}">
                                                         </td>
                                                     </tr>
                                                 @endforeach
