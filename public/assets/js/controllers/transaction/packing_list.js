@@ -407,6 +407,114 @@ let PackingList = {
             }));
     },
 
+    getDataReport: async () => {
+        let tableData = $("table#table-data-report");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(PackingList.moduleApi()) + `getDataReport`,
+                type: "POST",
+                data: {
+                    start_date: $('#start-date').val(),
+                    end_date: $('#end-date').val()
+                },
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "Report Delivery",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "do_date",
+                },
+                {
+                    data: "do_number",
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "total_amount",
+                },
+                {
+                    data: "packing_list_no",
+                },
+                {
+                    data: "packing_date",
+                },
+                {
+                    data: "receive_wh_date",
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded",
+                    );
+                },
+            }));
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1670,9 +1778,96 @@ let PackingList = {
     },
 };
 
+
+// untuk export all data
+function newexportaction(e, dt, button, config) {
+    var self = this;
+    var oldStart = dt.settings()[0]._iDisplayStart;
+    dt.one("preXhr", function (e, s, data) {
+        // Just this once, load all data from the server...
+        data.start = 0;
+        data.length = 2147483647;
+        dt.one("preDraw", function (e, settings) {
+            // Call the original action function
+            if (button[0].className.indexOf("buttons-copy") >= 0) {
+                $.fn.dataTable.ext.buttons.copyHtml5.action.call(
+                    self,
+                    e,
+                    dt,
+                    button,
+                    config,
+                );
+            } else if (button[0].className.indexOf("buttons-excel") >= 0) {
+                $.fn.dataTable.ext.buttons.excelHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.excelHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.excelFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-csv") >= 0) {
+                $.fn.dataTable.ext.buttons.csvHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.csvHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.csvFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-pdf") >= 0) {
+                $.fn.dataTable.ext.buttons.pdfHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.pdfHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.pdfFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-print") >= 0) {
+                $.fn.dataTable.ext.buttons.print.action(e, dt, button, config);
+            }
+            dt.one("preXhr", function (e, s, data) {
+                // DataTables thinks the first item displayed is index 0, but we're not drawing that.
+                // Set the property to what it was before exporting.
+                settings._iDisplayStart = oldStart;
+                data.start = oldStart;
+            });
+            // Reload the grid with the original page. Otherwise, API functions like table.cell(this) don't work properly.
+            setTimeout(dt.ajax.reload, 0);
+            // Prevent rendering of the full data to the DOM
+            return false;
+        });
+    });
+    // Requery the server with the new one-time export settings
+    dt.ajax.reload();
+}
+
 $(function () {
     PackingList.setSelect2();
     PackingList.getData();
+    PackingList.getDataReport();
     PackingList.getDataSr();
     PackingList.editReload();
 });

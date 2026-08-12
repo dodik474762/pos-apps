@@ -662,6 +662,7 @@ Route::post('api/transaksi/return_cs/showModalVendor', [TransactionReturnConsigm
 Route::post('api/transaksi/return_cs/showModalProduct', [TransactionReturnConsigmentController::class, 'showModalProduct']);
 
 Route::post('api/transaksi/packing_list/getData', [TransactionPackingListController::class, 'getData']);
+Route::post('api/transaksi/packing_list/getDataReport', [TransactionPackingListController::class, 'getDataReport']);
 Route::post('api/transaksi/packing_list/submit', [TransactionPackingListController::class, 'submit']);
 Route::post('api/transaksi/packing_list/delete', [TransactionPackingListController::class, 'delete']);
 Route::post('api/transaksi/packing_list/confirmDelete', [TransactionPackingListController::class, 'confirmDelete']);
@@ -724,4 +725,6 @@ Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitControll
 Route::post('api/report/report_penjualan/getData', [ReportReportPenjualanController::class, 'getData']);
 Route::post('api/report/report_penjualan/getDataPenjualanPerProduct', [ReportReportPenjualanController::class, 'getDataPenjualanPerProduct']);
 Route::post('api/report/report_piutang/getData', [ReportReportPiutangController::class, 'getData']);
+
+Route::get('report/delivery', [PackingListController::class, 'report']);
 /*API */

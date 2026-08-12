@@ -84,6 +84,77 @@ class PackingListController extends Controller
         return json_encode($data);
     }
 
+    public function getDataReport(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $start_date = $data['start_date'];
+        $end_date = $data['end_date'];
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'doh.do_date',
+                'doh.do_number',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.total_amount',
+                'pld.receive_wh_date'
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('packing_list_do as pld', function ($q) {
+                return $q->on('pld.packing_list_id', 'm.id');
+            })
+            ->join('delivery_order_header as doh', function ($q) {
+                return $q->on('doh.id', 'pld.delivery_order_id')->whereNull('doh.deleted');
+            })
+            ->join('sales_order_headers as soh', function ($q) {
+                return $q->on('soh.id', 'doh.so_id')->whereNull('soh.deleted');
+            })
+            ->join('sales_invoice_header as sih', 'sih.sales_order', 'soh.id')
+            ->whereNull('m.deleted')
+            ->where('m.type_transaction', 'PL')
+            ->where(function ($q) use ($start_date, $end_date) {
+                return $q->whereBetween('m.packing_date', [$start_date, $end_date]);
+            })
+            ->orderBy('doh.id', 'asc')
+            ->orderBy('m.packing_date');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.packing_list_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.packing_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.vehicle_no', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.driver_name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.expedition_name', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                // $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function getDataSr()
     {
         DB::enableQueryLog();
