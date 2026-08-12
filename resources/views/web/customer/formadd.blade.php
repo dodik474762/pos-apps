@@ -313,6 +313,16 @@
                                         value="{{ isset($data->min_invoice) ? $data->min_invoice : '1' }}">
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>Max Print Faktur</label>
+                                <div>
+                                    <input tabindex="12" type="number" id="max_print_invoice"
+                                        class="form-control required" error="Max Print Faktur "
+                                        {{ strtolower($akses) != 'superadmin' ? 'readonly' : '' }}
+                                        placeholder="Max Print Faktur"
+                                        value="{{ isset($data->max_print_invoice) ? $data->max_print_invoice : '' }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
 

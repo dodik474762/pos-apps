@@ -139,6 +139,7 @@ let Customer = {
         formData.append("channel_outlet", $("#channel_outlet").val());
         formData.append("sub_channel_outlet", $("#sub_channel_outlet").val());
         formData.append("min_invoice", $("#min_invoice").val());
+        formData.append("max_print_invoice", $("#max_print_invoice").val());
         formData.append("items_price", JSON.stringify(items_price));
 
         // FOTO (single upload)
