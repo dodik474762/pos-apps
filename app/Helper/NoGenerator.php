@@ -1447,7 +1447,7 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
 
     // cek piutang belum tertagih
     $totalOutstanding = DB::table('sales_invoice_header')
-        ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
+        // ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
         ->whereNull('deleted')
         ->where('customer_id', $customer)
         ->whereRaw('(total_amount - amount_paid) > 0');
@@ -1458,9 +1458,14 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
     $totalOutstanding = $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
 
     $invOutstanding = DB::table('sales_invoice_header')
-        ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
         ->whereNull('deleted')
-        ->where('customer_id', $customer)->get();
+        ->where('customer_id', $customer)
+        ->whereRaw('(total_amount - amount_paid) > 0');
+
+    if ($exclude_id != '') {
+        $invOutstanding->where('id', '!=', $exclude_id);
+    }
+    $invOutstanding = $invOutstanding->get();
 
     $invGroups = [];
     foreach ($invOutstanding as $inv) {
