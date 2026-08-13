@@ -812,6 +812,16 @@ class SalesInvoiceController extends Controller
                 cancelAllGL($reference);
             }
 
+            /*check credit limit */
+            $cl_check = canInvoiceProcessCL($cust_id, $subtotal);
+            if (!$cl_check['status']) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => $cl_check['message']
+                ]);
+            }
+
             postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, ($subtotal - $discountHeaderSo), $currency);
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal), $currency);
             postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($discountHeaderSo), $currency);

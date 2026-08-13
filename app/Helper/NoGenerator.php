@@ -1396,6 +1396,47 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
     ]);
 }
 
+function canInvoiceProcessCL($customer, $total = 0)
+{
+    $datadb = Customer::where('id', $customer)->first();
+
+    if (!$datadb) {
+        return [
+            'status' => false,
+            'message' => 'Customer tidak ditemukan',
+        ];
+    }
+
+    $credit_limit = $datadb->credit_limit;
+
+    if ($credit_limit == 0) {
+        return [
+            'status' => true,
+            'message' => 'Customer tidak memiliki batas kredit',
+        ];
+    }
+
+    $totalOutstanding = DB::table('sales_invoice_header')
+        ->whereNull('deleted')
+        ->where('customer_id', $customer)
+        ->whereRaw('(total_amount - amount_paid) > 0')
+        ->sum(DB::raw('total_amount - amount_paid'));
+
+    $totalWithNew = $total + $totalOutstanding;
+
+    if ($totalWithNew > $credit_limit) {
+        return [
+            'status' => false,
+            'message' => 'Customer telah mencapai batas kredit maksimal (Rp ' . number_format($credit_limit, 0, ',', '.') . '), total outstanding + invoice baru (Rp ' . number_format($totalWithNew, 0, ',', '.') . ')',
+        ];
+    }
+
+    return [
+        'status' => true,
+        'message' => 'Customer masih memiliki sisa batas kredit',
+    ];
+}
+
 function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
 {
     $datadb = Customer::where('id', $customer)->first();
@@ -1429,7 +1470,8 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
         //count invoice outstanding
         $countInvoiceOutstanding = DB::table('sales_invoice_header')
             // ->whereIn('status', ['DRAFT', 'POSTED', 'PARTIAL PAID'])
-            ->whereIn('status', ['POSTED', 'PARTIAL PAID'])
+            // ->whereIn('status', ['POSTED', 'PARTIAL PAID'])
+            ->whereRaw('(total_amount - amount_paid) > 0')
             ->whereNull('deleted')
             ->where('customer_id', $customer);
         if ($exclude_id != '') {
