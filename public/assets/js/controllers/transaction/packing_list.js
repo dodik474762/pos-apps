@@ -543,6 +543,157 @@ let PackingList = {
         });
     },
 
+    getDataReportReceived: async () => {
+        let tableData = $("table#table-data-report-item");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(PackingList.moduleApi()) + `getDataReportReceived`,
+                type: "POST",
+                data: {
+                    start_date: $('#start-date').val(),
+                    end_date: $('#end-date').val()
+                },
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "Report Barang Kembali",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "packing_date",
+                },
+                {
+                    data: "packing_list_no",
+                },
+                {
+                    data: "driver_name",
+                },
+                {
+                    data: "do_number",
+                },
+                {
+                    data: "invoice_number",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "product_code",
+                },
+                {
+                    data: "product_name",
+                },
+                {
+                    data: "qty_packed",
+                },
+                {
+                    data: "qty_received",
+                },
+                {
+                    data: "receive_wh_date",
+                },
+                {
+                    data: "receive_by",
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded",
+                    );
+                },
+            }));
+    },
+
+    delete: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(PackingList.moduleApi()) + "delete",
+            headers: {
+                "X-CSRF-TOKEN": PackingList.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-confirm-delete").html(resp);
+                $("#confirm-delete-btn").trigger("click");
+            },
+        });
+    },
+
     getDataSr: async () => {
         let tableData = $("table#table-data-sr");
 
@@ -1868,6 +2019,7 @@ $(function () {
     PackingList.setSelect2();
     PackingList.getData();
     PackingList.getDataReport();
+    PackingList.getDataReportReceived();
     PackingList.getDataSr();
     PackingList.editReload();
 });
