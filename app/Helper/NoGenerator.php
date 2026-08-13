@@ -1396,7 +1396,7 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
     ]);
 }
 
-function canInvoiceProcessCL($customer, $total = 0)
+function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0)
 {
     $datadb = Customer::where('id', $customer)->first();
 
@@ -1419,8 +1419,13 @@ function canInvoiceProcessCL($customer, $total = 0)
     $totalOutstanding = DB::table('sales_invoice_header')
         ->whereNull('deleted')
         ->where('customer_id', $customer)
-        ->whereRaw('(total_amount - amount_paid) > 0')
-        ->sum(DB::raw('total_amount - amount_paid'));
+        ->whereRaw('(total_amount - amount_paid) > 0');
+
+    if ($exclude_id) {
+        $totalOutstanding->where('id', '!=', $exclude_id);
+    }
+
+    $totalOutstanding = $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
 
     $totalWithNew = $total + $totalOutstanding;
 
