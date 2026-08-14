@@ -186,6 +186,25 @@ class SalesInvoiceController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+
+        // Subquery: ambil 1 packing_list terbaru (id terbesar) per delivery_order_id
+        // supaya tidak dobel saat di-join ke invoice
+        $packingListSub = DB::table('packing_list_do as pld')
+            ->join('packing_list as pl', function ($q) {
+                $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted')
+                    ->where('pl.packing_date', '>', '2026-06-29');
+            })
+            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no')
+            ->whereRaw('pl.id = (
+            SELECT MAX(pl2.id)
+            FROM packing_list_do AS pld2
+            INNER JOIN packing_list AS pl2 ON pl2.id = pld2.packing_list_id
+            WHERE pld2.delivery_order_id = pld.delivery_order_id
+              AND pl2.deleted IS NULL
+              AND pl2.packing_date > ?
+        )', ['2026-06-29']);
+
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -209,16 +228,13 @@ class SalesInvoiceController extends Controller
                 return $q->on('do.so_id', 'so.id')
                     ->whereNull('do.deleted');
             })
-            ->leftJoin('packing_list_do as pld', function ($q) {
-                return $q->on('pld.delivery_order_id', 'do.id');
-            })
-            ->leftJoin('packing_list as pl', function ($q) {
-                return $q->on('pl.id', 'pld.packing_list_id')
-                    ->whereNull('pl.deleted')
-                    ->where('pl.packing_date', '>', '2026-06-29');
+            ->leftJoinSub($packingListSub, 'pl', function ($q) {
+                $q->on('pl.delivery_order_id', 'do.id');
             })
             ->whereNull('m.deleted')
+            // ->where('m.invoice_number', 'SI08260484')
             ->orderBy('m.id', 'desc');
+
         if (isset($_POST)) {
             if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
                 $datadb->where('m.invoice_date', '>=', $_POST['start_date']);
@@ -266,8 +282,6 @@ class SalesInvoiceController extends Controller
         $data['draw'] = $_POST['draw'];
         $query = DB::getQueryLog();
 
-        // echo '<pre>';
-        // print_r($query);die;
         return json_encode($data);
     }
 
