@@ -1408,8 +1408,11 @@ class SalesInvoiceController extends Controller
             }
         }
 
+        // echo '<pre>';
+        // print_r($customers);
+        // die;
         // $customers = [
-        //     2335
+        //     6324
         // ];
         $result['message'] = '';
         $result['is_valid'] = true;
@@ -1440,7 +1443,8 @@ class SalesInvoiceController extends Controller
                 })
                 // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNotIn('sih.status', ['CANCELED'])
-                ->whereNull('sih.deleted')            // tidak termasuk deleted
+                ->whereNull('sih.deleted')
+                // ->where('sih.invoice_number', 'SI08260683')         // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
             // echo '<pre>';
@@ -1480,6 +1484,7 @@ class SalesInvoiceController extends Controller
                         'sid.qty',
                         'sid.price as unit_price',
                         'sid.subtotal',
+                        'sid.discount',
                         'p.code as product_code',
                         'p.name as product_name',
                         'u.name as unit_name'
@@ -1491,6 +1496,11 @@ class SalesInvoiceController extends Controller
                     ->where('sid.invoice_id', $invoice->id)
                     ->whereNull('sid.deleted')
                     ->get();
+                // echo '<pre>';
+                // print_r($invoice->detail_item);
+                // die;
+                $disc_amount_total = collect($invoice->detail_item)->sum('discount');
+                $invoice->discount_amount = $disc_amount_total;
             }
 
             $result['message'] = 'Success';
