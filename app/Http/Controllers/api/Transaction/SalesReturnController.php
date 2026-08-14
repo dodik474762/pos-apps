@@ -74,6 +74,75 @@ class SalesReturnController extends Controller
         return json_encode($data);
     }
 
+    public function getDataReport(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $start_date = $data['start_date'];
+        $end_date = $data['end_date'];
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'u.name as created_by_name',
+                'cc.nama_customer',
+                'cc.code as customer_code',
+                'i.invoice_number',
+                'p.code as product_code',
+                'p.name as product_name',
+                'srd.qty_return',
+                'srd.unit_price',
+                DB::raw('srd.qty_return * srd.unit_price as total_price')
+
+            ])
+            ->join('users as u', 'u.id', 'm.created_by')
+            ->join('customer as cc', 'cc.id', 'm.customer_id')
+            ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->join('sales_return_detail as srd', function ($q) {
+                return $q->on('srd.return_id', 'm.id')->whereNull('srd.deleted');
+            })
+            ->join('product as p', 'p.id', 'srd.product_id')
+            ->where(function ($q) use ($start_date, $end_date) {
+                return $q->whereBetween('m.return_date', [$start_date, $end_date]);
+            })
+            ->whereNull('m.deleted')
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.return_type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.return_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('i.invoice_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.nama_customer', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
     public function getDataInvoice(Request $request)
     {
         DB::enableQueryLog();

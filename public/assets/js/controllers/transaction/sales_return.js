@@ -226,9 +226,8 @@ let SalesReturn = {
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 SalesReturn.module()
-                            )}ubah?id=${data}' data_id="${
-                                row.id
-                            }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                            )}ubah?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -264,6 +263,123 @@ let SalesReturn = {
                     );
                 },
             });
+    },
+
+    getDataReport: async () => {
+        let tableData = $("table#table-data-report");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesReturn.moduleApi()) + `getDataReport`,
+                type: "POST",
+                data: {
+                    start_date: $('#start-date').val(),
+                    end_date: $('#end-date').val()
+                },
+                headers: {
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "Report Sales Return",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "return_date",
+                },
+                {
+                    data: "return_number",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "product_code",
+                },
+                {
+                    data: "product_name",
+                },
+                {
+                    data: "qty_return",
+                },
+                {
+                    data: "unit_price",
+                },
+                {
+                    data: "total_price",
+                },
+                {
+                    data: "return_type",
+                },
+                {
+                    data: "invoice_number",
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded",
+                    );
+                },
+            }));
     },
 
     delete: (elm, e) => {
@@ -697,13 +813,13 @@ let SalesReturn = {
         });
 
         document.getElementById("total-return").textContent =
-        total_net.toFixed(2);
+            total_net.toFixed(2);
 
         const return_type = $("#return_type").val();
-        if(return_type == "DEPOSIT"){
+        if (return_type == "DEPOSIT") {
             $("input#refund_amount").val(0);
             $("input#deposit_amount").val(total_net.toFixed(2));
-        }else{
+        } else {
             $("input#refund_amount").val(total_net.toFixed(2));
             $("input#deposit_amount").val(0);
         }
@@ -969,10 +1085,9 @@ let SalesReturn = {
                                 <button class="btn btn-outline-secondary" type="button" disabled onclick="SalesReturn.showDataProduct(this)">Free</button>
                                 <input disabled type="text" id="product" class="form-control"
                                     data_id="${applicableFree.free_product}"
-                                    value="${
-                                        applicableFree.free_product_name ||
-                                        "Free Product"
-                                    }">
+                                    value="${applicableFree.free_product_name ||
+                    "Free Product"
+                    }">
                             </div>
                         </td>
                         <td id="unit" data_id="${applicableFree.free_unit}">
@@ -1085,8 +1200,95 @@ let SalesReturn = {
     },
 };
 
+
+// untuk export all data
+function newexportaction(e, dt, button, config) {
+    var self = this;
+    var oldStart = dt.settings()[0]._iDisplayStart;
+    dt.one("preXhr", function (e, s, data) {
+        // Just this once, load all data from the server...
+        data.start = 0;
+        data.length = 2147483647;
+        dt.one("preDraw", function (e, settings) {
+            // Call the original action function
+            if (button[0].className.indexOf("buttons-copy") >= 0) {
+                $.fn.dataTable.ext.buttons.copyHtml5.action.call(
+                    self,
+                    e,
+                    dt,
+                    button,
+                    config,
+                );
+            } else if (button[0].className.indexOf("buttons-excel") >= 0) {
+                $.fn.dataTable.ext.buttons.excelHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.excelHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.excelFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-csv") >= 0) {
+                $.fn.dataTable.ext.buttons.csvHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.csvHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.csvFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-pdf") >= 0) {
+                $.fn.dataTable.ext.buttons.pdfHtml5.available(dt, config)
+                    ? $.fn.dataTable.ext.buttons.pdfHtml5.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    )
+                    : $.fn.dataTable.ext.buttons.pdfFlash.action.call(
+                        self,
+                        e,
+                        dt,
+                        button,
+                        config,
+                    );
+            } else if (button[0].className.indexOf("buttons-print") >= 0) {
+                $.fn.dataTable.ext.buttons.print.action(e, dt, button, config);
+            }
+            dt.one("preXhr", function (e, s, data) {
+                // DataTables thinks the first item displayed is index 0, but we're not drawing that.
+                // Set the property to what it was before exporting.
+                settings._iDisplayStart = oldStart;
+                data.start = oldStart;
+            });
+            // Reload the grid with the original page. Otherwise, API functions like table.cell(this) don't work properly.
+            setTimeout(dt.ajax.reload, 0);
+            // Prevent rendering of the full data to the DOM
+            return false;
+        });
+    });
+    // Requery the server with the new one-time export settings
+    dt.ajax.reload();
+}
+
 $(function () {
     SalesReturn.setSelect2();
     SalesReturn.getData();
+    SalesReturn.getDataReport();
     SalesReturn.editReload();
 });

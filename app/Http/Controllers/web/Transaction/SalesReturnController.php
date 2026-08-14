@@ -64,10 +64,29 @@ class SalesReturnController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListKasBank(){
+    public function report()
+    {
+        $data['data'] = [];
+        $data['title'] = $this->getTitle();
+        $data['title_parent'] = 'Report';
+        $data['akses'] = $this->akses_menu;
+        // echo '<pre>';
+        // print_r($data);die;
+        $view = view('web.sales_return.report', $data);
+        $put['title_content'] = $this->getTitle();
+        $put['title_top'] = $this->getTitle();
+        $put['title_parent'] = $this->getTitleParent();
+        $put['view_file'] = $view;
+        $put['header_data'] = $this->getHeaderCss();
+
+        return view('web.template.main', $put);
+    }
+
+    public function getListKasBank()
+    {
         $datadb = DB::table('coa')->where('is_active', 1)
-        ->where('parent_code', '1100')
-        ->whereNull('deleted')->get();
+            ->where('parent_code', '1100')
+            ->whereNull('deleted')->get();
         return $datadb;
     }
 
@@ -76,7 +95,7 @@ class SalesReturnController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
@@ -89,7 +108,7 @@ class SalesReturnController extends Controller
         $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.sales_return.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -127,11 +146,11 @@ class SalesReturnController extends Controller
             ->get();
 
         $data['general_ledgers'] = getGeneralLedger($data['data']->return_number);
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.sales_return.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -139,7 +158,8 @@ class SalesReturnController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -154,7 +174,7 @@ class SalesReturnController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
@@ -173,6 +193,6 @@ class SalesReturnController extends Controller
         $pdf = Pdf::loadView('web.sales_return.print.po-print', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SP-'.$data->payment_code.'.pdf');
+        return $pdf->stream('SP-' . $data->payment_code . '.pdf');
     }
 }

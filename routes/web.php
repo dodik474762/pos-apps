@@ -634,6 +634,7 @@ Route::post('api/transaksi/sales_payment/confirmAll', [TransactionSalesPaymentCo
 Route::post('api_mobile/transaksi/sales_payment/sync', [TransactionSalesPaymentController::class, 'sync']);
 
 Route::post('api/transaksi/sales_return/getData', [TransactionSalesReturnController::class, 'getData']);
+Route::post('api/transaksi/sales_return/getDataReport', [TransactionSalesReturnController::class, 'getDataReport']);
 Route::post('api/transaksi/sales_return/submit', [TransactionSalesReturnController::class, 'submit']);
 Route::post('api/transaksi/sales_return/delete', [TransactionSalesReturnController::class, 'delete']);
 Route::post('api/transaksi/sales_return/confirmDelete', [TransactionSalesReturnController::class, 'confirmDelete']);
@@ -729,4 +730,5 @@ Route::post('api/report/report_piutang/getData', [ReportReportPiutangController:
 
 Route::get('report/delivery', [PackingListController::class, 'report']);
 Route::get('report/item-received', [PackingListController::class, 'reportItemReceived']);
+Route::get('report/sales-return', [SalesReturnController::class, 'report']);
 /*API */
