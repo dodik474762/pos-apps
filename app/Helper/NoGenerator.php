@@ -1425,14 +1425,14 @@ function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0)
         $totalOutstanding->where('id', '!=', $exclude_id);
     }
 
-    $totalOutstanding = $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
+    $totalOutstanding = $exclude_id == 0 ? 0 : $totalOutstanding->sum(DB::raw('total_amount - amount_paid'));
 
     $totalWithNew = $total + $totalOutstanding;
 
     if ($totalWithNew > $credit_limit) {
         return [
             'status' => false,
-            'message' => 'Customer telah mencapai batas kredit maksimal (Rp ' . number_format($credit_limit, 0, ',', '.') . '), total outstanding + invoice baru (Rp ' . number_format($totalWithNew, 0, ',', '.') . ')',
+            'message' => 'Customer telah mencapai batas kredit maksimal (Rp ' . number_format($credit_limit, 0, ',', '.') . '), total outstanding ' . $totalOutstanding . ' + invoice baru (Rp ' . number_format($totalWithNew, 0, ',', '.') . ')',
         ];
     }
 
