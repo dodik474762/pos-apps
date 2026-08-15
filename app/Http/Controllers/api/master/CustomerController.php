@@ -112,7 +112,9 @@ class CustomerController extends Controller
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
-            ->leftJoin('sales_plan_detail_route as spdr', 'spdr.customer_id', '=', 'm.id')
+            ->leftJoin('sales_plan_detail_route as spdr', function ($q) {
+                return $q->on('spdr.customer_id', '=', 'm.id')->where('spdr.pjp_status', '!=', 'EXTRA CALL');
+            })
             ->leftJoin('dictionary as dc', 'dc.id', '=', 'spdr.visit_circle')
             ->leftJoin('sales_plan_header as sph', function ($q) {
                 return $q->on('sph.id', '=', 'spdr.header_id');
