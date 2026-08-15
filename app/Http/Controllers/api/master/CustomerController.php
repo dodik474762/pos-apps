@@ -299,6 +299,11 @@ class CustomerController extends Controller
                 $roles->longitude = $data['longitude'];
                 $roles->channel_outlet = $data['channel_outlet'];
                 $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+                if (isset($data['max_print_invoice'])) {
+                    $roles->max_print_invoice = $data['max_print_invoice'] == 'undefined' ? 1 : $data['max_print_invoice'];
+                } else {
+                    $roles->max_print_invoice = 1;
+                }
                 $roles->pasar = $data['pasar'];
                 $roles->branch = 'YOGYAKARTA';
                 $roles->save();
@@ -331,7 +336,9 @@ class CustomerController extends Controller
                 $roles->channel_outlet = $data['channel_outlet'];
                 $roles->sub_channel_outlet = $data['sub_channel_outlet'];
                 $roles->min_invoice = $data['min_invoice'];
-                $roles->max_print_invoice = $data['max_print_invoice'];
+                if (isset($data['max_print_invoice'])) {
+                    $roles->max_print_invoice = $data['max_print_invoice'] == 'undefined' ? 1 : $data['max_print_invoice'];
+                }
                 $roles->branch = 'YOGYAKARTA';
                 $roles->save();
                 $id_cust = $roles->id;

@@ -108,7 +108,7 @@ let Customer = {
         return result;
     },
 
-    getPostInput: () => {
+    getPostInput: (state = '') => {
         let formData = new FormData();
 
         const items_price = Customer.getPostItemPrice();
@@ -140,6 +140,7 @@ let Customer = {
         formData.append("sub_channel_outlet", $("#sub_channel_outlet").val());
         formData.append("min_invoice", $("#min_invoice").val());
         formData.append("max_print_invoice", $("#max_print_invoice").val());
+        formData.append("state", state);
         formData.append("items_price", JSON.stringify(items_price));
 
         // FOTO (single upload)
@@ -166,8 +167,7 @@ let Customer = {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
-            let params = Customer.getPostInput();
-            params.state = state;
+            let params = Customer.getPostInput(state);
             $.ajax({
                 type: "POST",
                 dataType: "json",
