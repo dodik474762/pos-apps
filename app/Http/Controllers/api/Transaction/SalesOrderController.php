@@ -4296,6 +4296,16 @@ class SalesOrderController extends Controller
                 cancelAllGL($reference);
             }
 
+            /*check credit limit */
+            $cl_check = canInvoiceProcessCL($cust_id, $subtotal, $data['id']);
+            if (!$cl_check['status']) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => $cl_check['message']
+                ]);
+            }
+
             // echo $subtotal;
             // echo '<br>';
             // echo $discountHeaderSo;
