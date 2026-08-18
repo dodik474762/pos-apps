@@ -79,7 +79,7 @@ class SalesPaymentController extends Controller
 
     public function getListPackingList($params)
     {
-        $start = date('Y-m-d', strtotime($params['tanggal'] . ' -2 days'));
+        $start = date('Y-m-d', strtotime($params['tanggal'] . ' -3 days'));
         $end = date('Y-m-d', strtotime($params['tanggal']));
         $packingLists = PackingList::whereBetween('packing_date', [$start, $end])
             ->select([
@@ -87,9 +87,16 @@ class SalesPaymentController extends Controller
                 'driver_name',
                 DB::raw("'delivery' as pl_type")
             ])
-            ->where('status', '!=', 'CANCELED')
+            ->where(function ($q) {
+                return $q->where('status', '!=', 'CANCELED')
+                    ->orWhereNull('status');
+            })
+            // ->where('packing_list_no', 'PL08260071')
             ->whereNull('deleted')
             ->get()->toArray();
+        // echo '<pre>';
+        // print_r($packingLists);
+        // die;
 
         $packingListSales = PackingListSalesman::whereBetween('packing_list_salesman.packing_date', [$start, $end])
             ->select([
