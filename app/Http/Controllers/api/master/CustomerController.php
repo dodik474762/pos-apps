@@ -186,6 +186,11 @@ class CustomerController extends Controller
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->where(function ($q) {
+                return $q->whereNull('m.spv_sales_date')
+                    ->orWhereNull('m.admin_sales_date')
+                    ->orWhereNull('m.om_date');
+            })
             ->whereNull('m.deleted')
             ->where('m.platform', 'mobile');
 
@@ -202,6 +207,68 @@ class CustomerController extends Controller
                     $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+            if (isset($_POST['order'][0]['column'])) {
+                $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
+            }
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'];
+        $query = DB::getQueryLog();
+        // echo '<pre>';
+        // print_r($query);die;
+        return json_encode($data);
+    }
+
+    public function getDataAccHistory()
+    {
+        DB::enableQueryLog();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+        $company = session('id_company');
+        $akses = session('akses');
+
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'cc.category as customer_category_name',
+                'ccr.category as ref_category_name',
+                'r.name as city_name',
+                'k.name as kecamatan_name',
+                'kl.name as kelurahan_name',
+            ])
+            ->join('customer_category as cc', 'cc.id', 'm.customer_category')
+            ->leftJoin('region as r', 'r.id', '=', 'm.kota')
+            ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
+            ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->leftJoin('customer_category as ccr', 'ccr.id', 'm.ref_category')
+            ->whereNull('m.deleted')
+            ->where('m.platform', 'mobile');
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.nama_customer', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.numbering_code', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.kota', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('cc.category', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('ccr.category', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {

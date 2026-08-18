@@ -806,6 +806,133 @@ let Customer = {
             });
     },
 
+    getDataAccHistory: async () => {
+        let tableData = $("table#table-data-customer-acc");
+
+        let updateAction = $("#update").val();
+        let deleteAction = $("#delete").val();
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            order: [[0, "desc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded"
+                );
+            },
+            ajax: {
+                url: url.base_url(Customer.moduleApi()) + `getDataAccHistory`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": Customer.csrf_token(),
+                },
+            },
+            deferRender: true,
+            createdRow: function (row, data, dataIndex) {
+                // console.log('row', $(row));
+            },
+            buttons: ["copy", "excel", "pdf", "colvis"],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "code",
+                },
+                {
+                    data: "numbering_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "customer_category_name",
+                },
+                {
+                    data: "pic",
+                },
+                {
+                    data: "email",
+                },
+                {
+                    data: "phone",
+                },
+                {
+                    "data": "status",
+                },
+                {
+                    "data": "remarks",
+                },
+                {
+                    "data": "spv_sales_date",
+                },
+                {
+                    "data": "admin_sales_date",
+                },
+                {
+                    "data": "om_date",
+                },
+                {
+                    "data": "ref_category_name",
+                },
+                {
+                    data: "id",
+                    render: function (data, type, row) {
+                        var html = "";
+                        if (updateAction == 1) {
+                            html += `<a href='${url.base_url(
+                                Customer.module()
+                            )}detail?id=${data}' data_id="${row.id
+                                }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        }
+                        return html;
+                    },
+                },
+            ],
+        });
+
+        data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm"
+            ),
+            $("#selection-datatable").DataTable({
+                select: {
+                    style: "multi",
+                },
+                language: {
+                    paginate: {
+                        previous: "<i class='mdi mdi-chevron-left'>",
+                        next: "<i class='mdi mdi-chevron-right'>",
+                    },
+                },
+                drawCallback: function () {
+                    $(".dataTables_paginate > .pagination").addClass(
+                        "pagination-rounded"
+                    );
+                },
+            });
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1167,4 +1294,5 @@ $(function () {
     Customer.getData();
     Customer.getDataReport();
     Customer.getDataAcc();
+    Customer.getDataAccHistory();
 });

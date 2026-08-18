@@ -360,6 +360,7 @@ Route::post('api/master/customer_category/confirmDelete', [MasterCustomerCategor
 Route::post('api/master/customer/getData', [MasterCustomerController::class, 'getData']);
 Route::post('api/master/customer/getDataReport', [MasterCustomerController::class, 'getDataReport']);
 Route::post('api/master/customer/getDataAcc', [MasterCustomerController::class, 'getDataAcc']);
+Route::post('api/master/customer/getDataAccHistory', [MasterCustomerController::class, 'getDataAccHistory']);
 Route::post('api/master/customer/submit', [MasterCustomerController::class, 'submit']);
 Route::post('api/master/customer/approve', [MasterCustomerController::class, 'approve']);
 Route::post('api/master/customer/delete', [MasterCustomerController::class, 'delete']);
