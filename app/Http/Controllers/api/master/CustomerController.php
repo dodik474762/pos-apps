@@ -306,6 +306,20 @@ class CustomerController extends Controller
                 }
                 $roles->pasar = $data['pasar'];
                 $roles->branch = 'YOGYAKARTA';
+
+                if ($data['akses'] == 'supervisor sales') {
+                    $roles->spv_sales_by = session('user_id');
+                    $roles->spv_sales_date = date('Y-m-d H:i:s');
+                }
+                if ($data['akses'] == 'admin supervisor') {
+                    $roles->admin_sales_by = session('user_id');
+                    $roles->admin_sales_date = date('Y-m-d H:i:s');
+                }
+                if ($data['akses'] == 'operational manager' || $data['akses'] == 'superadmin') {
+                    $roles->om_by = session('user_id');
+                    $roles->om_date = date('Y-m-d H:i:s');
+                    $roles->ref_category = $roles->customer_category;
+                }
                 $roles->save();
                 $id_cust = $roles->id;
                 $name_cust = $data['nama_customer'];
@@ -489,7 +503,7 @@ class CustomerController extends Controller
                 $roles->kelurahan = $data['kelurahan'];
             }
             $roles->npwp = $data['npwp'];
-            $roles->customer_category = 2; //kandidat
+            $roles->customer_category = 3; //noo
             $roles->latitude = $data['latitude'];
             $roles->longitude = $data['longitude'];
             $roles->platform = 'mobile';

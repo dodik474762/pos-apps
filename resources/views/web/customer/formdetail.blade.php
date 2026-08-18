@@ -328,12 +328,24 @@
 
         <div class="text-end">
             <div>
+                @php
+                    $acc = '';
+                @endphp
                 @if (isset($view_detail))
-                    @if ($akses == 'supervisor sales' || $akses == 'admin supervisor' || $akses == 'superadmin')
-                        <button type="submit" onclick="Customer.submit(this, event, 'update-sales')"
+                    @if (
+                        $akses == 'supervisor sales' ||
+                            $akses == 'admin supervisor' ||
+                            $akses == 'superadmin' ||
+                            $akses == 'operational manager')
+                        <button type="submit" akses="{{ $akses }}"
+                            onclick="Customer.submit(this, event, 'update-sales')"
                             class="btn btn-success waves-effect waves-light me-1">
                             Update
                         </button>
+
+                        @php
+                            $acc = 'acc';
+                        @endphp
                     @endif
                 @else
                     <button type="submit" onclick="Customer.submit(this, event)"
@@ -341,9 +353,15 @@
                         Submit
                     </button>
                 @endif
-                <button type="reset" onclick="Customer.cancel(this, event)" class="btn  waves-effect">
-                    Cancel
-                </button>
+                @if ($acc == '')
+                    <button type="reset" onclick="Customer.cancel(this, event)" class="btn  waves-effect">
+                        Cancel
+                    </button>
+                @else
+                    <button type="reset" onclick="Customer.cancelDetail(this, event)" class="btn  waves-effect">
+                        Cancel
+                    </button>
+                @endif
             </div>
         </div>
     </div>

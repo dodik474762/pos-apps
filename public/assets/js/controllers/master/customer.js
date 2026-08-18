@@ -32,6 +32,11 @@ let Customer = {
         window.location.href = url.base_url(Customer.module()) + "/";
     },
 
+    cancelDetail: (elm, e) => {
+        e.preventDefault();
+        window.location.href = url.base_url(Customer.moduleAcc()) + "/";
+    },
+
     cancelAcc: (elm, e) => {
         e.preventDefault();
         window.location.href = url.base_url(Customer.moduleAcc()) + "/";
@@ -108,7 +113,7 @@ let Customer = {
         return result;
     },
 
-    getPostInput: (state = '') => {
+    getPostInput: (state = '', akses = '') => {
         let formData = new FormData();
 
         const items_price = Customer.getPostItemPrice();
@@ -141,6 +146,7 @@ let Customer = {
         formData.append("min_invoice", $("#min_invoice").val());
         formData.append("max_print_invoice", $("#max_print_invoice").val());
         formData.append("state", state);
+        formData.append("akses", akses);
         formData.append("items_price", JSON.stringify(items_price));
 
         // FOTO (single upload)
@@ -167,7 +173,7 @@ let Customer = {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
-            let params = Customer.getPostInput(state);
+            let params = Customer.getPostInput(state, $(elm).attr('akses'));
             $.ajax({
                 type: "POST",
                 dataType: "json",
@@ -749,6 +755,15 @@ let Customer = {
                 },
                 {
                     "data": "remarks",
+                },
+                {
+                    "data": "spv_sales_date",
+                },
+                {
+                    "data": "admin_sales_date",
+                },
+                {
+                    "data": "om_date",
                 },
                 {
                     data: "id",
