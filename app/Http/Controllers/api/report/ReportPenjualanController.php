@@ -24,6 +24,61 @@ class ReportPenjualanController extends Controller
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end   = $_POST['date_end']   ?? date('Y-m-d');
 
+        $salesReturn = DB::table('sales_return as sr')
+            ->join('sales_return_detail as srd', function ($q) {
+                return $q->on('srd.return_id', '=', 'sr.id')->whereNull('srd.deleted');
+            })
+            ->select([
+                'srd.product_id',
+                'srd.unit_price as return_unit_price',
+                'srd.qty_return',
+                'sr.invoice_id',
+                'srd.invoice_detail_id',
+                'sr.return_number',
+                'sr.return_date',
+                DB::raw("
+            (
+                SELECT
+                    CASE uom_count.total_level
+                        WHEN 4 THEN
+                            CONCAT(
+                                FLOOR(srd.qty_return / uom_l4.nilai_konversi_terkecil), '.',
+                                FLOOR((srd.qty_return MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+                                FLOOR((srd.qty_return MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                                FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+                            )
+                        WHEN 3 THEN
+                            CONCAT(
+                                FLOOR(srd.qty_return / uom_l3.nilai_konversi_terkecil), '.',
+                                FLOOR((srd.qty_return MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                                FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+                            )
+                        WHEN 2 THEN
+                            CONCAT(
+                                FLOOR(srd.qty_return / uom_l2.nilai_konversi_terkecil), '.',
+                                FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+                            )
+                        ELSE
+                            CAST(FLOOR(srd.qty_return) AS CHAR)
+                    END
+                FROM (
+                    SELECT product, COUNT(*) as total_level
+                    FROM product_uom
+                    WHERE deleted IS NULL
+                    GROUP BY product
+                ) uom_count
+                JOIN product_uom uom_l1 ON uom_l1.product = srd.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
+                LEFT JOIN product_uom uom_l2 ON uom_l2.product = srd.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
+                LEFT JOIN product_uom uom_l3 ON uom_l3.product = srd.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
+                LEFT JOIN product_uom uom_l4 ON uom_l4.product = srd.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
+                WHERE uom_count.product = srd.product_id
+                LIMIT 1
+            ) as qty_return_formatted
+        "),
+            ])
+            ->whereNull('sr.deleted')
+            ->where('sr.types', 'good')
+            ->where('sr.return_type', 'RETURN');
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
                 'm.id',
@@ -141,6 +196,12 @@ class ReportPenjualanController extends Controller
                 'sid.discount as discount_per_product',
                 DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
                 DB::raw('(sid.qty * sid.price) AS gross_amount'),
+                // ⬇⬇⬇ TAMBAHAN BARU: return_number dari sales_return
+                'sr_data.return_number',
+                'sr_data.qty_return',
+                'sr_data.return_unit_price',
+                'sr_data.return_date',
+                'sr_data.qty_return_formatted'
             ])
             ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
@@ -171,6 +232,14 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
+            // ⬇⬇⬇ TAMBAHAN BARU: left join subquery sales_return
+            ->leftJoinSub($salesReturn, 'sr_data', function ($join) {
+                $join->on('sr_data.invoice_detail_id', '=', 'sid.id')
+                    ->orOn(function ($join2) {
+                        $join2->on('sr_data.invoice_id', '=', 'sih.id')
+                            ->on('sr_data.product_id', '=', 'sod.product_id');
+                    });
+            })
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '121')
             // ->where('sid.qty', '>', 0)
@@ -253,7 +322,25 @@ class ReportPenjualanController extends Controller
         $datadb = $datadb->get()->toArray();
 
         foreach ($datadb as $value) {
+            $value = (array) $value;
+            $value['is_return'] = 0;
             $resultdb[] = $value;
+
+            if (!empty($value['return_number'])) {
+                $returnRow = $value;
+                $returnRow['is_return']      = 1;
+                $returnRow['invoice_number'] = $value['return_number'];
+                $returnRow['qty_sold']       = !empty($value['qty_return_formatted'])
+                    ? '-' . $value['qty_return_formatted']
+                    : 0;
+                $returnRow['gross_amount']   = isset($value['return_unit_price'], $value['qty_return'])
+                    ? -1 * ($value['return_unit_price'] * $value['qty_return'])
+                    : 0;
+                $returnRow['prorate_discount']     = 0;
+                $returnRow['discount_per_product'] = 0;
+
+                $resultdb[] = $returnRow;
+            }
         }
 
         $data['data'] = $resultdb;

@@ -478,7 +478,7 @@ let ReportPenjualan = {
                     data: "so_date",
                     title: "TIPE TRANS",
                     render: function (data, type, row) {
-                        return "sales";
+                        return row.is_return ? "retur" : "sales";
                     },
                 },
                 {
