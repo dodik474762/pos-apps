@@ -291,7 +291,7 @@ let ReportPiutang = {
                     },
                 },
                 {
-                    data: "salesman_name",
+                    data: "salesman_nik",
                     title: "KODE SALESMAN",
                     render: function (data, type, row) {
                         return data;
