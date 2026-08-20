@@ -1115,7 +1115,8 @@ class PackingListController extends Controller
             ->where(function ($q) {
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
             })
-            ->where('m.packing_date', '>=', '2026-07-01')
+            // ->where('pld.packing_list_id', 276)
+            // ->where('m.packing_date', '>=', '2026-07-01')
             // ->whereNotIn('m.status', ['CANCELLED', 'NOT DELIVERED', 'RECEIVED'])
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');

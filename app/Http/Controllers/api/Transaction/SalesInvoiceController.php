@@ -1411,8 +1411,11 @@ class SalesInvoiceController extends Controller
         // echo '<pre>';
         // print_r($customers);
         // die;
+        // $invoicesIds = [
+        //     3810
+        // ];
         // $customers = [
-        //     6324
+        //     2189
         // ];
         $result['message'] = '';
         $result['is_valid'] = true;
@@ -1500,7 +1503,7 @@ class SalesInvoiceController extends Controller
                 // print_r($invoice->detail_item);
                 // die;
                 $disc_amount_total = collect($invoice->detail_item)->sum('discount');
-                $invoice->discount_amount = $disc_amount_total;
+                $invoice->discount_amount = $disc_amount_total + $invoice->discount_amount;
             }
 
             $result['message'] = 'Success';
