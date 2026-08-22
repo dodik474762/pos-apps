@@ -6,6 +6,7 @@ use App\Http\Controllers\api\master\CoaController as MasterCoaController;
 use App\Http\Controllers\api\master\CompanyController as MasterCompanyController;
 use App\Http\Controllers\api\master\CustomerCategoryController as MasterCustomerCategoryController;
 use App\Http\Controllers\api\master\CustomerController as MasterCustomerController;
+use App\Http\Controllers\api\master\CustomerLimitTopController as MasterCustomerLimitTopController;
 use App\Http\Controllers\api\master\PasarController as MasterPasarController;
 use App\Http\Controllers\api\master\DayoffController as MasterDayoffController;
 use App\Http\Controllers\api\master\GroupController as MasterGroupController;
@@ -59,6 +60,7 @@ use App\Http\Controllers\web\master\CoaController;
 use App\Http\Controllers\web\master\CompanyController;
 use App\Http\Controllers\web\master\CustomerCategoryController;
 use App\Http\Controllers\web\master\CustomerController;
+use App\Http\Controllers\web\master\CustomerLimitTopController;
 use App\Http\Controllers\web\master\PasarController;
 use App\Http\Controllers\web\master\DayoffController;
 use App\Http\Controllers\web\master\GroupController;
@@ -131,6 +133,12 @@ Route::get('master/pasar/add', [PasarController::class, 'add']);
 Route::get('master/pasar/ubah', [PasarController::class, 'ubah']);
 
 Route::get('approval/customer', [CustomerController::class, 'index_acc']);
+
+Route::get('master/customer_limit_top', [CustomerLimitTopController::class, 'index']);
+Route::get('master/customer_limit_top/add', [CustomerLimitTopController::class, 'add']);
+Route::get('master/customer_limit_top/ubah', [CustomerLimitTopController::class, 'ubah']);
+Route::get('master/customer_limit_top/detail', [CustomerLimitTopController::class, 'detail']);
+Route::get('approval/customer_limit_top', [CustomerLimitTopController::class, 'index_acc']);
 
 Route::get('master/unit', [UnitController::class, 'index']);
 Route::get('master/unit/add', [UnitController::class, 'add']);
@@ -371,6 +379,14 @@ Route::post('api/master/customer/getKelurahan', [MasterCustomerController::class
 Route::post('api/master/customer/addItemPrice', [MasterCustomerController::class, 'addItemPrice']);
 Route::post('api/master/customer/showDataProduct', [MasterCustomerController::class, 'showDataProduct']);
 Route::post('api/master/customer/getDataProduct', [MasterCustomerController::class, 'getDataProduct']);
+Route::post('api/master/customer_limit_top/getData', [MasterCustomerLimitTopController::class, 'getData']);
+Route::post('api/master/customer_limit_top/getDataAcc', [MasterCustomerLimitTopController::class, 'getDataAcc']);
+Route::post('api/master/customer_limit_top/getDataAccHistory', [MasterCustomerLimitTopController::class, 'getDataAccHistory']);
+Route::post('api/master/customer_limit_top/submit', [MasterCustomerLimitTopController::class, 'submit']);
+Route::post('api/master/customer_limit_top/approve', [MasterCustomerLimitTopController::class, 'approve']);
+Route::post('api/master/customer_limit_top/delete', [MasterCustomerLimitTopController::class, 'delete']);
+Route::post('api/master/customer_limit_top/confirmDelete', [MasterCustomerLimitTopController::class, 'confirmDelete']);
+Route::post('api/master/customer_limit_top/getDetailCustomer', [MasterCustomerLimitTopController::class, 'getDetailCustomer']);
 Route::post('api_mobile/master/customer/getCity', [MasterCustomerController::class, 'getCity']);
 Route::post('api_mobile/master/customer/getKecamatan', [MasterCustomerController::class, 'getKecamatan']);
 Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController::class, 'getKelurahan']);

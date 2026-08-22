@@ -107,6 +107,24 @@ function generateCodeCustomer()
     return $no;
 }
 
+function generateCodePengajuanLimitTop()
+{
+    $no = 'PLT' . strtoupper(date('m')) . date('y');
+    $data = DB::table('customer_limit_top')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+
+    $seq = 1;
+    if (! empty($data)) {
+        $data = current($data);
+        $seq = str_replace($no, '', $data->code);
+        $seq = intval($seq) + 1;
+    }
+
+    $seq = digit_count(4, $seq);
+    $no .= $seq;
+
+    return $no;
+}
+
 function generateVPN()
 {
     $no = 'VP' . strtoupper(date('m')) . date('y');
