@@ -4200,6 +4200,9 @@ class SalesOrderController extends Controller
                 ]);
             }
 
+            $data['total_amount'] = ROUND($data['total_amount'], 0);
+            $data['discount_amount'] = ROUND($data['discount_amount'], 0);
+
             $tax_amount = collect($data['items'])->sum('tax_amount');
             $data['tax'] = $data['tax'] == 0 || $data['tax'] == 11 ? 1 : $data['tax'];
             $tax = Tax::find($data['tax']);
@@ -4258,9 +4261,9 @@ class SalesOrderController extends Controller
                 $detail->so_detail_id = $item['id'];
                 $detail->product_id = $item['product_id'];
                 $detail->qty = $item['qty'];
-                $detail->price = $item['unit_price'];
-                $detail->discount = $item['discount_amount'];
-                $detail->subtotal = $item['subtotal'];
+                $detail->price = ROUND($item['unit_price'], 0);
+                $detail->discount = ROUND($item['discount_amount'], 0);
+                $detail->subtotal = ROUND($item['subtotal'], 0);
                 $detail->tax = $item['tax'];
                 $detail->tax_amount = $item['tax_amount'];
                 $detail->tax_rate = $item['tax_rate'];
@@ -4284,8 +4287,8 @@ class SalesOrderController extends Controller
                 $updateInv->save();
             }
 
-            $discountHeaderSo = $so->discount_amount == '' ? 0 : $so->discount_amount;
-            $header->discount_amount = $discountHeaderSo;
+            $discountHeaderSo = $so->discount_amount == '' ? 0 : ROUND($so->discount_amount, 0);
+            $header->discount_amount = ROUND($discountHeaderSo, 0);
             $header->total_amount = $subtotal - $discountHeaderSo; // fix di sini
             $header->save();
 
@@ -4306,36 +4309,6 @@ class SalesOrderController extends Controller
                 ]);
             }
 
-            // echo $subtotal;
-            // echo '<br>';
-            // echo $discountHeaderSo;
-            // echo '<br>';
-            // echo $currency;
-            // echo '<br>';
-            // echo $piutangAcc->account_id;
-            // echo '<br>';
-            // echo $piutangAcc->account->account_name;
-            // echo '<br>';
-            // echo $piutangAcc->cd;
-            // echo '<br>';
-            // echo ($subtotal - $discountHeaderSo);
-            // echo '<br>';
-            // echo $penjualanAcc->account_id;
-            // echo '<br>';
-            // echo $penjualanAcc->account->account_name;
-            // echo '<br>';
-            // echo $penjualanAcc->cd;
-            // echo '<br>';
-            // echo $subtotal;
-            // echo '<br>';
-            // echo $discPenjualanAcc->account_id;
-            // echo '<br>';
-            // echo $discPenjualanAcc->account->account_name;
-            // echo '<br>';
-            // echo $discPenjualanAcc->cd;
-            // echo '<br>';
-            // echo $discountHeaderSo;
-            // die;
             postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, ($subtotal - $discountHeaderSo), $currency);
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, ($subtotal), $currency);
             postingGL($reference, $discPenjualanAcc->account_id, $discPenjualanAcc->account->account_name, $discPenjualanAcc->cd, ($discountHeaderSo), $currency);

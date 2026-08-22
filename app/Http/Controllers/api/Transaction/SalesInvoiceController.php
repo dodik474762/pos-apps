@@ -647,6 +647,7 @@ class SalesInvoiceController extends Controller
             }
 
 
+            $subtotal = ROUND($subtotal, 0);
             $data['total_amount'] = $subtotal;
             $header->invoice_date = $data['invoice_date'];
             $header->do_id = isset($data['do_id']) ? $data['do_id'] : null;
@@ -732,11 +733,11 @@ class SalesInvoiceController extends Controller
                 $detail->so_detail_id = $item['so_detail_id'];
                 $detail->product_id = $item['product_id'];
                 $detail->qty = $item['qty'];
-                $detail->price = $item['price'];
-                $detail->discount = $item['discount'];
-                $detail->subtotal = $item['subtotal'];
-                $detail->tax = $item['tax'];
-                $detail->tax_amount = $item['tax_amount'];
+                $detail->price = ROUND($item['price'], 0);
+                $detail->discount = ROUND($item['discount'], 0);
+                $detail->subtotal = ROUND($item['subtotal'], 0);
+                $detail->tax = ROUND($item['tax'], 0);
+                $detail->tax_amount = ROUND($item['tax_amount'], 0);
                 $detail->tax_rate = $item['tax_rate'] == '11' ? 1 : $item['tax_rate'];
                 $detail->type_tax = $item['type_tax'];
                 $detail->line_no = $line_no++;
@@ -814,6 +815,7 @@ class SalesInvoiceController extends Controller
                 }
             }
 
+            $discountHeaderSo = ROUND($discountHeaderSo, 0);
             $header->subtotal = $subtotal;
             $header->discount_amount = $discountHeaderSo;
             $header->total_amount = $subtotal - $discountHeaderSo;
