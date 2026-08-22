@@ -544,7 +544,9 @@ class SalesPaymentController extends Controller
                 ]);
             }
 
-            if ($invoice->status == 'PAID') {
+            $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
+
+            if ($totalInvoicePrev <= 0) {
                 DB::rollBack();
                 return response()->json([
                     'is_valid' => false,
