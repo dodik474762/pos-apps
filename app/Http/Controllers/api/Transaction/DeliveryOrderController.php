@@ -293,8 +293,11 @@ class DeliveryOrderController extends Controller
                     ]);
                 }
 
+                // konversi DULU
+                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty']);
+                $qtyDeduct = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item['qty'] : 0;
 
-                if ($stock && ($stock->qty - $item['qty'] < 0)) {
+                if ($stock && ($stock->qty - $qtyDeduct < 0)) {
                     $productsDb = Product::find($item['product_id']);
                     DB::rollBack();
                     return response()->json([
@@ -439,8 +442,10 @@ class DeliveryOrderController extends Controller
                         ]);
                     }
 
+                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty);
+                    $qtyDeduct = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item->qty : 0;
 
-                    if ($stock && ($stock->qty - $item->qty < 0)) {
+                    if ($stock && ($stock->qty - $qtyDeduct < 0)) {
                         $productsDb = Product::find($item->product_id);
                         DB::rollBack();
                         return response()->json([
