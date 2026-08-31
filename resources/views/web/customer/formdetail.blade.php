@@ -336,7 +336,8 @@
                         $akses == 'supervisor sales' ||
                             $akses == 'admin supervisor' ||
                             $akses == 'superadmin' ||
-                            $akses == 'operational manager')
+                            $akses == 'operational manager' ||
+                            $akses == 'bod')
                         <button type="submit" akses="{{ $akses }}"
                             onclick="Customer.submit(this, event, 'update-sales')"
                             class="btn btn-success waves-effect waves-light me-1">

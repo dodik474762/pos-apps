@@ -476,7 +476,7 @@ let Customer = {
                             Customer.module()
                         )}detail?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-show"></i></a>&nbsp;`;
-                        if (updateAction == 1 && akses_session.toLowerCase() == "superadmin") {
+                        if (updateAction == 1 && akses_session.toLowerCase() == "superadmin" || akses_session.toLowerCase() == "bod") {
                             html += `<a href='${url.base_url(
                                 Customer.module()
                             )}ubah?id=${data}' data_id="${row.id

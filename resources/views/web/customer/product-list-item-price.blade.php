@@ -18,7 +18,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (strtolower($akses) == 'superadmin')
+                    @if (strtolower($akses) == 'superadmin' || strtolower($akses) == 'bod')
                         <tr>
                             <td colspan="7">
                                 <a href="javascript:;" class="btn btn-primary btn-sm"

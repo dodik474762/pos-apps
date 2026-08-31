@@ -25,8 +25,10 @@
 
                 <div class="row">
                     <div class="col-lg-6">
-                        <input type="hidden" id="current_credit_limit" value="{{ isset($data->current_credit_limit) ? $data->current_credit_limit : '' }}">
-                        <input type="hidden" id="current_payment_terms" value="{{ isset($data->current_payment_terms) ? $data->current_payment_terms : '' }}">
+                        <input type="hidden" id="current_credit_limit"
+                            value="{{ isset($data->current_credit_limit) ? $data->current_credit_limit : '' }}">
+                        <input type="hidden" id="current_payment_terms"
+                            value="{{ isset($data->current_payment_terms) ? $data->current_payment_terms : '' }}">
                         <div class="mb-3">
                             <label class="form-label">Code Pengajuan</label>
                             <div>
@@ -61,8 +63,7 @@
                         <div class="mb-3">
                             <label>Alasan Pengajuan</label>
                             <div>
-                                <textarea id="reason" class="form-control" placeholder="Alasan Pengajuan"
-                                    readonly>{{ isset($data->reason) ? $data->reason : '' }}</textarea>
+                                <textarea id="reason" class="form-control" placeholder="Alasan Pengajuan" readonly>{{ isset($data->reason) ? $data->reason : '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -72,11 +73,14 @@
                             <select class="form-control select2" id="type_pengajuan" disabled
                                 onchange="CustomerLimitTop.changeTypePengajuan(this)">
                                 <option value=""></option>
-                                <option value="CREDIT_LIMIT" {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'CREDIT_LIMIT' ? 'selected' : '') : '' }}>
+                                <option value="CREDIT_LIMIT"
+                                    {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'CREDIT_LIMIT' ? 'selected' : '') : '' }}>
                                     Pengajuan Credit Limit</option>
-                                <option value="TERM_OF_PAYMENT" {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'TERM_OF_PAYMENT' ? 'selected' : '') : '' }}>
+                                <option value="TERM_OF_PAYMENT"
+                                    {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'TERM_OF_PAYMENT' ? 'selected' : '') : '' }}>
                                     Pengajuan Term Of Payment</option>
-                                <option value="CREDIT_LIMIT_DAN_TOP" {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'CREDIT_LIMIT_DAN_TOP' ? 'selected' : '') : '' }}>
+                                <option value="CREDIT_LIMIT_DAN_TOP"
+                                    {{ isset($data->type_pengajuan) ? ($data->type_pengajuan == 'CREDIT_LIMIT_DAN_TOP' ? 'selected' : '') : '' }}>
                                     Pengajuan Credit Limit & Term Of Payment</option>
                             </select>
                         </div>
@@ -100,8 +104,8 @@
                                         }
                                     }
                                 @endphp
-                                <input type="text" id="new_top_name" class="form-control" value="{{ $topName }}"
-                                    readonly>
+                                <input type="text" id="new_top_name" class="form-control"
+                                    value="{{ $topName }}" readonly>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -115,8 +119,7 @@
                             <label>Spv Sales Acc</label>
                             <div>
                                 <input type="text" class="form-control"
-                                    value="{{ isset($data->spv_sales_date) ? $data->spv_sales_date : '-' }}"
-                                    readonly>
+                                    value="{{ isset($data->spv_sales_date) ? $data->spv_sales_date : '-' }}" readonly>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -139,7 +142,11 @@
 
                 <div class="text-end">
                     <div>
-                        @if (strtolower(session('akses')) == 'supervisor sales' || strtolower(session('akses')) == 'admin supervisor' || strtolower(session('akses')) == 'superadmin' || strtolower(session('akses')) == 'operational manager')
+                        @if (strtolower(session('akses')) == 'supervisor sales' ||
+                                strtolower(session('akses')) == 'admin supervisor' ||
+                                strtolower(session('akses')) == 'superadmin' ||
+                                strtolower(session('akses')) == 'operational manager' ||
+                                strtolower(session('akses')) == 'bod')
                             @if (!isset($data->status) || ($data->status != 'APPROVED' && $data->status != 'REJECTED'))
                                 <button type="submit" onclick="CustomerLimitTop.approve(this, event, 'acc')"
                                     class="btn btn-success waves-effect waves-light me-1">

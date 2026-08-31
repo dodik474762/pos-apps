@@ -248,7 +248,7 @@ class CustomerLimitTopController extends Controller
                 } elseif ($akses == 'admin supervisor') {
                     $roles->admin_sales_by = session('user_id');
                     $roles->admin_sales_date = date('Y-m-d H:i:s');
-                } elseif ($akses == 'operational manager' || $akses == 'superadmin') {
+                } elseif ($akses == 'operational manager' || $akses == 'superadmin' || $akses == 'bod') {
                     $roles->om_by = session('user_id');
                     $roles->om_date = date('Y-m-d H:i:s');
                     $roles->status = 'APPROVED';

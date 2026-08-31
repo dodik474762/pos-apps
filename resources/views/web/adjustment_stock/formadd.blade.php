@@ -177,7 +177,7 @@
         </div>
         <div class="text-end">
             @if (isset($data->id))
-                @if ($akses_session == 'superadmin')
+                @if ($akses_session == 'superadmin' || $akses_session == 'bod')
                     <button type="submit" onclick="AdjustmentStock.submit(this, event)"
                         class="btn btn-success waves-effect waves-light me-1">
                         Submit

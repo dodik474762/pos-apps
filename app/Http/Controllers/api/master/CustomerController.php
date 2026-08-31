@@ -382,7 +382,7 @@ class CustomerController extends Controller
                     $roles->admin_sales_by = session('user_id');
                     $roles->admin_sales_date = date('Y-m-d H:i:s');
                 }
-                if ($data['akses'] == 'operational manager' || $data['akses'] == 'superadmin') {
+                if ($data['akses'] == 'operational manager' || $data['akses'] == 'superadmin' || $data['akses'] == 'bod') {
                     $roles->om_by = session('user_id');
                     $roles->om_date = date('Y-m-d H:i:s');
                     $roles->ref_category = $roles->customer_category;
