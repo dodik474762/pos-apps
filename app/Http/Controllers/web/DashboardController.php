@@ -323,7 +323,7 @@ class DashboardController extends Controller
         if ($date_visit != '') {
             $datadb->where('soh.so_date', $date_visit);
         } else {
-            $datadb->whereYear('soh.so_date', date('Y'));
+            $datadb->where('soh.so_date', date('Y-m-d'));
         }
 
         $datadb = $datadb->get()->toArray();
