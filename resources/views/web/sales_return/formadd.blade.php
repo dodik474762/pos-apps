@@ -92,9 +92,14 @@
                                 <label class="form-label">Return Type</label>
                                 <select id="return_type" class="form-control select2 required">
                                     <option value=""></option>
-                                    <option value="RETURN"
-                                        {{ isset($data->return_type) && $data->return_type == 'RETURN' ? 'selected' : '' }}>
-                                        RETURN</option>
+                                    <option value="PURPOSED"
+                                        {{ isset($data->return_type) && $data->return_type == 'PURPOSED' ? 'selected' : '' }}>
+                                        PURPOSED</option>
+                                    @if ($akses == 'superadmin' || $akses == 'bod')
+                                        <option value="RETURN"
+                                            {{ isset($data->return_type) && $data->return_type == 'RETURN' ? 'selected' : '' }}>
+                                            RETURN</option>
+                                    @endif
                                     <option value="REFUND"
                                         {{ isset($data->return_type) && $data->return_type == 'REFUND' ? 'selected' : '' }}>
                                         REFUND</option>

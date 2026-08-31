@@ -93,6 +93,7 @@ class SalesReturnController extends Controller
     public function add(Request $request)
     {
         $data = $request->all();
+        $data['akses'] = strtolower(session('akses'));
         $data['data'] = [];
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
@@ -120,6 +121,7 @@ class SalesReturnController extends Controller
     {
         $api = new TransactionSalesReturnController();
         $data = $request->all();
+        $data['akses'] = strtolower(session('akses'));
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
