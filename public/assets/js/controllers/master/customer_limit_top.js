@@ -468,6 +468,12 @@ let CustomerLimitTop = {
                     },
                 },
                 {
+                    "data": "superadmin_date",
+                    render: function (data, type, row) {
+                        return data != null ? "Sudah" : "Belum";
+                    },
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";

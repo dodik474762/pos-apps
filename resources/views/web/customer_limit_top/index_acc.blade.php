@@ -90,9 +90,10 @@
                                                     <th>TOP Saat Ini</th>
                                                     <th>Pengajuan TOP</th>
                                                     <th>Status</th>
-                                                    <th>Spv Sales Acc</th>
-                                                    <th>Admin Spv Acc</th>
+                                                    <th>Admin Tax</th>
                                                     <th>Operational Manager Acc</th>
+                                                    <th>BOD</th>
+                                                    <th>Superadmin</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

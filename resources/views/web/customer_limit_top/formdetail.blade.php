@@ -146,7 +146,8 @@
                                 strtolower(session('akses')) == 'admin supervisor' ||
                                 strtolower(session('akses')) == 'superadmin' ||
                                 strtolower(session('akses')) == 'operational manager' ||
-                                strtolower(session('akses')) == 'bod')
+                                strtolower(session('akses')) == 'bod' ||
+                                strtolower(session('akses')) == 'admin tax & klaim')
                             @if (!isset($data->status) || ($data->status != 'APPROVED' && $data->status != 'REJECTED'))
                                 <button type="submit" onclick="CustomerLimitTop.approve(this, event, 'acc')"
                                     class="btn btn-success waves-effect waves-light me-1">
