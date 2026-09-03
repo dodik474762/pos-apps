@@ -644,6 +644,7 @@ class SalesOrderController extends Controller
                 $item['disc_percent'] = $totalDiscItemPercent;
                 $item['subtotal'] =
                     ($item['price'] * $item['qty']) - $item['disc_amount'];
+                $item['subtotal'] = ROUND($item['subtotal'], 0);
 
                 // if (!empty($calculatePromo['result_items'])) {
                 //     foreach ($calculatePromo['result_items'] as $promo) {
@@ -771,6 +772,7 @@ class SalesOrderController extends Controller
             // =============================
             // UPDATE TOTAL HEADER
             // =============================
+            $grandTotal = ROUND($grandTotal, 0);
             $header->total_amount = $grandTotal;
             $header->tax_amount   = $totalTaxAmount;
             $header->tax_base     = $taxRate;
@@ -1553,6 +1555,7 @@ class SalesOrderController extends Controller
                 $item['disc_percent'] = $totalDiscItemPercent;
                 $item['subtotal'] =
                     ($item['price'] * $item['qty']) - $item['disc_amount'];
+                $item['subtotal'] = ROUND($item['subtotal'], 0);
 
                 // if (!empty($calculatePromo['result_items'])) {
                 //     foreach ($calculatePromo['result_items'] as $promo) {
@@ -1676,6 +1679,7 @@ class SalesOrderController extends Controller
             // =============================
             // UPDATE TOTAL HEADER
             // =============================
+            $grandTotal = ROUND($grandTotal, 0);
             $header->total_amount = $grandTotal;
             $header->tax_amount   = $totalTaxAmount;
             $header->tax_base     = $taxRate;  // fix: sebelumnya tertukar
