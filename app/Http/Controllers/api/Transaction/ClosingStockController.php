@@ -98,7 +98,6 @@ class ClosingStockController extends Controller
 
                 'p.name as item_name',
             ])
-            // ->where('p.id', 52)
             ->orderBy('p.name');
 
         if (isset($_POST)) {
@@ -205,6 +204,7 @@ class ClosingStockController extends Controller
                 'sc.reference_type'
             ])
             ->where('sc.type_stock', $typeStock)
+            // ->where('p.id', 116)
             // ->where('trans_date', $dateNow)
             ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
             ->when($itemCode, fn($q) => $q->where('sc.item_code', $itemCode))

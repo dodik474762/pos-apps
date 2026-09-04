@@ -312,7 +312,14 @@ let ClosingStock = {
                     title: "In",
                     className: "text-end",
                     render: function (data, type, row) {
-                        return data ?? 0;
+                        let qty_in = row?.qty_in || 0;
+                        let qty_transfer_in = row?.qty_transfer_in || 0;
+                        let qty_return_in = row?.qty_return_in || 0;
+                        qty_in = isNaN(qty_in) ? 0 : parseFloat(qty_in);
+                        qty_transfer_in = isNaN(qty_transfer_in) ? 0 : parseFloat(qty_transfer_in);
+                        qty_return_in = isNaN(qty_return_in) ? 0 : parseFloat(qty_return_in);
+
+                        return `<strong>${qty_in + qty_transfer_in + qty_return_in}</strong>`;
                     },
                 },
                 {
