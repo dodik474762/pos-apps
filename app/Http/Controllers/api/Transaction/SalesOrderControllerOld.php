@@ -1239,6 +1239,11 @@ class SalesOrderController extends Controller
         $result['so_date']  = $so_date;
         $result['data']     = $data;
 
+        if ($customers->deleted != '') {
+            $result['message'] = 'Customer ' . $customers->code . ' Sudah tidak aktif, silakan hubungi Admin';
+            return response()->json($result);
+        }
+
         $dir  = 'berkas/document/sales_order/';
         $dir .= date('Y') . '/' . date('m');
 
