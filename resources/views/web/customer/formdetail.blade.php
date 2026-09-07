@@ -341,9 +341,15 @@
                         <button type="submit" akses="{{ $akses }}"
                             onclick="Customer.submit(this, event, 'update-sales')"
                             class="btn btn-success waves-effect waves-light me-1">
-                            Update
+                            {{ $data->superadmin_date == '' ? 'Approve' : 'Submit' }}
                         </button>
 
+                        @if ($data->superadmin_date == '')
+                            <button type="submit" onclick="Customer.reject(this, event)"
+                                class="btn btn-danger waves-effect waves-light me-1">
+                                Reject
+                            </button>
+                        @endif
                         @php
                             $acc = 'acc';
                         @endphp

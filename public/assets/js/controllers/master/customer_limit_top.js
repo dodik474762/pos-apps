@@ -167,7 +167,7 @@ let CustomerLimitTop = {
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Ya",
-            cancelButtonText: "-",
+            cancelButtonText: "Tidak",
         }).then((result) => {
             if (result.value) {
                 CustomerLimitTop.approve(elm, e, 'rej', result.value);

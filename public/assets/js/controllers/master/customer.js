@@ -169,11 +169,33 @@ let Customer = {
     },
 
 
-    submit: (elm, e, state = '') => {
+    reject: (elm, e) => {
+        e.preventDefault();
+        Swal.fire({
+            title: "Reject Data",
+            text: "Masukkan Alasan Penolakan",
+            input: "text",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya",
+            cancelButtonText: "Tidak",
+        }).then((result) => {
+            if (result.value) {
+                Customer.submit(elm, e, 'update-sales', result.value);
+            } else {
+                message.sweetError("Informasi", "Data Belum Lengkap");
+                return false;
+            }
+        })
+    },
+
+    submit: (elm, e, state = '', remarks = '') => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
         if (validation.runWithElement(form)) {
             let params = Customer.getPostInput(state, $(elm).attr('akses'));
+            params.remarks = remarks;
             $.ajax({
                 type: "POST",
                 dataType: "json",
@@ -757,13 +779,16 @@ let Customer = {
                     "data": "remarks",
                 },
                 {
-                    "data": "spv_sales_date",
-                },
-                {
                     "data": "admin_sales_date",
                 },
                 {
                     "data": "om_date",
+                },
+                {
+                    "data": "bod_date",
+                },
+                {
+                    "data": "superadmin_date",
                 },
                 {
                     data: "id",

@@ -84,9 +84,10 @@
                                                     <th>No. HP</th>
                                                     <th>Status</th>
                                                     <th>Keterangan</th>
-                                                    <th>Spv Sales Acc</th>
-                                                    <th>Admin Spv Acc</th>
+                                                    <th>Admin Sales</th>
                                                     <th>Operational Manager Acc</th>
+                                                    <th>BOD</th>
+                                                    <th>Superadmin</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

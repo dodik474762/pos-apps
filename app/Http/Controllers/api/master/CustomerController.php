@@ -347,32 +347,36 @@ class CustomerController extends Controller
             // $roles->branch = $data['branch'];
 
             if ($data['state'] == 'update-sales') {
-                $roles->pic = $data['pic'];
-                $roles->no_ktp = $data['no_ktp'];
-                $roles->nama_customer = $data['nama_customer'];
-                $roles->pic = $data['pic'];
-                $roles->phone = $data['phone'];
-                $roles->office_contact = $data['office_contact'];
-                $roles->email = $data['email'];
-                $roles->address = $data['address'];
-                $roles->kota = $data['kota'];
-                $roles->provinsi = $data['provinsi'];
-                $roles->npwp = $data['npwp'];
-                $roles->kecamatan = $data['kecamatan'];
-                $roles->kelurahan = $data['kelurahan'];
-                $roles->reference_number = $data['reference_number'];
-                $roles->max_retur = $data['max_retur'];
-                $roles->latitude = $data['latitude'];
-                $roles->longitude = $data['longitude'];
-                $roles->channel_outlet = $data['channel_outlet'];
-                $roles->sub_channel_outlet = $data['sub_channel_outlet'];
-                if (isset($data['max_print_invoice'])) {
-                    $roles->max_print_invoice = $data['max_print_invoice'] == 'undefined' ? 1 : $data['max_print_invoice'];
-                } else {
-                    $roles->max_print_invoice = 1;
+                if ($data['akses'] == 'superadmin') {
+                    $roles->pic = $data['pic'];
+                    $roles->no_ktp = $data['no_ktp'];
+                    $roles->nama_customer = $data['nama_customer'];
+                    $roles->pic = $data['pic'];
+                    $roles->phone = $data['phone'];
+                    $roles->office_contact = $data['office_contact'];
+                    $roles->email = $data['email'];
+                    $roles->address = $data['address'];
+                    $roles->kota = $data['kota'];
+                    $roles->provinsi = $data['provinsi'];
+                    $roles->npwp = $data['npwp'];
+                    $roles->kecamatan = $data['kecamatan'];
+                    $roles->kelurahan = $data['kelurahan'];
+                    $roles->reference_number = $data['reference_number'];
+                    $roles->max_retur = $data['max_retur'];
+                    $roles->latitude = $data['latitude'];
+                    $roles->longitude = $data['longitude'];
+                    $roles->channel_outlet = $data['channel_outlet'];
+                    $roles->sub_channel_outlet = $data['sub_channel_outlet'];
+                    if (isset($data['max_print_invoice'])) {
+                        $roles->max_print_invoice = $data['max_print_invoice'] == 'undefined' ? 1 : $data['max_print_invoice'];
+                    } else {
+                        $roles->max_print_invoice = 1;
+                    }
+                    $roles->pasar = $data['pasar'];
+                    $roles->branch = 'YOGYAKARTA';
                 }
-                $roles->pasar = $data['pasar'];
-                $roles->branch = 'YOGYAKARTA';
+
+                $roles->status = $data['remarks'] == '' ? 'APPROVED' : 'REJECTED';
 
                 if ($data['akses'] == 'supervisor sales') {
                     $roles->spv_sales_by = session('user_id');
@@ -382,9 +386,17 @@ class CustomerController extends Controller
                     $roles->admin_sales_by = session('user_id');
                     $roles->admin_sales_date = date('Y-m-d H:i:s');
                 }
-                if ($data['akses'] == 'operational manager' || $data['akses'] == 'superadmin' || $data['akses'] == 'bod') {
+                if ($data['akses'] == 'operational manager') {
                     $roles->om_by = session('user_id');
                     $roles->om_date = date('Y-m-d H:i:s');
+                }
+                if ($data['akses'] == 'bod') {
+                    $roles->bod_by = session('user_id');
+                    $roles->bod_date = date('Y-m-d H:i:s');
+                }
+                if ($data['akses'] == 'superadmin') {
+                    $roles->bod_by = session('user_id');
+                    $roles->bod_date = date('Y-m-d H:i:s');
                     $roles->ref_category = $roles->customer_category;
                 }
                 $roles->save();
