@@ -1001,6 +1001,24 @@ let Customer = {
                     data: "pic",
                 },
                 {
+                    data: "no_ktp",
+                },
+                {
+                    data: "foto_ktp_path",
+                    render: function (data, type, row) {
+                        return data == null ? '-' : 'Ya';
+                    }
+                },
+                {
+                    data: "npwp",
+                },
+                {
+                    data: "foto_npwp_path",
+                    render: function (data, type, row) {
+                        return data == null ? '-' : 'Ya';
+                    }
+                },
+                {
                     data: "email",
                 },
                 {

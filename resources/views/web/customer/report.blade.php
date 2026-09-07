@@ -81,6 +81,10 @@
                                                     <th>Nama Customer</th>
                                                     <th>Category</th>
                                                     <th>PIC</th>
+                                                    <th>KTP</th>
+                                                    <th>Foto KTP</th>
+                                                    <th>NPWP</th>
+                                                    <th>Foto NPWP</th>
                                                     <th>Email</th>
                                                     <th>No. HP</th>
                                                     <th>Channel Outlet</th>
