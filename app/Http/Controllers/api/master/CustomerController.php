@@ -18,9 +18,10 @@ class CustomerController extends Controller
         return "customer";
     }
 
-    public function getData()
+    public function getData(Request $request)
     {
         DB::enableQueryLog();
+        $data = $request->all();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -40,6 +41,10 @@ class CustomerController extends Controller
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
             ->whereNull('m.deleted');
+
+        if (isset($data['customer_category'])) {
+            $datadb->where('m.customer_category', $data['customer_category']);
+        }
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();

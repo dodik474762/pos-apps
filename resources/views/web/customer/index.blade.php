@@ -81,6 +81,26 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} Acc
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="All-noo"
+                                        href="#list-data-noo" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }} Noo
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="All-kandidat"
+                                        href="#list-data-kandidat" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                        Kandidat
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="All-reguler"
+                                        href="#list-data-reguler" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                        Reguler
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -135,6 +155,102 @@
                                                     <th>Admin Spv Acc</th>
                                                     <th>Operational Manager Acc</th>
                                                     <th>Ref Category</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-noo">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-noo">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Code Customer</th>
+                                                    <th>Reference Code</th>
+                                                    <th>Nama Customer</th>
+                                                    <th>Category</th>
+                                                    <th>PIC</th>
+                                                    <th>Email</th>
+                                                    <th>No. HP</th>
+                                                    <th>Channel Outlet</th>
+                                                    <th>Sub Channel Outlet</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-kandidat">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-kandidat">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Code Customer</th>
+                                                    <th>Reference Code</th>
+                                                    <th>Nama Customer</th>
+                                                    <th>Category</th>
+                                                    <th>PIC</th>
+                                                    <th>Email</th>
+                                                    <th>No. HP</th>
+                                                    <th>Channel Outlet</th>
+                                                    <th>Sub Channel Outlet</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="list-data-reguler">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-reguler">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Code Customer</th>
+                                                    <th>Reference Code</th>
+                                                    <th>Nama Customer</th>
+                                                    <th>Category</th>
+                                                    <th>PIC</th>
+                                                    <th>Email</th>
+                                                    <th>No. HP</th>
+                                                    <th>Channel Outlet</th>
+                                                    <th>Sub Channel Outlet</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
