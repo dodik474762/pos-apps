@@ -30,6 +30,7 @@ use App\Models\Master\Tax;
 use App\Models\Master\Users;
 use App\Models\Transaction\SalesInvoiceDtl;
 use App\Models\Transaction\SalesInvoiceHeader;
+use Illuminate\Support\Facades\Log;
 
 class SalesOrderController extends Controller
 {
@@ -1347,6 +1348,20 @@ class SalesOrderController extends Controller
         $usersdb       = Users::where('id', $users_id)->first();
         $branchId      = $usersdb->branch;
 
+        // ===== LOG AWAL SYNC =====
+        Log::info('=== SALES ORDER SYNC START ===', [
+            'user_id'        => $users_id,
+            'customer_id'    => $data['customer_id'] ?? null,
+            'so_date'        => $data['so_date'] ?? null,
+            'total_details'  => isset($data['details']) ? count($data['details']) : 0,
+            'raw_data'       => $data,
+            'has_files_outlet'  => !empty($files_outlet),
+            'has_files_ttd'     => !empty($files_ttd),
+            'has_files_checkin' => !empty($files_checkin),
+            'has_files_owner'   => !empty($files_owner),
+        ]);
+        // ===== END LOG =====
+
         $periode = Carbon::parse($data['so_date'])->setTimezone('Asia/Jakarta');
         $so_date = $periode->format('Y-m-d H:i:s');
 
@@ -1748,6 +1763,12 @@ class SalesOrderController extends Controller
             $result['sales_order_id'] = $hdrId;
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error('SALES ORDER SYNC FAILED', [
+                'user_id' => $users_id ?? null,
+                'message' => $th->getMessage(),
+                'file'    => $th->getFile(),
+                'line'    => $th->getLine(),
+            ]);
             $result['message'] = $th->getMessage();
         }
 
