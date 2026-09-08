@@ -381,7 +381,9 @@ class CustomerController extends Controller
                     $roles->branch = 'YOGYAKARTA';
                 }
 
-                $roles->status = $data['remarks'] == '' ? 'APPROVED' : 'REJECTED';
+                if (isset($data['remarks'])) {
+                    $roles->status = $data['remarks'] == '' ? 'APPROVED' : 'REJECTED';
+                }
 
                 if ($data['akses'] == 'supervisor sales') {
                     $roles->spv_sales_by = session('user_id');
