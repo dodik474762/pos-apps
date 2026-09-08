@@ -352,7 +352,7 @@ class CustomerController extends Controller
             // $roles->branch = $data['branch'];
 
             if ($data['state'] == 'update-sales') {
-                if ($data['akses'] == 'superadmin') {
+                if ($data['akses'] == 'superadmin' || ($data['akses'] == 'supervisor sales')) {
                     $roles->pic = $data['pic'];
                     $roles->no_ktp = $data['no_ktp'];
                     $roles->nama_customer = $data['nama_customer'];
