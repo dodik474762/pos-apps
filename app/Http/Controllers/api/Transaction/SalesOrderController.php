@@ -4325,7 +4325,7 @@ class SalesOrderController extends Controller
             }
 
             /*check credit limit */
-            $cl_check = canInvoiceProcessCL($cust_id, $subtotal, 0);
+            $cl_check = canInvoiceProcessCL($cust_id, $header->total_amount, 0);
             if (!$cl_check['status']) {
                 DB::rollBack();
                 return response()->json([
