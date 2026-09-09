@@ -28,6 +28,7 @@ use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
+use App\Http\Controllers\api\report\ReportPembayaranController as ReportReportPembayaranController;
 use App\Http\Controllers\api\report\ReportPenjualanController as ReportReportPenjualanController;
 use App\Http\Controllers\api\report\ReportPiutangController as ReportReportPiutangController;
 use App\Http\Controllers\api\Transaction\CreditNoteController as TransactionCreditNoteController;
@@ -82,6 +83,7 @@ use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
+use App\Http\Controllers\web\report\ReportPembayaranController;
 use App\Http\Controllers\web\report\ReportPenjualanController;
 use App\Http\Controllers\web\report\ReportPiutangController;
 use App\Http\Controllers\web\Transaction\CreditNoteController;
@@ -345,6 +347,8 @@ Route::get('report/report_visit', [ReportVisitController::class, 'index']);
 Route::get('report/summary_visit', [ReportVisitController::class, 'summary']);
 Route::get('report/report_penjualan', [ReportPenjualanController::class, 'index']);
 Route::get('report/report_piutang', [ReportPiutangController::class, 'index']);
+
+Route::get('report/report_pembayaran', [ReportPembayaranController::class, 'index']);
 
 Route::get('report/customer', [CustomerController::class, 'report']);
 
@@ -744,6 +748,8 @@ Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitControll
 Route::post('api/report/report_penjualan/getData', [ReportReportPenjualanController::class, 'getData']);
 Route::post('api/report/report_penjualan/getDataPenjualanPerProduct', [ReportReportPenjualanController::class, 'getDataPenjualanPerProduct']);
 Route::post('api/report/report_piutang/getData', [ReportReportPiutangController::class, 'getData']);
+
+Route::post('api/report/report_pembayaran/getData', [ReportReportPembayaranController::class, 'getData']);
 
 Route::get('report/delivery', [PackingListController::class, 'report']);
 Route::get('report/item-received', [PackingListController::class, 'reportItemReceived']);
