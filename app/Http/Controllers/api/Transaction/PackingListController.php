@@ -50,6 +50,7 @@ class PackingListController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->whereNull('m.deleted')
             ->where('m.type_transaction', 'PL')
+            ->where('m.packing_date', '>', '2026-08-31')
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -503,7 +504,7 @@ class PackingListController extends Controller
         $userId = session('user_id');
         $result = ['is_valid' => false];
 
-        // 🔥 decode JSON string jadi array
+        // ðŸ”¥ decode JSON string jadi array
         $data['do_list'] = is_string($data['do_list']) ? json_decode($data['do_list'], true) : $data['do_list'];
         $data['details'] = is_string($data['details']) ? json_decode($data['details'], true) : $data['details'];
 
@@ -1110,13 +1111,13 @@ class PackingListController extends Controller
             // ->where('m.driver', $data['users'])
             ->whereNull('m.deleted')
             ->where(function ($q) {
-                return $q->whereIn('m.status', ['PARTIAL', 'NOT DELIVERED'])->orWhereNull('m.status');
+                return $q->whereNotIn('m.status', ['RECEIVED'])->orWhereNull('m.status');
             })
-            ->where(function ($q) {
-                return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
-            })
-            // ->where('pld.packing_list_id', 276)
-            // ->where('m.packing_date', '>=', '2026-07-01')
+            // ->where(function ($q) {
+            //     return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
+            // })
+            // ->where('m.packing_list_no', 'PL09260038')
+            ->where('m.packing_date', '>=', '2026-08-31')
             // ->whereNotIn('m.status', ['CANCELLED', 'NOT DELIVERED', 'RECEIVED'])
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
@@ -1301,7 +1302,7 @@ class PackingListController extends Controller
                             $net_total   = 0;
                             $tax_total   = 0;
 
-                            // ✅ Siapkan item untuk auto return cancelled
+                            // âœ… Siapkan item untuk auto return cancelled
                             $cancelReturnItems = [];
 
                             foreach ($data['cancelled_items'] as $value) {
@@ -1335,7 +1336,7 @@ class PackingListController extends Controller
 
                                 $idDtlCancel[] = $value['id'];
 
-                                // ✅ Kumpulkan untuk auto return
+                                // âœ… Kumpulkan untuk auto return
                                 $cancelReturnItems[] = [
                                     'product' => $invUpdate->product_id,
                                     'invoice_detail_id' => $invUpdate->id,
@@ -1372,7 +1373,7 @@ class PackingListController extends Controller
                             postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total_update, $currencyId);
                             postingGL($reference, $penjualanBrg->account_id, $penjualanBrg->account->account_name, $penjualanBrg->cd, $totalAmountUpdate, $currencyId);
 
-                            // ✅ Auto return untuk cancelled items
+                            // âœ… Auto return untuk cancelled items
                             if (!empty($cancelReturnItems)) {
                                 createAutoReturn($invoiceId, $cancelReturnItems, 'REFUND', $users_id, $customer_id);
                             }
@@ -1381,7 +1382,7 @@ class PackingListController extends Controller
                         // ====== EDITED ITEMS ======
                         if (!empty($data['edited_items'])) {
 
-                            // ✅ Siapkan item untuk auto return selisih qty
+                            // âœ… Siapkan item untuk auto return selisih qty
                             $editReturnItems = [];
 
                             foreach ($data['edited_items'] as $editedItem) {
@@ -1391,7 +1392,7 @@ class PackingListController extends Controller
                                 $newQty      = (float)$editedItem['qty'];
                                 $originalQty = (float)$editedItem['original_qty'];
 
-                                // ✅ Simpan original dari DB hanya sekali
+                                // âœ… Simpan original dari DB hanya sekali
                                 if (empty($invDtl->original_qty)) {
                                     $invDtl->original_qty      = $invDtl->qty;
                                     $invDtl->original_price    = $invDtl->price;
@@ -1417,7 +1418,7 @@ class PackingListController extends Controller
                                 $invDtl->subtotal = $subtotal;
                                 $invDtl->save();
 
-                                // ✅ Hitung selisih untuk auto return
+                                // âœ… Hitung selisih untuk auto return
                                 $selisih = $dbOriginalQty - $newQty;
                                 if ($selisih > 0) {
                                     $so_detail = SalesOrderDetail::find($invDtl->so_detail_id);
@@ -1487,7 +1488,7 @@ class PackingListController extends Controller
                                 postingGL($reference, $penjualanBrgEdit->account_id, $penjualanBrgEdit->account->account_name, $penjualanBrgEdit->cd, $totalAmountRecalc, $currencyId);
                             }
 
-                            // ✅ Auto return untuk selisih qty edited items
+                            // âœ… Auto return untuk selisih qty edited items
                             if (!empty($editReturnItems)) {
                                 createAutoReturn($invoiceId, $editReturnItems, 'REFUND', $users_id, $customer_id);
                             }
