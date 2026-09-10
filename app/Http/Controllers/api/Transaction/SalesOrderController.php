@@ -3810,11 +3810,12 @@ class SalesOrderController extends Controller
     public function getAverageTransaction(Request $request)
     {
         $data = $request->all();
-        $month = intval(date('m'));   // Januari
+        $month = date('m');   // Januari
+        // $month = '06';
         $year = date('Y');
         $customer = $data['customer_id'] ?? null;
 
-        $data = DB::table('sales_order_headers as soh')
+        $dataso = DB::table('sales_order_headers as soh')
             ->select(
                 'soh.customer_id',
                 'c.nama_customer',
@@ -3827,48 +3828,62 @@ class SalesOrderController extends Controller
             ->join('customer as c', 'c.id', 'soh.customer_id')
             ->whereMonth('soh.so_date', $month)
             ->whereYear('soh.so_date', $year)
-            ->whereIn('soh.status', ['confirmed', 'completed', 'partial', 'draft'])
+            // ->whereIn('soh.status', ['confirmed', 'completed', 'partial', 'draft'])
             ->whereNull('soh.deleted')
             ->groupBy('soh.customer_id', 'c.nama_customer', 'c.npwp', 'c.no_ktp');
         if ($customer) {
-            $data = $data->where('soh.customer_id', $customer);
+            $dataso = $dataso->where('soh.customer_id', $customer);
         }
 
-        $data = $data->first();
+        $dataso = $dataso->first();
+        // echo '<pre>';
+        // print_r($dataso);
+        // die;
 
-        $customer = empty($data) ? $customer : $data->customer_id;
+        $customer = empty($dataso) ? $customer : $dataso->customer_id;
         /*data transaksi terakakhir */
         $last_transaction = SalesOrderHeader::where('customer_id', $customer)->orderBy('id', 'desc')->first();
+        // echo '<pre>';
+        // print_r($last_transaction);
+        // die;
         $last_product = '';
         if (!empty($last_transaction)) {
-            $data->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date));
+            try {
+                $dataso->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date));
 
-            $detailProduct = DB::table('sales_order_details as sod')
-                ->select([
-                    DB::raw("
-                        CONCAT(
-                            p.code, '-',
-                            p.name, '-',
-                            sod.qty, ' ',
-                            u.name, '-',
-                            sod.subtotal
-                        ) as detail_string
-                    ")
-                ])
-                ->join('product as p', 'p.id', 'sod.product_id')
-                ->join('unit as u', 'u.id', 'sod.unit')
-                ->where('sod.sales_order_id', $last_transaction->id)
-                ->get();
+                $detailProduct = DB::table('sales_order_details as sod')
+                    ->select([
+                        DB::raw("
+                            CONCAT(
+                                p.code, '-',
+                                p.name, '-',
+                                sod.qty, ' ',
+                                u.name, '-',
+                                sod.subtotal
+                            ) as detail_string
+                        ")
+                    ])
+                    ->join('product as p', 'p.id', 'sod.product_id')
+                    ->join('unit as u', 'u.id', 'sod.unit')
+                    ->where('sod.sales_order_id', $last_transaction->id)
+                    ->get();
 
-            $last_product = $detailProduct->pluck('detail_string')->implode("\n");
-            $data->last_product = $last_product;
-            $data->no_ktp = $last_transaction->no_ktp;
-            $data->npwp = $last_transaction->npwp;
+                $last_product = $detailProduct->pluck('detail_string')->implode("\n");
+                $dataso->last_product = $last_product;
+                $dataso->no_ktp = $last_transaction->no_ktp;
+                $dataso->npwp = $last_transaction->npwp;
+            } catch (\Throwable $th) {
+                //throw $th;
+            }            
         }
 
+        // echo '<pre>';
+        // print_r($dataso);
+        // die;
 
-        if (empty($data)) {
-            $data = [
+
+        if (empty($dataso)) {
+            $dataso = [
                 'is_valid' => true,
                 'data' => [
                     'customer_id' => $customer,
@@ -3886,7 +3901,7 @@ class SalesOrderController extends Controller
         }
         $data['periode'] = date('Y-m');
         $result['is_valid'] = true;
-        $result['data'] = $data;
+        $result['data'] = $dataso;
         return response()->json($result);
     }
 
