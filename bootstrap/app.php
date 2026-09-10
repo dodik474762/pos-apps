@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/sales_order/closingOrder',
             'api_mobile/transaksi/sales_order/stockSubmit',
             'api_mobile/master/customer/validateCustomer',
+            'api_mobile/master/customer/validateOutlet',
             'api_mobile/transaksi/sales_order/checkDiscount',
             'api_mobile/transaksi/sales_payment/sync',
             'api_mobile/transaksi/sales_return/sync',

@@ -397,6 +397,7 @@ Route::post('api_mobile/master/customer/getKelurahan', [MasterCustomerController
 Route::post('api_mobile/master/customer/getProvinsi', [MasterCustomerController::class, 'getProvinsi']);
 Route::post('api_mobile/master/customer/submitNoo', [MasterCustomerController::class, 'submitNoo']);
 Route::post('api_mobile/master/customer/validateCustomer', [MasterCustomerController::class, 'validateCustomer']);
+Route::post('api_mobile/master/customer/validateOutlet', [MasterCustomerController::class, 'validateOutlet']);
 
 Route::post('api/master/pasar/getData', [MasterPasarController::class, 'getData']);
 Route::post('api/master/pasar/getDataAcc', [MasterPasarController::class, 'getDataAcc']);

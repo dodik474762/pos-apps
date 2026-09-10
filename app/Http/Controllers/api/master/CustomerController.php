@@ -878,4 +878,49 @@ class CustomerController extends Controller
 
         return response()->json($result);
     }
+
+    public function validateOutletStatus(Request $request)
+    {
+        $customerId = $request->input('customer_id');
+        $statusOutlet = $request->input('status_outlet'); // 'SUDAH_RO' | 'TOKO_DOBEL'
+        $usersId = $request->input('user_id'); // sesuaikan kalau cara ambil user id-nya beda, misal dari $request->input('user_id')
+
+        $result['is_valid'] = false;
+        $result['message'] = '';
+
+        $categoryMap = [
+            'SUDAH_RO'   => 4,
+            'TOKO_DOBEL' => 5,
+        ];
+
+        if (!array_key_exists($statusOutlet, $categoryMap)) {
+            $result['message'] = 'Status outlet tidak valid.';
+            return response()->json($result);
+        }
+
+        DB::beginTransaction();
+        try {
+            $detail = Customer::find($customerId);
+
+            if (!$detail) {
+                $result['message'] = 'Customer tidak ditemukan.';
+                DB::rollBack();
+                return response()->json($result);
+            }
+
+            $detail->customer_category = $categoryMap[$statusOutlet];
+            $detail->validate_time = date('Y-m-d H:i:s');
+            $detail->validate_by = $usersId;
+            $detail->save();
+
+            DB::commit();
+            $result['message'] = 'Success';
+            $result['is_valid'] = true;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
 }
