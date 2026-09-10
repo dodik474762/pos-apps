@@ -3807,15 +3807,14 @@ class SalesOrderController extends Controller
         return response()->json($data);
     }
 
-    public function getAverageTransaction(Request $request)
+   public function getAverageTransaction(Request $request)
     {
         $data = $request->all();
-        $month = date('m');   // Januari
-        // $month = '06';
+        $month = date('m');
         $year = date('Y');
-        $customer = $data['customer_id'] ?? null;
+        $customerId = $data['customer_id'] ?? null;
 
-        $dataso = DB::table('sales_order_headers as soh')
+        $query = DB::table('sales_order_headers as soh')
             ->select(
                 'soh.customer_id',
                 'c.nama_customer',
@@ -3828,28 +3827,39 @@ class SalesOrderController extends Controller
             ->join('customer as c', 'c.id', 'soh.customer_id')
             ->whereMonth('soh.so_date', $month)
             ->whereYear('soh.so_date', $year)
-            // ->whereIn('soh.status', ['confirmed', 'completed', 'partial', 'draft'])
             ->whereNull('soh.deleted')
             ->groupBy('soh.customer_id', 'c.nama_customer', 'c.npwp', 'c.no_ktp');
-        if ($customer) {
-            $dataso = $dataso->where('soh.customer_id', $customer);
+
+        if ($customerId) {
+            $query = $query->where('soh.customer_id', $customerId);
         }
 
-        $dataso = $dataso->first();
-        // echo '<pre>';
-        // print_r($dataso);
-        // die;
+        $dataso = $query->first();
 
-        $customer = empty($dataso) ? $customer : $dataso->customer_id;
-        /*data transaksi terakakhir */
-        $last_transaction = SalesOrderHeader::where('customer_id', $customer)->orderBy('id', 'desc')->first();
-        // echo '<pre>';
-        // print_r($last_transaction);
-        // die;
-        $last_product = '';
-        if (!empty($last_transaction)) {
+        // Susun nilai default dulu, supaya semua field SELALU ada
+        $resultData = [
+            'customer_id'     => $customerId,
+            'nama_customer'   => $dataso->nama_customer ?? null,
+            'total_transaksi' => (int) ($dataso->total_transaksi ?? 0),
+            'total_nilai'     => (float) ($dataso->total_nilai ?? 0),
+            'avg_transaksi'   => round((float) ($dataso->avg_transaksi ?? 0), 2),
+            'last_transaksi'  => '-',
+            'last_product'    => '-',
+            'no_ktp'          => $dataso->no_ktp ?? null,
+            'npwp'            => $dataso->npwp ?? null,
+            'periode'         => date('Y-m'),
+        ];
+
+        $activeCustomerId = $dataso->customer_id ?? $customerId;
+
+        // Ambil transaksi terakhir customer ini
+        $lastTransaction = SalesOrderHeader::where('customer_id', $activeCustomerId)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!empty($lastTransaction)) {
             try {
-                $dataso->last_transaksi = date('Y-m-d', strtotime($last_transaction->so_date));
+                $resultData['last_transaksi'] = date('Y-m-d', strtotime($lastTransaction->so_date));
 
                 $detailProduct = DB::table('sales_order_details as sod')
                     ->select([
@@ -3865,44 +3875,26 @@ class SalesOrderController extends Controller
                     ])
                     ->join('product as p', 'p.id', 'sod.product_id')
                     ->join('unit as u', 'u.id', 'sod.unit')
-                    ->where('sod.sales_order_id', $last_transaction->id)
+                    ->where('sod.sales_order_id', $lastTransaction->id)
                     ->get();
 
-                $last_product = $detailProduct->pluck('detail_string')->implode("\n");
-                $dataso->last_product = $last_product;
-                $dataso->no_ktp = $last_transaction->no_ktp;
-                $dataso->npwp = $last_transaction->npwp;
+                $resultData['last_product'] = $detailProduct->pluck('detail_string')->implode("\n");
+
+                $resultData['no_ktp'] = $lastTransaction->no_ktp ?? $resultData['no_ktp'];
+                $resultData['npwp']   = $lastTransaction->npwp ?? $resultData['npwp'];
             } catch (\Throwable $th) {
-                //throw $th;
-            }            
+                // biarkan default kalau gagal ambil detail produk
+            }
         }
 
-        // echo '<pre>';
-        // print_r($dataso);
-        // die;
-
-
-        if (empty($dataso)) {
-            $dataso = [
+        // Bungkus dua level supaya konsisten dengan yang dibaca frontend: result.data.data
+        return response()->json([
+            'is_valid' => true,
+            'data' => [
                 'is_valid' => true,
-                'data' => [
-                    'customer_id' => $customer,
-                    // 'customer_name' => $customer_name,
-                    'total_transaksi' => 0,
-                    'total_nilai' => 0,
-                    'avg_transaksi' => 0,
-                    'last_transaksi' => '-',
-                    'last_product' => '-',
-                    'no_ktp' => '-',
-                    'npwp' => '-',
-                    'periode' => date('Y-m')
-                ]
-            ];
-        }
-        $data['periode'] = date('Y-m');
-        $result['is_valid'] = true;
-        $result['data'] = $dataso;
-        return response()->json($result);
+                'data' => $resultData,
+            ],
+        ]);
     }
 
     public function closingOrder(Request $request)
