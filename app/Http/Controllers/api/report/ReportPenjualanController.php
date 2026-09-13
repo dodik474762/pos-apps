@@ -241,11 +241,11 @@ class ReportPenjualanController extends Controller
                     });
             })
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '121')
+            // ->where('p.id', '49')
             // ->where('sid.qty', '>', 0)
             // ->whereIn('sih.id', [1138, 1139])
             // ->where('usr.name', 'SLS-009')
-            // ->where('sih.invoice_number', 'SI06260440')
+            // ->where('sih.invoice_number', 'SI08260026')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0);
@@ -407,7 +407,7 @@ class ReportPenjualanController extends Controller
                 'sih.invoice_date',
                 'sid.qty',
                 'sid.price',
-                'sid.subtotal',
+                DB::raw('(sid.subtotal + sid.discount) as subtotal'),
                 DB::raw("
                 (
                     SELECT SUM(
@@ -460,7 +460,8 @@ class ReportPenjualanController extends Controller
                 'unit_terkecil.name as unit_terkecil',
                 'unit_terbesar.name as unit_terbesar',
                 'price_terkecil.price as price_terkecil',
-                'price_terbesar.price as price_terbesar'
+                'price_terbesar.price as price_terbesar',
+                'sopi.sales_order_detail_id',
             ])
             ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
@@ -513,11 +514,14 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('unit as unit_terkecil', 'unit_terkecil.id', 'pou_terkecil.unit_tujuan')
             ->leftJoin('unit as unit_terbesar', 'unit_terbesar.id', 'pou.unit_tujuan')
+            ->leftJoin('sales_order_promo_item as sopi', function ($q) {
+                return $q->on('sopi.sales_order_detail_id', 'sid.so_detail_id');
+            })
             // ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             // ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '23')
-            // ->where('sih.invoice_number', 'SI06260592')
+            // ->where('p.id', '49')
+            // ->where('sih.invoice_number', 'SI08260026')
             // ->whereIn('sih.id', [1139])
             // ->where('usr.name', 'SLS-009')
             ->whereNull('sih.deleted')
@@ -526,6 +530,7 @@ class ReportPenjualanController extends Controller
             ->where('sid.qty', '>', 0)
             ->orderBy('sih.invoice_number', 'asc')
             ->orderBy('m.salesman', 'asc')
+            ->orderBy('sopi.sales_order_detail_id', 'desc')
             ->orderBy('sih.invoice_date', 'asc');
 
         if (isset($_POST)) {
