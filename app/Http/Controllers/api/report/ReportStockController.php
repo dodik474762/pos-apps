@@ -172,7 +172,13 @@ class ReportStockController extends Controller
                     ->whereNull('pu_large.deleted');
             })
             ->join('unit as u_large', 'u_large.id', 'pu_large.unit_tujuan')
-            ->whereDate('m.created_at', '<=', $tanggal)
+            // ->whereDate('m.created_at', '<=', $tanggal)
+            ->where(function ($q) use ($tanggal) {
+                return $q
+                    ->whereDate('m.created_at', '>', '2026-07-31')
+                    ->whereDate('m.created_at', '<=', $tanggal);
+            })
+            // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
             ->where('m.id', '>', '18013')
             ->groupBy(
                 'm.product',
@@ -336,7 +342,12 @@ class ReportStockController extends Controller
             ->join('unit as u_small', 'u_small.id', 'pu_small.unit_tujuan')
 
             ->where('m.id', '>', '18013')
-            ->whereDate('m.created_at', '<=', $tanggal)
+            ->where(function ($q) use ($tanggal) {
+                return $q
+                    ->whereDate('m.created_at', '>', '2026-07-31')
+                    ->whereDate('m.created_at', '<=', $tanggal);
+            })
+            // ->whereDate('m.created_at', '<=', $tanggal)
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -521,9 +532,14 @@ class ReportStockController extends Controller
             })
             ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
 
-            ->whereDate('m.created_at', '<=', $tanggal)
-            // ->where('p.code', '859290')
+            ->where(function ($q) use ($tanggal) {
+                return $q
+                    ->whereDate('m.created_at', '>', '2026-07-31')
+                    ->whereDate('m.created_at', '<=', $tanggal);
+            })
+            // ->where('p.code', 'PROD-07260001')
             ->where('m.id', '>', '18013')
+            // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
             ->groupBy(
                 'm.product',
                 'm.warehouse',
