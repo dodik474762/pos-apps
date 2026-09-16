@@ -446,9 +446,413 @@ class ReportStockController extends Controller
         return json_encode($data);
     }
 
+    // public function getDataStockDetail(Request $request)
+    // {
+    //     DB::enableQueryLog();
+    //     $data = $request->all();
+    //     $data['data'] = [];
+    //     $data['recordsTotal'] = 0;
+    //     $data['recordsFiltered'] = 0;
+
+    //     $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+
+    //     $datadb = ProductStockMove::from('product_stock_move as m')
+    //         ->select([
+    //             'm.product',
+    //             'm.warehouse',
+    //             'p.code as product_code',
+    //             'p.name as product_name',
+    //             'w.name as warehouse_name',
+    //             'v.nama_vendor as principal',
+
+    //             // Nama satuan per level
+    //             'u_ctn.name as unit_ctn_name', // level 4
+    //             'u_pck.name as unit_pck_name', // level 3
+    //             'u_rtg.name as unit_rtg_name', // level 2
+    //             'u_pcs.name as unit_pcs_name', // level 1
+
+    //             // Nilai konversi ke satuan terkecil per level
+    //             'pu_ctn.nilai_konversi_terkecil as konversi_ctn', // level 4
+    //             'pu_pck.nilai_konversi_terkecil as konversi_pck', // level 3
+    //             'pu_rtg.nilai_konversi_terkecil as konversi_rtg', // level 2
+    //             'pu_pcs.nilai_konversi_terkecil as konversi_pcs', // level 1
+
+    //             // Stok tersedia dalam satuan terkecil (raw)
+    //             DB::raw('ROUND(
+    //             SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+    //         ) as stok_tersedia_raw'),
+    //             // 'm.price'
+    //             // TAMBAH subquery price terlama (non-zero preferred)
+    //             DB::raw('COALESCE(
+    //     (SELECT m2.price FROM product_stock_move m2 
+    //      WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
+    //        AND m2.price > 0 AND DATE(m2.created_at) <= "' . $tanggal . '"
+    //      ORDER BY m2.created_at ASC LIMIT 1),
+    //     (SELECT m2.price FROM product_stock_move m2 
+    //      WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
+    //        AND DATE(m2.created_at) <= "' . $tanggal . '"
+    //      ORDER BY m2.created_at ASC LIMIT 1)
+    // ) as price')
+    //         ])
+    //         ->with(['products.uomFromLarge.units'])
+    //         ->join('product as p', 'p.id', 'm.product')
+    //         ->join('warehouse as w', 'w.id', 'm.warehouse')
+    //         ->join('unit as u', 'u.id', 'm.unit')
+    //         ->leftJoin('vendor as v', 'p.vendor', 'v.id')
+
+    //         // Join level 4 = CTN
+    //         ->leftJoin('product_uom as pu_ctn', function ($q) {
+    //             $q->on('pu_ctn.product', 'm.product')
+    //                 ->where('pu_ctn.level', 4)
+    //                 ->whereNull('pu_ctn.deleted');
+    //         })
+    //         ->leftJoin('unit as u_ctn', 'u_ctn.id', 'pu_ctn.unit_tujuan')
+
+    //         // Join level 3 = PCK
+    //         ->leftJoin('product_uom as pu_pck', function ($q) {
+    //             $q->on('pu_pck.product', 'm.product')
+    //                 ->where('pu_pck.level', 3)
+    //                 ->whereNull('pu_pck.deleted');
+    //         })
+    //         ->leftJoin('unit as u_pck', 'u_pck.id', 'pu_pck.unit_tujuan')
+
+    //         // Join level 2 = RTG
+    //         ->leftJoin('product_uom as pu_rtg', function ($q) {
+    //             $q->on('pu_rtg.product', 'm.product')
+    //                 ->where('pu_rtg.level', 2)
+    //                 ->whereNull('pu_rtg.deleted');
+    //         })
+    //         ->leftJoin('unit as u_rtg', 'u_rtg.id', 'pu_rtg.unit_tujuan')
+
+    //         // Join level 1 = PCS
+    //         ->leftJoin('product_uom as pu_pcs', function ($q) {
+    //             $q->on('pu_pcs.product', 'm.product')
+    //                 ->where('pu_pcs.level', 1)
+    //                 ->whereNull('pu_pcs.deleted');
+    //         })
+    //         ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
+
+    //         ->where(function ($q) use ($tanggal) {
+    //             return $q
+    //                 ->whereDate('m.created_at', '>', '2026-07-31')
+    //                 ->whereDate('m.created_at', '<=', $tanggal);
+    //         })
+    //         // ->where('p.code', 'PROD-07260001')
+    //         ->where('m.id', '>', '18013')
+    //         // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
+    //         ->groupBy(
+    //             'm.product',
+    //             'm.warehouse',
+    //             'p.code',
+    //             'p.name',
+    //             'w.name',
+    //             'v.nama_vendor',
+    //             'pu_ctn.nilai_konversi_terkecil',
+    //             'u_ctn.name',
+    //             'pu_pck.nilai_konversi_terkecil',
+    //             'u_pck.name',
+    //             'pu_rtg.nilai_konversi_terkecil',
+    //             'u_rtg.name',
+    //             'pu_pcs.nilai_konversi_terkecil',
+    //             'u_pcs.name',
+    //             // 'm.price'
+    //         )
+    //         ->orderBy('p.name');
+
+    //     if (isset($_POST)) {
+    //         $data['recordsTotal'] = $datadb->get()->count();
+
+    //         if (isset($_POST['search']['value'])) {
+    //             $keyword = $_POST['search']['value'];
+    //             $datadb->where(function ($query) use ($keyword) {
+    //                 $query->where('p.code', 'LIKE', '%' . $keyword . '%')
+    //                     ->orWhere('p.name', 'LIKE', '%' . $keyword . '%')
+    //                     ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
+    //                     ->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+    //             });
+    //         }
+
+    //         if (isset($_POST['order'][0]['column'])) {
+    //             switch ($_POST['order'][0]['column']) {
+    //                 case 1:
+    //                     $datadb->orderBy('p.code', $_POST['order'][0]['dir']);
+    //                     break;
+    //                 case 2:
+    //                     $datadb->orderBy('p.name', $_POST['order'][0]['dir']);
+    //                     break;
+    //                 case 3:
+    //                     $datadb->orderBy('v.nama_vendor', $_POST['order'][0]['dir']);
+    //                     break;
+    //                 default:
+    //                     $datadb->orderBy('p.name', 'asc');
+    //                     break;
+    //             }
+    //         }
+
+    //         $data['recordsFiltered'] = $datadb->get()->count();
+
+    //         if (isset($_POST['length'])) {
+    //             $datadb->limit($_POST['length']);
+    //         }
+    //         if (isset($_POST['start'])) {
+    //             $datadb->offset($_POST['start']);
+    //         }
+    //     }
+
+    //     $resultdb = [];
+    //     $datadb = $datadb->get()->toArray();
+    //     // echo '<pre>';
+    //     // print_r($datadb);
+    //     // die;
+
+    //     foreach ($datadb as &$value) {
+
+    //         // echo '<pre>';
+    //         // print_r($value);
+    //         // die;
+    //         $stok_raw = (int) ($value['stok_tersedia_raw'] ?? 0);
+    //         $price = (float) ($value['price'] ?? 0);
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | BUILD LEVEL SATUAN DINAMIS
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         $levels = collect([
+    //             [
+    //                 'alias'     => 'ctn',
+    //                 'level'     => 4,
+    //                 'unit_name' => $value['unit_ctn_name'] ?? null,
+    //                 'konversi'  => (int) ($value['konversi_ctn'] ?? 0),
+    //             ],
+    //             [
+    //                 'alias'     => 'pck',
+    //                 'level'     => 3,
+    //                 'unit_name' => $value['unit_pck_name'] ?? null,
+    //                 'konversi'  => (int) ($value['konversi_pck'] ?? 0),
+    //             ],
+    //             [
+    //                 'alias'     => 'rtg',
+    //                 'level'     => 2,
+    //                 'unit_name' => $value['unit_rtg_name'] ?? null,
+    //                 'konversi'  => (int) ($value['konversi_rtg'] ?? 0),
+    //             ],
+    //             [
+    //                 'alias'     => 'pcs',
+    //                 'level'     => 1,
+    //                 'unit_name' => $value['unit_pcs_name'] ?? null,
+    //                 'konversi'  => (int) ($value['konversi_pcs'] ?? 0),
+    //             ],
+    //         ])
+    //             ->filter(function ($item) {
+    //                 return $item['konversi'] > 0;
+    //             })
+    //             ->sortByDesc('konversi')
+    //             ->values();
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | RESET QTY
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         $value['qty_ctn'] = 0;
+    //         $value['qty_pck'] = 0;
+    //         $value['qty_rtg'] = 0;
+    //         $value['qty_pcs'] = 0;
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | TOTAL LEVEL TERSEDIA
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         $totalLevel = $levels->count();
+
+    //         $sisa = $stok_raw;
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | 4 LEVEL
+    // |--------------------------------------------------------------------------
+    // | CTN - PCK - RTG - PCS
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         if ($totalLevel == 4) {
+
+    //             $lvl1 = $levels[0];
+    //             $lvl2 = $levels[1];
+    //             $lvl3 = $levels[2];
+    //             $lvl4 = $levels[3];
+
+    //             // CTN
+    //             $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+    //             $sisa = $sisa % $lvl1['konversi'];
+
+    //             // PCK
+    //             // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
+    //             // $sisa = $sisa % $lvl2['konversi'];
+
+    //             $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
+    //             $sisa = $sisa % $lvl2['konversi'];
+
+    //             // RTG
+    //             // $value['qty_rtg'] = intdiv($sisa, $lvl3['konversi']);
+    //             // $sisa = $sisa % $lvl3['konversi'];
+    //             $value['qty_rtg'] = intdiv($stok_raw, $lvl3['konversi']);
+    //             $sisa = $sisa % $lvl3['konversi'];
+
+    //             // PCS
+    //             // $value['qty_pcs'] = $sisa;
+    //             $value['qty_pcs'] = $stok_raw;
+
+    //             // overwrite nama unit
+    //             $value['unit_ctn_name'] = $lvl1['unit_name'];
+    //             $value['unit_pck_name'] = $lvl2['unit_name'];
+    //             $value['unit_rtg_name'] = $lvl3['unit_name'];
+    //             $value['unit_pcs_name'] = $lvl4['unit_name'];
+    //         }
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | 3 LEVEL
+    // |--------------------------------------------------------------------------
+    // | terbesar = CTN
+    // | tengah = PCK
+    // | kecil = PCS
+    // |--------------------------------------------------------------------------
+    // */ elseif ($totalLevel == 3) {
+
+    //             $lvl1 = $levels[0];
+    //             $lvl2 = $levels[1];
+    //             $lvl3 = $levels[2];
+
+    //             // CTN
+    //             $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+    //             $sisa = $sisa % $lvl1['konversi'];
+
+
+    //             // PCK
+    //             // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
+    //             // $sisa = $sisa % $lvl2['konversi'];
+    //             $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
+    //             $sisa = $sisa % $lvl2['konversi'];
+
+    //             // PCS
+    //             // $value['qty_pcs'] = $sisa;
+    //             $value['qty_pcs'] = $stok_raw;
+
+    //             // overwrite nama unit
+    //             $value['unit_ctn_name'] = $lvl1['unit_name'];
+    //             $value['unit_pck_name'] = $lvl2['unit_name'];
+    //             $value['unit_pcs_name'] = $lvl3['unit_name'];
+    //         }
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | 2 LEVEL
+    // |--------------------------------------------------------------------------
+    // | terbesar = CTN
+    // | kecil = PCS
+    // |--------------------------------------------------------------------------
+    // */ elseif ($totalLevel == 2) {
+
+    //             $lvl1 = $levels[0];
+    //             $lvl2 = $levels[1];
+
+    //             // CTN
+    //             $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
+    //             $sisa = $sisa % $lvl1['konversi'];
+
+    //             // PCS
+    //             // $value['qty_pcs'] = $sisa;
+    //             $value['qty_pcs'] = $stok_raw;
+
+    //             // overwrite nama unit
+    //             $value['unit_ctn_name'] = $lvl1['unit_name'];
+    //             $value['unit_pcs_name'] = $lvl2['unit_name'];
+    //         }
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | 1 LEVEL
+    // |--------------------------------------------------------------------------
+    // */ elseif ($totalLevel == 1) {
+
+    //             $lvl1 = $levels[0];
+
+    //             $value['qty_pcs'] = $stok_raw;
+
+    //             // overwrite nama unit
+    //             $value['unit_pcs_name'] = $lvl1['unit_name'];
+    //         }
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | TOTAL HARGA
+    // |--------------------------------------------------------------------------
+    // | price diasumsikan harga satuan terbesar
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         $largestLevel = $levels->first();
+
+    //         $harga_per_pcs = 0;
+
+    //         if (
+    //             $largestLevel &&
+    //             $largestLevel['konversi'] > 0
+    //         ) {
+
+    //             $harga_per_pcs =
+    //                 $price / $largestLevel['konversi'];
+    //         }
+
+    //         $value['total_harga'] = round(
+    //             $harga_per_pcs * $stok_raw,
+    //             2
+    //         );
+
+    //         /*
+    // |--------------------------------------------------------------------------
+    // | FORMAT UOM PRODUCT
+    // |--------------------------------------------------------------------------
+    // */
+
+    //         $uoms = collect($value['products']['uom_from_large'] ?? [])
+    //             ->sortByDesc('level')
+    //             ->pluck('units.name')
+    //             ->filter()
+    //             ->values();
+
+    //         $value['uom_product'] = $uoms->implode('-');
+
+    //         $resultdb[] = $value;
+    //     }
+
+    //     $data['data'] = $resultdb;
+    //     $data['draw'] = $_POST['draw'];
+
+    //     $query = DB::getQueryLog();
+    //     return json_encode($data);
+    // }
+
+    /**
+     * PERUBAHAN UTAMA DARI VERSI ASLI:
+     * 1. Query hanya dieksekusi 1x untuk data, count total & filtered pakai clone query
+     *    dengan ->count() Eloquent (COUNT di DB), bukan ->get()->count() (ambil semua baris lalu hitung di PHP).
+     * 2. whereDate() diganti range datetime langsung supaya index di created_at kepakai.
+     * 3. $tanggal tidak lagi disisipkan sebagai string mentah ke DB::raw() -> pakai parameter binding (fix SQL Injection).
+     * 4. Struktur query dipisah jadi query dasar (base) lalu di-clone untuk count, supaya tidak duplikasi kode.
+     */
+
+
     public function getDataStockDetail(Request $request)
     {
         DB::enableQueryLog();
+
         $data = $request->all();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
@@ -456,7 +860,52 @@ class ReportStockController extends Controller
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
 
-        $datadb = ProductStockMove::from('product_stock_move as m')
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $tanggalMulai = '2026-07-31 00:00:00';
+        $tanggalAkhir = $tanggal . ' 23:59:59';
+
+        // ============================================================
+        // QUERY RINGAN untuk recordsTotal — tanpa join uom/unit, tanpa subquery price
+        // ============================================================
+        $data['recordsTotal'] = DB::table('product_stock_move as m')
+            ->where('m.created_at', '>', $tanggalMulai)
+            ->where('m.created_at', '<=', $tanggalAkhir)
+            ->where('m.id', '>', '18013')
+            ->select(DB::raw('COUNT(DISTINCT m.product, m.warehouse) as aggregate'))
+            ->value('aggregate') ?? 0;
+
+        // ============================================================
+        // QUERY RINGAN untuk recordsFiltered — cuma join yang dipakai search (product, warehouse, vendor)
+        // ============================================================
+        $filteredCountQuery = DB::table('product_stock_move as m')
+            ->join('product as p', 'p.id', 'm.product')
+            ->join('warehouse as w', 'w.id', 'm.warehouse')
+            ->leftJoin('vendor as v', 'p.vendor', 'v.id')
+            ->where('m.created_at', '>', $tanggalMulai)
+            ->where('m.created_at', '<=', $tanggalAkhir)
+            ->where('m.id', '>', '18013');
+
+        if (isset($_POST['search']['value']) && $_POST['search']['value'] !== '') {
+            $keyword = $_POST['search']['value'];
+            $filteredCountQuery->where(function ($query) use ($keyword) {
+                $query->where('p.code', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('p.name', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+            });
+        }
+
+        $data['recordsFiltered'] = $filteredCountQuery
+            ->select(DB::raw('COUNT(DISTINCT m.product, m.warehouse) as aggregate'))
+            ->value('aggregate') ?? 0;
+
+        // ============================================================
+        // QUERY UTAMA (yang berat, dengan semua join+subquery) — HANYA dijalankan sekali, untuk data yang ditampilkan
+        // ============================================================
+        $baseQuery = ProductStockMove::from('product_stock_move as m')
             ->select([
                 'm.product',
                 'm.warehouse',
@@ -465,42 +914,38 @@ class ReportStockController extends Controller
                 'w.name as warehouse_name',
                 'v.nama_vendor as principal',
 
-                // Nama satuan per level
-                'u_ctn.name as unit_ctn_name', // level 4
-                'u_pck.name as unit_pck_name', // level 3
-                'u_rtg.name as unit_rtg_name', // level 2
-                'u_pcs.name as unit_pcs_name', // level 1
+                'u_ctn.name as unit_ctn_name',
+                'u_pck.name as unit_pck_name',
+                'u_rtg.name as unit_rtg_name',
+                'u_pcs.name as unit_pcs_name',
 
-                // Nilai konversi ke satuan terkecil per level
-                'pu_ctn.nilai_konversi_terkecil as konversi_ctn', // level 4
-                'pu_pck.nilai_konversi_terkecil as konversi_pck', // level 3
-                'pu_rtg.nilai_konversi_terkecil as konversi_rtg', // level 2
-                'pu_pcs.nilai_konversi_terkecil as konversi_pcs', // level 1
+                'pu_ctn.nilai_konversi_terkecil as konversi_ctn',
+                'pu_pck.nilai_konversi_terkecil as konversi_pck',
+                'pu_rtg.nilai_konversi_terkecil as konversi_rtg',
+                'pu_pcs.nilai_konversi_terkecil as konversi_pcs',
 
-                // Stok tersedia dalam satuan terkecil (raw)
                 DB::raw('ROUND(
-                SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
-            ) as stok_tersedia_raw'),
-                // 'm.price'
-                // TAMBAH subquery price terlama (non-zero preferred)
+            SUM(CASE WHEN m.created_at <= ? THEN m.qty_in - m.qty_out ELSE 0 END)
+        ) as stok_tersedia_raw'),
+
                 DB::raw('COALESCE(
-        (SELECT m2.price FROM product_stock_move m2 
-         WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
-           AND m2.price > 0 AND DATE(m2.created_at) <= "' . $tanggal . '"
-         ORDER BY m2.created_at ASC LIMIT 1),
-        (SELECT m2.price FROM product_stock_move m2 
-         WHERE m2.product = m.product AND m2.warehouse = m.warehouse 
-           AND DATE(m2.created_at) <= "' . $tanggal . '"
-         ORDER BY m2.created_at ASC LIMIT 1)
-    ) as price')
+            (SELECT m2.price FROM product_stock_move m2
+             WHERE m2.product = m.product AND m2.warehouse = m.warehouse
+               AND m2.price > 0 AND m2.created_at <= ?
+             ORDER BY m2.created_at ASC LIMIT 1),
+            (SELECT m2.price FROM product_stock_move m2
+             WHERE m2.product = m.product AND m2.warehouse = m.warehouse
+               AND m2.created_at <= ?
+             ORDER BY m2.created_at ASC LIMIT 1)
+        ) as price'),
             ])
+            ->addBinding([$tanggalAkhir, $tanggalAkhir, $tanggalAkhir], 'select')
             ->with(['products.uomFromLarge.units'])
             ->join('product as p', 'p.id', 'm.product')
             ->join('warehouse as w', 'w.id', 'm.warehouse')
             ->join('unit as u', 'u.id', 'm.unit')
             ->leftJoin('vendor as v', 'p.vendor', 'v.id')
 
-            // Join level 4 = CTN
             ->leftJoin('product_uom as pu_ctn', function ($q) {
                 $q->on('pu_ctn.product', 'm.product')
                     ->where('pu_ctn.level', 4)
@@ -508,7 +953,6 @@ class ReportStockController extends Controller
             })
             ->leftJoin('unit as u_ctn', 'u_ctn.id', 'pu_ctn.unit_tujuan')
 
-            // Join level 3 = PCK
             ->leftJoin('product_uom as pu_pck', function ($q) {
                 $q->on('pu_pck.product', 'm.product')
                     ->where('pu_pck.level', 3)
@@ -516,7 +960,6 @@ class ReportStockController extends Controller
             })
             ->leftJoin('unit as u_pck', 'u_pck.id', 'pu_pck.unit_tujuan')
 
-            // Join level 2 = RTG
             ->leftJoin('product_uom as pu_rtg', function ($q) {
                 $q->on('pu_rtg.product', 'm.product')
                     ->where('pu_rtg.level', 2)
@@ -524,7 +967,6 @@ class ReportStockController extends Controller
             })
             ->leftJoin('unit as u_rtg', 'u_rtg.id', 'pu_rtg.unit_tujuan')
 
-            // Join level 1 = PCS
             ->leftJoin('product_uom as pu_pcs', function ($q) {
                 $q->on('pu_pcs.product', 'm.product')
                     ->where('pu_pcs.level', 1)
@@ -532,14 +974,9 @@ class ReportStockController extends Controller
             })
             ->leftJoin('unit as u_pcs', 'u_pcs.id', 'pu_pcs.unit_tujuan')
 
-            ->where(function ($q) use ($tanggal) {
-                return $q
-                    ->whereDate('m.created_at', '>', '2026-07-31')
-                    ->whereDate('m.created_at', '<=', $tanggal);
-            })
-            // ->where('p.code', 'PROD-07260001')
+            ->where('m.created_at', '>', $tanggalMulai)
+            ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
-            // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -554,70 +991,56 @@ class ReportStockController extends Controller
                 'pu_rtg.nilai_konversi_terkecil',
                 'u_rtg.name',
                 'pu_pcs.nilai_konversi_terkecil',
-                'u_pcs.name',
-                // 'm.price'
-            )
-            ->orderBy('p.name');
+                'u_pcs.name'
+            );
 
-        if (isset($_POST)) {
-            $data['recordsTotal'] = $datadb->get()->count();
+        $datadb = clone $baseQuery;
 
-            if (isset($_POST['search']['value'])) {
-                $keyword = $_POST['search']['value'];
-                $datadb->where(function ($query) use ($keyword) {
-                    $query->where('p.code', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('p.name', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
-                });
-            }
-
-            if (isset($_POST['order'][0]['column'])) {
-                switch ($_POST['order'][0]['column']) {
-                    case 1:
-                        $datadb->orderBy('p.code', $_POST['order'][0]['dir']);
-                        break;
-                    case 2:
-                        $datadb->orderBy('p.name', $_POST['order'][0]['dir']);
-                        break;
-                    case 3:
-                        $datadb->orderBy('v.nama_vendor', $_POST['order'][0]['dir']);
-                        break;
-                    default:
-                        $datadb->orderBy('p.name', 'asc');
-                        break;
-                }
-            }
-
-            $data['recordsFiltered'] = $datadb->get()->count();
-
-            if (isset($_POST['length'])) {
-                $datadb->limit($_POST['length']);
-            }
-            if (isset($_POST['start'])) {
-                $datadb->offset($_POST['start']);
-            }
+        if (isset($_POST['search']['value']) && $_POST['search']['value'] !== '') {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('p.code', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('p.name', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('w.name', 'LIKE', '%' . $keyword . '%');
+            });
         }
 
-        $resultdb = [];
+        if (isset($_POST['order'][0]['column'])) {
+            switch ($_POST['order'][0]['column']) {
+                case 1:
+                    $datadb->orderBy('p.code', $_POST['order'][0]['dir']);
+                    break;
+                case 2:
+                    $datadb->orderBy('p.name', $_POST['order'][0]['dir']);
+                    break;
+                case 3:
+                    $datadb->orderBy('v.nama_vendor', $_POST['order'][0]['dir']);
+                    break;
+                default:
+                    $datadb->orderBy('p.name', 'asc');
+                    break;
+            }
+        } else {
+            $datadb->orderBy('p.name', 'asc');
+        }
+
+        if (isset($_POST['length']) && (int) $_POST['length'] > 0) {
+            $datadb->limit((int) $_POST['length']);
+        }
+        if (isset($_POST['start'])) {
+            $datadb->offset((int) $_POST['start']);
+        }
+
+        // === Eksekusi query berat HANYA SEKALI, untuk baris yang benar-benar ditampilkan ===
         $datadb = $datadb->get()->toArray();
-        // echo '<pre>';
-        // print_r($datadb);
-        // die;
+
+        $resultdb = [];
 
         foreach ($datadb as &$value) {
 
-            // echo '<pre>';
-            // print_r($value);
-            // die;
             $stok_raw = (int) ($value['stok_tersedia_raw'] ?? 0);
             $price = (float) ($value['price'] ?? 0);
-
-            /*
-    |--------------------------------------------------------------------------
-    | BUILD LEVEL SATUAN DINAMIS
-    |--------------------------------------------------------------------------
-    */
 
             $levels = collect([
                 [
@@ -651,175 +1074,77 @@ class ReportStockController extends Controller
                 ->sortByDesc('konversi')
                 ->values();
 
-            /*
-    |--------------------------------------------------------------------------
-    | RESET QTY
-    |--------------------------------------------------------------------------
-    */
-
             $value['qty_ctn'] = 0;
             $value['qty_pck'] = 0;
             $value['qty_rtg'] = 0;
             $value['qty_pcs'] = 0;
 
-            /*
-    |--------------------------------------------------------------------------
-    | TOTAL LEVEL TERSEDIA
-    |--------------------------------------------------------------------------
-    */
-
             $totalLevel = $levels->count();
-
             $sisa = $stok_raw;
 
-            /*
-    |--------------------------------------------------------------------------
-    | 4 LEVEL
-    |--------------------------------------------------------------------------
-    | CTN - PCK - RTG - PCS
-    |--------------------------------------------------------------------------
-    */
-
             if ($totalLevel == 4) {
-
                 $lvl1 = $levels[0];
                 $lvl2 = $levels[1];
                 $lvl3 = $levels[2];
                 $lvl4 = $levels[3];
 
-                // CTN
                 $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
                 $sisa = $sisa % $lvl1['konversi'];
-
-                // PCK
-                // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
-                // $sisa = $sisa % $lvl2['konversi'];
 
                 $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
                 $sisa = $sisa % $lvl2['konversi'];
 
-                // RTG
-                // $value['qty_rtg'] = intdiv($sisa, $lvl3['konversi']);
-                // $sisa = $sisa % $lvl3['konversi'];
                 $value['qty_rtg'] = intdiv($stok_raw, $lvl3['konversi']);
                 $sisa = $sisa % $lvl3['konversi'];
 
-                // PCS
-                // $value['qty_pcs'] = $sisa;
                 $value['qty_pcs'] = $stok_raw;
 
-                // overwrite nama unit
                 $value['unit_ctn_name'] = $lvl1['unit_name'];
                 $value['unit_pck_name'] = $lvl2['unit_name'];
                 $value['unit_rtg_name'] = $lvl3['unit_name'];
                 $value['unit_pcs_name'] = $lvl4['unit_name'];
-            }
-
-            /*
-    |--------------------------------------------------------------------------
-    | 3 LEVEL
-    |--------------------------------------------------------------------------
-    | terbesar = CTN
-    | tengah = PCK
-    | kecil = PCS
-    |--------------------------------------------------------------------------
-    */ elseif ($totalLevel == 3) {
-
+            } elseif ($totalLevel == 3) {
                 $lvl1 = $levels[0];
                 $lvl2 = $levels[1];
                 $lvl3 = $levels[2];
 
-                // CTN
                 $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
                 $sisa = $sisa % $lvl1['konversi'];
 
-
-                // PCK
-                // $value['qty_pck'] = intdiv($sisa, $lvl2['konversi']);
-                // $sisa = $sisa % $lvl2['konversi'];
                 $value['qty_pck'] = intdiv($stok_raw, $lvl2['konversi']);
                 $sisa = $sisa % $lvl2['konversi'];
 
-                // PCS
-                // $value['qty_pcs'] = $sisa;
                 $value['qty_pcs'] = $stok_raw;
 
-                // overwrite nama unit
                 $value['unit_ctn_name'] = $lvl1['unit_name'];
                 $value['unit_pck_name'] = $lvl2['unit_name'];
                 $value['unit_pcs_name'] = $lvl3['unit_name'];
-            }
-
-            /*
-    |--------------------------------------------------------------------------
-    | 2 LEVEL
-    |--------------------------------------------------------------------------
-    | terbesar = CTN
-    | kecil = PCS
-    |--------------------------------------------------------------------------
-    */ elseif ($totalLevel == 2) {
-
+            } elseif ($totalLevel == 2) {
                 $lvl1 = $levels[0];
                 $lvl2 = $levels[1];
 
-                // CTN
                 $value['qty_ctn'] = intdiv($stok_raw, $lvl1['konversi']);
                 $sisa = $sisa % $lvl1['konversi'];
 
-                // PCS
-                // $value['qty_pcs'] = $sisa;
                 $value['qty_pcs'] = $stok_raw;
 
-                // overwrite nama unit
                 $value['unit_ctn_name'] = $lvl1['unit_name'];
                 $value['unit_pcs_name'] = $lvl2['unit_name'];
-            }
-
-            /*
-    |--------------------------------------------------------------------------
-    | 1 LEVEL
-    |--------------------------------------------------------------------------
-    */ elseif ($totalLevel == 1) {
-
+            } elseif ($totalLevel == 1) {
                 $lvl1 = $levels[0];
 
                 $value['qty_pcs'] = $stok_raw;
-
-                // overwrite nama unit
                 $value['unit_pcs_name'] = $lvl1['unit_name'];
             }
 
-            /*
-    |--------------------------------------------------------------------------
-    | TOTAL HARGA
-    |--------------------------------------------------------------------------
-    | price diasumsikan harga satuan terbesar
-    |--------------------------------------------------------------------------
-    */
-
             $largestLevel = $levels->first();
-
             $harga_per_pcs = 0;
 
-            if (
-                $largestLevel &&
-                $largestLevel['konversi'] > 0
-            ) {
-
-                $harga_per_pcs =
-                    $price / $largestLevel['konversi'];
+            if ($largestLevel && $largestLevel['konversi'] > 0) {
+                $harga_per_pcs = $price / $largestLevel['konversi'];
             }
 
-            $value['total_harga'] = round(
-                $harga_per_pcs * $stok_raw,
-                2
-            );
-
-            /*
-    |--------------------------------------------------------------------------
-    | FORMAT UOM PRODUCT
-    |--------------------------------------------------------------------------
-    */
+            $value['total_harga'] = round($harga_per_pcs * $stok_raw, 2);
 
             $uoms = collect($value['products']['uom_from_large'] ?? [])
                 ->sortByDesc('level')
@@ -833,9 +1158,10 @@ class ReportStockController extends Controller
         }
 
         $data['data'] = $resultdb;
-        $data['draw'] = $_POST['draw'];
+        $data['draw'] = $_POST['draw'] ?? 0;
 
         $query = DB::getQueryLog();
+
         return json_encode($data);
     }
 }

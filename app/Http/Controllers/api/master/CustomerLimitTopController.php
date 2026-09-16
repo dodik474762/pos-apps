@@ -227,7 +227,7 @@ class CustomerLimitTopController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $akses = session('akses');
+            $akses = strtolower(session('akses'));
             $roles = CustomerLimitTop::find($data['id']);
 
             if ($roles->status == 'APPROVED' || $roles->status == 'REJECTED') {

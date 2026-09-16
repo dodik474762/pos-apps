@@ -300,6 +300,7 @@ class CustomerController extends Controller
     {
         $data = $request->all();
         $items_price = isset($data['items_price']) ? json_decode($data['items_price']) : [];
+        $data['akses'] = isset($data['akses']) ? strtolower($data['akses']) : '';
 
         // echo '<pre>';
         // print_r($data);
