@@ -864,7 +864,7 @@ class ReportStockController extends Controller
             $tanggal = date('Y-m-d');
         }
 
-        $tanggalMulai = '2026-07-31 00:00:00';
+        $tanggalMulai = '2026-07-31 23:59:59';
         $tanggalAkhir = $tanggal . ' 23:59:59';
 
         // ============================================================
@@ -977,6 +977,7 @@ class ReportStockController extends Controller
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
+            // ->where('p.code', 'PROD-07260001')
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -1157,6 +1158,9 @@ class ReportStockController extends Controller
             $resultdb[] = $value;
         }
 
+        // echo '<pre>';
+        // print_r($resultdb);
+        // die;
         $data['data'] = $resultdb;
         $data['draw'] = $_POST['draw'] ?? 0;
 
