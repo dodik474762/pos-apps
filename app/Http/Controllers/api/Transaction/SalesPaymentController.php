@@ -374,13 +374,29 @@ class SalesPaymentController extends Controller
                 /*mapping coa */
 
                 $invoice = SalesInvoiceHeader::find($value['invoice_id']);
-                $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
+                // $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
 
-                if ($totalInvoicePrev <= 0 && $invoice->status == "PAID" && $header->created_by != $userId) {
+                // if ($totalInvoicePrev <= 0 && $invoice->status == "PAID" && $header->created_by != $userId) {
+                //     DB::rollBack();
+                //     return response()->json([
+                //         'is_valid' => false,
+                //         'message'  => 'Invoice ' . $invoice->invoice_number . ' sudah lunas.',
+                //     ]);
+                // }
+
+                $outstandingNow = $invoice->total_amount - $invoice->amount_paid;   // ⬅ ganti $totalInvoicePrev
+                if ($outstandingNow <= 0) {
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
                         'message'  => 'Invoice ' . $invoice->invoice_number . ' sudah lunas.',
+                    ]);
+                }
+                if ($value['allocated_amount'] > $outstandingNow) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message'  => 'Allocated amount melebihi outstanding invoice ' . $invoice->invoice_number,
                     ]);
                 }
 
