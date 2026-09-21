@@ -197,7 +197,8 @@
                 <tr>
                     <td>{{ $v->promo_name }}</td>
                     <td class="text-right" style="color:#c00;">-
-                        {{ number_format($promoInclude, 0, ',', '.') }}</td>
+                        <strong>{{ number_format($promoInclude, 0, ',', '.') }}</strong>
+                    </td>
                 </tr>
             @endforeach
             {{-- <tr>
