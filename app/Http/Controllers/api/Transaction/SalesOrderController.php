@@ -469,6 +469,13 @@ class SalesOrderController extends Controller
             }
 
             $customersId = $data['customer_id'];
+            $customers_check   = Customer::where('id', trim($data['customer_id']))->first();
+            if ($customers_check->deleted != '') {
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Cust : ' . $customers_check->nama_customer  . ' sudah tidak aktif',
+                ]);
+            }
             // $custUpdate = Customer::where('id', $customersId)->first();
 
             // =============================
@@ -1375,6 +1382,12 @@ class SalesOrderController extends Controller
         }
 
         $customers   = Customer::where('id', trim($data['customer_id']))->first();
+        if ($customers->deleted != '') {
+            return response()->json([
+                'is_valid' => false,
+                'message' => 'Cust : ' . $customers->nama_customer  . ' sudah tidak aktif',
+            ]);
+        }
         $customersId = $customers->id;
         $top         = TermOfPayment::where('id', $customers->payment_terms)->first();
         $payment_term = 0;
