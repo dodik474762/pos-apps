@@ -24,6 +24,7 @@ use App\Http\Controllers\api\master\RolesController as MasterRolesController;
 use App\Http\Controllers\api\master\RoutingApprovalController as MasterRoutingApprovalController;
 use App\Http\Controllers\api\master\TaxController as MasterTaxController;
 use App\Http\Controllers\api\master\AccountTypesController as MasterAccountTypesController;
+use App\Http\Controllers\api\master\AccountsController as MasterAccountsController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\web\master\RolesController;
 use App\Http\Controllers\web\master\RoutingApprovalController;
 use App\Http\Controllers\web\master\TaxController;
 use App\Http\Controllers\web\master\AccountTypesController;
+use App\Http\Controllers\web\master\AccountsController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
@@ -242,6 +244,10 @@ Route::get('master/tax/ubah', [TaxController::class, 'ubah']);
 Route::get('master/account_types', [AccountTypesController::class, 'index']);
 Route::get('master/account_types/add', [AccountTypesController::class, 'add']);
 Route::get('master/account_types/ubah', [AccountTypesController::class, 'ubah']);
+
+Route::get('master/accounts', [AccountsController::class, 'index']);
+Route::get('master/accounts/add', [AccountsController::class, 'add']);
+Route::get('master/accounts/ubah', [AccountsController::class, 'ubah']);
 
 Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
 Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
@@ -559,6 +565,11 @@ Route::post('api/master/account_types/getData', [MasterAccountTypesController::c
 Route::post('api/master/account_types/submit', [MasterAccountTypesController::class, 'submit']);
 Route::post('api/master/account_types/delete', [MasterAccountTypesController::class, 'delete']);
 Route::post('api/master/account_types/confirmDelete', [MasterAccountTypesController::class, 'confirmDelete']);
+
+Route::post('api/master/accounts/getData', [MasterAccountsController::class, 'getData']);
+Route::post('api/master/accounts/submit', [MasterAccountsController::class, 'submit']);
+Route::post('api/master/accounts/delete', [MasterAccountsController::class, 'delete']);
+Route::post('api/master/accounts/confirmDelete', [MasterAccountsController::class, 'confirmDelete']);
 
 Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderController::class, 'getData']);
 Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
