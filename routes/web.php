@@ -625,6 +625,8 @@ Route::post('api/transaksi/journals/showModalPost', [TransactionJournalsControll
 Route::post('api/transaksi/journals/showModalReversal', [TransactionJournalsController::class, 'showModalReversal']);
 Route::post('api/transaksi/journals/getAccountList', [TransactionJournalsController::class, 'getAccountList']);
 Route::post('api/transaksi/good-receipt/showDataPOItem', [TransactionGoodReceiptController::class, 'showDataPOItem']);
+Route::post('api/transaksi/good-receipt/postJurnal', [TransactionGoodReceiptController::class, 'postJurnal']);
+Route::post('api/transaksi/good-receipt/showModalPostJurnal', [TransactionGoodReceiptController::class, 'showModalPostJurnal']);
 Route::post('api/transaksi/good-receipt/getListItemOutstandingPO', [TransactionGoodReceiptController::class, 'getListItemOutstandingPO']);
 
 Route::post('api/transaksi/purchase-invoice/getData', [TransactionPurchaseInvoiceController::class, 'getData']);
@@ -639,6 +641,8 @@ Route::post('api/transaksi/vendor-bill/getData', [TransactionVendorBillControlle
 Route::post('api/transaksi/vendor-bill/submit', [TransactionVendorBillController::class, 'submit']);
 Route::post('api/transaksi/vendor-bill/delete', [TransactionVendorBillController::class, 'delete']);
 Route::post('api/transaksi/vendor-bill/confirmDelete', [TransactionVendorBillController::class, 'confirmDelete']);
+Route::post('api/transaksi/vendor-bill/showModalPostJurnal', [TransactionVendorBillController::class, 'showModalPostJurnal']);
+Route::post('api/transaksi/vendor-bill/postJurnal', [TransactionVendorBillController::class, 'postJurnal']);
 Route::post('api/transaksi/vendor-bill/showDataInvoice', [TransactionVendorBillController::class, 'showDataInvoice']);
 Route::post('api/transaksi/vendor-bill/loadInvoices', [TransactionVendorBillController::class, 'loadInvoices']);
 

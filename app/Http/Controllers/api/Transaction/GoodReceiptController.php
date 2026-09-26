@@ -10,6 +10,8 @@ use App\Models\Transaction\GoodReceipt;
 use App\Models\Transaction\GoodReceiptDtl;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
+use App\Services\Accounting\GoodReceiptJournalService;
+use App\Services\Accounting\JournalValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -307,6 +309,17 @@ class GoodReceiptController extends Controller
 
             $menu = GoodReceipt::find($data['id']);
 
+            $journalService = new GoodReceiptJournalService();
+            $activeJournal = $journalService->getActiveJournal($data['id']);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
+                    . ' masih berstatus ' . $activeJournal->status
+                    . '. Jurnal harus direversal terlebih dahulu.';
+
+                return response()->json($result);
+            }
+
             $now = date('Y-m-d');
             if ($now > $menu->received_date) {
                 DB::rollBack();
@@ -438,7 +451,90 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
 
+        $gr = GoodReceipt::select(['id', 'gr_number', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->first();
+
+        $data['gr_number'] = empty($gr) ? '' : $gr->gr_number;
+        $data['gr_status'] = empty($gr) ? '' : $gr->status;
+        $data['is_open'] = ! empty($gr) && $gr->status == 'open';
+
+        $journalService = new GoodReceiptJournalService();
+        $journal = $journalService->getJournalForGoodReceipt($data['id'] ?? null);
+        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null);
+
+        $data['journal_no'] = empty($journal) ? '' : $journal->journal_no;
+        $data['journal_status'] = empty($journal) ? '' : $journal->status;
+        $data['has_active_journal'] = ! empty($activeJournal);
+
         return view('web.good_receipt.modal.confirmdelete', $data);
+    }
+
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $gr = GoodReceipt::select(['id', 'gr_number', 'received_date', 'total_amount', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['gr_number'] = empty($gr) ? '' : $gr->gr_number;
+        $data['gr_total'] = empty($gr) ? (float) 0 : (float) $gr->total_amount;
+        $data['gr_status'] = empty($gr) ? '' : $gr->status;
+
+        return view('web.good_receipt.modal.confirmpostjurnal', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan memposting jurnal penerimaan barang untuk satu
+     * Good Receipt.
+     *   Dr INVENTORY (gabungan per akun)
+     *   Cr GRNI
+     *
+     * Ini murni pengakuan barang masuk gudang. Hutang ke supplier belum
+     * diakui di sini dan baru diakui saat Purchase Invoice diposting.
+     * submit(), stockUpdate() dan postingGL() legacy tidak diubah.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID penerimaan barang wajib diisi.';
+
+                return response()->json($result);
+            }
+
+            $journalService = new GoodReceiptJournalService();
+
+            // Status penerimaan diubah hanya setelah jurnal berhasil dibuat dan
+            // diposting, supaya barang tidak ditandai selesai tanpa jurnal.
+            $journal = DB::transaction(function () use ($id, $journalService) {
+                $journal = $journalService->postFromGoodReceipt($id, session('user_id'));
+
+                $gr = GoodReceipt::where('id', $id)->first();
+                if (! empty($gr)) {
+                    $gr->status = 'completed';
+                    $gr->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     public function showDataPOItem(Request $request)

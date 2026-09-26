@@ -9,6 +9,8 @@ use App\Models\Master\Currency;
 use App\Models\Transaction\PurchaseInvoiceHeader;
 use App\Models\Transaction\VendorBillDtl;
 use App\Models\Transaction\VendorBillHeader;
+use App\Services\Accounting\JournalValidationException;
+use App\Services\Accounting\SupplierPaymentJournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -224,6 +226,22 @@ class VendorBillController extends Controller
                 ]);
             }
 
+            // Journal Engine: pembayaran yang sudah punya jurnal aktif tidak boleh
+            // dihapus karena general ledger sudah menerima dampaknya. Jurnal harus
+            // direversal lebih dulu lewat menu Transaksi > Jurnal.
+            $journalService = new SupplierPaymentJournalService();
+            $activeJournal = $journalService->getActiveJournal($payment->id);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
+                        . ' masih berstatus ' . $activeJournal->status
+                        . '. Jurnal harus direversal terlebih dahulu.',
+                ]);
+            }
+
             // ambil mapping akun untuk rollback GL
             $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
                 ->where('account_type', 'hutang usaha')
@@ -327,7 +345,150 @@ class VendorBillController extends Controller
     {
         $data = $request->all();
 
+        $payment = VendorBillHeader::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['id'] = empty($payment) ? ($data['id'] ?? '') : $payment->id;
+        $data['payment_number'] = empty($payment) ? '' : $payment->payment_number;
+        $data['payment_status'] = empty($payment) ? '' : $payment->status;
+        $data['is_draft'] = ! empty($payment) && $payment->status == 'draft';
+
+        // Journal Engine: tampilkan nomor jurnal supaya user tahu harus reversal dulu.
+        $journalService = new SupplierPaymentJournalService();
+        $activeJournal = $journalService->getActiveJournal($data['id']);
+        $data['has_active_journal'] = ! empty($activeJournal);
+        $data['journal_no'] = empty($activeJournal) ? '' : $activeJournal->journal_no;
+        $data['journal_status'] = empty($activeJournal) ? '' : $activeJournal->status;
+
         return view('web.vendor_bill.modal.confirmdelete', $data);
+    }
+
+    /**
+     * Journal Engine: modal konfirmasi posting jurnal pembayaran supplier.
+     * Akun Bank/Cash diambil dari tabel accounts, bukan dari coa legacy.
+     */
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $payment = VendorBillHeader::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['payment_number'] = empty($payment) ? '' : $payment->payment_number;
+        $data['payment_total'] = empty($payment) ? (float) 0 : (float) $payment->total_payment;
+        $data['payment_status'] = empty($payment) ? '' : $payment->status;
+        $data['vendor_name'] = empty($payment)
+            ? ''
+            : DB::table('vendor')->where('id', $payment->vendor)->value('nama_vendor');
+        $data['bank_cash_accounts'] = $this->getListJournalBankCash();
+        $data['invoice_count'] = empty($payment)
+            ? 0
+            : DB::table('vendor_payment_detail')
+                ->where('vendor_payment_id', $payment->id)
+                ->whereNull('deleted')
+                ->count();
+
+        return view('web.vendor_bill.modal.confirmpostjurnal', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan memposting jurnal pembayaran supplier.
+     *   Dr AP (dari account mapping SUPPLIER_PAYMENT / AP)
+     *   Cr Bank/Cash (akun pilihan user)
+     *
+     * Status pembayaran diubah menjadi posted hanya setelah jurnal berhasil
+     * dibuat dan diposting, supaya pembayaran tidak ditandai lunas tanpa jurnal.
+     * submit() dan postingGL() legacy tidak diubah.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID vendor payment wajib diisi.';
+
+                return response()->json($result);
+            }
+
+            $journalService = new SupplierPaymentJournalService();
+
+            $journal = DB::transaction(function () use ($data, $id, $journalService) {
+                $journal = $journalService->postFromVendorPayment(
+                    $id,
+                    $data['bank_account_id'] ?? null,
+                    session('user_id')
+                );
+
+                $payment = VendorBillHeader::where('id', $id)->first();
+                if (! empty($payment) && $payment->status != 'posted') {
+                    $payment->status = 'posted';
+                    $payment->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Akun kas & bank untuk jurnal, diambil dari master accounts Journal Engine
+     * dan bukan dari coa. Kelompok kas & bank dicari lewat posisinya di bawah
+     * header Asset sehingga tidak bergantung kode akun.
+     */
+    protected function getListJournalBankCash()
+    {
+        $assetRoot = DB::table('accounts')
+            ->select(['id'])
+            ->where('is_header', 1)
+            ->where('normal_balance', 'Debit')
+            ->whereNull('parent_id')
+            ->whereNull('deleted_at')
+            ->orderBy('id')
+            ->first();
+
+        if (empty($assetRoot)) {
+            return collect();
+        }
+
+        $cashBankParents = DB::table('accounts')
+            ->select(['id'])
+            ->where('parent_id', $assetRoot->id)
+            ->where('is_header', 1)
+            ->where('normal_balance', 'Debit')
+            ->whereNull('deleted_at')
+            ->where(function ($query) {
+                $query->where('name', 'like', '%CASH%')
+                    ->orWhere('name', 'like', '%BANK%');
+            })
+            ->pluck('id');
+
+        if ($cashBankParents->isEmpty()) {
+            return collect();
+        }
+
+        return DB::table('accounts')
+            ->select(['id', 'code', 'name'])
+            ->whereIn('parent_id', $cashBankParents)
+            ->where('is_header', 0)
+            ->where('is_active', 1)
+            ->whereNull('deleted_at')
+            ->orderBy('code')
+            ->get();
     }
 
     public function showDataInvoice(Request $request)

@@ -122,6 +122,10 @@ class CustomerPaymentJournalService
 
         return JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $paymentId)
+            // Jurnal reversal mewarisi reference_type dan reference_id, jadi harus dikecualikan.
+            // Kalau tidak, reversal akan dianggap jurnal aktif sehingga hapus tetap terkunci
+            // dan posting ulang justru mengembalikan jurnal reversal.
+            ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
             ->orderByDesc('id')
             ->first();

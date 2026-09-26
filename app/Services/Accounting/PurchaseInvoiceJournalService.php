@@ -10,9 +10,15 @@ use Illuminate\Support\Facades\DB;
  * Integrasi Journal Engine dengan Purchase Invoice.
  *
  * Setiap baris detail invoice dipetakan ke akun debit berdasarkan flag
- * product.is_stock:
- *   1. product.is_stock <> 0  -> role INVENTORY (barang persediaan)
- *   2. product.is_stock = 0   -> role EXPENSE (beban / jasa)
+ * product.is_stock dan apakah item-nya sudah pernah diterima di modul
+ * Receiving:
+ *   1. product.is_stock = 0                        -> role EXPENSE
+ *   2. sudah pernah di-Receiving                    -> role GRNI
+ *   3. product.is_stock <> 0 dan belum di-Receiving -> role INVENTORY
+ *
+ * Urutan tersebut memastikan item non stok tetap menjadi beban meskipun
+ * pernah masuk Receiving, dan item yang sudah diakui barangnya di Receiving
+ * tidak mendapat debit persediaan dua kali.
  *
  * Nominal baris memakai purchase_invoice_detail.subtotal, yaitu nilai
  * qty x harga setelah diskon dan sebelum pajak. PPN Masukan tetap
@@ -23,7 +29,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Jurnal yang dihasilkan:
  *   1. journal_headers  : 1 baris, reference ke Purchase Invoice
- *   2. journal_details  : N baris debit (gabungan INVENTORY / EXPENSE)
+ *   2. journal_details  : N baris debit (gabungan INVENTORY / GRNI / EXPENSE)
  *                         dan 1 baris credit AP
  */
 class PurchaseInvoiceJournalService
@@ -33,6 +39,7 @@ class PurchaseInvoiceJournalService
     const ROLE_AP = 'AP';
     const ROLE_INVENTORY = 'INVENTORY';
     const ROLE_EXPENSE = 'EXPENSE';
+    const ROLE_GRNI = 'GRNI';
     const EPSILON = 0.001;
     const TOLERANCE = 0.01;
 
@@ -110,6 +117,9 @@ class PurchaseInvoiceJournalService
 
         return JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $invoiceId)
+            // Jurnal reversal memakai reference yang sama, sehingga yang dicari di sini
+            // adalah jurnal asal transaksi, bukan jurnal pembalikannya.
+            ->whereNull('reversal_of_id')
             ->orderByDesc('id')
             ->first();
     }
@@ -126,6 +136,10 @@ class PurchaseInvoiceJournalService
 
         return JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $invoiceId)
+            // Jurnal reversal mewarisi reference_type dan reference_id, jadi harus dikecualikan.
+            // Kalau tidak, reversal akan dianggap jurnal aktif sehingga hapus tetap terkunci
+            // dan posting ulang justru mengembalikan jurnal reversal.
+            ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
             ->orderByDesc('id')
             ->first();
@@ -145,7 +159,8 @@ class PurchaseInvoiceJournalService
     }
 
     /**
-     * Baris detail invoice beserta flag is_stock dari master product.
+     * Baris detail invoice beserta flag is_stock dari master product dan penanda
+     * apakah baris tersebut sudah pernah diterima di modul Receiving.
      */
     protected function getLines($invoice)
     {
@@ -153,10 +168,18 @@ class PurchaseInvoiceJournalService
             ->select([
                 'd.id',
                 'd.product',
+                'd.purchase_order_detail_id',
                 'd.subtotal',
                 'p.id as product_id',
                 'p.name as product_name',
                 'p.is_stock',
+                DB::raw(
+                    'CASE WHEN EXISTS ('
+                    . 'SELECT 1 FROM goods_receipt_detail grd'
+                    . ' WHERE grd.purchase_order_detail = d.purchase_order_detail_id'
+                    . ' AND grd.deleted IS NULL'
+                    . ') THEN 1 ELSE 0 END as is_received'
+                ),
             ])
             ->leftJoin('product as p', 'p.id', '=', 'd.product')
             ->where('d.purchase_invoice_id', $invoice->id)
@@ -253,12 +276,23 @@ class PurchaseInvoiceJournalService
     }
 
     /**
-     * is_stock decides per item: 0 berarti beban, selain itu termasuk persediaan.
-     * Nilai NULL mengikuti default kolom yaitu persediaan.
+     * Menentukan role debit per baris invoice.
+     *
+     * Urutan: non stok lebih dulu supaya item jasa tetap menjadi beban,
+     * lalu item yang sudah pernah di-Receiving karena persediaannya sudah
+     * diakui di modul Receiving, sisanya persediaan biasa.
      */
     protected function resolveRole($line)
     {
-        return (int) $line->is_stock === 0 ? self::ROLE_EXPENSE : self::ROLE_INVENTORY;
+        if ((int) $line->is_stock === 0) {
+            return self::ROLE_EXPENSE;
+        }
+
+        if (! empty($line->purchase_order_detail_id) && (int) $line->is_received === 1) {
+            return self::ROLE_GRNI;
+        }
+
+        return self::ROLE_INVENTORY;
     }
 
     /**
@@ -282,6 +316,10 @@ class PurchaseInvoiceJournalService
     {
         if ($role === self::ROLE_EXPENSE) {
             return 'Beban pembelian non stock ' . $invoice->invoice_number;
+        }
+
+        if ($role === self::ROLE_GRNI) {
+            return 'GRNI barang sudah diterima ' . $invoice->invoice_number;
         }
 
         return 'Persediaan pembelian ' . $invoice->invoice_number;
