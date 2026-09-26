@@ -7,6 +7,8 @@ use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\ProductUom;
 use App\Models\Master\Tax;
+use App\Services\Accounting\JournalValidationException;
+use App\Services\Accounting\SalesInvoiceJournalService;
 use Illuminate\Http\Request;
 use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
@@ -1104,6 +1106,8 @@ class SalesInvoiceController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
 
+        $journalService = new SalesInvoiceJournalService();
+
         DB::beginTransaction();
         try {
 
@@ -1116,9 +1120,18 @@ class SalesInvoiceController extends Controller
             }
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
+            $menu->post_date = date('Y-m-d H:i:s');
+            $menu->post_by = session('user_id');
             $menu->save();
+
+            // Journal Engine: transaksi ERP diubah menjadi jurnal double entry yang tervalidasi.
+            $journalService->postFromSalesInvoice($menu->id, session('user_id'));
+
             DB::commit();
             $result['is_valid'] = true;
+        } catch (JournalValidationException $e) {
+            DB::rollBack();
+            $result['message'] = $e->getMessage();
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();

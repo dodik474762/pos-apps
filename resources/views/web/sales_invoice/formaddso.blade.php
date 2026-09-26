@@ -183,7 +183,7 @@
             @if (isset($view_detail))
             @else
                 @if (isset($id))
-                    @if ($data->status == 'DRAFT')
+                    @if ($data->post_date == '' && date('Y-m-d', strtotime($data->created_at)) > '2026-08-31')
                         <button type="button" onclick="SalesInvoice.posted(this, event)"
                             class="btn btn-primary waves-effect waves-light me-1">
                             Posted

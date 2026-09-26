@@ -50,6 +50,8 @@
                                     <option value="COGS" {{ isset($data->account_role) && $data->account_role == 'COGS' ? 'selected' : '' }}>COGS</option>
                                     <option value="INVENTORY" {{ isset($data->account_role) && $data->account_role == 'INVENTORY' ? 'selected' : '' }}>INVENTORY</option>
                                     <option value="BANK" {{ isset($data->account_role) && $data->account_role == 'BANK' ? 'selected' : '' }}>BANK</option>
+                                    <option value="TAX_PAYABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_PAYABLE' ? 'selected' : '' }}>TAX_PAYABLE</option>
+                                    <option value="TAX_RECEIVABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_RECEIVABLE' ? 'selected' : '' }}>TAX_RECEIVABLE</option>
                                 </select>
                             </div>
 

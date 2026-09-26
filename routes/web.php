@@ -26,6 +26,7 @@ use App\Http\Controllers\api\master\TaxController as MasterTaxController;
 use App\Http\Controllers\api\master\AccountTypesController as MasterAccountTypesController;
 use App\Http\Controllers\api\master\AccountsController as MasterAccountsController;
 use App\Http\Controllers\api\master\AccountMappingRulesController as MasterAccountMappingRulesController;
+use App\Http\Controllers\api\master\AccountingPeriodsController as MasterAccountingPeriodsController;
 use App\Http\Controllers\api\master\UnitController as MasterUnitController;
 use App\Http\Controllers\api\master\UsersController as MasterUsersController;
 use App\Http\Controllers\api\master\VendorController as MasterVendorController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\api\Transaction\CreditNoteController as TransactionCred
 use App\Http\Controllers\api\Transaction\DeliveryOrderController as TransactionDeliveryOrderController;
 use App\Http\Controllers\api\Transaction\PurchaseOrderController as TransactionPurchaseOrderController;
 use App\Http\Controllers\api\Transaction\GoodReceiptController as TransactionGoodReceiptController;
+use App\Http\Controllers\api\Transaction\JournalsController as TransactionJournalsController;
 use App\Http\Controllers\api\Transaction\PackingListController as TransactionPackingListController;
 use App\Http\Controllers\api\Transaction\PresensiController;
 use App\Http\Controllers\api\Transaction\PurchaseInvoiceController as TransactionPurchaseInvoiceController;
@@ -84,6 +86,7 @@ use App\Http\Controllers\web\master\TaxController;
 use App\Http\Controllers\web\master\AccountTypesController;
 use App\Http\Controllers\web\master\AccountsController;
 use App\Http\Controllers\web\master\AccountMappingRulesController;
+use App\Http\Controllers\web\master\AccountingPeriodsController;
 use App\Http\Controllers\web\master\UnitController;
 use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
@@ -96,6 +99,7 @@ use App\Http\Controllers\web\Transaction\CreditNoteController;
 use App\Http\Controllers\web\Transaction\DeliveryOrderController;
 use App\Http\Controllers\web\Transaction\PurchaseOrderController;
 use App\Http\Controllers\web\Transaction\GoodReceiptController;
+use App\Http\Controllers\web\Transaction\JournalsController;
 use App\Http\Controllers\web\Transaction\PackingListController;
 use App\Http\Controllers\web\Transaction\PLTagihanController;
 use App\Http\Controllers\web\Transaction\PresensiController as TransactionPresensiController;
@@ -254,6 +258,15 @@ Route::get('master/accounts/ubah', [AccountsController::class, 'ubah']);
 Route::get('master/account_mapping_rules', [AccountMappingRulesController::class, 'index']);
 Route::get('master/account_mapping_rules/add', [AccountMappingRulesController::class, 'add']);
 Route::get('master/account_mapping_rules/ubah', [AccountMappingRulesController::class, 'ubah']);
+
+Route::get('master/accounting_periods', [AccountingPeriodsController::class, 'index']);
+Route::get('master/accounting_periods/add', [AccountingPeriodsController::class, 'add']);
+Route::get('master/accounting_periods/ubah', [AccountingPeriodsController::class, 'ubah']);
+
+Route::get('transaksi/journals', [JournalsController::class, 'index']);
+Route::get('transaksi/journals/add', [JournalsController::class, 'add']);
+Route::get('transaksi/journals/ubah', [JournalsController::class, 'ubah']);
+Route::get('transaksi/journals/detail', [JournalsController::class, 'detail']);
 
 Route::get('transaksi/purchase_order', [PurchaseOrderController::class, 'index']);
 Route::get('transaksi/purchase_order/add', [PurchaseOrderController::class, 'add']);
@@ -582,6 +595,14 @@ Route::post('api/master/account_mapping_rules/submit', [MasterAccountMappingRule
 Route::post('api/master/account_mapping_rules/delete', [MasterAccountMappingRulesController::class, 'delete']);
 Route::post('api/master/account_mapping_rules/confirmDelete', [MasterAccountMappingRulesController::class, 'confirmDelete']);
 
+Route::post('api/master/accounting_periods/getData', [MasterAccountingPeriodsController::class, 'getData']);
+Route::post('api/master/accounting_periods/submit', [MasterAccountingPeriodsController::class, 'submit']);
+Route::post('api/master/accounting_periods/delete', [MasterAccountingPeriodsController::class, 'delete']);
+Route::post('api/master/accounting_periods/confirmDelete', [MasterAccountingPeriodsController::class, 'confirmDelete']);
+Route::post('api/master/accounting_periods/generateYear', [MasterAccountingPeriodsController::class, 'generateYear']);
+Route::post('api/master/accounting_periods/close', [MasterAccountingPeriodsController::class, 'close']);
+Route::post('api/master/accounting_periods/reopen', [MasterAccountingPeriodsController::class, 'reopen']);
+
 Route::post('api/transaksi/purchase_order/getData', [TransactionPurchaseOrderController::class, 'getData']);
 Route::post('api/transaksi/purchase_order/submit', [TransactionPurchaseOrderController::class, 'submit']);
 Route::post('api/transaksi/purchase_order/delete', [TransactionPurchaseOrderController::class, 'delete']);
@@ -593,6 +614,16 @@ Route::post('api/transaksi/good-receipt/getData', [TransactionGoodReceiptControl
 Route::post('api/transaksi/good-receipt/submit', [TransactionGoodReceiptController::class, 'submit']);
 Route::post('api/transaksi/good-receipt/delete', [TransactionGoodReceiptController::class, 'delete']);
 Route::post('api/transaksi/good-receipt/confirmDelete', [TransactionGoodReceiptController::class, 'confirmDelete']);
+
+Route::post('api/transaksi/journals/getData', [TransactionJournalsController::class, 'getData']);
+Route::post('api/transaksi/journals/submit', [TransactionJournalsController::class, 'submit']);
+Route::post('api/transaksi/journals/delete', [TransactionJournalsController::class, 'delete']);
+Route::post('api/transaksi/journals/confirmDelete', [TransactionJournalsController::class, 'confirmDelete']);
+Route::post('api/transaksi/journals/posted', [TransactionJournalsController::class, 'posted']);
+Route::post('api/transaksi/journals/reversal', [TransactionJournalsController::class, 'reversal']);
+Route::post('api/transaksi/journals/showModalPost', [TransactionJournalsController::class, 'showModalPost']);
+Route::post('api/transaksi/journals/showModalReversal', [TransactionJournalsController::class, 'showModalReversal']);
+Route::post('api/transaksi/journals/getAccountList', [TransactionJournalsController::class, 'getAccountList']);
 Route::post('api/transaksi/good-receipt/showDataPOItem', [TransactionGoodReceiptController::class, 'showDataPOItem']);
 Route::post('api/transaksi/good-receipt/getListItemOutstandingPO', [TransactionGoodReceiptController::class, 'getListItemOutstandingPO']);
 
