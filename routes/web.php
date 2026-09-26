@@ -632,6 +632,8 @@ Route::post('api/transaksi/purchase-invoice/submit', [TransactionPurchaseInvoice
 Route::post('api/transaksi/purchase-invoice/delete', [TransactionPurchaseInvoiceController::class, 'delete']);
 Route::post('api/transaksi/purchase-invoice/confirmDelete', [TransactionPurchaseInvoiceController::class, 'confirmDelete']);
 Route::post('api/transaksi/purchase-invoice/showDataPoDetail', [TransactionPurchaseInvoiceController::class, 'showDataPoDetail']);
+Route::post('api/transaksi/purchase-invoice/postJurnal', [TransactionPurchaseInvoiceController::class, 'postJurnal']);
+Route::post('api/transaksi/purchase-invoice/showModalPostJurnal', [TransactionPurchaseInvoiceController::class, 'showModalPostJurnal']);
 
 Route::post('api/transaksi/vendor-bill/getData', [TransactionVendorBillController::class, 'getData']);
 Route::post('api/transaksi/vendor-bill/submit', [TransactionVendorBillController::class, 'submit']);

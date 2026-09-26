@@ -34,6 +34,7 @@
                                     <option value="DELIVERY" {{ isset($data->transaction_type) && $data->transaction_type == 'DELIVERY' ? 'selected' : '' }}>DELIVERY</option>
                                     <option value="DELIVERY_ORDER" {{ isset($data->transaction_type) && $data->transaction_type == 'DELIVERY_ORDER' ? 'selected' : '' }}>DELIVERY_ORDER</option>
                                     <option value="PURCHASE" {{ isset($data->transaction_type) && $data->transaction_type == 'PURCHASE' ? 'selected' : '' }}>PURCHASE</option>
+                                    <option value="PURCHASE_INVOICE" {{ isset($data->transaction_type) && $data->transaction_type == 'PURCHASE_INVOICE' ? 'selected' : '' }}>PURCHASE_INVOICE</option>
                                     <option value="CUSTOMER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'CUSTOMER_PAYMENT' ? 'selected' : '' }}>CUSTOMER_PAYMENT</option>
                                     <option value="SUPPLIER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'SUPPLIER_PAYMENT' ? 'selected' : '' }}>SUPPLIER_PAYMENT</option>
                                 </select>
@@ -50,6 +51,7 @@
                                     <option value="REVENUE" {{ isset($data->account_role) && $data->account_role == 'REVENUE' ? 'selected' : '' }}>REVENUE</option>
                                     <option value="COGS" {{ isset($data->account_role) && $data->account_role == 'COGS' ? 'selected' : '' }}>COGS</option>
                                     <option value="INVENTORY" {{ isset($data->account_role) && $data->account_role == 'INVENTORY' ? 'selected' : '' }}>INVENTORY</option>
+                                    <option value="EXPENSE" {{ isset($data->account_role) && $data->account_role == 'EXPENSE' ? 'selected' : '' }}>EXPENSE</option>
                                     <option value="BANK" {{ isset($data->account_role) && $data->account_role == 'BANK' ? 'selected' : '' }}>BANK</option>
                                     <option value="TAX_PAYABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_PAYABLE' ? 'selected' : '' }}>TAX_PAYABLE</option>
                                     <option value="TAX_RECEIVABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_RECEIVABLE' ? 'selected' : '' }}>TAX_RECEIVABLE</option>

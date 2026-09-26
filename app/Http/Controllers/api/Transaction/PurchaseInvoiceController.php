@@ -9,6 +9,8 @@ use App\Models\Transaction\PurchaseInvoiceDtl;
 use App\Models\Transaction\PurchaseInvoiceHeader;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
+use App\Services\Accounting\JournalValidationException;
+use App\Services\Accounting\PurchaseInvoiceJournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -243,6 +245,18 @@ class PurchaseInvoiceController extends Controller
 
             $menu = PurchaseInvoiceHeader::find($data['id']);
             $invoice_number = $menu->invoice_number;
+
+            $journalService = new PurchaseInvoiceJournalService();
+            $activeJournal = $journalService->getActiveJournal($data['id']);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
+                    . ' masih berstatus ' . $activeJournal->status
+                    . '. Jurnal harus direversal terlebih dahulu.';
+
+                return response()->json($result);
+            }
+
             if ($menu->status != 'draft') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -327,7 +341,88 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
 
+        $invoice = PurchaseInvoiceHeader::select(['id', 'invoice_number', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->first();
+
+        $data['invoice_number'] = empty($invoice) ? '' : $invoice->invoice_number;
+        $data['invoice_status'] = empty($invoice) ? '' : $invoice->status;
+        $data['is_draft'] = ! empty($invoice) && $invoice->status == 'draft';
+
+        $journalService = new PurchaseInvoiceJournalService();
+        $journal = $journalService->getJournalForPurchaseInvoice($data['id'] ?? null);
+        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null);
+
+        $data['journal_no'] = empty($journal) ? '' : $journal->journal_no;
+        $data['journal_status'] = empty($journal) ? '' : $journal->status;
+        $data['has_active_journal'] = ! empty($activeJournal);
+
         return view('web.purchase_invoice.modal.confirmdelete', $data);
+    }
+
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $invoice = PurchaseInvoiceHeader::select(['id', 'invoice_number', 'invoice_date', 'total_amount', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['invoice_number'] = empty($invoice) ? '' : $invoice->invoice_number;
+        $data['invoice_total'] = empty($invoice) ? (float) 0 : (float) $invoice->total_amount;
+        $data['invoice_status'] = empty($invoice) ? '' : $invoice->status;
+
+        return view('web.purchase_invoice.modal.confirmpostjurnal', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan memposting jurnal pembelian untuk satu
+     * Purchase Invoice.
+     *   Dr INVENTORY / EXPENSE (gabungan per akun, mengikuti product.is_stock)
+     *   Cr AP
+     * submit() dan postingGL() legacy tidak diubah, keduanya tetap berjalan
+     * seperti semula.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID purchase invoice wajib diisi.';
+
+                return response()->json($result);
+            }
+
+            $journalService = new PurchaseInvoiceJournalService();
+
+            // Status invoice diubah hanya setelah jurnal berhasil dibuat dan
+            // diposting, supaya invoice tidak ditandai posted tanpa jurnal.
+            $journal = DB::transaction(function () use ($id, $journalService) {
+                $journal = $journalService->postFromPurchaseInvoice($id, session('user_id'));
+
+                $invoice = PurchaseInvoiceHeader::where('id', $id)->first();
+                if (! empty($invoice)) {
+                    $invoice->status = 'posted';
+                    $invoice->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     public function showDataPoDetail(Request $request)
