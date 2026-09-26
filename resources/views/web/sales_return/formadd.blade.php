@@ -111,6 +111,24 @@
                                 </select>
                             </div>
 
+                            {{-- Condition of returned goods. Consumed by Journal Engine: goods that are
+                                 no longer sellable do not return to INVENTORY but to the loss account. --}}
+                            <div class="mb-3">
+                                <label class="form-label">Kondisi Barang</label>
+                                <select id="good_condition" class="form-control select2 required">
+                                    <option value="good"
+                                        {{ (isset($data->types) && $data->types == 'good') || ! isset($data->types) ? 'selected' : '' }}>
+                                        GOOD (layak jual, kembali ke stok)</option>
+                                    <option value="damaged"
+                                        {{ isset($data->types) && $data->types == 'damaged' ? 'selected' : '' }}>
+                                        DAMAGED (rusak, tidak kembali ke stok)</option>
+                                </select>
+                                <small class="text-muted">
+                                    Bila <b>DAMAGED</b>, jurnal sales return membebankan sisi persediaan ke akun
+                                    kerugian (LOSS) dan tidak mengembalikan barang ke Inventory.
+                                </small>
+                            </div>
+
                             {{-- Refund amount --}}
                             <div class="mb-3">
                                 <label class="form-label">Refund Amount</label>

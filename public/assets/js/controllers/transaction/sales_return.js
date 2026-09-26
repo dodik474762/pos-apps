@@ -88,6 +88,7 @@ let SalesReturn = {
             customer_id: $("#customer_id").attr("data_id") || null,
             invoice_id: $("#invoice_id").attr("data_id") || null,
             return_type: $("#return_type").val() || null,
+            good_condition: $("#good_condition").val() || "good",
             refund_amount: parseFloat($("#refund_amount").val()) || 0,
             deposit_amount: parseFloat($("#deposit_amount").val()) || 0,
             reason: $("#reason").val() || null,
@@ -228,6 +229,9 @@ let SalesReturn = {
                                 SalesReturn.module()
                             )}ubah?id=${data}' data_id="${row.id
                                 }" class="btn btn-success editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        }
+                        if (row.status == "DRAFT") {
+                            html += `<button type="button" data_id="${row.id}" onclick="SalesReturn.postJurnal(this, event)" class="btn btn-warning editable-post btn-sm waves-effect waves-light" title="Buat Jurnal Sales Return"><i class="bx bx-book-alt"></i></button>&nbsp;`;
                         }
                         if (deleteAction == 1) {
                             if (row.status == "DRAFT") {
@@ -466,6 +470,70 @@ let SalesReturn = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Confirm");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    postJurnal: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(SalesReturn.moduleApi()) + "showModalPostJurnal",
+            headers: {
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-confirm-post-jurnal").html(resp);
+                $("#confirm-post-jurnal-btn").trigger("click");
+            },
+        });
+    },
+
+    confirmPostJurnal: (elm) => {
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(SalesReturn.moduleApi()) + "postJurnal",
+            headers: {
+                "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Posting Jurnal...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess(
+                        "Informasi",
+                        "Jurnal " + (resp.journal_no || "") + " Berhasil Diposting"
+                    );
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);

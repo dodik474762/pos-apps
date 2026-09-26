@@ -11,6 +11,8 @@ use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesReturnDtl;
 use App\Models\Transaction\SalesReturnHdr;
+use App\Services\Accounting\JournalValidationException;
+use App\Services\Accounting\SalesReturnJournalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -411,6 +413,7 @@ class SalesReturnController extends Controller
             $header->return_date = $data['return_date'];
             $header->customer_id = $data['customer_id'];
             $header->return_type = $data['return_type'];
+            $header->types = $data['good_condition'] ?? 'good';
             $header->refund_amount = $data['refund_amount'];
             $header->deposit_amount = $data['deposit_amount'];
             $header->total_return_value = 0;
@@ -503,9 +506,11 @@ class SalesReturnController extends Controller
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $value['product'] = $value['product_id'];
+
+                $invoiceHdr = SalesInvoiceHeader::where('id', $data['invoice_id'])->first();
                 stockUpdate(
                     $hdrId,
-                    $invoice->warehouse_id,
+                    $invoiceHdr->warehouse_id,
                     $value['product_id'],
                     $productUomLevel1->unit_tujuan,
                     $qtyBaseUnit,
@@ -855,6 +860,21 @@ class SalesReturnController extends Controller
                 ]);
             }
 
+            // Journal Engine: sales return yang sudah punya jurnal aktif tidak boleh
+            // dihapus karena general ledger sudah menerima dampaknya. Jurnal harus
+            // direversal lebih dulu lewat menu Transaksi > Jurnal.
+            $activeJournal = (new SalesReturnJournalService())->getActiveJournal($header->id);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
+                        . ' masih berstatus ' . $activeJournal->status
+                        . '. Jurnal harus direversal terlebih dahulu.',
+                ]);
+            }
+
             // ambil semua detail termasuk yg sudah deleted
             $details = SalesReturnDtl::where('return_id', $id)->whereNull('deleted')->get();
 
@@ -947,7 +967,102 @@ class SalesReturnController extends Controller
     {
         $data = $request->all();
 
+        $header = SalesReturnHdr::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['id'] = empty($header) ? ($data['id'] ?? '') : $header->id;
+        $data['return_number'] = empty($header) ? '' : $header->return_number;
+        $data['return_status'] = empty($header) ? '' : $header->status;
+        $data['is_draft'] = ! empty($header) && $header->status == 'DRAFT';
+        $data['good_condition'] = empty($header) ? '' : $header->types;
+
+        // Journal Engine: tampilkan nomor jurnal supaya user tahu harus reversal dulu.
+        $journalService = new SalesReturnJournalService();
+        $activeJournal = $journalService->getActiveJournal($data['id']);
+        $data['has_active_journal'] = ! empty($activeJournal);
+        $data['journal_no'] = empty($activeJournal) ? '' : $activeJournal->journal_no;
+        $data['journal_status'] = empty($activeJournal) ? '' : $activeJournal->status;
+
         return view('web.sales_return.modal.confirmdelete', $data);
+    }
+
+    /**
+     * Journal Engine: modal konfirmasi posting jurnal sales return.
+     */
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $header = SalesReturnHdr::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['return_number'] = empty($header) ? '' : $header->return_number;
+        $data['return_total'] = empty($header) ? (float) 0 : (float) $header->total_return_value;
+        $data['return_status'] = empty($header) ? '' : $header->status;
+        $data['customer_name'] = empty($header)
+            ? ''
+            : DB::table('customer')->where('id', $header->customer_id)->value('nama_customer');
+        $data['good_condition'] = empty($header) ? '' : $header->types;
+        $data['is_damaged'] = ! empty($header) && in_array(
+            strtolower(trim((string) $header->types)),
+            SalesReturnJournalService::CONDITION_DAMAGED,
+            true
+        );
+        $data['detail_count'] = empty($header)
+            ? 0
+            : SalesReturnDtl::where('return_id', $header->id)->whereNull('deleted')->count();
+
+        return view('web.sales_return.modal.confirmpostjurnal', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan mempost jurnal sales return.
+     *   Dr SALES_RETURN / Cr AR   (nilai jual dari Sales Invoice asal)
+     *   Dr INVENTORY / Cr COGS    (nilai HPP dari Delivery Order asal)
+     *
+     * Bila kondisi barang rusak, Dr INVENTORY diganti Dr LOSS karena barang
+     * tidak kembali ke stok. Status diubah menjadi POSTED hanya setelah jurnal
+     * berhasil dibuat. submit(), posted() dan postingGL() legacy tidak diubah.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID sales return wajib diisi.';
+
+                return response()->json($result);
+            }
+
+            $journalService = new SalesReturnJournalService();
+
+            $journal = DB::transaction(function () use ($id, $journalService) {
+                $journal = $journalService->postFromSalesReturn($id, session('user_id'));
+
+                $header = SalesReturnHdr::where('id', $id)->first();
+                if (! empty($header) && $header->status != 'POSTED') {
+                    $header->status = 'POSTED';
+                    $header->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     public function showModalCustomer(Request $request)

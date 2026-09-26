@@ -38,6 +38,7 @@
                                     <option value="GOODS_RECEIPT" {{ isset($data->transaction_type) && $data->transaction_type == 'GOODS_RECEIPT' ? 'selected' : '' }}>GOODS_RECEIPT</option>
                                     <option value="CUSTOMER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'CUSTOMER_PAYMENT' ? 'selected' : '' }}>CUSTOMER_PAYMENT</option>
                                     <option value="SUPPLIER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'SUPPLIER_PAYMENT' ? 'selected' : '' }}>SUPPLIER_PAYMENT</option>
+                                    <option value="SALES_RETURN" {{ isset($data->transaction_type) && $data->transaction_type == 'SALES_RETURN' ? 'selected' : '' }}>SALES_RETURN</option>
                                 </select>
                             </div>
 
@@ -57,6 +58,8 @@
                                     <option value="BANK" {{ isset($data->account_role) && $data->account_role == 'BANK' ? 'selected' : '' }}>BANK</option>
                                     <option value="TAX_PAYABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_PAYABLE' ? 'selected' : '' }}>TAX_PAYABLE</option>
                                     <option value="TAX_RECEIVABLE" {{ isset($data->account_role) && $data->account_role == 'TAX_RECEIVABLE' ? 'selected' : '' }}>TAX_RECEIVABLE</option>
+                                    <option value="SALES_RETURN" {{ isset($data->account_role) && $data->account_role == 'SALES_RETURN' ? 'selected' : '' }}>SALES_RETURN</option>
+                                    <option value="LOSS" {{ isset($data->account_role) && $data->account_role == 'LOSS' ? 'selected' : '' }}>LOSS</option>
                                 </select>
                             </div>
 
