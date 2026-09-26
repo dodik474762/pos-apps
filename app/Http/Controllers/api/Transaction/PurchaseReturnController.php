@@ -444,6 +444,10 @@ class PurchaseReturnController extends Controller
                     $header->save();
                 }
 
+                // AP Subledger: retur pembelian terbentuk dari jurnal yang baru di-post,
+                // sehingga nominal subledger pasti sama dengan yang masuk ke general_ledgers.
+                (new \App\Services\Accounting\ApSubledgerService())->syncFromJournal($journal);
+
                 return $journal;
             });
 

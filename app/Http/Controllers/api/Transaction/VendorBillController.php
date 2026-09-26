@@ -430,6 +430,10 @@ class VendorBillController extends Controller
                     $payment->save();
                 }
 
+                // AP Subledger: pembayaran supplier terbentuk dari jurnal yang baru di-post,
+                // sehingga nominal subledger pasti sama dengan yang masuk ke general_ledgers.
+                (new \App\Services\Accounting\ApSubledgerService())->syncFromJournal($journal);
+
                 return $journal;
             });
 

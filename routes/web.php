@@ -56,6 +56,7 @@ use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVend
 use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
 use App\Http\Controllers\api\report\ReportVisitController as ReportReportVisitController;
+use App\Http\Controllers\api\Transaction\ApSubledgerController as TransactionApSubledgerController;
 use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionClosingStockController;
 use App\Http\Controllers\api\Transaction\PLTagihanController as TransactionPLTagihanController;
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
@@ -118,6 +119,7 @@ use App\Http\Controllers\web\Transaction\VendorBillController;
 use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use App\Http\Controllers\web\report\ReportStockController;
 use App\Http\Controllers\web\report\ReportVisitController;
+use App\Http\Controllers\web\Transaction\ApSubledgerController;
 use App\Http\Controllers\web\Transaction\ClosingStockController;
 use App\Http\Controllers\web\Transaction\TerimaUangController;
 use Illuminate\Support\Facades\Route;
@@ -322,6 +324,9 @@ Route::get('transaksi/sales_invoice/multiplePrint', [SalesInvoiceController::cla
 
 Route::get('transaksi/ar_subledger', [WebArSubledgerController::class, 'index'])->name('ar-subledger-index');
 Route::get('transaksi/ar_subledger/customer-ledger', [WebArSubledgerController::class, 'customerLedger'])->name('ar-subledger-ledger');
+
+Route::get('transaksi/ap_subledger', [ApSubledgerController::class, 'index'])->name('ap-subledger-index');
+Route::get('transaksi/ap_subledger/supplier-ledger', [ApSubledgerController::class, 'supplierLedger'])->name('ap-subledger-ledger');
 
 Route::get('transaksi/sales_payment', [SalesPaymentController::class, 'index'])->name('sales-payment-index');
 Route::get('transaksi/sales_payment/add', [SalesPaymentController::class, 'add'])->name('sales-payment-add');
@@ -726,6 +731,10 @@ Route::post('api_mobile/transaksi/sales_invoice/getOutstandingInvoice', [Transac
 Route::post('api/transaksi/ar_subledger/getData', [ApiArSubledgerController::class, 'getData']);
 Route::post('api/transaksi/ar_subledger/getCustomerList', [ApiArSubledgerController::class, 'getCustomerList']);
 Route::post('api/transaksi/ar_subledger/getLedgerData', [ApiArSubledgerController::class, 'getLedgerData']);
+
+Route::post('api/transaksi/ap_subledger/getData', [TransactionApSubledgerController::class, 'getData']);
+Route::post('api/transaksi/ap_subledger/getSupplierList', [TransactionApSubledgerController::class, 'getSupplierList']);
+Route::post('api/transaksi/ap_subledger/getLedgerData', [TransactionApSubledgerController::class, 'getLedgerData']);
 
 Route::post('api/transaksi/sales_payment/getData', [TransactionSalesPaymentController::class, 'getData']);
 Route::post('api/transaksi/sales_payment/submit', [TransactionSalesPaymentController::class, 'submit']);

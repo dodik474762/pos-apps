@@ -410,6 +410,10 @@ class PurchaseInvoiceController extends Controller
                     $invoice->save();
                 }
 
+                // AP Subledger: hutang AP terbentuk dari jurnal yang baru di-post,
+                // sehingga nominal subledger pasti sama dengan yang masuk ke general_ledgers.
+                (new \App\Services\Accounting\ApSubledgerService())->syncFromJournal($journal);
+
                 return $journal;
             });
 
