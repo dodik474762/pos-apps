@@ -12,6 +12,7 @@ use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
+use App\Services\Accounting\CustomerPaymentJournalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -973,9 +974,21 @@ class SalesPaymentController extends Controller
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();
+
+            // Journal Engine: penerimaan pembayaran customer menjadi jurnal double entry.
+            //   Dr Bank/Cash (akun pilihan user di form) / Cr AR (dari account mapping)
+            // Jurnal gagal tetap membatalkan status POSTED agar pembayaran dapat diulang.
+            $journalService = new CustomerPaymentJournalService();
+            $journal = $journalService->postFromCustomerPayment(
+                $menu->id,
+                $data['bank_account_id'] ?? null,
+                session('user_id')
+            );
+
             DB::commit();
 
             $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
         } catch (\Throwable $th) {
             $result['message'] = $th->getMessage();
             DB::rollBack();

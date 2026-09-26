@@ -88,6 +88,21 @@
                                 </select>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label">Akun Bank / Cash (Jurnal)</label>
+                                <select id="bank_account_id" class="form-control select2">
+                                    <option value="">-- Pilih Akun Bank / Cash --</option>
+                                    @foreach ($journalBankCashAccounts as $acc)
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">
+                                    Dipakai untuk jurnal penerimaan pembayaran. Akun ini dipilih user, bukan dari
+                                    Account Mapping Rules. Bila dikosongkan, akun diambil dari rule
+                                    CUSTOMER_PAYMENT / BANK.
+                                </small>
+                            </div>
+
                         </div>
 
                         <!-- RIGHT -->
@@ -215,11 +230,12 @@
                 @php
                     $disabled = '';
                 @endphp
-                @if (isset($id))
+                @if (isset($data->id))
                     @if ($data->status == 'PENDING')
                         @if (strtolower($akses) == 'superadmin')
                             <button type="button" onclick="SalesPayment.posted(this, event)"
-                                class="btn btn-primary waves-effect waves-light me-1">
+                                class="btn btn-primary waves-effect waves-light me-1"
+                                title="Konfirmasi pembayaran dan buat jurnal Dr Bank/Cash / Cr AR">
                                 Confirm
                             </button>
                         @endif

@@ -125,6 +125,52 @@ class SalesPaymentController extends Controller
         return $datadb;
     }
 
+    /**
+     * Akun Bank/Cash untuk jurnal pembayaran customer, diambil dari master
+     * accounts Journal Engine, bukan dari coa. Kelompok kas & bank dicari
+     * lewat posisinya di bawah header Asset sehingga tidak bergantung kode akun.
+     */
+    public function getListJournalBankCash()
+    {
+        $assetRoot = DB::table('accounts')
+            ->select(['id'])
+            ->where('is_header', 1)
+            ->where('normal_balance', 'Debit')
+            ->whereNull('parent_id')
+            ->whereNull('deleted_at')
+            ->orderBy('id')
+            ->first();
+
+        if (empty($assetRoot)) {
+            return collect();
+        }
+
+        $cashBankParents = DB::table('accounts')
+            ->select(['id'])
+            ->where('parent_id', $assetRoot->id)
+            ->where('is_header', 1)
+            ->where('normal_balance', 'Debit')
+            ->whereNull('deleted_at')
+            ->where(function ($query) {
+                $query->where('name', 'like', '%CASH%')
+                    ->orWhere('name', 'like', '%BANK%');
+            })
+            ->pluck('id');
+
+        if ($cashBankParents->isEmpty()) {
+            return collect();
+        }
+
+        return DB::table('accounts')
+            ->select(['id', 'code', 'name'])
+            ->whereIn('parent_id', $cashBankParents)
+            ->where('is_header', 0)
+            ->where('is_active', 1)
+            ->whereNull('deleted_at')
+            ->orderBy('code')
+            ->get();
+    }
+
     public function add(Request $request)
     {
         $data = $request->all();
@@ -143,6 +189,7 @@ class SalesPaymentController extends Controller
         $payment_method = $data['payment_method'] ?? 'CASH';
         $data['akses'] = session('akses');
         $data['cashBankAccounts'] = $this->getListKasBank($payment_method);
+        $data['journalBankCashAccounts'] = $this->getListJournalBankCash();
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -193,6 +240,7 @@ class SalesPaymentController extends Controller
         $data['data_customer'] = $this->getListCustomer();
         $data['akses'] = session('akses');
         $data['packing_list'] = $this->getListPackingListInvoice();
+        $data['journalBankCashAccounts'] = $this->getListJournalBankCash();
         $view = view('web.sales_payment.formaddbulk', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -263,6 +311,7 @@ class SalesPaymentController extends Controller
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = session('akses');
+        $data['journalBankCashAccounts'] = $this->getListJournalBankCash();
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -311,6 +360,7 @@ class SalesPaymentController extends Controller
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = session('akses');
+        $data['journalBankCashAccounts'] = $this->getListJournalBankCash();
         $data['view_akses'] = 'detail';
         $view = view('web.sales_payment.formadd', $data);
         $put['title_content'] = $this->getTitle();

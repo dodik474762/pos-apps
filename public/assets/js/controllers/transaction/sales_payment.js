@@ -807,6 +807,7 @@ let SalesPayment = {
     posted: (elm) => {
         let params = {};
         params.id = $('#id').val();
+        params.bank_account_id = $('#bank_account_id').val() || null;
         $.ajax({
             type: "POST",
             dataType: "json",
@@ -826,7 +827,12 @@ let SalesPayment = {
             success: function (resp) {
                 message.closeLoading();
                 if (resp.is_valid) {
-                    message.sweetSuccess("Informasi", "Data Berhasil Confirm");
+                    message.sweetSuccess(
+                        "Informasi",
+                        resp.journal_no
+                            ? "Data Berhasil Confirm, Jurnal " + resp.journal_no + " Diposting"
+                            : "Data Berhasil Confirm",
+                    );
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
