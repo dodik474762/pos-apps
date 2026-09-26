@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\DB;
 /**
  * Integrasi Journal Engine dengan Delivery Order.
  *
- * HPP (harga pokok penjualan) dihitung per baris detail DO dari tabel
- * product_uom_cost. Bila tidak ditemukan untuk product + uom yang sama,
- * ditanyakan ulang memakai unit lain dari produk yang sama. Bila tetap
- * tidak ada, proses berhenti.
+ * HPP (harga pokok penjualan) dihitung per baris detail DO lewat
+ * ProductCostResolver. product_uom_cost menyimpan cost dalam satuan besar,
+ * sehingga cost dibagi dengan rantai konversi product_uom bila baris DO
+ * memakai satuan yang lebih kecil. Bila cost atau rantai konversinya tidak
+ * ada, proses berhenti.
  *
  * Jurnal yang dihasilkan:
  *   1. journal_headers  : 1 baris, status DRAFT, reference ke DO
@@ -32,6 +33,7 @@ class DeliveryOrderJournalService
     protected $postingService;
     protected $validator;
     protected $resolver;
+    protected $costResolver;
 
     public function __construct()
     {
@@ -39,6 +41,7 @@ class DeliveryOrderJournalService
         $this->postingService = new JournalPostingService();
         $this->validator = new JournalValidator();
         $this->resolver = new AccountMappingResolver();
+        $this->costResolver = new ProductCostResolver();
     }
 
     public function postFromDeliveryOrder($doId, $userId = null)
@@ -221,37 +224,16 @@ class DeliveryOrderJournalService
     }
 
     /**
-     * HPP per baris dari product_uom_cost.
-     * Urutan: product + uom persis, lalu unit lain dari produk yang sama.
+     * HPP per baris, didelegasikan ke ProductCostResolver.
+     *
+     * product_uom_cost menyimpan cost dalam satuan besar, sehingga cost harus
+     * dibagi dengan rantai konversi product_uom bila baris dokumen memakai
+     * satuan yang lebih kecil. Tidak ada lagi fallback ke cost satuan lain
+     * tanpa konversi karena itu membuat HPP kelipatan dari satuan sebenarnya.
      */
     protected function resolveCost($productId, $uom, $productNames = [])
     {
-        $row = DB::table('product_uom_cost')
-            ->where('product', $productId)
-            ->where('unit_id', $uom)
-            ->where('is_active', 1)
-            ->orderByDesc('date_start')
-            ->orderByDesc('id')
-            ->first();
-
-        if (empty($row)) {
-            $row = DB::table('product_uom_cost')
-                ->where('product', $productId)
-                ->where('is_active', 1)
-                ->orderByDesc('date_start')
-                ->orderByDesc('id')
-                ->first();
-        }
-
-        if (empty($row) || $this->validator->toAmount($row->cost) <= self::EPSILON) {
-            $name = $productNames[$productId] ?? ('product #' . $productId);
-            throw new JournalValidationException(
-                'HPP untuk ' . $name . ' (unit ' . $uom . ') belum tersedia, jurnal tidak dapat dibuat. '
-                . 'Lengkapi data product_uom_cost untuk produk tersebut.'
-            );
-        }
-
-        return $this->validator->toAmount($row->cost);
+        return $this->costResolver->resolve($productId, $uom, $productNames);
     }
 
     protected function getProductNames($lines)

@@ -26,18 +26,20 @@ use Illuminate\Support\Facades\DB;
  * retur sebagian ikut terhitung benar. PPN tetap diproses oleh posting GL legacy
  * sehingga tidak ikut dalam jurnal ini, sama seperti Purchase Invoice.
  *
- * NILAI HPP TIDAK dihitung ulang. HPP ditelusuri ke Delivery Order asal melalui
- * sales_invoice_detail.so_detail_id -> delivery_order_detail, lalu memakai
- * product_uom_cost dengan urutan lookup yang sama persis dengan
- * DeliveryOrderJournalService, sehingga angkanya sama dengan yang diakui jurnal
- * DO. Jurnal DO yang sudah ada hanya dipakai sebagai pembanding, bukan sumber
- * angka, karena jurnal DO menggabungkan seluruh baris per pasangan akun dan
- * tidak menyimpan HPP per produk.
+ * NILAI HPP BUKAN hasil hitung ulang dari nilai jual. Baris DO asal dicari
+ * melalui sales_invoice_detail.so_detail_id -> delivery_order_detail, lalu HPP
+ * per satuannya diambil dari product_uom_cost melalui ProductCostResolver yang
+ * sama dengan yang dipakai DeliveryOrderJournalService, sehingga angkanya sama
+ * dengan yang diakui jurnal DO. Karena product_uom_cost menyimpan cost satuan
+ * besar, nilainya dibagi dengan rantai konversi product_uom bila baris DO
+ * memakai satuan yang lebih kecil. Jurnal DO yang sudah ada hanya dipakai
+ * sebagai pembanding, bukan sumber angka, karena jurnal DO menggabungkan
+ * seluruh baris per pasangan akun dan tidak menyimpan HPP per produk.
  *
  * RETUR BARANG RUSAK. Bila kondisi barang tidak layak jual lagi, barang tidak
  * kembali ke stok sehingga sisi persediaan tidak memakai INVENTORY melainkan
  * akun kerugian/write-off. Keputusan ini milik modul Sales Return lewat kolom
- * types pada header; Journal Engine hanya deliciosaikan.
+ * types pada header; Journal Engine hanya menindaklanjuti pilihan itu.
  */
 class SalesReturnJournalService
 {
@@ -68,6 +70,7 @@ class SalesReturnJournalService
     protected $postingService;
     protected $validator;
     protected $resolver;
+    protected $costResolver;
 
     public function __construct()
     {
@@ -75,6 +78,7 @@ class SalesReturnJournalService
         $this->postingService = new JournalPostingService();
         $this->validator = new JournalValidator();
         $this->resolver = new AccountMappingResolver();
+        $this->costResolver = new ProductCostResolver();
     }
 
     public function postFromSalesReturn($returnId, $userId = null)
@@ -471,37 +475,19 @@ class SalesReturnJournalService
     }
 
     /**
-     * HPP per unit dari product_uom_cost, urutan lookup sama persis dengan
-     * DeliveryOrderJournalService::resolveCost supaya angkanya sama dengan yang
-     * diakui jurnal DO.
+     * HPP per unit, didelegasikan ke ProductCostResolver.
+     *
+     * product_uom_cost menyimpan cost dalam satuan besar, sehingga cost harus
+     * dibagi dengan rantai konversi product_uom bila baris DO memakai satuan
+     * yang lebih kecil. Dengan begitu HPP sales return sama dengan HPP yang
+     * diakui jurnal Delivery Order. Tidak ada fallback ke cost satuan lain
+     * tanpa konversi karena itu membuat HPP kelipatan dari satuan sebenarnya.
      */
     protected function resolveCost($productId, $uom, $productName = '')
     {
-        $row = DB::table('product_uom_cost')
-            ->where('product', $productId)
-            ->where('unit_id', $uom)
-            ->where('is_active', 1)
-            ->orderByDesc('date_start')
-            ->orderByDesc('id')
-            ->first();
+        $names = empty($productName) ? [] : [$productId => $productName];
 
-        if (empty($row)) {
-            $row = DB::table('product_uom_cost')
-                ->where('product', $productId)
-                ->where('is_active', 1)
-                ->orderByDesc('date_start')
-                ->orderByDesc('id')
-                ->first();
-        }
-
-        if (empty($row) || $this->validator->toAmount($row->cost) <= self::EPSILON) {
-            throw new JournalValidationException(
-                'HPP untuk ' . $productName . ' (unit ' . $uom . ') belum tersedia, jurnal tidak dapat dibuat. '
-                . 'Lengkapi data product_uom_cost untuk produk tersebut.'
-            );
-        }
-
-        return $this->validator->toAmount($row->cost);
+        return $this->costResolver->resolve($productId, $uom, $names);
     }
 
     /**
