@@ -3,6 +3,12 @@
 
 <div id="content-modal-form"></div>
 
+@if (isset($id))
+    <button type="button" id="confirm-post-jurnal-btn" class="" style="display: none;" data-bs-toggle="modal"
+        data-bs-target="#konfirmasi-post-jurnal"></button>
+    <div id="content-confirm-post-jurnal"></div>
+@endif
+
 <input type="hidden" id="id" value="{{ isset($id) ? $id : '' }}">
 <input type="hidden" id="url"
     value="{{ isset($id) ? route('delivery-order-edit') : route('delivery-order-add') }}">
@@ -169,12 +175,25 @@
         <div class="text-end">
             @php
                 $disabled = '';
+                $canPostJurnal = false;
                 if (isset($id)) {
                     if ($data->status != 'DRAFT') {
                         $disabled = 'disabled';
                     }
+                    if (empty($data->post_date)
+                        && in_array($data->status, ['CONFIRMED', 'PACKED'])
+                        && isset($akses->delivery_order)
+                        && $akses->delivery_order->update == 1) {
+                        $canPostJurnal = true;
+                    }
                 }
             @endphp
+            @if ($canPostJurnal)
+                <button type="button" data_id="{{ $id }}" onclick="DeliveryOrder.postJurnal(this, event)"
+                    class="btn btn-warning waves-effect waves-light me-1" title="Buat Jurnal HPP">
+                    Posting
+                </button>
+            @endif
             <button {{ $disabled }} type="submit" onclick="DeliveryOrder.submit(this, event)"
                 class="btn btn-success waves-effect waves-light me-1">
                 Submit

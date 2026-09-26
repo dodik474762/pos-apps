@@ -32,6 +32,7 @@
                                     <option value=""></option>
                                     <option value="SALES" {{ isset($data->transaction_type) && $data->transaction_type == 'SALES' ? 'selected' : '' }}>SALES</option>
                                     <option value="DELIVERY" {{ isset($data->transaction_type) && $data->transaction_type == 'DELIVERY' ? 'selected' : '' }}>DELIVERY</option>
+                                    <option value="DELIVERY_ORDER" {{ isset($data->transaction_type) && $data->transaction_type == 'DELIVERY_ORDER' ? 'selected' : '' }}>DELIVERY_ORDER</option>
                                     <option value="PURCHASE" {{ isset($data->transaction_type) && $data->transaction_type == 'PURCHASE' ? 'selected' : '' }}>PURCHASE</option>
                                     <option value="CUSTOMER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'CUSTOMER_PAYMENT' ? 'selected' : '' }}>CUSTOMER_PAYMENT</option>
                                     <option value="SUPPLIER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'SUPPLIER_PAYMENT' ? 'selected' : '' }}>SUPPLIER_PAYMENT</option>

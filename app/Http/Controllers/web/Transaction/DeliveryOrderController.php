@@ -105,6 +105,7 @@ class DeliveryOrderController extends Controller
             ->get();
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['akses'] = $this->akses_menu;
         $view = view('web.delivery_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form '.$this->getTitle();

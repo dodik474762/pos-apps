@@ -258,6 +258,11 @@ let DeliveryOrder = {
                                 html += `<button type="button" data_id="${row.id}" onclick="DeliveryOrder.delete(this, event)" class="btn btn-danger editable-cancel btn-sm waves-effect waves-light"><i class="bx bx-trash-alt"></i></button>`;
                             }
                         }
+                        if (updateAction == 1) {
+                            if (row.status == "CONFIRMED" || row.status == "PACKED") {
+                                html += `<button type="button" data_id="${row.id}" onclick="DeliveryOrder.postJurnal(this, event)" class="btn btn-warning editable-post btn-sm waves-effect waves-light" title="Buat Jurnal HPP"><i class="bx bx-book-alt"></i></button>&nbsp;`;
+                            }
+                        }
                         return html;
                     },
                 },
@@ -340,6 +345,68 @@ let DeliveryOrder = {
                 message.closeLoading();
                 if (resp.is_valid) {
                     message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    $("#konfirmasi-delete").modal("hide");
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    postJurnal: (elm, e) => {
+        e.preventDefault();
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            data: params,
+            url: url.base_url(DeliveryOrder.moduleApi()) + "showModalPostJurnal",
+            headers: {
+                "X-CSRF-TOKEN": DeliveryOrder.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                $("#content-confirm-post-jurnal").html(resp);
+                $("#confirm-post-jurnal-btn").trigger("click");
+            },
+        });
+    },
+
+    confirmPostJurnal: (elm) => {
+        let params = {};
+        params.id = $(elm).attr("data_id");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: params,
+            url: url.base_url(DeliveryOrder.moduleApi()) + "postJurnal",
+            headers: {
+                "X-CSRF-TOKEN": DeliveryOrder.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Posting Jurnal...");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess("Informasi", "Jurnal " + (resp.journal_no || "") + " Berhasil Diposting");
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);

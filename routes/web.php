@@ -688,6 +688,8 @@ Route::post('api/transaksi/delivery_order/confirmDelete', [TransactionDeliveryOr
 Route::post('api/transaksi/delivery_order/showModalSO', [TransactionDeliveryOrderController::class, 'showModalSO']);
 Route::post('api/transaksi/delivery_order/getDataSo', [TransactionDeliveryOrderController::class, 'getDataSo']);
 Route::post('api/transaksi/delivery_order/getSoDetail', [TransactionDeliveryOrderController::class, 'getSoDetail']);
+Route::post('api/transaksi/delivery_order/postJurnal', [TransactionDeliveryOrderController::class, 'postJurnal']);
+Route::post('api/transaksi/delivery_order/showModalPostJurnal', [TransactionDeliveryOrderController::class, 'showModalPostJurnal']);
 
 Route::post('api/transaksi/sales_invoice/getData', [TransactionSalesInvoiceController::class, 'getData']);
 Route::post('api/transaksi/sales_invoice/getDataTagihan', [TransactionSalesInvoiceController::class, 'getDataTagihan']);

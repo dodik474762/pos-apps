@@ -6,6 +6,9 @@
         <button type="button" id="confirm-delete-btn" class="" style="display: none;" data-bs-toggle="modal"
             data-bs-target="#konfirmasi-delete"></button>
         <div id="content-confirm-delete"></div>
+        <button type="button" id="confirm-post-jurnal-btn" class="" style="display: none;" data-bs-toggle="modal"
+            data-bs-target="#konfirmasi-post-jurnal"></button>
+        <div id="content-confirm-post-jurnal"></div>
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">

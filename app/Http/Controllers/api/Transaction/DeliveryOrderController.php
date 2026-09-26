@@ -10,6 +10,8 @@ use App\Models\Transaction\DeliveryOrderHeader;
 use App\Models\Transaction\DeliveryOrderStatusLog;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesOrderHeader;
+use App\Services\Accounting\DeliveryOrderJournalService;
+use App\Services\Accounting\JournalValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -527,12 +529,27 @@ class DeliveryOrderController extends Controller
         try {
             // code...
             $menu = DeliveryOrderHeader::find($data['id']);
-            // if ($menu->status != 'DRAFT') {
-            //     DB::rollBack();
-            //     $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Delivery order tidak ditemukan.';
 
-            //     return response()->json($result);
-            // }
+                return response()->json($result);
+            }
+
+            // Jurnal HPP yang masih aktif (DRAFT atau POSTED) harus direversal
+            // terlebih dahulu, baru Delivery Order boleh dihapus.
+            $journalService = new DeliveryOrderJournalService();
+            $activeJournal = $journalService->getActiveJournal($menu->id);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+                $result['message'] = 'Delivery Order ' . $menu->do_number
+                    . ' tidak dapat dihapus karena jurnal HPP ' . $activeJournal->journal_no
+                    . ' masih berstatus ' . $activeJournal->status
+                    . '. Lakukan reversal jurnal terlebih dahulu pada menu Transaksi > Jurnal.';
+
+                return response()->json($result);
+            }
+
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->deleted_by = session('user_id');
             $menu->save();
@@ -603,7 +620,36 @@ class DeliveryOrderController extends Controller
     {
         $data = $request->all();
 
+        $do = DeliveryOrderHeader::select(['id', 'do_number', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->first();
+
+        $data['do_number'] = empty($do) ? '' : $do->do_number;
+        $data['do_status'] = empty($do) ? '' : $do->status;
+        $data['is_draft'] = ! empty($do) && $do->status == 'DRAFT';
+
+        $journalService = new DeliveryOrderJournalService();
+        $journal = $journalService->getJournalForDeliveryOrder($data['id'] ?? null);
+        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null);
+
+        $data['journal_no'] = empty($journal) ? '' : $journal->journal_no;
+        $data['journal_status'] = empty($journal) ? '' : $journal->status;
+        $data['has_active_journal'] = ! empty($activeJournal);
+
         return view('web.delivery_order.modal.confirmdelete', $data);
+    }
+
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $do = DeliveryOrderHeader::select(['id', 'do_number', 'do_date', 'status'])
+            ->where('id', $data['id'] ?? null)
+            ->first();
+
+        $data['do_number'] = empty($do) ? '' : $do->do_number;
+
+        return view('web.delivery_order.modal.confirmpostjurnal', $data);
     }
 
     public function showModalSO(Request $request)
@@ -611,6 +657,52 @@ class DeliveryOrderController extends Controller
         $data = $request->all();
 
         return view('web.delivery_order.modal.dataso', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan memposting jurnal HPP untuk satu Delivery Order.
+     *   Dr COGS / Cr INVENTORY
+     * Status DO tidak diubah karena tidak tersedia status POSTED.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID delivery order wajib diisi.';
+                return response()->json($result);
+            }
+
+            $journalService = new DeliveryOrderJournalService();
+
+            // post_date hanya diisi setelah jurnal berhasil dibuat dan diposting,
+            // supaya DO tidak ditandai sudah posted tanpa jurnal.
+            $journal = DB::transaction(function () use ($id, $journalService) {
+                $journal = $journalService->postFromDeliveryOrder($id, session('user_id'));
+
+                $dopost = DeliveryOrderHeader::where('id', $id)->first();
+                if (! empty($dopost)) {
+                    $dopost->post_date = date('Y-m-d H:i:s');
+                    $dopost->post_by = session('user_id');
+                    $dopost->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     public function getSoDetail(Request $request)
