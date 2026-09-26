@@ -38,6 +38,7 @@
                                     <option value="GOODS_RECEIPT" {{ isset($data->transaction_type) && $data->transaction_type == 'GOODS_RECEIPT' ? 'selected' : '' }}>GOODS_RECEIPT</option>
                                     <option value="CUSTOMER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'CUSTOMER_PAYMENT' ? 'selected' : '' }}>CUSTOMER_PAYMENT</option>
                                     <option value="SUPPLIER_PAYMENT" {{ isset($data->transaction_type) && $data->transaction_type == 'SUPPLIER_PAYMENT' ? 'selected' : '' }}>SUPPLIER_PAYMENT</option>
+                                    <option value="PURCHASE_RETURN" {{ isset($data->transaction_type) && $data->transaction_type == 'PURCHASE_RETURN' ? 'selected' : '' }}>PURCHASE_RETURN</option>
                                     <option value="SALES_RETURN" {{ isset($data->transaction_type) && $data->transaction_type == 'SALES_RETURN' ? 'selected' : '' }}>SALES_RETURN</option>
                                 </select>
                             </div>

@@ -652,6 +652,8 @@ Route::post('api/transaksi/purchase-return/delete', [TransactionPurchaseReturnCo
 Route::post('api/transaksi/purchase-return/confirmDelete', [TransactionPurchaseReturnController::class, 'confirmDelete']);
 Route::get('api/transaksi/purchase-return/references', [TransactionPurchaseReturnController::class, 'getReferences']);
 Route::get('api/transaksi/purchase-return/reference-detail', [TransactionPurchaseReturnController::class, 'getReferencesDetail']);
+Route::post('api/transaksi/purchase-return/showModalPostJurnal', [TransactionPurchaseReturnController::class, 'showModalPostJurnal']);
+Route::post('api/transaksi/purchase-return/postJurnal', [TransactionPurchaseReturnController::class, 'postJurnal']);
 
 Route::post('api/transaksi/sales_order/getData', [TransactionSalesOrderController::class, 'getData']);
 Route::post('api/transaksi/sales_order/submit', [TransactionSalesOrderController::class, 'submit']);

@@ -10,6 +10,8 @@ use App\Models\Master\ProductUom;
 use App\Models\Transaction\PurchaseInvoiceDtl;
 use App\Models\Transaction\PurchaseReturn;
 use App\Models\Transaction\PurchaseReturnDtl;
+use App\Services\Accounting\JournalValidationException;
+use App\Services\Accounting\PurchaseReturnJournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -249,6 +251,21 @@ class PurchaseReturnController extends Controller
                 ]);
             }
 
+            // Journal Engine: purchase return yang sudah punya jurnal aktif tidak
+            // boleh dihapus karena general ledger sudah menerima dampaknya.
+            // Jurnal harus direversal lebih dulu lewat menu Transaksi > Jurnal.
+            $activeJournal = (new PurchaseReturnJournalService())->getActiveJournal($hdr->id);
+            if (! empty($activeJournal)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
+                        . ' masih berstatus ' . $activeJournal->status
+                        . '. Jurnal harus direversal terlebih dahulu.',
+                ]);
+            }
+
             $hdrId = $hdr->id;
             $returnNumber = $hdr->code;
 
@@ -316,7 +333,130 @@ class PurchaseReturnController extends Controller
     {
         $data = $request->all();
 
+        $header = PurchaseReturn::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['id'] = empty($header) ? ($data['id'] ?? '') : $header->id;
+        $data['return_number'] = empty($header) ? '' : $header->code;
+        $data['return_status'] = empty($header) ? '' : $header->status;
+        $data['return_type'] = empty($header) ? '' : $header->return_type;
+        $data['is_draft'] = ! empty($header) && $header->status == 'DRAFT';
+
+        // Journal Engine: tampilkan nomor jurnal supaya user tahu harus reversal dulu.
+        $journalService = new PurchaseReturnJournalService();
+        $activeJournal = $journalService->getActiveJournal($data['id']);
+        $data['has_active_journal'] = ! empty($activeJournal);
+        $data['journal_no'] = empty($activeJournal) ? '' : $activeJournal->journal_no;
+        $data['journal_status'] = empty($activeJournal) ? '' : $activeJournal->status;
+
         return view('web.purchase_return.modal.confirmdelete', $data);
+    }
+
+    /**
+     * Journal Engine: modal konfirmasi posting jurnal purchase return.
+     */
+    public function showModalPostJurnal(Request $request)
+    {
+        $data = $request->all();
+
+        $header = PurchaseReturn::where('id', $data['id'] ?? null)
+            ->whereNull('deleted')
+            ->first();
+
+        $data['return_number'] = empty($header) ? '' : $header->code;
+        $data['return_total'] = empty($header) ? (float) 0 : (float) $header->total_amount;
+        $data['return_status'] = empty($header) ? '' : $header->status;
+        $data['return_type'] = empty($header) ? '' : $header->return_type;
+        $data['vendor_name'] = empty($header)
+            ? ''
+            : DB::table('vendor')->where('id', $header->vendor)->value('nama_vendor');
+
+        // Ringkasan per baris supaya user dapat meninjau akun tujuan sebelum jurnal dibuat.
+        $rows = [];
+        if (! empty($header)) {
+            $details = PurchaseReturnDtl::where('purchase_return_id', $header->id)->orderBy('id')->get();
+
+            foreach ($details as $detail) {
+                $product = DB::table('product')->where('id', $detail->product)->whereNull('deleted')->first();
+                if (empty($product)) {
+                    continue;
+                }
+
+                $source = strtoupper(trim((string) ($detail->return_type ?: $header->return_type)));
+                $isFromInvoice = $source === PurchaseReturnJournalService::SOURCE_INVOICE;
+                $isNonStock = (int) $product->is_stock === 0;
+
+                $key = ($isFromInvoice ? 'AP' : 'GRNI') . '|' . ($isNonStock ? 'EXPENSE' : 'INVENTORY');
+                $rows[$key] = [
+                    'debit_role' => $isFromInvoice ? 'AP' : 'GRNI',
+                    'credit_role' => $isNonStock ? 'EXPENSE' : 'INVENTORY',
+                    'source' => $isFromInvoice ? 'Purchase Invoice' : 'Receiving',
+                    'items' => ($rows[$key]['items'] ?? 0) + 1,
+                    'products' => $rows[$key]['products'] ?? [],
+                ];
+                if (! in_array($product->name, $rows[$key]['products'], true)) {
+                    $rows[$key]['products'][] = $product->name;
+                }
+            }
+        }
+
+        $data['journal_rows'] = array_values($rows);
+        $data['detail_count'] = empty($header)
+            ? 0
+            : PurchaseReturnDtl::where('purchase_return_id', $header->id)->count();
+
+        return view('web.purchase_return.modal.confirmpostjurnal', $data);
+    }
+
+    /**
+     * Journal Engine: membuat dan mempost jurnal purchase return.
+     *   Dr AP    / Cr INVENTORY  - invoice sudah masuk, AP sudah diakui
+     *   Dr GRNI  / Cr INVENTORY  - baru Receiving, AP belum diakui
+     *   Dr AP atau Dr GRNI / Cr EXPENSE - barang non stok yang sudah dibebankan
+     *
+     * Nilai perolehan diambil dari dokumen asal (Purchase Invoice atau Receiving)
+     * diprorate terhadap qty retur, bukan dihitung ulang dari harga beli.
+     * Status diubah menjadi POSTED hanya setelah jurnal berhasil dibuat.
+     * submit() dan postingGL() legacy tidak diubah.
+     */
+    public function postJurnal(Request $request)
+    {
+        $data = $request->all();
+        $result['is_valid'] = false;
+
+        try {
+            $id = $data['id'] ?? null;
+            if (empty($id)) {
+                $result['message'] = 'ID purchase return wajib diisi.';
+
+                return response()->json($result);
+            }
+
+            $journalService = new PurchaseReturnJournalService();
+
+            $journal = DB::transaction(function () use ($id, $journalService) {
+                $journal = $journalService->postFromPurchaseReturn($id, session('user_id'));
+
+                $header = PurchaseReturn::where('id', $id)->first();
+                if (! empty($header) && $header->status != 'POSTED') {
+                    $header->status = 'POSTED';
+                    $header->save();
+                }
+
+                return $journal;
+            });
+
+            $result['is_valid'] = true;
+            $result['journal_no'] = $journal->journal_no ?? null;
+            $result['status'] = $journal->status ?? null;
+        } catch (JournalValidationException $e) {
+            $result['message'] = $e->getMessage();
+        } catch (\Throwable $th) {
+            $result['message'] = $th->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     public function getReferences(Request $request)
