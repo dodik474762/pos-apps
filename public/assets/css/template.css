@@ -120,3 +120,82 @@ table.dataTable td,
 table.dataTable th {
   background-color: white !important;
 }
+
+.hover-shadow {
+  transition: all 0.2s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-2px);
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.card {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.table-responsive {
+  border-radius: 0 0 12px 12px;
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.75rem 1rem;
+}
+
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  border-radius: 0.5rem;
+}
+
+.select2-container--default .select2-selection--single {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  height: 42px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 40px !important;
+  padding-left: 12px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 40px !important;
+  right: 8px !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default .select2-selection--single:hover {
+  border-color: #405189 !important;
+}
+
+.select2-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.flatpickr-input {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.flatpickr-input:focus {
+  border-color: #405189 !important;
+  box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.15) !important;
+}
