@@ -191,12 +191,12 @@ class AccountingPeriodService
                 throw new \RuntimeException('Periode akuntansi tidak ditemukan');
             }
 
-            $postedJournal = DB::table('journal_headers')
+            $draftJournal = DB::table('journal_headers')
                 ->whereBetween('journal_date', [$period->start_date, $period->end_date])
-                ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+                ->where('status', JournalService::STATUS_DRAFT)
                 ->count();
-            if ($postedJournal > 0) {
-                throw new \RuntimeException('Periode masih memiliki ' . $postedJournal . ' jurnal aktif, tidak dapat ditutup');
+            if ($draftJournal > 0) {
+                throw new \RuntimeException('Periode masih memiliki ' . $draftJournal . ' jurnal DRAFT, tidak dapat ditutup. Silakan posting atau hapus jurnal DRAFT terlebih dahulu.');
             }
 
             $period->status = self::STATUS_CLOSED;
