@@ -7,6 +7,7 @@ use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\ProductUom;
 use App\Models\Master\Tax;
+use App\Services\Accounting\ArSubledgerService;
 use App\Services\Accounting\JournalValidationException;
 use App\Services\Accounting\SalesInvoiceJournalService;
 use Illuminate\Http\Request;
@@ -1125,7 +1126,11 @@ class SalesInvoiceController extends Controller
             $menu->save();
 
             // Journal Engine: transaksi ERP diubah menjadi jurnal double entry yang tervalidasi.
-            $journalService->postFromSalesInvoice($menu->id, session('user_id'));
+            $journal = $journalService->postFromSalesInvoice($menu->id, session('user_id'));
+
+            // AR Subledger: tagihan AR terbentuk dari jurnal yang baru di-post,
+            // sehingga nominal subledger pasti sama dengan yang masuk ke general_ledgers.
+            (new ArSubledgerService())->syncFromJournal($journal);
 
             DB::commit();
             $result['is_valid'] = true;

@@ -12,6 +12,7 @@ use App\Models\Transaction\PackingListDo;
 use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesPaymentDtl;
 use App\Models\Transaction\SalesPaymentHeader;
+use App\Services\Accounting\ArSubledgerService;
 use App\Services\Accounting\CustomerPaymentJournalService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -984,6 +985,10 @@ class SalesPaymentController extends Controller
                 $data['bank_account_id'] ?? null,
                 session('user_id')
             );
+
+            // AR Subledger: penerimaan kas ini langsung dialokasikan ke invoice
+            // terbuka secara FIFO, jadi outstanding customer langsung berkurang.
+            (new ArSubledgerService())->syncFromJournal($journal);
 
             DB::commit();
 

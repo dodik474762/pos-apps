@@ -11,6 +11,7 @@ use App\Models\Transaction\SalesInvoiceHeader;
 use App\Models\Transaction\SalesOrderDetail;
 use App\Models\Transaction\SalesReturnDtl;
 use App\Models\Transaction\SalesReturnHdr;
+use App\Services\Accounting\ArSubledgerService;
 use App\Services\Accounting\JournalValidationException;
 use App\Services\Accounting\SalesReturnJournalService;
 use Carbon\Carbon;
@@ -1049,6 +1050,10 @@ class SalesReturnController extends Controller
                     $header->status = 'POSTED';
                     $header->save();
                 }
+
+                // AR Subledger: retur menjadi kredit nota yang mengurangi
+                // outstanding invoice customer secara FIFO.
+                (new ArSubledgerService())->syncFromJournal($journal);
 
                 return $journal;
             });

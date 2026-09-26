@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\Accounts;
+use App\Services\Accounting\ArSubledgerService;
 use App\Services\Accounting\JournalPostingService;
 use App\Services\Accounting\JournalReversalService;
 use App\Services\Accounting\JournalService;
@@ -112,7 +113,18 @@ class JournalsController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
         try {
-            $reversal = $this->reversalService->reverse($data['id'], $data);
+            // DIBungkus satu transaksi supaya pembatalan alokasi AR Subledger
+            // gagal atau tidak, jurnal reversal tetap tidak jadi setengah jadi.
+            $reversal = DB::transaction(function () use ($data) {
+                $reversal = $this->reversalService->reverse($data['id'], $data);
+
+                // AR Subledger: alokasi payment atau credit note dibatalkan dan
+                // outstanding invoice dikembalikan seperti sebelum pembatalan.
+                (new ArSubledgerService())->reverseFromJournal($reversal);
+
+                return $reversal;
+            });
+
             $result['is_valid'] = true;
             $result['journal_no'] = $reversal->journal_no;
             $result['journal_id'] = $reversal->id;
