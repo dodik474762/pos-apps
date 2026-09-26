@@ -965,6 +965,7 @@ class ProductController extends Controller
             $roles->sku_name  = $data['sku_name'];
             $roles->category  = $data['category'];
             $roles->sub_brand  = $data['sub_brand'];
+            $roles->is_stock = $data['is_stock'] ?? 1;
             $roles->files       = !empty($data['file']) ? $fileName : $roles->files;
             $roles->path_files  = !empty($data['file']) ? $dbpathlamp : $roles->path_files;
             $roles->save();

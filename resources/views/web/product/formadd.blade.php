@@ -138,6 +138,16 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label>Stok</label>
+                                <div>
+                                    <select class="form-control select2 required" error='Stok' id="is_stock"
+                                        name="is_stock">
+                                        <option value="1" {{ isset($data->is_stock) ? ($data->is_stock == 1 ? 'selected' : '') : 'selected' }}>Ya</option>
+                                        <option value="0" {{ isset($data->is_stock) ? ($data->is_stock == 0 ? 'selected' : '') : '' }}>Tidak</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label for="">File Produk</label>
                                 <div class="input-group">
                                     {{-- <button class="btn btn-outline-secondary" type="button" id="button-addon1"
