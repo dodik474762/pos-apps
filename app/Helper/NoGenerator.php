@@ -909,6 +909,12 @@ function setSessionUserFromApp($user_id = 0)
 
 function terbilang($angka)
 {
+    $angka = (int) round($angka);
+
+    if ($angka < 0) {
+        return 'minus ' . terbilang(abs($angka));
+    }
+
     $huruf = [
         '',
         'satu',
@@ -922,32 +928,37 @@ function terbilang($angka)
         'sembilan',
         'sepuluh',
         'sebelas',
-        'dua belas',
-        'tiga belas',
-        'empat belas',
-        'lima belas',
-        'enam belas',
-        'tujuh belas',
-        'delapan belas',
-        'sembilan belas',
     ];
 
-    if ($angka < 20) {
-        return $huruf[$angka];
-    } elseif ($angka < 100) {
-        return terbilang(floor($angka / 10)) . ' puluh ' . terbilang($angka % 10);
-    } elseif ($angka < 200) {
-        return 'seratus ' . terbilang($angka - 100);
-    } elseif ($angka < 1000) {
-        return terbilang(floor($angka / 100)) . ' ratus ' . terbilang($angka % 100);
-    } elseif ($angka < 1000000) {
-        return terbilang(floor($angka / 1000)) . ' ribu ' . terbilang($angka % 1000);
-    } elseif ($angka < 1000000000) {
-        return terbilang(floor($angka / 1000000)) . ' juta ' . terbilang($angka % 1000000);
-    } elseif ($angka < 1000000000000) {
-        return terbilang(floor($angka / 1000000000)) . ' milyar ' . terbilang($angka % 1000000000);
-    } elseif ($angka < 1000000000000000) {
-        return terbilang(floor($angka / 1000000000000)) . ' triliun ' . terbilang($angka % 1000000000000);
+    if ($angka === 0) {
+        return 'nol';
+    }
+
+    return trim(_terbilang($angka, $huruf));
+}
+
+function _terbilang(int $n, array $huruf): string
+{
+    if ($n < 12) {
+        return $huruf[$n];
+    } elseif ($n < 20) {
+        return $huruf[$n - 10] . ' belas';
+    } elseif ($n < 100) {
+        return $huruf[intdiv($n, 10)] . ' puluh ' . _terbilang($n % 10, $huruf);
+    } elseif ($n < 200) {
+        return 'seratus ' . _terbilang($n - 100, $huruf);
+    } elseif ($n < 1000) {
+        return $huruf[intdiv($n, 100)] . ' ratus ' . _terbilang($n % 100, $huruf);
+    } elseif ($n < 2000) {
+        return 'seribu ' . _terbilang($n - 1000, $huruf);
+    } elseif ($n < 1000000) {
+        return _terbilang(intdiv($n, 1000), $huruf) . ' ribu ' . _terbilang($n % 1000, $huruf);
+    } elseif ($n < 1000000000) {
+        return _terbilang(intdiv($n, 1000000), $huruf) . ' juta ' . _terbilang($n % 1000000, $huruf);
+    } elseif ($n < 1000000000000) {
+        return _terbilang(intdiv($n, 1000000000), $huruf) . ' miliar ' . _terbilang($n % 1000000000, $huruf);
+    } else {
+        return _terbilang(intdiv($n, 1000000000000), $huruf) . ' triliun ' . _terbilang($n % 1000000000000, $huruf);
     }
 }
 

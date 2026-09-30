@@ -929,6 +929,17 @@ class ReportStockController extends Controller
         ) as stok_tersedia_raw'),
 
                 DB::raw('COALESCE(
+            (SELECT pup.price FROM product_uom_price pup
+             WHERE pup.product = m.product
+               AND pup.deleted IS NULL
+               AND pup.date_start <= ?
+               AND (pup.date_end IS NULL OR pup.date_end >= ?)
+               AND (pup.channel = \'RETAIL UMUM\' OR pup.channel IS NULL)
+               AND pup.customer IS NULL
+               AND pup.unit = (SELECT pu.unit_tujuan FROM product_uom pu
+                               WHERE pu.product = m.product AND pu.deleted IS NULL
+                               ORDER BY pu.level DESC LIMIT 1)
+             ORDER BY pup.date_start DESC, pup.id DESC LIMIT 1),
             (SELECT m2.price FROM product_stock_move m2
              WHERE m2.product = m.product AND m2.warehouse = m.warehouse
                AND m2.price > 0 AND m2.created_at <= ?
@@ -939,7 +950,7 @@ class ReportStockController extends Controller
              ORDER BY m2.created_at ASC LIMIT 1)
         ) as price'),
             ])
-            ->addBinding([$tanggalAkhir, $tanggalAkhir, $tanggalAkhir], 'select')
+            ->addBinding([$tanggalAkhir, $tanggal, $tanggal, $tanggalAkhir, $tanggalAkhir], 'select')
             ->with(['products.uomFromLarge.units'])
             ->join('product as p', 'p.id', 'm.product')
             ->join('warehouse as w', 'w.id', 'm.warehouse')
@@ -977,7 +988,7 @@ class ReportStockController extends Controller
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
-            // ->where('p.code', 'PROD-07260001')
+            // ->where('p.id', '1372')
             ->groupBy(
                 'm.product',
                 'm.warehouse',
