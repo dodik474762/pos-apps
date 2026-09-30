@@ -11,6 +11,7 @@ class StockCard extends Model
     protected $fillable = [
         'item_code',
         'opening_balance',
+        'opening_value',
         'qty_in',
         'qty_out',
         'qty_adjust',
@@ -23,6 +24,13 @@ class StockCard extends Model
         'reference_id',
         'wh_code',
         'note',
-        'type_stock'
+        'type_stock',
+        'value_in',
+        'value_out',
+        'nominal_value',
+        'closing_value',
+        'avg_cost',
+        'unit_cost',
+        'cost_source'
     ];
 }

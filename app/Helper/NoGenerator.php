@@ -1748,6 +1748,256 @@ function sanitizeDecimal($value): float
     return doubleval($clean);
 }
 
+// function recalculateFrom(
+//     string $itemCode,
+//     string $fromDate,
+//     ?string $toDate = null,
+//     string $wh_code = '1',
+//     ?float $openingBalance = null,
+//     ?string $productId = null
+// ): void {
+
+//     // 1. Saldo awal sebelum $fromDate
+//     // Kalau opening balance tidak dikirim, ambil dari stock card sebelumnya
+//     // echo $openingBalance;die;
+//     $itemCode = $productId === null ? $itemCode : DB::table('product')->where('id', $productId)->first()->code;
+//     if ($openingBalance === null) {
+//         $previousCard = StockCard::where('item_code', $itemCode)
+//             ->where('trans_date', '<', $fromDate)
+//             ->where('wh_code', $wh_code)
+//             ->orderByDesc('trans_date')
+//             ->orderByDesc('id')
+//             ->first();
+
+//         $runningBalance = $previousCard->closing_balance ?? 0;
+//     } else {
+//         // Pakai opening balance dari parameter
+//         $runningBalance = $openingBalance;
+//     }
+
+//     // 2. Hapus stock_cards dalam rentang fromDate - toDate saja
+//     StockCard::where('item_code', $itemCode)
+//         ->where('trans_date', '>=', $fromDate)
+//         ->where('wh_code', $wh_code)
+//         ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
+//         ->delete();
+
+//     if ($openingBalance != 0) {
+//         StockCard::create([
+//             'item_code'        => $itemCode,
+//             'opening_balance'  => $openingBalance,
+//             'qty_in'           => 0,
+//             'qty_out'          => 0,
+//             'qty_adjust'       => 0,
+//             'qty_transfer_out' => $openingRepairBalance ?? 0,
+//             'qty_transfer_in'  => 0,
+//             'qty_return_in'    => 0,
+//             'trans_date'       => $fromDate,
+//             'closing_balance'  => $openingBalance,
+//             'reference_type'   => 'opening_balance',
+//             'reference_id'     => 0,
+//             'note'             => 'Opening Balance',
+//             'wh_code'          => $wh_code,
+//             'type_stock'       => 'rm',
+//         ]);
+//     }
+
+//     // 3. Ambil ulang transaksi dari tabel sumber, dalam rentang tsb
+//     $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code);
+//     $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
+//     $adjust = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
+//     $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
+//     $cancelDo = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code);
+//     // echo '<pre>';
+//     // print_r($sales);
+//     // die;
+
+//     $transactions = collect()
+//         ->merge($purchases)
+//         ->merge($sales)
+//         ->merge($adjust)
+//         ->merge($returns)
+//         ->merge($cancelDo)
+//         ->sortBy([
+//             ['trans_date', 'asc'],
+//             ['created_at', 'asc'],
+//         ])
+//         ->values();
+
+//     // 4. Insert ulang dengan running balance
+//     foreach ($transactions as $trx) {
+//         $movement = $trx['qty_in'] - $trx['qty_out'] + $trx['qty_adjust']
+//             - $trx['qty_transfer_out'] + $trx['qty_transfer_in'] + $trx['qty_return_in'];
+
+//         $closingBalance = $runningBalance + $movement;
+
+//         StockCard::create([
+//             'item_code'        => $itemCode,
+//             'opening_balance'  => $runningBalance,
+//             'qty_in'           => $trx['qty_in'],
+//             'qty_out'          => $trx['qty_out'],
+//             'qty_adjust'       => $trx['qty_adjust'],
+//             'qty_transfer_out' => $trx['qty_transfer_out'],
+//             'qty_transfer_in'  => $trx['qty_transfer_in'],
+//             'qty_return_in'    => $trx['qty_return_in'],
+//             'trans_date'       => $trx['trans_date'],
+//             'closing_balance'  => $closingBalance,
+//             'reference_type'   => $trx['reference_type'],
+//             'reference_id'     => $trx['reference_id'],
+//             'note'             => $trx['note'],
+//             'wh_code'          => $wh_code,
+//             'type_stock'       => 'rm',
+//         ]);
+
+//         $runningBalance = $closingBalance;
+//     }
+
+//     // 6. Kalau ada toDate, lanjutkan propagasi balance ke baris setelahnya
+//     if ($toDate) {
+//         propagateBalanceAfter($itemCode, $toDate, $runningBalance, $wh_code);
+//     }
+// }
+
+
+/*
+ * PATCH VALUASI STOCK CARD (moving average)
+ *
+ * Cara pasang di file helper:
+ *  1. HAPUS recalculateFrom() dan propagateBalanceAfter() yang lama, ganti dengan versi di bawah.
+ *  2. TAMBAHKAN: costMovement(), getMasterCostBase(), getOriginalDoCost().
+ *  3. UBAH mapPurchases() sesuai bagian "PERUBAHAN mapPurchases" di paling bawah.
+ *  4. Tambahkan 7 kolom baru ke $fillable model StockCard:
+ *     opening_value, unit_cost, value_in, value_out, closing_value, avg_cost, cost_source
+ *     (nominal_value juga harus ada di $fillable kalau belum).
+ */
+
+/**
+ * Cost master (product_uom_cost) dalam satuan TERKECIL.
+ * Hanya dipakai sebagai fallback (GR tanpa harga, saldo awal lama, keluar saat avg masih 0).
+ * Prioritas: baris aktif terbaru dengan date_start <= tanggal; kalau tidak ada, baris aktif paling awal.
+ */
+function getMasterCostBase(string $itemCode, ?string $date = null): float
+{
+    static $cache = [];
+
+    $date = $date ? substr($date, 0, 10) : date('Y-m-d');
+    $key  = $itemCode . '|' . $date;
+    if (isset($cache[$key])) {
+        return $cache[$key];
+    }
+
+    $base = DB::table('product_uom_cost as c')
+        ->join('product as p', 'p.id', '=', 'c.product')
+        ->leftJoin('product_uom as pu', 'pu.id', '=', 'c.product_uom')
+        ->where('p.code', $itemCode)
+        ->where('c.is_active', '1')
+        ->select('c.cost', 'pu.nilai_konversi_terkecil as conv');
+
+    $row = (clone $base)->where('c.date_start', '<=', $date)
+        ->orderByDesc('c.date_start')->orderByDesc('c.id')->first()
+        ?? (clone $base)->orderBy('c.date_start')->orderBy('c.id')->first();
+
+    $conv = ($row && (float) $row->conv > 0) ? (float) $row->conv : 1;
+
+    return $cache[$key] = $row ? ((float) $row->cost / $conv) : 0.0;
+}
+
+/**
+ * Cost keluar dari DO asli (dipakai saat Cancel DO supaya barang balik di cost yang sama).
+ */
+function getOriginalDoCost(string $itemCode, $doId): float
+{
+    return (float) (StockCard::where('item_code', $itemCode)
+        ->where('reference_type', DeliveryOrderHeader::class)
+        ->where('reference_id', $doId)
+        ->where('qty_out', '>', 0)
+        ->orderByDesc('id')
+        ->value('unit_cost') ?? 0);
+}
+
+/**
+ * Hitung nilai 1 movement dengan moving average, sekaligus memajukan state berjalan.
+ *
+ * $s = ['qty' => float, 'value' => float, 'avg' => float]   (by reference)
+ * $m = qty_in, qty_out, qty_adjust, qty_transfer_out, qty_transfer_in, qty_return_in,
+ *      item_code, trans_date, is_purchase (bool), purchase_value (?float), orig_cost (?float)
+ */
+function costMovement(array &$s, array $m): array
+{
+    $adj      = (float) ($m['qty_adjust'] ?? 0);
+    $qtyPlus  = (float) $m['qty_in'] + (float) $m['qty_transfer_in'] + (float) $m['qty_return_in'] + max($adj, 0);
+    $qtyMinus = (float) $m['qty_out'] + (float) $m['qty_transfer_out'] + abs(min($adj, 0));
+
+    $openingValue = $s['value'];
+    $valueIn      = 0.0;
+    $valueOut     = 0.0;
+    $unitCost     = 0.0;
+    $source       = 'avg';
+
+    // ---- MASUK ----
+    if ($qtyPlus > 0) {
+        $purchaseValue = (float) ($m['purchase_value'] ?? 0);
+        $origCost      = (float) ($m['orig_cost'] ?? 0);
+
+        if (! empty($m['is_purchase']) && $purchaseValue > 0) {
+            // GR: nilai aktual dari harga beli -> ikut membentuk avg baru
+            $valueIn  = round($purchaseValue, 4);
+            $unitCost = $valueIn / $qtyPlus;
+            $source   = 'purchase';
+        } else {
+            if ($origCost > 0) {
+                $unitCost = $origCost;              // cancel DO: kembali di cost DO asli
+                $source   = 'original';
+            } elseif ($s['avg'] > 0) {
+                $unitCost = $s['avg'];              // retur, adjust +, GR tanpa harga
+                $source   = 'avg';
+            } else {
+                $unitCost = getMasterCostBase($m['item_code'], $m['trans_date']);
+                $source   = $unitCost > 0 ? 'master' : 'zero';
+            }
+            $valueIn = round($qtyPlus * $unitCost, 4);
+        }
+
+        $s['qty']  += $qtyPlus;
+        $s['value'] = round($s['value'] + $valueIn, 4);
+        if ($s['qty'] > 0) {
+            $s['avg'] = $s['value'] / $s['qty'];
+        }
+    }
+
+    // ---- KELUAR ----
+    if ($qtyMinus > 0) {
+        if ($s['avg'] > 0) {
+            $unitCost = $s['avg'];
+            $source   = 'avg';
+        } else {
+            $unitCost = getMasterCostBase($m['item_code'], $m['trans_date']);
+            $source   = $unitCost > 0 ? 'master' : 'zero';
+        }
+        $valueOut = round($qtyMinus * $unitCost, 4);
+
+        $s['qty']  -= $qtyMinus;
+        $s['value'] = round($s['value'] - $valueOut, 4);
+    }
+
+    // stok habis -> buang sisa pembulatan (avg terakhir tetap disimpan)
+    if (abs($s['qty']) < 0.00005) {
+        $s['qty']   = 0.0;
+        $s['value'] = 0.0;
+    }
+
+    return [
+        'opening_value' => $openingValue,
+        'unit_cost'     => round($unitCost, 4),
+        'value_in'      => $valueIn,
+        'value_out'     => $valueOut,
+        'nominal_value' => round($valueIn - $valueOut, 4),
+        'closing_value' => $s['value'],
+        'avg_cost'      => round($s['avg'], 4),
+        'cost_source'   => $source,
+    ];
+}
+
 function recalculateFrom(
     string $itemCode,
     string $fromDate,
@@ -1757,9 +2007,7 @@ function recalculateFrom(
     ?string $productId = null
 ): void {
 
-    // 1. Saldo awal sebelum $fromDate
-    // Kalau opening balance tidak dikirim, ambil dari stock card sebelumnya
-    // echo $openingBalance;die;
+    // 1. State awal (qty + nilai + avg) sebelum $fromDate
     $itemCode = $productId === null ? $itemCode : DB::table('product')->where('id', $productId)->first()->code;
     if ($openingBalance === null) {
         $previousCard = StockCard::where('item_code', $itemCode)
@@ -1769,11 +2017,30 @@ function recalculateFrom(
             ->orderByDesc('id')
             ->first();
 
-        $runningBalance = $previousCard->closing_balance ?? 0;
+        $state = [
+            'qty'   => (float) ($previousCard->closing_balance ?? 0),
+            'value' => (float) ($previousCard->closing_value ?? 0),
+            'avg'   => (float) ($previousCard->avg_cost ?? 0),
+        ];
     } else {
-        // Pakai opening balance dari parameter
-        $runningBalance = $openingBalance;
+        $state = ['qty' => (float) $openingBalance, 'value' => 0.0, 'avg' => 0.0];
     }
+
+    // echo '<pre>';
+    // print_r($state);
+    // die;
+
+    // Saldo awal ada qty tapi belum bernilai (data lama sebelum fitur valuasi) -> nilai dari cost master
+    if ($state['qty'] > 0 && $state['value'] <= 0) {
+        if ($state['avg'] <= 0) {
+            $state['avg'] = getMasterCostBase($itemCode, $fromDate);
+        }
+        $state['value'] = round($state['qty'] * $state['avg'], 4);
+    }
+
+    // echo '<pre>';
+    // print_r($state);
+    // die;
 
     // 2. Hapus stock_cards dalam rentang fromDate - toDate saja
     StockCard::where('item_code', $itemCode)
@@ -1799,18 +2066,24 @@ function recalculateFrom(
             'note'             => 'Opening Balance',
             'wh_code'          => $wh_code,
             'type_stock'       => 'rm',
+            // valuasi
+            'opening_value'    => 0,
+            'unit_cost'        => $state['avg'],
+            'value_in'         => 0,
+            'value_out'        => 0,
+            'nominal_value'    => 0,
+            'closing_value'    => $state['value'],
+            'avg_cost'         => $state['avg'],
+            'cost_source'      => 'master',
         ]);
     }
 
-    // 3. Ambil ulang transaksi dari tabel sumber, dalam rentang tsb
+    // 3. Ambil ulang transaksi dari tabel sumber
     $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code);
-    $sales = mapSales($itemCode, $fromDate, $toDate, $wh_code);
-    $adjust = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
-    $returns = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
-    $cancelDo = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code);
-    // echo '<pre>';
-    // print_r($sales);
-    // die;
+    $sales     = mapSales($itemCode, $fromDate, $toDate, $wh_code);
+    $adjust    = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
+    $returns   = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
+    $cancelDo  = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code);
 
     $transactions = collect()
         ->merge($purchases)
@@ -1824,16 +2097,30 @@ function recalculateFrom(
         ])
         ->values();
 
-    // 4. Insert ulang dengan running balance
+    // echo '<pre>';
+    // print_r($transactions);
+    // die;
+    // 4. Insert ulang dengan running balance + running value
     foreach ($transactions as $trx) {
-        $movement = $trx['qty_in'] - $trx['qty_out'] + $trx['qty_adjust']
-            - $trx['qty_transfer_out'] + $trx['qty_transfer_in'] + $trx['qty_return_in'];
+        $isPurchase = $trx['reference_type'] === GoodReceipt::class;
+        $isCancelDo = $trx['reference_type'] === DeliveryOrderHeader::class && (float) $trx['qty_in'] > 0;
 
-        $closingBalance = $runningBalance + $movement;
+        $openingQty = $state['qty'];
 
-        StockCard::create([
+        $cost = costMovement($state, array_merge($trx, [
+            'item_code'      => $itemCode,
+            'is_purchase'    => $isPurchase,
+            'purchase_value' => $trx['purchase_value'] ?? null,
+            'orig_cost'      => $isCancelDo ? getOriginalDoCost($itemCode, $trx['reference_id']) : null,
+        ]));
+
+        // echo '<pre>';
+        // print_r($cost);
+        // die;
+
+        StockCard::create(array_merge([
             'item_code'        => $itemCode,
-            'opening_balance'  => $runningBalance,
+            'opening_balance'  => $openingQty,
             'qty_in'           => $trx['qty_in'],
             'qty_out'          => $trx['qty_out'],
             'qty_adjust'       => $trx['qty_adjust'],
@@ -1841,22 +2128,85 @@ function recalculateFrom(
             'qty_transfer_in'  => $trx['qty_transfer_in'],
             'qty_return_in'    => $trx['qty_return_in'],
             'trans_date'       => $trx['trans_date'],
-            'closing_balance'  => $closingBalance,
+            'closing_balance'  => $state['qty'],
             'reference_type'   => $trx['reference_type'],
             'reference_id'     => $trx['reference_id'],
             'note'             => $trx['note'],
             'wh_code'          => $wh_code,
             'type_stock'       => 'rm',
-        ]);
-
-        $runningBalance = $closingBalance;
+        ], $cost));
     }
 
-    // 6. Kalau ada toDate, lanjutkan propagasi balance ke baris setelahnya
+    // 5. Propagasi qty + nilai ke baris setelah $toDate
     if ($toDate) {
-        propagateBalanceAfter($itemCode, $toDate, $runningBalance, $wh_code);
+        propagateBalanceAfter($itemCode, $toDate, $state, $wh_code);
     }
 }
+
+function propagateBalanceAfter(string $itemCode, string $afterDate, array $state, $wh_code = '1'): void
+{
+    $cardsAfter = StockCard::where('item_code', $itemCode)
+        ->where('trans_date', '>', $afterDate)
+        ->where('wh_code', $wh_code)
+        ->orderBy('trans_date')
+        ->orderBy('id')
+        ->lockForUpdate()
+        ->get();
+    // echo '<pre>';
+    // print_r($cardsAfter);
+    // die;
+
+    foreach ($cardsAfter as $card) {
+        $before     = $state;
+        $isPurchase = $card->reference_type === GoodReceipt::class;
+        $isCancelDo = $card->reference_type === DeliveryOrderHeader::class && (float) $card->qty_in > 0;
+
+        $cost = costMovement($state, [
+            'item_code'        => $itemCode,
+            'trans_date'       => $card->trans_date,
+            'qty_in'           => $card->qty_in,
+            'qty_out'          => $card->qty_out,
+            'qty_adjust'       => $card->qty_adjust,
+            'qty_transfer_out' => $card->qty_transfer_out,
+            'qty_transfer_in'  => $card->qty_transfer_in,
+            'qty_return_in'    => $card->qty_return_in,
+            'is_purchase'      => $isPurchase,
+            'purchase_value'   => $isPurchase ? (float) $card->value_in : null,
+            'orig_cost'        => $isCancelDo ? getOriginalDoCost($itemCode, $card->reference_id) : null,
+        ]);
+
+        // Rantai sudah konsisten (qty & nilai) -> semua baris setelahnya juga konsisten, boleh berhenti
+        if (
+            abs((float) $card->opening_balance - $before['qty']) < 0.00005
+            && abs((float) $card->closing_balance - $state['qty']) < 0.00005
+            && abs((float) $card->opening_value - $before['value']) < 0.0001
+            && abs((float) $card->closing_value - $state['value']) < 0.0001
+        ) {
+            break;
+        }
+
+        $card->forceFill(array_merge([
+            'opening_balance' => $before['qty'],
+            'closing_balance' => $state['qty'],
+        ], $cost))->save();
+    }
+}
+
+/*
+ * =====================================================================
+ * PERUBAHAN mapPurchases()
+ * =====================================================================
+ * 1) Di ->select([...]) tambahkan satu baris (SESUAIKAN nama kolom harga GR detail):
+ *
+ *      DB::raw('SUM(goods_receipt_detail.qty_received * goods_receipt_detail.price) as total_value'),
+ *
+ * 2) Di ->map(fn($p) => [...]) tambahkan:
+ *
+ *      'purchase_value' => $p->total_value,
+ *
+ * Asumsi: "price" = harga per satuan transaksi GR (satuan yg sama dgn kolom `unit`).
+ * Kalau harga di GR sudah net/gross diskon atau pajak, sesuaikan rumusnya di sini.
+ */
 
 function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $material = true, $type_stock = 'rm', $item_code = '')
 {
@@ -2235,36 +2585,36 @@ function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_c
         ]);
 }
 
-function propagateBalanceAfter(string $itemCode, string $afterDate, float $startingBalance, $wh_code = '01'): void
-{
-    $runningBalance = $startingBalance;
+// function propagateBalanceAfter(string $itemCode, string $afterDate, float $startingBalance, $wh_code = '01'): void
+// {
+//     $runningBalance = $startingBalance;
 
-    $cardsAfter = StockCard::where('item_code', $itemCode)
-        ->where('trans_date', '>', $afterDate)
-        ->where('wh_code', $wh_code)
-        ->orderBy('trans_date')
-        ->orderBy('id')
-        ->lockForUpdate()
-        ->get();
+//     $cardsAfter = StockCard::where('item_code', $itemCode)
+//         ->where('trans_date', '>', $afterDate)
+//         ->where('wh_code', $wh_code)
+//         ->orderBy('trans_date')
+//         ->orderBy('id')
+//         ->lockForUpdate()
+//         ->get();
 
-    foreach ($cardsAfter as $card) {
-        // Kalau opening_balance sudah sama & closing_balance juga sudah sama,
-        // artinya rantai sudah konsisten dari titik ini -> bisa berhenti lebih awal (opsional optimasi)
-        $movement = $card->qty_in - $card->qty_out + $card->qty_adjust
-            - $card->qty_transfer_out + $card->qty_transfer_in + $card->qty_return_in;
+//     foreach ($cardsAfter as $card) {
+//         // Kalau opening_balance sudah sama & closing_balance juga sudah sama,
+//         // artinya rantai sudah konsisten dari titik ini -> bisa berhenti lebih awal (opsional optimasi)
+//         $movement = $card->qty_in - $card->qty_out + $card->qty_adjust
+//             - $card->qty_transfer_out + $card->qty_transfer_in + $card->qty_return_in;
 
-        $newClosing = $runningBalance + $movement;
+//         $newClosing = $runningBalance + $movement;
 
-        if ($card->opening_balance == $runningBalance && $card->closing_balance == $newClosing) {
-            // sudah konsisten, dan karena semua baris setelahnya berantai dari sini,
-            // aman untuk berhenti di sini
-            break;
-        }
+//         if ($card->opening_balance == $runningBalance && $card->closing_balance == $newClosing) {
+//             // sudah konsisten, dan karena semua baris setelahnya berantai dari sini,
+//             // aman untuk berhenti di sini
+//             break;
+//         }
 
-        $card->opening_balance = $runningBalance;
-        $card->closing_balance = $newClosing;
-        $card->save();
+//         $card->opening_balance = $runningBalance;
+//         $card->closing_balance = $newClosing;
+//         $card->save();
 
-        $runningBalance = $newClosing;
-    }
-}
+//         $runningBalance = $newClosing;
+//     }
+// }

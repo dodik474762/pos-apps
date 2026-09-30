@@ -381,7 +381,7 @@ class ClosingStockController extends Controller
                 'p.code as product_code'
             ])
                 ->join('product as p', 'p.id', '=', 'product_stock.product')
-                // ->where('p.code', '10000575')
+                ->where('p.id', '1372')
                 ->whereNull('p.deleted')->get();
             // echo '<pre>';
             // print_r($product_stock);
