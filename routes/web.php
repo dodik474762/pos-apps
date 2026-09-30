@@ -56,6 +56,7 @@ use App\Http\Controllers\api\Transaction\VendorBillController as TransactionVend
 use App\Http\Controllers\api\Transaction\ProductAdjustmentStockController as TransactionProductAdjustmentStockController;
 use App\Http\Controllers\api\report\ReportStockController as ApiReportStockController;
 use App\Http\Controllers\api\report\ReportVisitController as ReportReportVisitController;
+use App\Http\Controllers\api\report\InventoryValuationController as ApiInventoryValuationController;
 use App\Http\Controllers\api\Transaction\ApSubledgerController as TransactionApSubledgerController;
 use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionClosingStockController;
 use App\Http\Controllers\api\Transaction\PLTagihanController as TransactionPLTagihanController;
@@ -119,6 +120,7 @@ use App\Http\Controllers\web\Transaction\VendorBillController;
 use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use App\Http\Controllers\web\report\ReportStockController;
 use App\Http\Controllers\web\report\ReportVisitController;
+use App\Http\Controllers\web\report\InventoryValuationController;
 use App\Http\Controllers\web\Transaction\ApSubledgerController;
 use App\Http\Controllers\web\Transaction\ClosingStockController;
 use App\Http\Controllers\web\Transaction\TerimaUangController;
@@ -382,6 +384,7 @@ Route::get('transaksi/adjustment_stock/ubah', [ProductAdjustmentStockController:
 
 Route::get('transaksi/closing-stock', [ClosingStockController::class, 'index'])->name('closing-stock');;
 Route::get('report/stock-card', [ClosingStockController::class, 'stockCard'])->name('stock-card');;
+Route::get('report/inventory-valuation', [InventoryValuationController::class, 'index'])->name('inventory-valuation');;
 
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
@@ -833,6 +836,9 @@ Route::post('api/transaksi/adjustment_stock/getDataProduct', [TransactionProduct
 Route::post('api/transaksi/closing-stock/getData', [TransactionClosingStockController::class, 'getStockCardLogDetail']);
 Route::post('api/transaksi/closing-stock/closing', [TransactionClosingStockController::class, 'closing']);
 Route::post('api/transaksi/closing-stock/recalculate', [TransactionClosingStockController::class, 'recalculate']);
+
+Route::post('api/report/inventory-valuation/getData', [ApiInventoryValuationController::class, 'getData']);
+Route::post('api/report/inventory-valuation/getSummary', [ApiInventoryValuationController::class, 'getSummary']);
 
 Route::post('api/report/report_stock/getData', [ApiReportStockController::class, 'getData']);
 Route::post('api/report/report_stock/getDataStock', [ApiReportStockController::class, 'getDataStock']);
