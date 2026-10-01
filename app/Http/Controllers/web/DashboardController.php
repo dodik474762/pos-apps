@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    // status invoice yang dihitung sebagai penjualan aktif
+    const STATUS_INVOICE = ['PACKED', 'POSTED', 'PARTIAL PAID', 'PAID', 'DRAFT'];
+
     private $userGroup;
     private $id_user;
 
@@ -104,11 +107,21 @@ class DashboardController extends Controller
     {
         $year = ($year == '') ? date('Y') : $year;
 
+        // total pesanan = SO yang benar-benar sudah terbit jadi invoice.
+        // status 'correction' tidak dihitung, dan SO yang belum jadi invoice diabaikan
+        // supaya basisnya sama dengan card Total Penjualan.
         $totalSales = DB::table('sales_order_headers')
             ->whereYear('so_date', $year)
             ->where('total_amount', '>', 0)
-            ->whereNull('deleted');
-        // ->whereIn('status', ['confirmed', 'completed', 'partial']);
+            ->whereNull('deleted')
+            ->whereIn('status', ['confirmed', 'draft'])
+            ->whereExists(function ($q) use ($year) {
+                $q->select(DB::raw(1))
+                    ->from('sales_invoice_header as sih')
+                    ->whereColumn('sih.sales_order', 'sales_order_headers.id')
+                    ->whereNull('sih.deleted')
+                    ->whereYear('sih.invoice_date', $year);
+            });
 
         $summary = $totalSales->sum('total_amount');
         $jumlah = $totalSales->count();
@@ -123,18 +136,23 @@ class DashboardController extends Controller
     {
         $year = ($year == '') ? date('Y') : $year;
 
-        $outstandingReceivable = DB::table('sales_invoice_header')
+        $invoiceBase = DB::table('sales_invoice_header')
             ->whereNull('deleted')
             // ->where('invoice_number', 'SI06260204')
             ->whereYear('invoice_date', $year)
-            ->whereIn('status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID']);
+            ->whereIn('status', self::STATUS_INVOICE);
 
+        // total tagihan outstanding: hanya invoice yang masih punya sisa tagihan
+        $outstandingReceivable = (clone $invoiceBase)
+            ->whereRaw('(total_amount - amount_paid) > 0');
 
         $summary = $outstandingReceivable->selectRaw('SUM(total_amount - amount_paid) as outstanding')
             ->value('outstanding');
-        $summary_netto = $outstandingReceivable->sum('total_amount');
-        $jumlah = $outstandingReceivable->count();
-        $summary_gross = $outstandingReceivable->sum('subtotal');
+        $jumlah_outstanding = $outstandingReceivable->count();
+
+        $summary_netto = $invoiceBase->sum('total_amount');
+        $jumlah = $invoiceBase->count();
+        $summary_gross = $invoiceBase->sum('subtotal');
 
         $cogsQuery = DB::table('sales_invoice_detail as sid')
             ->join('sales_invoice_header as sih', 'sih.id', '=', 'sid.invoice_id')
@@ -151,9 +169,11 @@ class DashboardController extends Controller
             })
             // ->where('sih.invoice_number', 'SI06260204')
             ->whereNull('sih.deleted')
+            ->whereNull('sid.deleted')
+            ->whereNull('sid.flag_cancel')
             // ->where('sid.product_id', 120)
             ->whereYear('sih.invoice_date', $year)
-            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PAID'])
+            ->whereIn('sih.status', self::STATUS_INVOICE)
             ->select(
                 DB::raw("
                        SUM(
@@ -193,8 +213,9 @@ class DashboardController extends Controller
         // die;
 
         return [
-            'summary' => $summary,
+            'summary' => $summary ?: 0,
             'jumlah' => $jumlah,
+            'jumlah_outstanding' => $jumlah_outstanding,
             'summary_netto' => $summary_netto,
             'summary_gross' => $summary_gross,
             'total_cogs' => $cogsQuery ?: 0
@@ -209,10 +230,12 @@ class DashboardController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        // daftar invoice outstanding: basisnya sama dengan card Total Tagihan Outstanding
         $outstandingReceivable = DB::table('sales_invoice_header as sih')
             ->whereNull('sih.deleted')
             ->whereYear('sih.invoice_date', $year)
-            ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID']);
+            ->whereIn('sih.status', self::STATUS_INVOICE)
+            ->whereRaw('(sih.total_amount - sih.amount_paid) > 0');
 
 
         $datadb = $outstandingReceivable->select([
@@ -269,28 +292,31 @@ class DashboardController extends Controller
     {
         $data = $request->all();
         $year = isset($data['year']) ? $data['year'] : date('Y');
-        $resultStatusSo = [];
-        for ($i = 1; $i < 13; $i++) {
-            $month = $i < 10 ? '0' . $i : $i;
-            $total = DB::table('sales_order_headers')->whereNull('sales_order_headers.deleted')
-                ->where('sales_order_headers.status', '!=', 'CANCELLED')
-                ->where(function ($q) use ($year, $month) {
-                    return $q->where('sales_order_headers.created_at', 'like', '%' . $year . '-' . $month . '%');
-                })
-                ->count();
-            $resultStatusSo[] = $total;
-        }
 
+        // penjualan valid per bulan, basisnya sama dengan card Total Penjualan
+        $validPerBulan = DB::table('sales_invoice_header')
+            ->whereNull('deleted')
+            ->whereIn('status', self::STATUS_INVOICE)
+            ->whereYear('invoice_date', $year)
+            ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+
+        // penjualan batal: invoice dihapus atau berstatus CANCELED
+        $batalPerBulan = DB::table('sales_invoice_header')
+            ->where(function ($q) {
+                $q->whereNotNull('deleted')->orWhere('status', 'CANCELED');
+            })
+            ->whereYear('invoice_date', $year)
+            ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan');
+
+        $resultStatusSo = [];
         $resultsStatusSoCancel = [];
-        for ($i = 1; $i < 13; $i++) {
-            $month = $i < 10 ? '0' . $i : $i;
-            $total = DB::table('sales_order_headers')
-                ->whereNotNull('sales_order_headers.deleted')
-                ->where(function ($q) use ($year, $month) {
-                    return $q->where('sales_order_headers.created_at', 'like', '%' . $year . '-' . $month . '%');
-                })
-                ->count();
-            $resultsStatusSoCancel[] = $total;
+        for ($i = 1; $i <= 12; $i++) {
+            $resultStatusSo[] = (int) ($validPerBulan[$i] ?? 0);
+            $resultsStatusSoCancel[] = (int) ($batalPerBulan[$i] ?? 0);
         }
 
         $result['is_valid'] = true;

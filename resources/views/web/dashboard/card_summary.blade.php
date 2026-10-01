@@ -146,7 +146,7 @@
                 <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
-                                data-target="0">{{ $summary_invoice['jumlah'] }}</span></h4>
+                                data-target="0">{{ $summary_invoice['jumlah_outstanding'] }}</span></h4>
                         <a href="#" class="text-decoration-underline">IDR
                             {{ number_format($summary_invoice['summary'], 0, ',', '.') }}
                         </a>

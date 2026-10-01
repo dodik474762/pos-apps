@@ -344,12 +344,12 @@ let Dashboard = {
         const options = {
             series: [
                 {
-                    name: "Penjualan OK",
+                    name: "Penjualan Valid",
                     type: "bar",
                     data: data.so_ok,
                 },
                 {
-                    name: "Penjualan Cancel",
+                    name: "Penjualan Batal",
                     type: "bar",
                     data: data.so_cancel,
                 },
