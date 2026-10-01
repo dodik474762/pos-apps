@@ -397,16 +397,6 @@ class ReportPenjualanController extends Controller
                         )
                     ) as discount_amount
                 "),
-                DB::raw("
-                    IFNULL((
-                        SELECT COUNT(*)
-                        FROM sales_order_promo sp
-                        INNER JOIN product_promo_item_detail ppid
-                            ON ppid.product_promo_item = sp.promo
-                            AND ppid.product = sod.product_id
-                        WHERE sp.sales_order_id = m.id
-                    ), 0) as is_promo
-                "),
                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
                 DB::raw('DAY(m.so_date) as day'),
                 DB::raw("ELT(DAYOFWEEK(m.so_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
@@ -531,7 +521,7 @@ class ReportPenjualanController extends Controller
             // ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
             // ->where('p.id', '49')
-            // ->where('sih.invoice_number', 'SI09260029')
+            // ->where('sih.invoice_number', 'SI08260026')
             // ->whereIn('sih.id', [1139])
             // ->where('usr.name', 'SLS-009')
             ->whereNull('sih.deleted')
@@ -540,7 +530,6 @@ class ReportPenjualanController extends Controller
             ->where('sid.qty', '>', 0)
             ->orderBy('sih.invoice_number', 'asc')
             ->orderBy('m.salesman', 'asc')
-            ->orderByRaw('is_promo DESC')
             ->orderBy('sopi.sales_order_detail_id', 'desc')
             ->orderBy('sih.invoice_date', 'asc');
 
