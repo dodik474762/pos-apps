@@ -2,6 +2,21 @@ let map = null;
 let markers = [];
 var group = null;
 
+// Teks bahasa Indonesia untuk DataTables (tampilan saja)
+const dtLanguage = {
+    paginate: {
+        previous: "<i class='mdi mdi-chevron-left'>",
+        next: "<i class='mdi mdi-chevron-right'>",
+    },
+    emptyTable: "Belum ada data untuk ditampilkan",
+    zeroRecords: "Data tidak ditemukan",
+    info: "Menampilkan _START_–_END_ dari _TOTAL_ data",
+    infoEmpty: "Tidak ada data",
+    infoFiltered: "(difilter dari _MAX_ data)",
+    processing: "Memuat data...",
+    search: "Cari:",
+};
+
 let Dashboard = {
     module: () => {
         return "dashboard";
@@ -70,12 +85,7 @@ let Dashboard = {
                 [25, 50, 100],
             ],
             lengthChange: !1,
-            language: {
-                paginate: {
-                    previous: "<i class='mdi mdi-chevron-left'>",
-                    next: "<i class='mdi mdi-chevron-right'>",
-                },
-            },
+            language: dtLanguage,
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
                     "pagination-rounded",
@@ -102,6 +112,9 @@ let Dashboard = {
                 },
                 {
                     data: "so_number",
+                    render: function (data) {
+                        return `<span class="fw-semibold">${data ?? ""}</span>`;
+                    },
                 },
                 {
                     data: "so_date",
@@ -111,6 +124,7 @@ let Dashboard = {
                 },
                 {
                     data: "total_amount",
+                    className: "text-end",
                 },
                 {
                     data: "currency_code",
@@ -134,6 +148,7 @@ let Dashboard = {
                 },
                 {
                     data: "platform",
+                    className: "text-center",
                     render: function (data) {
                         const icon =
                             data === "mobile"
@@ -189,12 +204,7 @@ let Dashboard = {
                 [25, 50, 100],
             ],
             lengthChange: !1,
-            language: {
-                paginate: {
-                    previous: "<i class='mdi mdi-chevron-left'>",
-                    next: "<i class='mdi mdi-chevron-right'>",
-                },
-            },
+            language: dtLanguage,
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass(
                     "pagination-rounded",
@@ -207,6 +217,9 @@ let Dashboard = {
                 type: "POST",
                 headers: {
                     "X-CSRF-TOKEN": Dashboard.csrf_token(),
+                },
+                data: function (d) {
+                    d.year = $("#year").val();
                 },
             },
             deferRender: true,
@@ -229,6 +242,9 @@ let Dashboard = {
                 },
                 {
                     data: "invoice_number",
+                    render: function (data) {
+                        return `<span class="fw-semibold">${data ?? ""}</span>`;
+                    },
                 },
                 {
                     data: "invoice_date",
@@ -244,7 +260,7 @@ let Dashboard = {
                         let dueDate = new Date(data);
 
                         if (dueDate < today) {
-                            return `<span style="color:red; font-weight:bold;">${data}</span>`;
+                            return `<span class="text-danger fw-semibold"><i class="ri-error-warning-line align-bottom me-1"></i>${data}</span>`;
                         }
 
                         return data;
@@ -252,9 +268,22 @@ let Dashboard = {
                 },
                 {
                     data: "outstanding",
+                    className: "text-end fw-semibold",
                 },
                 {
                     data: "status",
+                    render: function (data) {
+                        if (!data) return data;
+                        const key = String(data).toLowerCase();
+                        let color = "warning";
+                        if (key.includes("paid") || key.includes("lunas"))
+                            color = "success";
+                        else if (key.includes("partial") || key.includes("sebagian"))
+                            color = "info";
+                        else if (key.includes("overdue") || key.includes("jatuh"))
+                            color = "danger";
+                        return `<span class="badge bg-${color}-subtle text-${color} text-capitalize">${data}</span>`;
+                    },
                 },
             ],
         });
@@ -298,7 +327,7 @@ let Dashboard = {
             },
             beforeSend: () => {
                 $("div#penjualan_chart")
-                    .html(`<div class="text-center mb-3"><div class="spinner-border text-primary" role="status">
+                    .html(`<div class="text-center py-5"><div class="spinner-border text-primary" role="status">
                                                             <span class="sr-only">Loading...</span>
                                                         </div></div>`);
             },
@@ -354,15 +383,18 @@ let Dashboard = {
                     data: data.so_cancel,
                 },
             ],
-            chart: { height: 370, type: "line", toolbar: { show: !1 } },
-            stroke: {
-                curve: "straight",
-                dashArray: [0, 0, 8],
-                width: [2, 0, 2.2],
+            chart: {
+                height: 370,
+                type: "line",
+                toolbar: { show: !1 },
+                fontFamily: "inherit",
             },
-            fill: { opacity: [0.1, 0.9, 1] },
+            dataLabels: { enabled: false },
+            // Perbaikan tampilan: sebelumnya series pertama hanya 10% opacity
+            stroke: { width: [0, 0] },
+            fill: { opacity: [0.95, 0.95] },
             markers: {
-                size: [0, 0, 0],
+                size: [0, 0],
                 strokeWidth: 2,
                 hover: { size: 4 },
             },
@@ -384,21 +416,33 @@ let Dashboard = {
                 axisTicks: { show: !1 },
                 axisBorder: { show: !1 },
             },
+            yaxis: {
+                labels: {
+                    formatter: function (v) {
+                        return Number(v).toLocaleString("id-ID");
+                    },
+                },
+            },
             grid: {
                 show: !0,
-                xaxis: { lines: { show: !0 } },
-                yaxis: { lines: { show: !1 } },
-                padding: { top: 0, right: -2, bottom: 15, left: 10 },
+                borderColor: "rgba(135,138,153,.2)",
+                strokeDashArray: 4,
+                xaxis: { lines: { show: !1 } },
+                yaxis: { lines: { show: !0 } },
+                padding: { top: 0, right: 10, bottom: 15, left: 10 },
             },
             legend: {
                 show: !0,
-                horizontalAlign: "center",
+                position: "top",
+                horizontalAlign: "right",
                 offsetX: 0,
                 offsetY: -5,
                 markers: { width: 9, height: 9, radius: 6 },
                 itemMargin: { horizontal: 10, vertical: 0 },
             },
-            plotOptions: { bar: { columnWidth: "30%", barHeight: "70%" } },
+            plotOptions: {
+                bar: { columnWidth: "38%", barHeight: "70%", borderRadius: 4 },
+            },
             colors: linechartcustomerColors,
             tooltip: {
                 shared: !0,
@@ -503,14 +547,16 @@ let Dashboard = {
             let keterangan = ``;
             if (content_) {
                 keterangan = `
-                <div style="">
-                    <img src="${content_.checkin_path}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>
+                <div class="dash-popup" style="min-width:230px;">
+                    <img src="${content_.checkin_path}" alt="Foto check-in" onerror="this.style.display='none'"/>
+                    <dl>
+                        <dt>No. SO</dt><dd>${content_.so_number}</dd>
+                        <dt>Tanggal</dt><dd>${content_.so_date ?? ""}</dd>
+                        <dt>Nilai (IDR)</dt><dd>${content_.total_amount}</dd>
+                        <dt>Customer</dt><dd>${content_.customer_code} - ${content_.nama_customer}</dd>
+                        <dt>Koordinat</dt><dd><a href="https://www.google.com/maps/search/?api=1&query=${content_.latitude},${content_.longitude}" target="_blank" rel="noopener">${content_.latitude}, ${content_.longitude}</a></dd>
+                    </dl>
                 </div>
-                SO Number : <b>${content_.so_number}</b> <br>
-                Visit Date : <b>${content_.so_date ?? ""}</b> <br>
-                Amount IDR : <b>${content_.total_amount}</b> <br>
-                Customer : <b>${content_.customer_code} - ${content_.nama_customer}</b> <br>
-                Koordinat : <b><a href="https://www.google.com/maps/search/?api=1&query=${content_.latitude},${content_.longitude}" target="_blank">${content_.latitude}, ${content_.longitude}</a></b> <br>
             `;
             }
 
