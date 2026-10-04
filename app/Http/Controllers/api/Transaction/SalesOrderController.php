@@ -2976,6 +2976,586 @@ class SalesOrderController extends Controller
     //     ];
     // }
 
+    // public function calculatePromoV2($items = [], $promoAll = [], $productIds = [], $customer_id = '')
+    // {
+    //     $resultItems   = [];
+    //     $freeGoods     = [];
+    //     $grandTotal    = 0;
+
+    //     $customers          = [];
+    //     $channel_outlet     = '';
+    //     $sub_channel_outlet = '';
+    //     if ($customer_id != '') {
+    //         $customers          = Customer::where('id', $customer_id)->first();
+    //         $channel_outlet     = $customers->channel_outlet;
+    //         $sub_channel_outlet = $customers->sub_channel_outlet;
+    //     }
+
+    //     $promoHeaders    = $promoAll['promo_header'];
+    //     $discountHeader  = [];
+
+    //     $grandTotalAfterItemDisc = 0;
+
+    //     // ============================================================
+    //     // Tracking untuk DISC SYARAT STRATA di loop per item
+    //     // ============================================================
+    //     $appliedKategoriDiscItem = [];
+
+    //     // ============================================================
+    //     // LOOP 1: PROMO PER ITEM (potong_grand_total != 1)
+    //     // ============================================================
+    //     foreach ($promoHeaders as $promo) {
+
+    //         if ($promo->potong_grand_total != 0) continue;
+
+    //         // ── Filter channel outlet ────────────────────────────────
+    //         if ($customer_id != '') {
+    //             $channelMatch    = empty($promo->channel_outlet)     || $promo->channel_outlet     == $channel_outlet;
+    //             $subChannelMatch = empty($promo->sub_channel_outlet) || $promo->sub_channel_outlet == $sub_channel_outlet;
+    //             if (!$channelMatch || !$subChannelMatch) continue;
+    //         }
+
+    //         // ── Cek syarat ──────────────────────────────────────────
+    //         if (
+    //             in_array($promo->kategori_disc, ['DISC SYARAT', 'DISC SYARAT STRATA'])
+    //             && count($promo->promoSyarat) > 0
+    //         ) {
+    //             $qtySummaryCart = 0;
+    //             foreach ($promo->promoSyarat as $syarat) {
+    //                 $itemQtySmallest = 0;
+    //                 $valItems = collect($items)->where('product_id', $syarat->product)->all();
+    //                 foreach ($valItems as $vi) {
+    //                     $qtyBaseItem      = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
+    //                     $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
+    //                 }
+    //                 $qtySummaryCart += $itemQtySmallest;
+    //             }
+    //             $qtyTargetSummary = collect($promo->promoSyarat)->max('qty');
+    //             if ($qtySummaryCart < $qtyTargetSummary) continue;
+    //         }
+
+    //         // ── Match produk ────────────────────────────────────────
+    //         $promoProduc      = $promo->promoProducts->pluck('product')->map('strval')->toArray();
+    //         $productIdsStr    = array_map('strval', array_unique($productIds));
+
+    //         $mixTotalPromo    = 0;
+    //         $itemsHasDiscount = [];
+    //         foreach ($promoProduc as $v) {
+    //             foreach ($productIdsStr as $k) {
+    //                 if ($k == $v) {
+    //                     $mixTotalPromo++;
+    //                     $itemsHasDiscount[] = $v;
+    //                 }
+    //             }
+    //         }
+
+    //         $mix_min_promo = $promo->min_mix;
+    //         $mix_max_promo = $promo->max_mix;
+    //         if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo)) continue;
+
+    //         $itemsValue = [];
+    //         foreach (array_unique($itemsHasDiscount) as $h) {
+    //             $valItems = collect($items)->where('product_id', $h)->all();
+    //             foreach ($valItems as $vi) {
+    //                 $itemsValue[] = $vi;
+    //             }
+    //         }
+
+    //         // ── Subtotal mentah ─────────────────────────────────────
+    //         $rawSubtotal = 0;
+    //         foreach ($itemsValue as $v) {
+    //             $rawSubtotal += $v['price'] * $v['qty'];
+    //         }
+
+    //         $isNominalCategory     = $promo->kategori === 'nominal';
+    //         $qtySmallestAllProduct = $isNominalCategory
+    //             ? $rawSubtotal
+    //             : $this->calculateTotalSmallestQty($itemsValue);
+
+    //         // ── Cek applicable ──────────────────────────────────────
+    //         $totalPromoAplicable = 0;
+    //         $checkedProducts     = [];
+    //         foreach ($itemsValue as $v) {
+    //             if (in_array($v['product_id'], $checkedProducts)) continue;
+    //             $checkedProducts[] = $v['product_id'];
+    //             if ($this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
+    //                 $totalPromoAplicable++;
+    //             }
+    //         }
+    //         if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo)) continue;
+
+    //         // ── DISC SYARAT STRATA: override entry lama ─────────────
+    //         $kategoriDiscItem = $promo->kategori_disc ?? 'DEFAULT';
+    //         if ($kategoriDiscItem === 'DISC SYARAT STRATA') {
+    //             if (isset($appliedKategoriDiscItem[$kategoriDiscItem])) {
+    //                 $resultItems = array_values(array_filter(
+    //                     $resultItems,
+    //                     fn($r) => $r['promo_id'] != $appliedKategoriDiscItem[$kategoriDiscItem]
+    //                 ));
+    //                 // Recalculate grandTotalAfterItemDisc
+    //                 $grandTotalAfterItemDisc = 0;
+    //                 foreach ($resultItems as $r) {
+    //                     foreach ($r['items'] as $ri) {
+    //                         $grandTotalAfterItemDisc += $ri['subtotal'];
+    //                     }
+    //                 }
+    //             }
+    //             $appliedKategoriDiscItem[$kategoriDiscItem] = $promo->id;
+    //         }
+
+    //         // ── Hitung diskon per item ──────────────────────────────
+    //         $discountPercent  = 0;
+    //         $discountAmounts  = 0;
+    //         $grandTotal       = 0;
+    //         $itemsValueApplied = [];
+
+    //         foreach ($itemsValue as $v) {
+    //             $discountAmount = 0;
+
+    //             if ($promo->discount_type === 'percent') {
+    //                 $discountPercent = $promo->discount_value;
+    //                 $discountAmount  = ($v['price'] * $v['qty']) * ($discountPercent / 100);
+
+    //                 if ($promo->potong_per_qty == 1) {
+    //                     $promoUnitId = $promo->promoProducts[0]->unit;
+    //                     $productUom  = ProductUom::where('product', $v['product_id'])
+    //                         ->where('unit_tujuan', $promoUnitId)
+    //                         ->whereNull('deleted')
+    //                         ->first();
+
+    //                     $qtyBaseItem     = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+    //                     $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+    //                     $totalQtyLargest = 0;
+
+    //                     if ($productUom && $productUom->state == 'large') {
+    //                         $productUomLarge  = ProductUom::where('product', $v['product_id'])
+    //                             ->where('state', 'large')
+    //                             ->whereNull('deleted')
+    //                             ->first();
+    //                         $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+    //                         $discountAmount   = ($v['price'] * $totalQtyLargest) * ($discountPercent / 100);
+    //                     } else {
+    //                         $discountAmount = ($v['price'] * $itemQtySmallest) * ($discountPercent / 100);
+    //                     }
+    //                 }
+    //                 $discountAmounts += $discountAmount;
+    //             }
+
+    //             if ($promo->discount_type === 'nominal') {
+    //                 $qtyBaseUnit          = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
+    //                 $minQtyPromoSmallest  = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+    //                 $multiplier           = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+    //                 $discountAmount       = $promo->discount_value * $multiplier;
+
+    //                 if ($promo->potong_per_qty == 1) {
+    //                     $promoUnitId = $promo->promoProducts[0]->unit;
+    //                     $productUom  = ProductUom::where('product', $v['product_id'])
+    //                         ->where('unit_tujuan', $promoUnitId)
+    //                         ->whereNull('deleted')
+    //                         ->first();
+
+    //                     $qtyBaseItem     = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+    //                     $itemQtySmallest = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+    //                     $totalQtyLargest = 0;
+
+    //                     if ($productUom && $productUom->state == 'large') {
+    //                         $productUomLarge  = ProductUom::where('product', $v['product_id'])
+    //                             ->where('state', 'large')
+    //                             ->whereNull('deleted')
+    //                             ->first();
+    //                         $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+    //                         $discountAmount   = $promo->discount_value * $totalQtyLargest;
+    //                     } else {
+    //                         $discountAmount = $promo->discount_value * $itemQtySmallest;
+    //                     }
+    //                 }
+    //                 $discountAmounts += $discountAmount;
+    //             }
+
+    //             if ($promo->discount_type == 'price') {
+    //                 $allPrice = getHargaSemuaUnit($v['product_id'], $promo->discount_value, $promo->unit);
+    //                 foreach ($allPrice as $p) {
+    //                     if ($v['unit_id'] == $p['unit_id']) {
+    //                         $v['price'] = $p['harga'];
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+
+    //             $subtotal              = ($v['price'] * $v['qty']) - $discountAmount;
+    //             $v['subtotal']         = $subtotal;
+    //             $v['discountAmount']   = $discountAmount;
+    //             $v['discountPercent']  = $discountPercent;
+    //             $itemsValueApplied[]   = $v;
+    //             $grandTotal           += $subtotal;
+    //         }
+
+    //         // ── Additional disc ─────────────────────────────────────
+    //         $grandTotalAfterDisc  = 0;
+    //         foreach ($itemsValueApplied as $v) {
+    //             $grandTotalAfterDisc += ($v['price'] * $v['qty']) - ($v['discountAmount'] ?? 0);
+    //         }
+
+    //         $additionalDiscAmount = 0;
+    //         if (!empty($promo->additional_disc) && $promo->additional_disc > 0 && $discountAmounts > 0) {
+    //             if ($promo->additional_disc_type === 'percent') {
+    //                 $additionalDiscAmount = $grandTotalAfterDisc * ($promo->additional_disc / 100);
+    //             } elseif ($promo->additional_disc_type === 'nominal') {
+    //                 $additionalDiscAmount = $promo->additional_disc;
+    //             }
+    //             $discountHeader['discount_amount'] = ($discountHeader['discount_amount'] ?? 0) + $additionalDiscAmount;
+    //             if (empty($discountHeader['promo_id'])) {
+    //                 $discountHeader['promo_id']        = $promo->id;
+    //                 $discountHeader['promo_name']      = $promo->promo_name;
+    //                 $discountHeader['discount_percent'] = $promo->additional_disc_type === 'percent' ? $promo->additional_disc : 0;
+    //             }
+    //         }
+
+    //         // ── Free good ───────────────────────────────────────────
+    //         $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
+    //         $freeGoods    = array_merge($freeGoods, $discountFree);
+
+    //         $resultItems[] = [
+    //             'promo_id'           => $promo->id,
+    //             'promo_name'         => $promo->promo_name,
+    //             'items'              => $itemsValueApplied,
+    //             'discount_type'      => $promo->discount_type,
+    //             'discount_percent'   => $discountPercent,
+    //             'discount_amount'    => $discountAmounts,
+    //             'grand_total'        => $grandTotal,
+    //             'discount_free'      => $discountFree,
+    //             'potong_grand_total' => $promo->potong_grand_total,
+    //         ];
+    //     }
+
+    //     // ── Akumulasi grand total setelah disc item ──────────────────
+    //     foreach ($resultItems as $r) {
+    //         foreach ($r['items'] as $ri) {
+    //             $grandTotalAfterItemDisc += $ri['subtotal'];
+    //         }
+    //     }
+
+    //     // ── Tambah item yang tidak kena promo apapun ─────────────────
+    //     $itemNonDisc = [];
+    //     foreach ($items as $item) {
+    //         $productInPromo = false;
+    //         foreach ($resultItems as $r) {
+    //             $found = collect($r['items'])->where('product_id', $item['product_id'])->first();
+    //             if ($found) {
+    //                 $productInPromo = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (!$productInPromo) {
+    //             $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
+    //             $itemNonDisc[]            = $item;
+    //         }
+    //     }
+
+    //     // ============================================================
+    //     // LOOP 2: PROMO POTONG GRAND TOTAL (potong_grand_total == 1)
+    //     // ============================================================
+    //     $grandTotalRunning   = $grandTotalAfterItemDisc;
+    //     $appliedKategoriDisc = [];
+
+    //     foreach ($promoHeaders as $promo) {
+
+    //         if ($promo->potong_grand_total != 1) continue;
+
+    //         // ── Filter channel outlet ────────────────────────────────
+    //         if ($customer_id != '') {
+    //             $channelMatch    = empty($promo->channel_outlet)     || $promo->channel_outlet     == $channel_outlet;
+    //             $subChannelMatch = empty($promo->sub_channel_outlet) || $promo->sub_channel_outlet == $sub_channel_outlet;
+    //             if (!$channelMatch || !$subChannelMatch) continue;
+    //         }
+
+    //         // ── Cek syarat ──────────────────────────────────────────
+    //         if (
+    //             in_array($promo->kategori_disc, ['DISC SYARAT', 'DISC SYARAT STRATA'])
+    //             && count($promo->promoSyarat) > 0
+    //         ) {
+    //             $qtySummaryCart = 0;
+    //             foreach ($promo->promoSyarat as $syarat) {
+    //                 $itemQtySmallest = 0;
+    //                 $valItems = collect($items)->where('product_id', $syarat->product)->all();
+    //                 foreach ($valItems as $vi) {
+    //                     $qtyBaseItem      = getSmallestUnitV2($vi['product_id'], $vi['unit_id'], 1);
+    //                     $itemQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $vi['qty'] : 0;
+    //                 }
+    //                 $qtySummaryCart += $itemQtySmallest;
+    //             }
+    //             $qtyTargetSummary = collect($promo->promoSyarat)->max('qty');
+    //             if ($qtySummaryCart < $qtyTargetSummary) continue;
+    //         }
+
+    //         // ── Match produk ────────────────────────────────────────
+    //         $promoProduc      = $promo->promoProducts->pluck('product')->map('strval')->toArray();
+    //         $productIdsStr    = array_map('strval', array_unique($productIds));
+
+    //         $mixTotalPromo    = 0;
+    //         $itemsHasDiscount = [];
+    //         foreach ($promoProduc as $v) {
+    //             foreach ($productIdsStr as $k) {
+    //                 if ($k == $v) {
+    //                     $mixTotalPromo++;
+    //                     $itemsHasDiscount[] = $v;
+    //                 }
+    //             }
+    //         }
+
+    //         $mix_min_promo = $promo->min_mix;
+    //         $mix_max_promo = $promo->max_mix;
+    //         if (!($mixTotalPromo >= $mix_min_promo && $mixTotalPromo <= $mix_max_promo)) continue;
+
+    //         $itemsValue = [];
+    //         foreach (array_unique($itemsHasDiscount) as $h) {
+    //             $valItems = collect($items)->where('product_id', $h)->all();
+    //             foreach ($valItems as $vi) {
+    //                 $itemsValue[] = $vi;
+    //             }
+    //         }
+
+    //         // ── Subtotal mentah ─────────────────────────────────────
+    //         $rawSubtotal = 0;
+    //         foreach ($itemsValue as $v) {
+    //             $rawSubtotal += $v['price'] * $v['qty'];
+    //         }
+
+    //         $isNominalCategory     = $promo->kategori === 'nominal';
+    //         $qtySmallestAllProduct = $isNominalCategory
+    //             ? $rawSubtotal
+    //             : $this->calculateTotalSmallestQty($itemsValue);
+
+    //         // ── Cek applicable ──────────────────────────────────────
+    //         $totalPromoAplicable = 0;
+    //         $checkedProducts     = [];
+    //         foreach ($itemsValue as $v) {
+    //             if (in_array($v['product_id'], $checkedProducts)) continue;
+    //             $checkedProducts[] = $v['product_id'];
+    //             if ($this->isPromoApplicable($promo, $qtySmallestAllProduct, $v['product_id'])) {
+    //                 $totalPromoAplicable++;
+    //             }
+    //         }
+    //         if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo)) continue;
+
+    //         // ── DISC SYARAT STRATA: override entry lama ─────────────
+    //         $kategoriDisc = $promo->kategori_disc ?? 'DEFAULT';
+    //         if (
+    //             in_array($kategoriDisc, ['DISC STRATA', 'DISC SYARAT STRATA'])
+    //             && isset($appliedKategoriDisc[$kategoriDisc])
+    //         ) {
+    //             $oldPromoId = $appliedKategoriDisc[$kategoriDisc];
+
+    //             // Hapus dari discountHeader
+    //             $discountHeader = array_values(array_filter(
+    //                 $discountHeader,
+    //                 fn($dh) => $dh['promo_id'] != $oldPromoId
+    //             ));
+
+    //             // Hapus dari resultItems
+    //             $resultItems = array_values(array_filter(
+    //                 $resultItems,
+    //                 fn($r) => $r['promo_id'] != $oldPromoId
+    //             ));
+
+    //             // Reset grandTotalRunning
+    //             $grandTotalRunning = $grandTotalAfterItemDisc;
+    //             foreach ($discountHeader as $dh) {
+    //                 $grandTotalRunning -= $dh['discount_amount'];
+    //             }
+    //         }
+
+    //         // ── Hitung diskon grand total ───────────────────────────
+    //         $discAmountHeader  = 0;
+    //         $discPercentHeader = 0;
+    //         $itemsValueApplied = [];
+
+    //         if ($promo->discount_type === 'percent') {
+    //             $discPercentHeader = $promo->discount_value;
+
+    //             if (in_array($kategoriDisc, ['DISC STRATA', 'DISC SYARAT STRATA'])) {
+    //                 // ✅ FIX: basis = subtotal item terkena dikurangi disc sebelumnya yang produknya overlap
+    //                 $subtotalItemsTerkena = 0;
+    //                 foreach ($itemsValue as $v) {
+    //                     $subtotalItemsTerkena += $v['price'] * $v['qty'];
+    //                 }
+
+    //                 // Cast product_id ke string agar array_diff tidak salah karena type mismatch
+    //                 $productIdsTerkena = array_map('strval', array_column($itemsValue, 'product_id'));
+
+    //                 $discSudahDipotong = 0;
+    //                 foreach ($discountHeader as $dh) {
+    //                     $promoLama = collect($promoHeaders)->where('id', $dh['promo_id'])->first();
+    //                     if (!$promoLama) continue;
+
+    //                     $produkPromoLama = array_map('strval', $promoLama->promoProducts->pluck('product')->toArray());
+
+    //                     // ✅ FIX: ada overlap produk saja sudah cukup untuk potong disc sebelumnya
+    //                     $overlap = array_intersect($produkPromoLama, $productIdsTerkena);
+    //                     if (count($overlap) > 0) {
+    //                         $discSudahDipotong += $dh['discount_amount'];
+    //                     }
+    //                 }
+
+    //                 $basisDisc        = $subtotalItemsTerkena - $discSudahDipotong;
+    //                 $discAmountHeader = $basisDisc * ($discPercentHeader / 100);
+    //             } else {
+    //                 // Non-strata: potong dari grandTotalRunning semua item
+    //                 $discAmountHeader = $grandTotalRunning * ($discPercentHeader / 100);
+    //             }
+
+    //             // Potong per qty
+    //             if ($promo->potong_per_qty == 1) {
+    //                 $promoUnitId = $promo->promoProducts[0]->unit;
+    //                 $productUom  = ProductUom::where('product', $itemsValue[0]['product_id'])
+    //                     ->where('unit_tujuan', $promoUnitId)
+    //                     ->whereNull('deleted')
+    //                     ->first();
+
+    //                 $discAmountHeader = 0;
+    //                 $totalQtyLargest  = 0;
+    //                 $itemQtySmallest  = 0;
+
+    //                 foreach ($itemsValue as $v) {
+    //                     $qtyBaseItem      = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+    //                     $itemQtySmallest  = !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+    //                 }
+
+    //                 if ($productUom && $productUom->state == 'large') {
+    //                     $productUomLarge  = ProductUom::where('product', $itemsValue[0]['product_id'])
+    //                         ->where('state', 'large')
+    //                         ->whereNull('deleted')
+    //                         ->first();
+    //                     $totalQtyLargest += $itemQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+    //                     $discAmountHeader = ($itemsValue[0]['price'] * $totalQtyLargest) * ($discPercentHeader / 100);
+    //                 } else {
+    //                     $discAmountHeader = ($itemsValue[0]['price'] * $itemQtySmallest) * ($discPercentHeader / 100);
+    //                 }
+    //             }
+    //         }
+
+    //         if ($promo->discount_type === 'nominal') {
+    //             $qtyBaseUnit         = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
+    //             $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+    //             $multiplier          = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+    //             $discAmountHeader    = $promo->discount_value * $multiplier;
+
+    //             if ($promo->potong_per_qty == 1) {
+    //                 $promoUnitId     = $promo->promoProducts[0]->unit;
+    //                 $productUom      = ProductUom::where('product', $itemsValue[0]['product_id'])
+    //                     ->where('unit_tujuan', $promoUnitId)
+    //                     ->whereNull('deleted')
+    //                     ->first();
+
+    //                 $totalQtySmallest = 0;
+    //                 $totalQtyLargest  = 0;
+    //                 foreach ($itemsValue as $v) {
+    //                     $qtyBaseItem       = getSmallestUnitV2($v['product_id'], $v['unit_id'], 1);
+    //                     $totalQtySmallest += !empty($qtyBaseItem) ? $qtyBaseItem->nilai_konversi_terkecil * $v['qty'] : $v['qty'];
+    //                 }
+
+    //                 if ($productUom && $productUom->state == 'large') {
+    //                     $productUomLarge  = ProductUom::where('product', $itemsValue[0]['product_id'])
+    //                         ->where('state', 'large')
+    //                         ->whereNull('deleted')
+    //                         ->first();
+    //                     $totalQtyLargest += $totalQtySmallest / $productUomLarge->nilai_konversi_terkecil;
+    //                     $discAmountHeader  = $promo->discount_value * $totalQtyLargest;
+    //                 } else {
+    //                     $discAmountHeader = $promo->discount_value * $totalQtySmallest;
+    //                 }
+    //             }
+    //         }
+
+    //         // ── Additional disc ─────────────────────────────────────
+    //         $grandTotalAfterMainDisc = $grandTotalRunning - $discAmountHeader;
+    //         if (!empty($promo->additional_disc) && $promo->additional_disc > 0) {
+    //             $additionalDiscAmount = 0;
+    //             if ($promo->additional_disc_type === 'percent') {
+    //                 $additionalDiscAmount = $grandTotalAfterMainDisc * ($promo->additional_disc / 100);
+    //             } elseif ($promo->additional_disc_type === 'nominal') {
+    //                 $additionalDiscAmount = $promo->additional_disc;
+    //             }
+    //             $discAmountHeader += $additionalDiscAmount;
+    //         }
+
+    //         $grandTotalRunning -= $discAmountHeader;
+
+    //         // ── Free good ───────────────────────────────────────────
+    //         $discountFree = $this->calculateFreeGoods($promo, $qtySmallestAllProduct, $itemsValue[0]['product_id']);
+    //         $freeGoods    = array_merge($freeGoods, $discountFree);
+
+    //         // ── Susun items applied ─────────────────────────────────
+    //         if ($discAmountHeader > 0) {
+    //             foreach ($itemsValue as $key => $value) {
+    //                 $itemsValueApplied[$key] = $value;
+    //             }
+    //         }
+
+    //         $discountHeader[] = [
+    //             'discount_percent'   => $discPercentHeader,
+    //             'discount_amount'    => $discAmountHeader,
+    //             'grand_total_before' => $grandTotalRunning + $discAmountHeader,
+    //             'grand_total_after'  => $grandTotalRunning,
+    //             'promo_id'           => $promo->id,
+    //             'promo_name'         => $promo->promo_name,
+    //             'discount_free'      => $discountFree,
+    //         ];
+
+    //         $resultItems[] = [
+    //             'promo_id'           => $promo->id,
+    //             'promo_name'         => $promo->promo_name,
+    //             'items'              => $itemsValueApplied,
+    //             'discount_type'      => $promo->discount_type,
+    //             'discount_percent'   => $discPercentHeader,
+    //             'discount_amount'    => $discAmountHeader,
+    //             'grand_total'        => $grandTotal,
+    //             'discount_free'      => $discountFree,
+    //             'potong_grand_total' => $promo->potong_grand_total,
+    //         ];
+
+    //         // ✅ Set SETELAH entry ditambahkan
+    //         $appliedKategoriDisc[$kategoriDisc] = $promo->id;
+    //     }
+
+    //     return [
+    //         'discount_header' => $discountHeader,
+    //         'result_items'    => $resultItems,
+    //         'free_goods'      => $freeGoods,
+    //     ];
+    // }
+
+    /**
+     * Hitung grand total setelah diskon per item, TANPA double count.
+     * Dihitung per baris $items: (harga x qty) - total diskon dari semua promo per item
+     * yang mengenai baris tersebut.
+     */
+    private function calcGrandTotalAfterItemDisc($items, $resultItems)
+    {
+        $total = 0;
+        foreach ($items as $item) {
+            $price = $item['price'];
+            $disc  = 0;
+
+            foreach ($resultItems as $r) {
+                // hanya promo per item (bukan potong grand total)
+                if (($r['potong_grand_total'] ?? 0) == 1) continue;
+
+                foreach ($r['items'] as $ri) {
+                    if ($ri['product_id'] == $item['product_id'] && $ri['unit_id'] == $item['unit_id']) {
+                        $disc += $ri['discountAmount'] ?? 0;
+                        if ($r['discount_type'] == 'price') {
+                            $price = $ri['price'];
+                        }
+                    }
+                }
+            }
+
+            $total += ($price * $item['qty']) - $disc;
+        }
+        return $total;
+    }
+
     public function calculatePromoV2($items = [], $promoAll = [], $productIds = [], $customer_id = '')
     {
         $resultItems   = [];
@@ -3085,6 +3665,8 @@ class SalesOrderController extends Controller
             if (!($totalPromoAplicable >= $mix_min_promo && $totalPromoAplicable <= $mix_max_promo)) continue;
 
             // ── DISC SYARAT STRATA: override entry lama ─────────────
+            // (FIX: tidak perlu recalculate grandTotalAfterItemDisc di sini,
+            //  karena dihitung ulang via helper setelah Loop 1)
             $kategoriDiscItem = $promo->kategori_disc ?? 'DEFAULT';
             if ($kategoriDiscItem === 'DISC SYARAT STRATA') {
                 if (isset($appliedKategoriDiscItem[$kategoriDiscItem])) {
@@ -3092,13 +3674,6 @@ class SalesOrderController extends Controller
                         $resultItems,
                         fn($r) => $r['promo_id'] != $appliedKategoriDiscItem[$kategoriDiscItem]
                     ));
-                    // Recalculate grandTotalAfterItemDisc
-                    $grandTotalAfterItemDisc = 0;
-                    foreach ($resultItems as $r) {
-                        foreach ($r['items'] as $ri) {
-                            $grandTotalAfterItemDisc += $ri['subtotal'];
-                        }
-                    }
                 }
                 $appliedKategoriDiscItem[$kategoriDiscItem] = $promo->id;
             }
@@ -3228,29 +3803,10 @@ class SalesOrderController extends Controller
             ];
         }
 
-        // ── Akumulasi grand total setelah disc item ──────────────────
-        foreach ($resultItems as $r) {
-            foreach ($r['items'] as $ri) {
-                $grandTotalAfterItemDisc += $ri['subtotal'];
-            }
-        }
-
-        // ── Tambah item yang tidak kena promo apapun ─────────────────
-        $itemNonDisc = [];
-        foreach ($items as $item) {
-            $productInPromo = false;
-            foreach ($resultItems as $r) {
-                $found = collect($r['items'])->where('product_id', $item['product_id'])->first();
-                if ($found) {
-                    $productInPromo = true;
-                    break;
-                }
-            }
-            if (!$productInPromo) {
-                $grandTotalAfterItemDisc += $item['price'] * $item['qty'];
-                $itemNonDisc[]            = $item;
-            }
-        }
+        // ── FIX: grand total setelah disc item, dihitung per baris item ──
+        // (menggantikan blok "Akumulasi" + "Tambah item yang tidak kena promo"
+        //  yang menyebabkan double count)
+        $grandTotalAfterItemDisc = $this->calcGrandTotalAfterItemDisc($items, $resultItems);
 
         // ============================================================
         // LOOP 2: PROMO POTONG GRAND TOTAL (potong_grand_total == 1)
@@ -3374,7 +3930,7 @@ class SalesOrderController extends Controller
                 $discPercentHeader = $promo->discount_value;
 
                 if (in_array($kategoriDisc, ['DISC STRATA', 'DISC SYARAT STRATA'])) {
-                    // ✅ FIX: basis = subtotal item terkena dikurangi disc sebelumnya yang produknya overlap
+                    // basis = subtotal item terkena dikurangi disc sebelumnya yang produknya overlap
                     $subtotalItemsTerkena = 0;
                     foreach ($itemsValue as $v) {
                         $subtotalItemsTerkena += $v['price'] * $v['qty'];
@@ -3390,7 +3946,7 @@ class SalesOrderController extends Controller
 
                         $produkPromoLama = array_map('strval', $promoLama->promoProducts->pluck('product')->toArray());
 
-                        // ✅ FIX: ada overlap produk saja sudah cukup untuk potong disc sebelumnya
+                        // ada overlap produk saja sudah cukup untuk potong disc sebelumnya
                         $overlap = array_intersect($produkPromoLama, $productIdsTerkena);
                         if (count($overlap) > 0) {
                             $discSudahDipotong += $dh['discount_amount'];
@@ -3514,7 +4070,7 @@ class SalesOrderController extends Controller
                 'potong_grand_total' => $promo->potong_grand_total,
             ];
 
-            // ✅ Set SETELAH entry ditambahkan
+            // Set SETELAH entry ditambahkan
             $appliedKategoriDisc[$kategoriDisc] = $promo->id;
         }
 
