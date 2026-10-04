@@ -24,6 +24,9 @@ class ReportPenjualanController extends Controller
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end   = $_POST['date_end']   ?? date('Y-m-d');
 
+        // ============================================================
+        // RETUR (tidak berubah)
+        // ============================================================
         $salesReturn = DB::table('sales_return as sr')
             ->join('sales_return_detail as srd', function ($q) {
                 return $q->on('srd.return_id', '=', 'sr.id')->whereNull('srd.deleted');
@@ -79,6 +82,33 @@ class ReportPenjualanController extends Controller
             ->whereNull('sr.deleted')
             ->where('sr.types', 'good')
             ->where('sr.return_type', 'RETURN');
+
+        // ============================================================
+        // GABUNG BARIS FAKTUR: 1 baris per faktur + produk + satuan
+        // ============================================================
+        $lines = DB::table('sales_invoice_detail as sid')
+            ->join('sales_order_details as sod', function ($q) {
+                return $q->on('sod.id', 'sid.so_detail_id')->whereNull('sod.deleted');
+            })
+            ->whereNull('sid.deleted')
+            ->whereNull('sid.flag_cancel')
+            ->groupBy('sid.invoice_id', 'sod.sales_order_id', 'sod.product_id', 'sod.unit')
+            ->select([
+                'sid.invoice_id',
+                'sod.sales_order_id',
+                'sod.product_id',
+                'sod.unit',
+                DB::raw('SUM(sod.qty) as qty'),
+                DB::raw('SUM(sod.qty * sod.unit_price) as total_amount'),
+                DB::raw('SUM(sid.qty * sid.price) as gross_amount'),
+                DB::raw('SUM(sid.discount) as discount_per_product'),
+                DB::raw('GROUP_CONCAT(DISTINCT sod.id) as sod_ids'),
+                DB::raw('GROUP_CONCAT(sid.id) as sid_ids'),
+            ]);
+
+        // Ekspresi qty (dalam satuan terkecil) dari baris yang sudah digabung
+        $q = '(g.qty * uom_used.nilai_konversi_terkecil)';
+
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
                 'm.id',
@@ -106,7 +136,7 @@ class ReportPenjualanController extends Controller
                 'kel.name as kelurahan',
                 'c.address as alamat',
                 'dv.cicle_type',
-                DB::raw('(sod.qty * sod.unit_price) as total_amount'),
+                'g.total_amount',
                 DB::raw('DAY(sih.invoice_date) as day'),
                 DB::raw("ELT(DAYOFWEEK(sih.invoice_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
                 DB::raw('MONTH(sih.invoice_date) as month'),
@@ -118,61 +148,47 @@ class ReportPenjualanController extends Controller
             CASE uom_count.total_level
                 WHEN 4 THEN
                     CONCAT(
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l4.nilai_konversi_terkecil), '.',
-                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
-                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                        FLOOR($q / uom_l4.nilai_konversi_terkecil), '.',
+                        FLOOR(($q MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+                        FLOOR(($q MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR($q MOD uom_l2.nilai_konversi_terkecil)
                     )
                 WHEN 3 THEN
                     CONCAT(
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
-                        FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                        FLOOR($q / uom_l3.nilai_konversi_terkecil), '.',
+                        FLOOR(($q MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR($q MOD uom_l2.nilai_konversi_terkecil)
                     )
                 WHEN 2 THEN
                     CONCAT(
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
-                        FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+                        FLOOR($q / uom_l2.nilai_konversi_terkecil), '.',
+                        FLOOR($q MOD uom_l2.nilai_konversi_terkecil)
                     )
                 ELSE
-                    CAST(FLOOR(inner_sod.qty * uom_used.nilai_konversi_terkecil) AS CHAR)
+                    CAST(FLOOR($q) AS CHAR)
             END
-        FROM sales_order_details inner_sod
-        JOIN product_uom uom_used
-            ON uom_used.unit_tujuan = inner_sod.unit
-            AND uom_used.product = inner_sod.product_id
-            AND uom_used.deleted IS NULL
+        FROM product_uom uom_used
         JOIN (
             SELECT product, COUNT(*) as total_level
             FROM product_uom
             WHERE deleted IS NULL
             GROUP BY product
-        ) uom_count ON uom_count.product = inner_sod.product_id
-        JOIN product_uom uom_l1 ON uom_l1.product = inner_sod.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
-        LEFT JOIN product_uom uom_l2 ON uom_l2.product = inner_sod.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
-        LEFT JOIN product_uom uom_l3 ON uom_l3.product = inner_sod.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
-        LEFT JOIN product_uom uom_l4 ON uom_l4.product = inner_sod.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
-        WHERE inner_sod.id = sod.id
+        ) uom_count ON uom_count.product = uom_used.product
+        JOIN product_uom uom_l1 ON uom_l1.product = uom_used.product AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
+        LEFT JOIN product_uom uom_l2 ON uom_l2.product = uom_used.product AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
+        LEFT JOIN product_uom uom_l3 ON uom_l3.product = uom_used.product AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
+        LEFT JOIN product_uom uom_l4 ON uom_l4.product = uom_used.product AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
+        WHERE uom_used.unit_tujuan = g.unit
+          AND uom_used.product = g.product_id
+          AND uom_used.deleted IS NULL
         LIMIT 1
     ) as qty_sold
 "),
                 'ppi.beban',
-                // 'sop.discount_amount',
-                //                 DB::raw('
-                //     IFNULL((
-                //         SELECT SUM(sop2.discount_amount)
-                //         FROM sales_order_promo sop2
-                //         JOIN product_promo_item_detail ppid2
-                //             ON ppid2.product_promo_item = sop2.promo
-                //         WHERE sop2.sales_order_id = m.id
-                //           AND ppid2.product = sod.product_id
-                //     ), 0) as prorate_discount
-                // '),                                      // 👈 total discount dari promo
-                // DB::raw('IFNULL(sop.discount_amount / NULLIF((SELECT COUNT(sod2.qty) FROM sales_order_details sod2 WHERE sod2.sales_order_id = m.id AND sod2.deleted IS NULL), 0), 0) as prorate_discount'),
                 DB::raw('
     IFNULL((
         SELECT CASE 
-            WHEN sod.id = (
+            WHEN FIND_IN_SET((
                 SELECT MIN(sod_inner.id)
                 FROM sales_order_details sod_inner
                 JOIN sales_order_promo sop_inner ON sop_inner.sales_order_id = sod_inner.sales_order_id
@@ -181,7 +197,7 @@ class ReportPenjualanController extends Controller
                     AND ppid_inner.product = sod_inner.product_id
                 WHERE sod_inner.sales_order_id = m.id
                   AND sod_inner.deleted IS NULL
-            )
+            ), g.sod_ids) > 0
             THEN (
                 SELECT SUM(sop2.discount_amount)
                 FROM sales_order_promo sop2
@@ -193,10 +209,9 @@ class ReportPenjualanController extends Controller
 '),
                 'sih.invoice_date',
                 'sih.amount_paid',
-                'sid.discount as discount_per_product',
+                'g.discount_per_product',
                 DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
-                DB::raw('(sid.qty * sid.price) AS gross_amount'),
-                // ⬇⬇⬇ TAMBAHAN BARU: return_number dari sales_return
+                'g.gross_amount',
                 'sr_data.return_number',
                 'sr_data.qty_return',
                 'sr_data.return_unit_price',
@@ -205,18 +220,13 @@ class ReportPenjualanController extends Controller
             ])
             ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
-            ->join('sales_order_details as sod', function ($q) {
-                return $q->on('sod.sales_order_id', 'm.id')
-                    ->whereNull('sod.deleted');
+            // pengganti join sod + sid: sudah digabung per faktur + produk + satuan
+            ->joinSub($lines, 'g', function ($j) {
+                $j->on('g.sales_order_id', 'm.id');
             })
-            ->join('product as p', 'p.id', 'sod.product_id')
-            ->join('sales_invoice_detail as sid', function ($q) {
-                return $q->on('sid.so_detail_id', 'sod.id')
-                    ->whereNull('sid.deleted')
-                    ->whereNull('sid.flag_cancel');
-            })
+            ->join('product as p', 'p.id', 'g.product_id')
             ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+                return $q->on('sih.id', 'g.invoice_id')->whereNull('sih.deleted');
             })
             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
             ->leftJoin('vendor as principal', 'principal.id', 'p.principal')
@@ -232,25 +242,17 @@ class ReportPenjualanController extends Controller
             })
             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
-            // ⬇⬇⬇ TAMBAHAN BARU: left join subquery sales_return
             ->leftJoinSub($salesReturn, 'sr_data', function ($join) {
-                $join->on('sr_data.invoice_detail_id', '=', 'sid.id')
-                    ->orOn(function ($join2) {
-                        $join2->on('sr_data.invoice_id', '=', 'sih.id')
-                            ->on('sr_data.product_id', '=', 'sod.product_id');
-                    });
+                $join->whereRaw('(
+                    FIND_IN_SET(sr_data.invoice_detail_id, g.sid_ids) > 0
+                    OR (sr_data.invoice_id = g.invoice_id AND sr_data.product_id = g.product_id)
+                )');
             })
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
-            // ->where('p.id', '49')
-            // ->where('sid.qty', '>', 0)
-            // ->whereIn('sih.id', [1138, 1139])
-            // ->where('usr.name', 'SLS-009')
-            // ->where('sih.invoice_number', 'SI08260026')
+            // ->where('sih.invoice_number', 'SI09260384') // TODO: hapus setelah selesai test
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0);
-        // ->orderBy('m.salesman', 'asc')
-        // ->orderBy('m.so_number', 'asc');
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -349,6 +351,342 @@ class ReportPenjualanController extends Controller
         $query = DB::getQueryLog();
         return json_encode($data);
     }
+
+    //     public function getData()
+    //     {
+    //         DB::enableQueryLog();
+    //         $data['data'] = [];
+    //         $data['recordsTotal'] = 0;
+    //         $data['recordsFiltered'] = 0;
+
+    //         $date_start = $_POST['date_start'] ?? date('Y-m-d');
+    //         $date_end   = $_POST['date_end']   ?? date('Y-m-d');
+
+    //         $salesReturn = DB::table('sales_return as sr')
+    //             ->join('sales_return_detail as srd', function ($q) {
+    //                 return $q->on('srd.return_id', '=', 'sr.id')->whereNull('srd.deleted');
+    //             })
+    //             ->select([
+    //                 'srd.product_id',
+    //                 'srd.unit_price as return_unit_price',
+    //                 'srd.qty_return',
+    //                 'sr.invoice_id',
+    //                 'srd.invoice_detail_id',
+    //                 'sr.return_number',
+    //                 'sr.return_date',
+    //                 DB::raw("
+    //             (
+    //                 SELECT
+    //                     CASE uom_count.total_level
+    //                         WHEN 4 THEN
+    //                             CONCAT(
+    //                                 FLOOR(srd.qty_return / uom_l4.nilai_konversi_terkecil), '.',
+    //                                 FLOOR((srd.qty_return MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+    //                                 FLOOR((srd.qty_return MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+    //                                 FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+    //                             )
+    //                         WHEN 3 THEN
+    //                             CONCAT(
+    //                                 FLOOR(srd.qty_return / uom_l3.nilai_konversi_terkecil), '.',
+    //                                 FLOOR((srd.qty_return MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+    //                                 FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+    //                             )
+    //                         WHEN 2 THEN
+    //                             CONCAT(
+    //                                 FLOOR(srd.qty_return / uom_l2.nilai_konversi_terkecil), '.',
+    //                                 FLOOR(srd.qty_return MOD uom_l2.nilai_konversi_terkecil)
+    //                             )
+    //                         ELSE
+    //                             CAST(FLOOR(srd.qty_return) AS CHAR)
+    //                     END
+    //                 FROM (
+    //                     SELECT product, COUNT(*) as total_level
+    //                     FROM product_uom
+    //                     WHERE deleted IS NULL
+    //                     GROUP BY product
+    //                 ) uom_count
+    //                 JOIN product_uom uom_l1 ON uom_l1.product = srd.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
+    //                 LEFT JOIN product_uom uom_l2 ON uom_l2.product = srd.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
+    //                 LEFT JOIN product_uom uom_l3 ON uom_l3.product = srd.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
+    //                 LEFT JOIN product_uom uom_l4 ON uom_l4.product = srd.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
+    //                 WHERE uom_count.product = srd.product_id
+    //                 LIMIT 1
+    //             ) as qty_return_formatted
+    //         "),
+    //             ])
+    //             ->whereNull('sr.deleted')
+    //             ->where('sr.types', 'good')
+    //             ->where('sr.return_type', 'RETURN');
+    //         $datadb = SalesOrderHeader::from('sales_order_headers as m')
+    //             ->select([
+    //                 'm.id',
+    //                 'm.salesman',
+    //                 'm.so_date',
+    //                 'c.nama_customer',
+    //                 'c.code as customer_code',
+    //                 'c.channel_outlet',
+    //                 'm.remarks',
+    //                 'm.check_in_time',
+    //                 'm.check_out_time',
+    //                 'k.nama_lengkap as salesman_name',
+    //                 'usr.name as salesman_nik',
+    //                 'm.status',
+    //                 'm.platform',
+    //                 'p.code as product_code',
+    //                 'p.name as product_name',
+    //                 'principal.nama_vendor as principal',
+    //                 'p.category',
+    //                 'p.sku_name as brand',
+    //                 'p.sub_brand',
+    //                 'v.nama_vendor',
+    //                 'kec.name as kecamatan',
+    //                 'kab.name as kabupaten',
+    //                 'kel.name as kelurahan',
+    //                 'c.address as alamat',
+    //                 'dv.cicle_type',
+    //                 DB::raw('(sod.qty * sod.unit_price) as total_amount'),
+    //                 DB::raw('DAY(sih.invoice_date) as day'),
+    //                 DB::raw("ELT(DAYOFWEEK(sih.invoice_date), 'Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu') as day_name"),
+    //                 DB::raw('MONTH(sih.invoice_date) as month'),
+    //                 DB::raw('YEAR(sih.invoice_date) as year'),
+    //                 'sih.invoice_number',
+    //                 DB::raw("
+    //     (
+    //         SELECT
+    //             CASE uom_count.total_level
+    //                 WHEN 4 THEN
+    //                     CONCAT(
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l4.nilai_konversi_terkecil), '.',
+    //                         FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l4.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+    //                         FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+    //                     )
+    //                 WHEN 3 THEN
+    //                     CONCAT(
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l3.nilai_konversi_terkecil), '.',
+    //                         FLOOR(((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l3.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+    //                     )
+    //                 WHEN 2 THEN
+    //                     CONCAT(
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) / uom_l2.nilai_konversi_terkecil), '.',
+    //                         FLOOR((inner_sod.qty * uom_used.nilai_konversi_terkecil) MOD uom_l2.nilai_konversi_terkecil)
+    //                     )
+    //                 ELSE
+    //                     CAST(FLOOR(inner_sod.qty * uom_used.nilai_konversi_terkecil) AS CHAR)
+    //             END
+    //         FROM sales_order_details inner_sod
+    //         JOIN product_uom uom_used
+    //             ON uom_used.unit_tujuan = inner_sod.unit
+    //             AND uom_used.product = inner_sod.product_id
+    //             AND uom_used.deleted IS NULL
+    //         JOIN (
+    //             SELECT product, COUNT(*) as total_level
+    //             FROM product_uom
+    //             WHERE deleted IS NULL
+    //             GROUP BY product
+    //         ) uom_count ON uom_count.product = inner_sod.product_id
+    //         JOIN product_uom uom_l1 ON uom_l1.product = inner_sod.product_id AND uom_l1.level = 1 AND uom_l1.deleted IS NULL
+    //         LEFT JOIN product_uom uom_l2 ON uom_l2.product = inner_sod.product_id AND uom_l2.level = 2 AND uom_l2.deleted IS NULL
+    //         LEFT JOIN product_uom uom_l3 ON uom_l3.product = inner_sod.product_id AND uom_l3.level = 3 AND uom_l3.deleted IS NULL
+    //         LEFT JOIN product_uom uom_l4 ON uom_l4.product = inner_sod.product_id AND uom_l4.level = 4 AND uom_l4.deleted IS NULL
+    //         WHERE inner_sod.id = sod.id
+    //         LIMIT 1
+    //     ) as qty_sold
+    // "),
+    //                 'ppi.beban',
+    //                 // 'sop.discount_amount',
+    //                 //                 DB::raw('
+    //                 //     IFNULL((
+    //                 //         SELECT SUM(sop2.discount_amount)
+    //                 //         FROM sales_order_promo sop2
+    //                 //         JOIN product_promo_item_detail ppid2
+    //                 //             ON ppid2.product_promo_item = sop2.promo
+    //                 //         WHERE sop2.sales_order_id = m.id
+    //                 //           AND ppid2.product = sod.product_id
+    //                 //     ), 0) as prorate_discount
+    //                 // '),                                      // 👈 total discount dari promo
+    //                 // DB::raw('IFNULL(sop.discount_amount / NULLIF((SELECT COUNT(sod2.qty) FROM sales_order_details sod2 WHERE sod2.sales_order_id = m.id AND sod2.deleted IS NULL), 0), 0) as prorate_discount'),
+    //                 DB::raw('
+    //     IFNULL((
+    //         SELECT CASE 
+    //             WHEN sod.id = (
+    //                 SELECT MIN(sod_inner.id)
+    //                 FROM sales_order_details sod_inner
+    //                 JOIN sales_order_promo sop_inner ON sop_inner.sales_order_id = sod_inner.sales_order_id
+    //                 JOIN product_promo_item_detail ppid_inner 
+    //                     ON ppid_inner.product_promo_item = sop_inner.promo
+    //                     AND ppid_inner.product = sod_inner.product_id
+    //                 WHERE sod_inner.sales_order_id = m.id
+    //                   AND sod_inner.deleted IS NULL
+    //             )
+    //             THEN (
+    //                 SELECT SUM(sop2.discount_amount)
+    //                 FROM sales_order_promo sop2
+    //                 WHERE sop2.sales_order_id = m.id
+    //             )
+    //             ELSE 0
+    //         END
+    //     ), 0) as prorate_discount  
+    // '),
+    //                 'sih.invoice_date',
+    //                 'sih.amount_paid',
+    //                 'sid.discount as discount_per_product',
+    //                 DB::raw('(sih.total_amount - sih.amount_paid) AS outstanding_amount'),
+    //                 DB::raw('(sid.qty * sid.price) AS gross_amount'),
+    //                 // ⬇⬇⬇ TAMBAHAN BARU: return_number dari sales_return
+    //                 'sr_data.return_number',
+    //                 'sr_data.qty_return',
+    //                 'sr_data.return_unit_price',
+    //                 'sr_data.return_date',
+    //                 'sr_data.qty_return_formatted'
+    //             ])
+    //             ->distinct()
+    //             ->join('customer as c', 'c.id', 'm.customer_id')
+    //             ->join('sales_order_details as sod', function ($q) {
+    //                 return $q->on('sod.sales_order_id', 'm.id')
+    //                     ->whereNull('sod.deleted');
+    //             })
+    //             ->join('product as p', 'p.id', 'sod.product_id')
+    //             ->join('sales_invoice_detail as sid', function ($q) {
+    //                 return $q->on('sid.so_detail_id', 'sod.id')
+    //                     ->whereNull('sid.deleted')
+    //                     ->whereNull('sid.flag_cancel');
+    //             })
+    //             ->join('sales_invoice_header as sih', function ($q) {
+    //                 return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+    //             })
+    //             ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+    //             ->leftJoin('vendor as principal', 'principal.id', 'p.principal')
+    //             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
+    //             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
+    //             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
+    //             ->leftJoin('region as kab', 'kab.id', 'c.kota')
+    //             ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
+    //             ->leftJoin('daily_visit as dv', function ($q) {
+    //                 return $q->on('dv.date_visit', 'm.so_date')
+    //                     ->on('dv.users', 'm.salesman')
+    //                     ->whereNull('dv.deleted');
+    //             })
+    //             ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
+    //             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
+    //             // ⬇⬇⬇ TAMBAHAN BARU: left join subquery sales_return
+    //             ->leftJoinSub($salesReturn, 'sr_data', function ($join) {
+    //                 $join->on('sr_data.invoice_detail_id', '=', 'sid.id')
+    //                     ->orOn(function ($join2) {
+    //                         $join2->on('sr_data.invoice_id', '=', 'sih.id')
+    //                             ->on('sr_data.product_id', '=', 'sod.product_id');
+    //                     });
+    //             })
+    //             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
+    //             // ->where('p.id', '49')
+    //             // ->where('sid.qty', '>', 0)
+    //             // ->whereIn('sih.id', [1138, 1139])
+    //             // ->where('usr.name', 'SLS-009')
+    //             ->where('sih.invoice_number', 'SI09260384')
+    //             ->whereNull('m.deleted')
+    //             ->whereNull('sih.deleted')
+    //             ->where('m.total_amount', '>', 0);
+    //         // ->orderBy('m.salesman', 'asc')
+    //         // ->orderBy('m.so_number', 'asc');
+
+    //         if (isset($_POST)) {
+    //             $data['recordsTotal'] = $datadb->get()->count();
+
+    //             if (isset($_POST['search']['value'])) {
+    //                 $keyword = $_POST['search']['value'];
+    //                 $datadb->where(function ($query) use ($keyword) {
+    //                     $query->where('m.salesman', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('c.channel_outlet', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('principal.nama_vendor', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('kec.name', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('kab.name', 'LIKE', '%' . $keyword . '%')
+    //                         ->orWhere('kel.name', 'LIKE', '%' . $keyword . '%');
+    //                 });
+    //             }
+
+    //             if (isset($_POST['order'][0]['column'])) {
+    //                 switch ($_POST['order'][0]['column']) {
+    //                     case 0:
+    //                         $datadb->orderBy('m.salesman', $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 1:
+    //                         $datadb->orderBy('m.so_date', $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 2:
+    //                         $datadb->orderBy('c.nama_customer', $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 3:
+    //                         $datadb->orderBy('c.code', $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 4:
+    //                         $datadb->orderBy('c.channel_outlet', $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 5:
+    //                         $datadb->orderByRaw('m.check_in_time ' . $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 6:
+    //                         $datadb->orderByRaw('m.check_out_time ' . $_POST['order'][0]['dir']);
+    //                         break;
+    //                     case 7:
+    //                         $datadb->orderByRaw('m.salesman ' . $_POST['order'][0]['dir']);
+    //                         break;
+    //                     default:
+    //                         $datadb->orderBy('m.salesman', 'asc');
+    //                         break;
+    //                 }
+    //             }
+
+    //             $data['recordsFiltered'] = $datadb->get()->count();
+
+    //             if (isset($_POST['length'])) {
+    //                 $datadb->limit($_POST['length']);
+    //             }
+    //             if (isset($_POST['start'])) {
+    //                 $datadb->offset($_POST['start']);
+    //             }
+    //         }
+
+    //         $resultdb = [];
+    //         $datadb = $datadb->get()->toArray();
+
+    //         foreach ($datadb as $value) {
+    //             $value = (array) $value;
+    //             $value['is_return'] = 0;
+    //             $resultdb[] = $value;
+
+    //             if (!empty($value['return_number'])) {
+    //                 $returnRow = $value;
+    //                 $returnRow['is_return']      = 1;
+    //                 $returnRow['invoice_number'] = $value['return_number'];
+    //                 $returnRow['qty_sold']       = !empty($value['qty_return_formatted'])
+    //                     ? '-' . $value['qty_return_formatted']
+    //                     : 0;
+    //                 $returnRow['gross_amount']   = isset($value['return_unit_price'], $value['qty_return'])
+    //                     ? -1 * ($value['return_unit_price'] * $value['qty_return'])
+    //                     : 0;
+    //                 $returnRow['prorate_discount']     = 0;
+    //                 $returnRow['discount_per_product'] = 0;
+
+    //                 $resultdb[] = $returnRow;
+    //             }
+    //         }
+
+    //         $data['data'] = $resultdb;
+    //         $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
+
+    //         $query = DB::getQueryLog();
+    //         return json_encode($data);
+    //     }
 
     public function getDataPenjualanPerProduct(Request $request)
     {
