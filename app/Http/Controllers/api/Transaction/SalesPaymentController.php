@@ -974,6 +974,8 @@ class SalesPaymentController extends Controller
             $menu = SalesPaymentHeader::find($data['id']);
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
+            $menu->post_date = date('Y-m-d H:i:s');
+            $menu->post_by = session('user_id');
             $menu->save();
 
             // Journal Engine: penerimaan pembayaran customer menjadi jurnal double entry.
