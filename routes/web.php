@@ -61,7 +61,9 @@ use App\Http\Controllers\api\Transaction\ApSubledgerController as TransactionApS
 use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionClosingStockController;
 use App\Http\Controllers\api\Transaction\PLTagihanController as TransactionPLTagihanController;
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
+use App\Http\Controllers\api\monitoring\ClosingPeriodController as ApiClosingPeriodController;
 use App\Http\Controllers\web\auth\LoginController;
+use App\Http\Controllers\web\ClosingPeriodController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\BranchController;
 use App\Http\Controllers\web\master\CityController;
@@ -132,6 +134,8 @@ Route::get('/user/signOut', [LoginController::class, 'signOut']);
 Route::post('api_mobile/auth/login', [LoginController::class, 'signInApps']);
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
+
+Route::get('monitoring/closing-period', [ClosingPeriodController::class, 'index'])->name('closing-period');
 
 Route::get('master/company', [CompanyController::class, 'index']);
 Route::get('master/company/add', [CompanyController::class, 'add']);
@@ -401,6 +405,8 @@ Route::get('report/customer', [CustomerController::class, 'report']);
 Route::post('api/dashboard/getGrafikPenjualan', [DashboardController::class, 'getGrafikPenjualan']);
 Route::post('api/dashboard/getInvoiceOutstanding', [DashboardController::class, 'getInvoiceOutstanding']);
 Route::post('api/dashboard/getMapVisit', [DashboardController::class, 'getMapVisit']);
+
+Route::post('api/monitoring/closing-period/getData', [ApiClosingPeriodController::class, 'getData']);
 
 Route::post('api/master/company/getData', [MasterCompanyController::class, 'getData']);
 Route::post('api/master/company/submit', [MasterCompanyController::class, 'submit']);
