@@ -1048,6 +1048,8 @@ class SalesReturnController extends Controller
                 $header = SalesReturnHdr::where('id', $id)->first();
                 if (! empty($header) && $header->status != 'POSTED') {
                     $header->status = 'POSTED';
+                    $header->post_date = date('Y-m-d H:i:s');
+                    $header->post_by = session('user_id');
                     $header->save();
                 }
 
