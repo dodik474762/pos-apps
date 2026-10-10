@@ -57,14 +57,22 @@ class TrialBalanceService
         $rows = [];
         foreach ($snapshots as $snap) {
             $closing = (float) $snap->closing_balance;
-            $normalBalance = strtoupper(trim($snap->normal_balance));
             if (abs($closing) < 0.0001) {
                 continue;
             }
 
-            if ($closing >= 0) {
-                if ($normalBalance === 'DEBIT' || $closing > 0) {
-                    $debit = $closing;
+            $normalBalance = strtoupper(trim($snap->normal_balance));
+            if ($closing > 0) {
+                if ($normalBalance === 'CREDIT') {
+                    $debit = 0.00;
+                    $credit = abs($closing);
+                } else {
+                    $debit = abs($closing);
+                    $credit = 0.00;
+                }
+            } elseif ($closing < 0) {
+                if ($normalBalance === 'CREDIT') {
+                    $debit = abs($closing);
                     $credit = 0.00;
                 } else {
                     $debit = 0.00;
@@ -72,7 +80,7 @@ class TrialBalanceService
                 }
             } else {
                 $debit = 0.00;
-                $credit = abs($closing);
+                $credit = 0.00;
             }
 
             $rows[] = [
@@ -105,20 +113,25 @@ class TrialBalanceService
             }
 
             $normalBalance = strtoupper(trim($account->normal_balance));
-            if ($closingBalance >= 0) {
-                $debit = $closingBalance;
-                $credit = 0.00;
-                if ($normalBalance === 'CREDIT' && $closingBalance == 0) {
+            if ($closingBalance > 0) {
+                if ($normalBalance === 'CREDIT') {
                     $debit = 0.00;
+                    $credit = abs($closingBalance);
+                } else {
+                    $debit = abs($closingBalance);
                     $credit = 0.00;
                 }
-                if ($normalBalance === 'CREDIT' && $closingBalance > 0) {
+            } elseif ($closingBalance < 0) {
+                if ($normalBalance === 'CREDIT') {
+                    $debit = abs($closingBalance);
+                    $credit = 0.00;
+                } else {
                     $debit = 0.00;
-                    $credit = $closingBalance;
+                    $credit = abs($closingBalance);
                 }
             } else {
                 $debit = 0.00;
-                $credit = abs($closingBalance);
+                $credit = 0.00;
             }
 
             $rows[] = [
