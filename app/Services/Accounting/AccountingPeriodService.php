@@ -199,10 +199,31 @@ class AccountingPeriodService
                 throw new \RuntimeException('Periode masih memiliki ' . $draftJournal . ' jurnal DRAFT, tidak dapat ditutup. Silakan posting atau hapus jurnal DRAFT terlebih dahulu.');
             }
 
+            $previousPeriod = AccountingPeriod::where(function ($q) use ($period) {
+                $q->where('year', '<', $period->year)
+                    ->orWhere(function ($qq) use ($period) {
+                        $qq->where('year', $period->year)
+                            ->where('month', '<', $period->month);
+                    });
+            })
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->first();
+
+            if (! empty($previousPeriod) && $previousPeriod->status !== self::STATUS_CLOSED) {
+                throw new \RuntimeException('Periode sebelumnya (' . $previousPeriod->year . '-' . str_pad($previousPeriod->month, 2, '0', STR_PAD_LEFT) . ') masih berstatus ' . $previousPeriod->status . '. Periode harus ditutup secara berurutan.');
+            }
+
             $period->status = self::STATUS_CLOSED;
             $period->closed_at = date('Y-m-d H:i:s');
             $period->closed_by = empty($userId) ? session('user_id') : $userId;
             $period->save();
+
+            $snapshotService = new AccountPeriodBalanceService();
+            $snapResult = $snapshotService->snapshotPeriod($period->id);
+            if (! $snapResult['is_valid']) {
+                throw new \RuntimeException($snapResult['message'] ?? 'Gagal membuat snapshot saldo periode');
+            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -291,3 +312,6 @@ class AccountingPeriodService
             ->get();
     }
 }
+
+// hook for snapshot
+use App\Services\Accounting\AccountPeriodBalanceService;

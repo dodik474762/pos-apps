@@ -62,6 +62,8 @@ use App\Http\Controllers\api\Transaction\ClosingStockController as TransactionCl
 use App\Http\Controllers\api\Transaction\PLTagihanController as TransactionPLTagihanController;
 use App\Http\Controllers\api\Transaction\TerimaUangController as TransactionTerimaUangController;
 use App\Http\Controllers\api\monitoring\ClosingPeriodController as ApiClosingPeriodController;
+use App\Http\Controllers\api\report\GeneralLedgerController as ReportGeneralLedgerController;
+use App\Http\Controllers\api\report\TrialBalanceController as ReportTrialBalanceController;
 use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\ClosingPeriodController;
 use App\Http\Controllers\web\DashboardController;
@@ -97,6 +99,7 @@ use App\Http\Controllers\web\master\UsersController;
 use App\Http\Controllers\web\master\VendorController;
 use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseController;
 use App\Http\Controllers\web\master\WorkingHourController;
+use App\Http\Controllers\web\report\GeneralLedgerController;
 use App\Http\Controllers\web\report\ReportPembayaranController;
 use App\Http\Controllers\web\report\ReportPenjualanController;
 use App\Http\Controllers\web\report\ReportPiutangController;
@@ -123,6 +126,7 @@ use App\Http\Controllers\web\Transaction\ProductAdjustmentStockController;
 use App\Http\Controllers\web\report\ReportStockController;
 use App\Http\Controllers\web\report\ReportVisitController;
 use App\Http\Controllers\web\report\InventoryValuationController;
+use App\Http\Controllers\web\report\TrialBalanceController;
 use App\Http\Controllers\web\Transaction\ApSubledgerController;
 use App\Http\Controllers\web\Transaction\ClosingStockController;
 use App\Http\Controllers\web\Transaction\TerimaUangController;
@@ -862,3 +866,12 @@ Route::get('report/delivery', [PackingListController::class, 'report']);
 Route::get('report/item-received', [PackingListController::class, 'reportItemReceived']);
 Route::get('report/sales-return', [SalesReturnController::class, 'report']);
 /*API */
+
+// General Ledger & Trial Balance
+Route::get('report/general-ledger', [GeneralLedgerController::class, 'index']);
+Route::get('report/trial-balance', [TrialBalanceController::class, 'index']);
+Route::post('api/report/general-ledger/getData', [ReportGeneralLedgerController::class, 'getData']);
+Route::post('api/report/general-ledger/getAccountList', [ReportGeneralLedgerController::class, 'getAccountList']);
+Route::post('api/report/general-ledger/getPeriodList', [ReportGeneralLedgerController::class, 'getPeriodList']);
+Route::post('api/report/trial-balance/getData', [ReportTrialBalanceController::class, 'getData']);
+Route::post('api/report/trial-balance/getPeriodList', [ReportTrialBalanceController::class, 'getPeriodList']);
