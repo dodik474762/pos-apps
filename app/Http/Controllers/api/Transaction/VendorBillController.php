@@ -24,10 +24,11 @@ class VendorBillController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
@@ -38,16 +39,17 @@ class VendorBillController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.payment_number', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.payment_date', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.status', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('v.nama_vendor', 'LIKE', '%'.$keyword.'%');
+                    $query->where('m.payment_number', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.payment_date', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.status', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('v.nama_vendor', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -77,6 +79,7 @@ class VendorBillController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $users = session('user_id');
+        $company_id = session('id_company');
         $result['is_valid'] = false;
 
         DB::beginTransaction();
@@ -127,6 +130,7 @@ class VendorBillController extends Controller
             $roles->account_id = $data['account_id'];
             $roles->status = 'draft';
             $roles->currency = $currency_id;
+            $roles->company_id = $company_id;
             $roles->save();
 
             $hdrId = $roles->id;
@@ -140,7 +144,7 @@ class VendorBillController extends Controller
 
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Invoice ID '.$value['id'].' tidak ditemukan.',
+                        'message' => 'Invoice ID ' . $value['id'] . ' tidak ditemukan.',
                     ]);
                 }
 
@@ -166,7 +170,7 @@ class VendorBillController extends Controller
                 $invoice->save();
 
                 // Posting ke General Ledger
-                $reference = $payment_number.'-'.$invoice->invoice_number;
+                $reference = $payment_number . '-' . $invoice->invoice_number;
 
                 // Debit Hutang Usaha (mengurangi kewajiban)
                 postingGL(
@@ -281,7 +285,7 @@ class VendorBillController extends Controller
 
                     return response()->json([
                         'is_valid' => false,
-                        'message' => 'Invoice ID '.$detail->purchase_invoice_id.' tidak ditemukan.',
+                        'message' => 'Invoice ID ' . $detail->purchase_invoice_id . ' tidak ditemukan.',
                     ]);
                 }
 
@@ -303,7 +307,7 @@ class VendorBillController extends Controller
                 $invoice->save();
 
                 // batalkan jurnal (GL)
-                $reference = $payment->payment_number.'-'.$invoice->invoice_number;
+                $reference = $payment->payment_number . '-' . $invoice->invoice_number;
 
                 cancelGL($reference, $hutangAccount->account_id, $hutangAccount->account->account_name, $hutangAccount->cd);
                 cancelGL($reference, $kasBankAccount->id, $kasBankAccount->account_name, 'C');
@@ -328,7 +332,7 @@ class VendorBillController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
+        $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'v.nama_vendor',
@@ -386,9 +390,9 @@ class VendorBillController extends Controller
         $data['invoice_count'] = empty($payment)
             ? 0
             : DB::table('vendor_payment_detail')
-                ->where('vendor_payment_id', $payment->id)
-                ->whereNull('deleted')
-                ->count();
+            ->where('vendor_payment_id', $payment->id)
+            ->whereNull('deleted')
+            ->count();
 
         return view('web.vendor_bill.modal.confirmpostjurnal', $data);
     }
