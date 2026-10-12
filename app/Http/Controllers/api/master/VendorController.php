@@ -10,44 +10,48 @@ use Illuminate\Support\Facades\DB;
 
 class VendorController extends Controller
 {
-     public function getTableName(){
+    public function getTableName()
+    {
         return "vendor";
     }
 
-    public function getData(){
+    public function getData()
+    {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         $company = session('id_company');
         $akses = session('akses');
 
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])
-        ->whereNull('m.deleted');
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])
+            ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id);
 
-        if(isset($_POST)){
+        if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
-            if(isset($_POST['search']['value'])){
+            if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                $datadb->where(function($query) use ($keyword){
-                    $query->where('m.nama_vendor', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.pic', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.address', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('m.email', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.nama_vendor', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.pic', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.address', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('m.email', 'LIKE', '%' . $keyword . '%');
                 });
             }
-            if(isset($_POST['order'][0]['column'])){
+            if (isset($_POST['order'][0]['column'])) {
                 $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
             }
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            if(isset($_POST['length'])){
+            if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
-            if(isset($_POST['start'])){
+            if (isset($_POST['start'])) {
                 $datadb->offset($_POST['start']);
             }
         }
@@ -59,12 +63,14 @@ class VendorController extends Controller
         return json_encode($data);
     }
 
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
+            $company_id = session('id_company');
             $roles = $data['id'] == '' ? new Vendor() : Vendor::find($data['id']);
             $roles->nama_vendor = $data['nama_vendor'];
             $roles->pic = $data['pic'];
@@ -79,6 +85,7 @@ class VendorController extends Controller
             $roles->product_type = $data['product_type'];
             $roles->channel = $data['channel'];
             $roles->parent = $data['parent'];
+            $roles->company_id = $company_id;
             $roles->save();
             DB::commit();
             $result['is_valid'] = true;
@@ -90,7 +97,8 @@ class VendorController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDelete(Request $request){
+    public function confirmDelete(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -110,28 +118,30 @@ class VendorController extends Controller
         return response()->json($result);
     }
 
-    public function getDetailData($id){
+    public function getDetailData($id)
+    {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-            'r.name as region_name',
-            'c.name as city_name'
-        ])
-        ->leftJoin('region as r', 'r.id', 'm.region')
-        ->leftJoin('region as c', 'c.id', 'm.city')
-        ->where('m.id', $id);
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'r.name as region_name',
+                'c.name as city_name'
+            ])
+            ->leftJoin('region as r', 'r.id', 'm.region')
+            ->leftJoin('region as c', 'c.id', 'm.city')
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $data = $request->all();
         return view('web.vendor.modal.confirmdelete', $data);
     }
 
-     public function getCity(Request $request)
+    public function getCity(Request $request)
     {
         $data = $request->all();
         $datadb = Region::where('type', 'KOTA')
