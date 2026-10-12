@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Karyawan;
 use App\Models\Master\Users;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -70,10 +71,14 @@ class UsersController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
             list($nik, $name) = explode('//', $data['nik']);
+            $karyawan = Karyawan::where('nik', $data['nik'])
+                ->where('company', $company_id)
+                ->first();
             $roles = $data['id'] == '' ? new Users() : Users::find($data['id']);
             $roles->user_group = $data['roles'];
             $roles->username = $data['username'];
@@ -81,6 +86,7 @@ class UsersController extends Controller
             $roles->branch = $data['branch'];
             $roles->password = Hash::make($request->get('password'));
             $roles->nik = trim($nik);
+            $roles->karyawan_id = $karyawan->id;
             $roles->save();
             $user = User::create([
                 'name' => $request->get('name'),
