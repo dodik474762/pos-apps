@@ -130,7 +130,10 @@ class PackingListController extends Controller
 
     public function getKendaraan()
     {
-        $datadb = DB::table('vehicle')->whereNull('deleted')->get();
+        $id_company = session('id_company');
+        $datadb = DB::table('vehicle')->whereNull('deleted')
+            ->where('company_id', $id_company)
+            ->get();
         return $datadb;
     }
 
