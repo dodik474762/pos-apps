@@ -37,6 +37,7 @@ class UsersController extends Controller
             ->join('karyawan as p', 'p.nik', 'm.nik')
             ->leftJoin('branch as b', 'b.id', 'm.branch')
             ->where('p.company', $company_id)
+            ->where('m.company_id', $company_id)
             ->whereNull('m.deleted');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -89,6 +90,7 @@ class UsersController extends Controller
             $roles->password = Hash::make($request->get('password'));
             $roles->nik = trim($nik);
             $roles->karyawan_id = $karyawan->id;
+            $roles->company_id = $company_id;
             $roles->save();
             $user = User::create([
                 'name' => $request->get('name'),
