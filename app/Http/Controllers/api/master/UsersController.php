@@ -20,6 +20,7 @@ class UsersController extends Controller
 
     public function getData()
     {
+        $company_id = session('id_company');
         DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
@@ -35,6 +36,7 @@ class UsersController extends Controller
             ->join('users_group as ug', 'ug.id', 'm.user_group')
             ->join('karyawan as p', 'p.nik', 'm.nik')
             ->leftJoin('branch as b', 'b.id', 'm.branch')
+            ->where('p.company', $company_id)
             ->whereNull('m.deleted');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
