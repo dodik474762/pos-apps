@@ -9,39 +9,43 @@ use Illuminate\Support\Facades\DB;
 
 class RolesController extends Controller
 {
-    public function getTableName(){
+    public function getTableName()
+    {
         return "users_group";
     }
 
-    public function getData(){
+    public function getData()
+    {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])
-        ->whereNull('m.deleted')
-        ->where('m.group', '!=', 'SUPERADMIN')
-        ->orderBy('m.id', 'desc');
-        if(isset($_POST)){
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])
+            ->whereNull('m.deleted')
+            ->where('m.group', '!=', 'SUPERADMIN')
+            ->where('m.company_id', $company_id)
+            ->orderBy('m.id', 'desc');
+        if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
-            if(isset($_POST['search']['value'])){
+            if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                $datadb->where(function($query) use ($keyword){
-                    $query->where('m.group', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('m.group', 'LIKE', '%' . $keyword . '%');
                 });
             }
-            if(isset($_POST['order'][0]['column'])){
+            if (isset($_POST['order'][0]['column'])) {
                 $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
             }
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            if(isset($_POST['length'])){
+            if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
-            if(isset($_POST['start'])){
+            if (isset($_POST['start'])) {
                 $datadb->offset($_POST['start']);
             }
         }
@@ -53,14 +57,17 @@ class RolesController extends Controller
         return json_encode($data);
     }
 
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
+            $company_id = session('id_company');
             $roles = $data['id'] == '' ? new Roles() : Roles::find($data['id']);
             $roles->group = $data['akses'];
+            $roles->company_id = $company_id;
             $roles->save();
 
             DB::commit();
@@ -73,7 +80,8 @@ class RolesController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDelete(Request $request){
+    public function confirmDelete(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -93,18 +101,20 @@ class RolesController extends Controller
         return response()->json($result);
     }
 
-    public function getDetailData($id){
+    public function getDetailData($id)
+    {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])->where('m.id', $id);
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $data = $request->all();
         return view('web.roles.modal.confirmdelete', $data);
     }
