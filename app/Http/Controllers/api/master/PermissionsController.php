@@ -9,42 +9,46 @@ use Illuminate\Support\Facades\DB;
 
 class PermissionsController extends Controller
 {
-    public function getTableName(){
+    public function getTableName()
+    {
         return "users_permissions";
     }
 
-    public function getData(){
+    public function getData()
+    {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-            'mn.nama as nama_menu',
-            'ug.group'
-        ])
-        ->join('menu as mn', 'mn.id', 'm.menu')
-        ->join('users_group as ug', 'ug.id', 'm.users_group')
-        ->whereNull('m.deleted');
-        if(isset($_POST)){
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+                'mn.nama as nama_menu',
+                'ug.group'
+            ])
+            ->join('menu as mn', 'mn.id', 'm.menu')
+            ->join('users_group as ug', 'ug.id', 'm.users_group')
+            ->where('m.company_id', $company_id)
+            ->whereNull('m.deleted');
+        if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
-            if(isset($_POST['search']['value'])){
+            if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
-                $datadb->where(function($query) use ($keyword){
-                    $query->where('mn.nama', 'LIKE', '%'.$keyword.'%');
-                    $query->orWhere('ug.group', 'LIKE', '%'.$keyword.'%');
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('mn.nama', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('ug.group', 'LIKE', '%' . $keyword . '%');
                 });
             }
-            if(isset($_POST['order'][0]['column'])){
+            if (isset($_POST['order'][0]['column'])) {
                 $datadb->orderBy('m.id', $_POST['order'][0]['dir']);
             }
             $data['recordsFiltered'] = $datadb->get()->count();
 
-            if(isset($_POST['length'])){
+            if (isset($_POST['length'])) {
                 $datadb->limit($_POST['length']);
             }
-            if(isset($_POST['start'])){
+            if (isset($_POST['start'])) {
                 $datadb->offset($_POST['start']);
             }
         }
@@ -56,7 +60,8 @@ class PermissionsController extends Controller
         return json_encode($data);
     }
 
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $data = $request->all();
         // echo '<pre>';
         // print_r($data);die;
@@ -66,6 +71,7 @@ class PermissionsController extends Controller
             //code...
             DB::table('users_permissions')->where('users_group', $data['data']['roles'])->delete();
 
+            $company_id = session('id_company');
             foreach ($data['data_menu'] as $key => $value) {
                 $push = new UsersPermission();
                 $push->users_group = $data['data']['roles'];
@@ -75,6 +81,7 @@ class PermissionsController extends Controller
                 $push->delete = $value['delete'];
                 $push->view = $value['view'];
                 $push->print = $value['print'];
+                $push->company_id = $company_id;
                 $push->save();
             }
 
@@ -88,7 +95,8 @@ class PermissionsController extends Controller
         return response()->json($result);
     }
 
-    public function confirmDelete(Request $request){
+    public function confirmDelete(Request $request)
+    {
         $data = $request->all();
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -106,25 +114,31 @@ class PermissionsController extends Controller
         return response()->json($result);
     }
 
-    public function getDetailData($id){
+    public function getDetailData($id)
+    {
         DB::enableQueryLog();
-        $datadb = DB::table($this->getTableName().' as m')
-        ->select([
-            'm.*',
-        ])->where('m.id', $id);
+        $datadb = DB::table($this->getTableName() . ' as m')
+            ->select([
+                'm.*',
+            ])->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
     }
 
-    public function delete(Request $request){
+    public function delete(Request $request)
+    {
         $data = $request->all();
         return view('web.permission.modal.confirmdelete', $data);
     }
 
-    public function showMenu(Request $request){
+    public function showMenu(Request $request)
+    {
         $data = $request->all();
-        $result = UsersPermission::where('users_group', $data['roles'])->get()->toArray();
+        $company_id = session('id_company');
+        $result = UsersPermission::where('users_group', $data['roles'])
+            ->where('company_id', $company_id)
+            ->get()->toArray();
         return response()->json($result);
     }
 }
