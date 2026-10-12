@@ -58,6 +58,6 @@
 
 @foreach ($node['children'] as $child)
     @if (!empty($child['children']))
-        @include('web.template.partials.accurate-panel', ['node' => $child, 'level' => $level + 1])
+        @include('web.template.cardmenu', ['node' => $child, 'level' => $level + 1])
     @endif
 @endforeach

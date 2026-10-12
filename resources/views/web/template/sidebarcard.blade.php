@@ -20,12 +20,21 @@
                 @php
                     $menuUrl = trim($menu['url'] ?? '', '/');
                     $active = $menuUrl !== '' && $menuUrl !== '-' && request()->is($menuUrl . '*') ? 'active' : '';
+                    $hasChildren = !empty($menu['children']);
                 @endphp
-                <div class="rail-item {{ $active }}" data-target="panel-{{ $menu['id'] }}"
-                    title="{{ $menu['nama'] }}">
-                    <i class="{{ $menu['icon'] }}"></i>
-                    <span class="rail-item-label">{{ $menu['nama'] }}</span>
-                </div>
+                @if ($hasChildren)
+                    <div class="rail-item {{ $active }}" data-target="panel-{{ $menu['id'] }}"
+                        title="{{ $menu['nama'] }}">
+                        <i class="{{ $menu['icon'] }}"></i>
+                        <span class="rail-item-label">{{ $menu['nama'] }}</span>
+                    </div>
+                @else
+                    <a class="rail-item {{ $active }}" href="{{ url($menuUrl) }}"
+                        title="{{ $menu['nama'] }}">
+                        <i class="{{ $menu['icon'] }}"></i>
+                        <span class="rail-item-label">{{ $menu['nama'] }}</span>
+                    </a>
+                @endif
             @endforeach
         </div>
     </div>
@@ -35,7 +44,9 @@
 
     <div class="accurate-panel-wrapper" id="accuratePanelWrapper">
         @foreach ($menuTree as $menu)
-            @include('web.template.cardmenu', ['node' => $menu, 'level' => 1])
+            @if (!empty($menu['children']))
+                @include('web.template.cardmenu', ['node' => $menu, 'level' => 1])
+            @endif
         @endforeach
     </div>
 </div>
