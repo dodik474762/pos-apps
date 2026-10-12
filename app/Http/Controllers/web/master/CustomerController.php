@@ -104,7 +104,9 @@ class CustomerController extends Controller
 
     public function getTerms()
     {
+        $company_id = session('id_company');
         $datadb = DB::table('term_of_payment')->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('nilai', 'asc')
             ->get();
 
