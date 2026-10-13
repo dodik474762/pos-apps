@@ -18,6 +18,7 @@ class StockCustomer extends Model
         'created_by',
         'foto_path',
         'toko_tutup',
+        'company_id',
     ];
     protected $table = 'stock_customer';
 }

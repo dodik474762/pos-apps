@@ -4605,6 +4605,7 @@ class SalesOrderController extends Controller
     {
         $data = json_decode($request->input('data'), true);
         $users_id = $data['user_id'];
+        $company_id = Users::where('id', $users_id)->value('company_id');
 
         $result['is_valid'] = false;
         $result['message'] = '';
@@ -4648,6 +4649,7 @@ class SalesOrderController extends Controller
                     'is_free_good'   => 0,
                     'created_by'     => $users_id,
                     'toko_tutup'     => $data['toko_tutup'],
+                    'company_id'     => $company_id,
                 ];
                 // foto_path hanya di-update kalau ada file baru diupload
                 if ($fotoPath !== null) {
@@ -4679,6 +4681,7 @@ class SalesOrderController extends Controller
                     'discount_type' => null,
                     'is_free_good'  => 0,
                     'created_by'    => $users_id,
+                    'company_id'    => $company_id,
                 ];
                 if ($fotoPath !== null) {
                     $updateValues['foto_path'] = $fotoPath;
