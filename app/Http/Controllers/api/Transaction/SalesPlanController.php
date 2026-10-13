@@ -27,6 +27,7 @@ class SalesPlanController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -41,6 +42,7 @@ class SalesPlanController extends Controller
             ->join('users as us', 'us.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'us.nik')
             ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -182,10 +184,12 @@ class SalesPlanController extends Controller
                 $header->status = 'DRAFT';
             }
 
+            $company_id = session('id_company');
             $header->salesman = $data['salesman'];
             $header->period_year = $data['period_year'];
             $header->period_month = $data['period_month'] ?? null;
             $header->description = $data['description'] ?? null;
+            $header->company_id = $company_id;
             $header->save();
 
             $hdrId = $header->id;
@@ -232,6 +236,7 @@ class SalesPlanController extends Controller
                 $detail->visit_sat = $item['visit_sat'];
                 $detail->visit_sun = $item['visit_sun'];
                 $detail->note = $item['note'];
+                $detail->company_id = $company_id;
                 $detail->pjp_status = $item['type'];
                 if ($item['type'] == 'EXTRA CALL') {
                     if ($item['id'] == '') {
