@@ -201,10 +201,15 @@ function generateNoPO()
     return $no;
 }
 
-function generateNoSO()
+function generateNoSO($company_id = null)
 {
     $no = 'SO' . strtoupper(date('m')) . date('y');
-    $data = DB::table('sales_order_headers')->where('so_number', 'LIKE', '%' . $no . '%')->orderBy('so_number', 'desc')->get()->toArray();
+    $data = DB::table('sales_order_headers')
+        ->where('so_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null, fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('so_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {

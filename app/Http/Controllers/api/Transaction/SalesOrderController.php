@@ -550,7 +550,7 @@ class SalesOrderController extends Controller
                 : SalesOrderHeader::find($data['id']);
 
             if (empty($data['id'])) {
-                $header->so_number  = generateNoSO();
+                $header->so_number  = generateNoSO($company_id);
                 $header->created_by = $userId;
                 $header->status     = 'draft';
             } else {
@@ -1515,7 +1515,7 @@ class SalesOrderController extends Controller
             // HEADER
             // =============================
             $header                  = new SalesOrderHeader;
-            $header->so_number       = generateNoSO();
+            $header->so_number       = generateNoSO($company_id);
             $header->created_by      = $users_id;
             $header->status          = 'submited';
             $header->so_date         = $so_date;
