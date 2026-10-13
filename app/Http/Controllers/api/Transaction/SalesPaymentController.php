@@ -28,6 +28,7 @@ class SalesPaymentController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -67,6 +68,7 @@ class SalesPaymentController extends Controller
             // ->where('m.id', '1157')
             // ->where('sih.invoice_number', 'SI07260237')
             ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
 
         if (isset($_POST)) {
@@ -257,6 +259,7 @@ class SalesPaymentController extends Controller
         try {
 
             $users = Users::find($userId);
+            $company_id = $users->company_id;
 
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
@@ -302,6 +305,7 @@ class SalesPaymentController extends Controller
             $header->bulk = $data['bulk'];
             $header->last_verificator = $users->user_group;
             $header->verificator_id = $userId;
+            $header->company_id = $company_id;
             $header->verificator_date = date('Y-m-d H:i:s');
             $header->save();
 
@@ -370,6 +374,7 @@ class SalesPaymentController extends Controller
                 $detail->invoice_id = $value['invoice_id'];
                 $detail->allocated_amount = $value['allocated_amount'];
                 $detail->outstanding_amount = $value['outstanding_amount'];
+                $detail->company_id = $company_id;
                 $detail->line_no = $line_no++;
                 $detail->save();
 
@@ -461,6 +466,9 @@ class SalesPaymentController extends Controller
                 ->setTimezone('Asia/Jakarta')
                 ->format('Y-m-d');
 
+            $users = Users::find($userId);
+            $company_id = $users->company_id;
+
             // === PAYMENT METHOD & ACCOUNT MAPPING ===
             $paymentMethod = $data['payment_method'] ?? 'CASH';
             $accountMap = [
@@ -500,6 +508,7 @@ class SalesPaymentController extends Controller
                 $header->coa_kas        = $data['account_id'];
                 $header->bulk           = 0;
                 $header->platform       = 'mobile';
+                $header->company_id = $company_id;
                 $header->save();
 
                 DB::commit();
@@ -597,6 +606,7 @@ class SalesPaymentController extends Controller
             $header->coa_kas         = $data['account_id'];
             $header->bulk            = 0;
             $header->platform        = 'mobile';
+            $header->company_id = $company_id;
             $header->save();
 
             $hdrId     = $header->id;
@@ -607,6 +617,7 @@ class SalesPaymentController extends Controller
             $detail->payment_id        = $hdrId;
             $detail->invoice_id        = $invoice->id;
             $detail->allocated_amount  = $totalAmount;
+            $detail->company_id = $company_id;
             $detail->outstanding_amount = (float)$outstanding_before; // outstanding SEBELUM bayar ini
             $detail->line_no           = 1;
             $detail->save();
@@ -672,6 +683,9 @@ class SalesPaymentController extends Controller
                     'message' => 'Tidak ada invoice yang dipilih.'
                 ]);
             }
+
+            $users = Users::find($userId);
+            $company_id = $users->company_id;
 
             // Group details by customer_id
             $customerDetails = [];
