@@ -81,7 +81,9 @@ class SalesOrderController extends Controller
             ->select(['customer.*', 'top.nilai as top_value'])
             ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
             ->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
+            ->where('company_id', $company_id)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -116,7 +118,9 @@ class SalesOrderController extends Controller
             ->get();
 
 
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
+            ->where('company_id', $company_id)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -167,7 +171,9 @@ class SalesOrderController extends Controller
             ->get();
 
 
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
+            ->where('company_id', $company_id)
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);

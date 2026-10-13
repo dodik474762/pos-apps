@@ -114,7 +114,10 @@ class ProductController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
-        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
+        $company_id = session('id_company');
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
+            ->get()->toArray();
         // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['tax_type'] = ['include'];
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
@@ -241,7 +244,10 @@ class ProductController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
-        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
+        $company_id = session('id_company');
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
+            ->get()->toArray();
 
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
         // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
@@ -282,7 +288,10 @@ class ProductController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
-        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')->get()->toArray();
+        $company_id = session('id_company');
+        $data['taxs'] = Tax::whereNull('deleted')->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
+            ->get()->toArray();
 
         $data['retur_type'] = ['NON RETUR', 'RETUR'];
         // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];

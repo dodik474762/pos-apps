@@ -140,8 +140,10 @@ class SalesInvoiceController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -165,8 +167,10 @@ class SalesInvoiceController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -188,8 +192,10 @@ class SalesInvoiceController extends Controller
         $api = new TransactionSalesInvoiceController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -228,8 +234,10 @@ class SalesInvoiceController extends Controller
         $api = new TransactionSalesInvoiceController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);

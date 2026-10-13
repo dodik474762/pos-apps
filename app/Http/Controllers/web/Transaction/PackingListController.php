@@ -144,9 +144,11 @@ class PackingListController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['list_users'] = User::whereNull('deleted')->get(['id', 'name']);
@@ -171,9 +173,11 @@ class PackingListController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitleSr();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['list_kendaraan'] = $this->getKendaraan();
@@ -197,9 +201,11 @@ class PackingListController extends Controller
         $data['list_kendaraan'] = $this->getKendaraan();
 
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
@@ -252,9 +258,11 @@ class PackingListController extends Controller
         $data['list_kendaraan'] = $this->getKendaraan();
 
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
@@ -305,9 +313,11 @@ class PackingListController extends Controller
         $api = new TransactionPackingListController;
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])

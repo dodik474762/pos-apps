@@ -71,8 +71,10 @@ class PurchaseOrderController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Input')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -93,8 +95,10 @@ class PurchaseOrderController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-         $data['taxes'] = Tax::where('is_active', 1)
+        $company_id = session('id_company');
+        $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->where('tax_type', 'Input')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);

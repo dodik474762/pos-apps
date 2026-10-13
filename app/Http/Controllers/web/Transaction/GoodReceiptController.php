@@ -105,8 +105,10 @@ class GoodReceiptController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
@@ -132,8 +134,10 @@ class GoodReceiptController extends Controller
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = GoodReceiptDtl::where('goods_receipt_detail.goods_receipt_header', $data['id'])

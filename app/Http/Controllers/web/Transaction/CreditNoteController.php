@@ -64,10 +64,11 @@ class CreditNoteController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListKasBank(){
+    public function getListKasBank()
+    {
         $datadb = DB::table('coa')->where('is_active', 1)
-        ->where('parent_code', '1100')
-        ->whereNull('deleted')->get();
+            ->where('parent_code', '1100')
+            ->whereNull('deleted')->get();
         return $datadb;
     }
 
@@ -76,11 +77,13 @@ class CreditNoteController extends Controller
         $data = $request->all();
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
@@ -89,7 +92,7 @@ class CreditNoteController extends Controller
         $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.credit_note.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -102,9 +105,11 @@ class CreditNoteController extends Controller
         $api = new TransactionCreditNoteController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['cashBankAccounts'] = $this->getListKasBank();
@@ -127,11 +132,11 @@ class CreditNoteController extends Controller
             ->get();
 
         $data['general_ledgers'] = getGeneralLedger($data['data']->credit_note_number);
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.credit_note.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -139,7 +144,8 @@ class CreditNoteController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getCustomer($salesmanId){
+    public function getCustomer($salesmanId)
+    {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
 
@@ -154,7 +160,7 @@ class CreditNoteController extends Controller
             ->distinct()
             ->get();
 
-            return $customers;
+        return $customers;
     }
 
     public function cetak(Request $request)
@@ -173,6 +179,6 @@ class CreditNoteController extends Controller
         $pdf = Pdf::loadView('web.credit_note.print.po-print', compact('data',  'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SP-'.$data->payment_code.'.pdf');
+        return $pdf->stream('SP-' . $data->payment_code . '.pdf');
     }
 }

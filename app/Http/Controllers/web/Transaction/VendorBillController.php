@@ -61,10 +61,11 @@ class VendorBillController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListKasBank(){
+    public function getListKasBank()
+    {
         $datadb = DB::table('coa')->where('is_active', 1)
-        ->where('parent_code', '1100')
-        ->whereNull('deleted')->get();
+            ->where('parent_code', '1100')
+            ->whereNull('deleted')->get();
         return $datadb;
     }
 
@@ -72,11 +73,13 @@ class VendorBillController extends Controller
     {
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_invoices'] = [];
@@ -84,7 +87,7 @@ class VendorBillController extends Controller
         $data['cashBankAccounts'] = $this->getListKasBank();
         $view = view('web.vendor_bill.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -115,12 +118,12 @@ class VendorBillController extends Controller
         // echo '<pre>';
         // print_r($data['data_invoices']);die;
 
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['general_ledgers'] = getGeneralLedger($data['data']->payment_number);
         $view = view('web.vendor_bill.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();

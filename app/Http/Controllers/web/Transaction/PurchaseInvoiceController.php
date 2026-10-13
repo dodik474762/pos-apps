@@ -68,18 +68,20 @@ class PurchaseInvoiceController extends Controller
     {
         $data['data'] = [];
         $data['code'] = generateNoPO();
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = [];
         $data['general_ledgers'] = [];
         $view = view('web.purchase_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -95,6 +97,7 @@ class PurchaseInvoiceController extends Controller
         $data['vendors'] = Vendor::whereNull('deleted')->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->where('company_id', $company_id)
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = PurchaseInvoiceDtl::where('purchase_invoice_detail.purchase_invoice_id', $data['id'])
@@ -114,12 +117,12 @@ class PurchaseInvoiceController extends Controller
             ->whereNull('purchase_invoice_detail.deleted')
             ->get();
 
-        $data['title'] = 'Form '.$this->getTitle();
+        $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
         $view = view('web.purchase_invoice.formadd', $data);
         $put['title_content'] = $this->getTitle();
-        $put['title_top'] = 'Form '.$this->getTitle();
+        $put['title_top'] = 'Form ' . $this->getTitle();
         $put['title_parent'] = $this->getTitleParent();
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
@@ -131,7 +134,7 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail','items.products', 'items.units'])->findOrFail($data['id']);
+        $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail', 'items.products', 'items.units'])->findOrFail($data['id']);
         // echo '<pre>';
         // print_r($data);die;
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
@@ -143,6 +146,6 @@ class PurchaseInvoiceController extends Controller
         $pdf = Pdf::loadView('web.purchase_invoice.print.pi-print', compact('data', 'total', 'company', 'qr'))
             ->setPaper('a4', 'portrait');
 
-        return $pdf->stream('PO-'.$data->code.'.pdf');
+        return $pdf->stream('PO-' . $data->code . '.pdf');
     }
 }
