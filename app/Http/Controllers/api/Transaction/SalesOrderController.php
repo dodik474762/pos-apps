@@ -47,6 +47,7 @@ class SalesOrderController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -71,6 +72,7 @@ class SalesOrderController extends Controller
                     ->whereNull('sih.deleted');
             })
             ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
@@ -468,6 +470,7 @@ class SalesOrderController extends Controller
                 ]);
             }
 
+            $company_id = session('id_company');
             $customersId = $data['customer_id'];
             $customers_check   = Customer::where('id', trim($data['customer_id']))->first();
             if ($customers_check->deleted != '') {
@@ -563,6 +566,7 @@ class SalesOrderController extends Controller
             $header->branch    = $data['branch']       ?? null;
             $header->warehouse    = $data['warehouse']      ?? null;
             $header->total_amount = 0;
+            $header->company_id = $company_id;
             $header->platform     = $platform;
 
             if (!empty($calculatePromo['discount_header'])) {
@@ -718,6 +722,7 @@ class SalesOrderController extends Controller
                     : SalesOrderDetail::find($item['id']);
 
                 $detail->sales_order_id       = $hdrId;
+                $detail->company_id = $company_id;
                 $detail->product_id           = $item['product_id'];
                 $detail->qty                  = $item['qty'];
                 $detail->unit                 = $item['unit_id'];
@@ -770,6 +775,7 @@ class SalesOrderController extends Controller
                         $freeDetail->discount_amount = 0;
                         $freeDetail->subtotal        = 0;
                         $freeDetail->is_free_good    = 1;
+                        $freeDetail->company_id    = $company_id;
                         $freeDetail->free_for        = $item['product_id'];
                         $freeDetail->status          = 'draft';
                         $freeDetail->save();
@@ -807,6 +813,7 @@ class SalesOrderController extends Controller
                     $salesPromo->promo_name      = $dh['promo_name'];
                     $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
                     $salesPromo->discount_amount = $dh['discount_amount']   ?? 0;
+                    $salesPromo->company_id = $company_id;
                     $salesPromo->save();
                 }
             }
@@ -828,6 +835,7 @@ class SalesOrderController extends Controller
                         $salesPromoItem->promo_name            = $promo['promo_name'];
                         $salesPromoItem->discount_percent      = $discPercent;
                         $salesPromoItem->discount_amount       = $discAmount;
+                        $salesPromoItem->company_id       = $company_id;
                         $salesPromoItem->save();
                     }
                 }
@@ -1354,6 +1362,7 @@ class SalesOrderController extends Controller
         $users_id      = $data['user_id'];
         $usersdb       = Users::where('id', $users_id)->first();
         $branchId      = $usersdb->branch;
+        $company_id = $usersdb->company_id;
 
         // ===== LOG AWAL SYNC =====
         Log::info('=== SALES ORDER SYNC START ===', [
@@ -1517,6 +1526,7 @@ class SalesOrderController extends Controller
             $header->remarks         = $data['remarks'];
             $header->total_amount    = 0;
             $header->platform        = 'mobile';
+            $header->company_id = $company_id;
             $header->photo_path      = $dbpathlampOutlet == '' ? null : $dbpathlampOutlet . $fileOutletName;
             $header->signature_path  = $dbpathlampSignature == '' ? null : $dbpathlampSignature . $fileTtdName;
             $header->checkin_path    = $dbpathlampCheckin == '' ? null : $dbpathlampCheckin . $fileCheckinName;
@@ -1654,6 +1664,7 @@ class SalesOrderController extends Controller
                 $detail->discount_amount      = $item['disc_amount']  ?? 0;
                 $detail->subtotal             = $item['subtotal'];
                 $detail->is_free_good         = 0;
+                $detail->company_id = $company_id;
                 $detail->has_channel_price    = $item['has_channel_price']    ? 1 : 0;
                 $detail->has_customer_product = $item['has_customer_product'] ? 1 : 0;
                 $detail->has_motoris_price    = $item['has_motoris_price']    ? 1 : 0;
@@ -1697,6 +1708,7 @@ class SalesOrderController extends Controller
                         $freeDetail->discount_amount  = 0;
                         $freeDetail->subtotal         = 0;
                         $freeDetail->is_free_good     = 1;
+                        $freeDetail->company_id = $company_id;
                         $freeDetail->free_for         = $item['product_id'];
                         $freeDetail->status           = 'draft';
                         $freeDetail->save();
@@ -1727,6 +1739,7 @@ class SalesOrderController extends Controller
                     $salesPromo->sales_order_id   = $soId;
                     $salesPromo->promo            = $dh['promo_id'];
                     $salesPromo->promo_name       = $dh['promo_name'];
+                    $salesPromo->company_id       = $company_id;
                     $salesPromo->discount_percent = $dh['discount_percent'] ?? 0;
                     $salesPromo->discount_amount  = $dh['discount_amount']  ?? 0;
                     $salesPromo->save();
@@ -1746,6 +1759,7 @@ class SalesOrderController extends Controller
                         $salesPromoItem                        = new SalesOrderPromoItem();
                         $salesPromoItem->sales_order_id        = $soId;
                         $salesPromoItem->sales_order_detail_id = $detailId;
+                        $salesPromoItem->company_id = $company_id;
                         $salesPromoItem->promo                 = $promo['promo_id'];
                         $salesPromoItem->promo_name            = $promo['promo_name'];
                         $salesPromoItem->discount_percent      = $discPercent;
