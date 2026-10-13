@@ -283,9 +283,11 @@ class ClosingStockController extends Controller
                 return response()->json($result);
             }
 
+            $company_id = session('id_company');
             $stockClosing = new StockClosing();
             $stockClosing->closing_date = $params['tanggal'];
             $stockClosing->created_by = session('user_id');
+            $stockClosing->company_id = $company_id;
             $stockClosing->save();
 
 

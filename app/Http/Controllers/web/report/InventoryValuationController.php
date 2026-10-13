@@ -43,7 +43,10 @@ class InventoryValuationController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $lastClosing = StockClosing::orderBy('closing_date', 'desc')->first();
+        $company_id = session('id_company');
+        $lastClosing = StockClosing::where('company_id', $company_id)
+            ->orderBy('closing_date', 'desc')
+            ->first();
         $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');
         $data['data'] = [];
         $data['title'] = $this->getTitle();
