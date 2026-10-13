@@ -356,6 +356,8 @@ class ClosingStockController extends Controller
             // $stockClosing->created_by = session('user_id');
             // $stockClosing->save();
 
+            $company_id = session('id_company');
+
 
             /*update stock cards close_date */
             // $stockCards = StockCard::whereBetween('stock_cards.trans_date', [$params['tanggal_awal'], $params['tanggal']])
@@ -390,7 +392,7 @@ class ClosingStockController extends Controller
             // die;
 
             foreach ($product_stock as $key => $value) {
-                recalculateFrom($value->product_code, $params['tanggal_awal'], $params['tanggal'], 1, null, null);
+                recalculateFrom($value->product_code, $params['tanggal_awal'], $params['tanggal'], 1, null, null, $company_id);
             }
 
             $result['is_valid'] = true;

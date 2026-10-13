@@ -31,6 +31,7 @@ class StockCard extends Model
         'closing_value',
         'avg_cost',
         'unit_cost',
-        'cost_source'
+        'cost_source',
+        'company_id',
     ];
 }

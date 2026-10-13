@@ -2004,8 +2004,13 @@ function recalculateFrom(
     ?string $toDate = null,
     string $wh_code = '1',
     ?float $openingBalance = null,
-    ?string $productId = null
+    ?string $productId = null,
+    $company_id = null
 ): void {
+
+    if ($company_id === null || $company_id === '') {
+        throw new \Exception('company_id tidak boleh null.');
+    }
 
     // 1. State awal (qty + nilai + avg) sebelum $fromDate
     $itemCode = $productId === null ? $itemCode : DB::table('product')->where('id', $productId)->first()->code;
@@ -2075,6 +2080,7 @@ function recalculateFrom(
             'closing_value'    => $state['value'],
             'avg_cost'         => $state['avg'],
             'cost_source'      => 'master',
+            'company_id'       => $company_id,
         ]);
     }
 
@@ -2134,20 +2140,22 @@ function recalculateFrom(
             'note'             => $trx['note'],
             'wh_code'          => $wh_code,
             'type_stock'       => 'rm',
+            'company_id'       => $company_id,
         ], $cost));
     }
 
     // 5. Propagasi qty + nilai ke baris setelah $toDate
     if ($toDate) {
-        propagateBalanceAfter($itemCode, $toDate, $state, $wh_code);
+        propagateBalanceAfter($itemCode, $toDate, $state, $wh_code, $company_id);
     }
 }
 
-function propagateBalanceAfter(string $itemCode, string $afterDate, array $state, $wh_code = '1'): void
+function propagateBalanceAfter(string $itemCode, string $afterDate, array $state, $wh_code = '1', $company_id = null): void
 {
     $cardsAfter = StockCard::where('item_code', $itemCode)
         ->where('trans_date', '>', $afterDate)
         ->where('wh_code', $wh_code)
+        ->where('company_id', $company_id)
         ->orderBy('trans_date')
         ->orderBy('id')
         ->lockForUpdate()
@@ -2185,10 +2193,15 @@ function propagateBalanceAfter(string $itemCode, string $afterDate, array $state
             break;
         }
 
-        $card->forceFill(array_merge([
+        $updateValues = array_merge([
             'opening_balance' => $before['qty'],
             'closing_balance' => $state['qty'],
-        ], $cost))->save();
+        ], $cost);
+        if ($company_id !== null) {
+            $updateValues['company_id'] = $company_id;
+        }
+
+        $card->forceFill($updateValues)->save();
     }
 }
 
