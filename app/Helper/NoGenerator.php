@@ -1585,6 +1585,8 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
 // ====== HELPER: CREATE AUTO SALES RETURN ======
 function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $customerId)
 {
+    $company_id = Users::where('id', $userId)->value('company_id');
+
     $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'penjualan barang')->with('account')->first();
     $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'ppn keluaran')->with('account')->first();
     $discAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'diskon penjualan')->with('account')->first();
@@ -1608,6 +1610,7 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $header->reason            = 'Auto return dari delivery confirm';
     $header->types            = 'good';
     $header->invoice_id        = $invoiceId;
+    $header->company_id        = $company_id;
     $header->save();
 
     $hdrId     = $header->id;
@@ -1647,6 +1650,7 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
         $detail->tax_rate          = $invDtl->tax_rate ?? 0;
         $detail->tax               = $invDtl->tax ?? 0;
         $detail->invoice_detail_id = $invDtl->id;
+        $detail->company_id        = $company_id;
         $detail->save();
 
         // Update return_qty di invoice detail

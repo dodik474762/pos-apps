@@ -28,6 +28,7 @@ class SalesReturnController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -42,6 +43,7 @@ class SalesReturnController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
             ->whereNull('m.deleted')
+            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -411,6 +413,7 @@ class SalesReturnController extends Controller
                 $header->status = 'DRAFT';
             }
 
+            $company_id = session('id_company');
             $header->return_date = $data['return_date'];
             $header->customer_id = $data['customer_id'];
             $header->return_type = $data['return_type'];
@@ -420,6 +423,7 @@ class SalesReturnController extends Controller
             $header->total_return_value = 0;
             $header->reason = $data['reason'];
             $header->invoice_id = $data['invoice_id'];
+            $header->company_id = $company_id;
             $header->save();
 
             $hdrId = $header->id;
@@ -470,6 +474,7 @@ class SalesReturnController extends Controller
                 $detail->tax_rate = $value['tax_rate'];
                 $detail->invoice_detail_id = $value['invoice_detail_id'];
                 $detail->tax = $value['tax'];
+                $detail->company_id = $company_id;
                 $detail->save();
 
                 $disc_total += $value['discount_return'];
