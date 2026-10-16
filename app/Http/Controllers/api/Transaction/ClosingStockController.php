@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\ProductStock;
 use App\Models\Transaction\StockCard;
 use App\Models\Transaction\StockClosing;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -284,6 +285,25 @@ class ClosingStockController extends Controller
             }
 
             $company_id = session('id_company');
+
+            // ===== WARNING: pastikan tanggal closing sebelumnya sudah di-closing =====
+            $requestedDate = Carbon::parse($params['tanggal'])->format('Y-m-d');
+            $prevDate      = Carbon::parse($requestedDate)->subDay()->format('Y-m-d');
+
+            $lastClosing = StockClosing::where('company_id', $company_id)
+                ->where('closing_date', '<', $requestedDate)
+                ->orderBy('closing_date', 'desc')
+                ->first();
+
+            // Jika sudah pernah ada closing sebelumnya, tanggal tepat sebelum tanggal
+            // yang akan di-closing harus sudah di-closing (tidak boleh ada tanggal bolong)
+            if (!empty($lastClosing) && Carbon::parse($lastClosing->closing_date)->lt(Carbon::parse($prevDate))) {
+                DB::rollBack();
+                $result['is_warning'] = true;
+                $result['message'] = 'Tanggal closing ' . date('d F Y', strtotime($prevDate)) . ' belum di-closing. Silakan lakukan closing tanggal tersebut terlebih dahulu.';
+                return response()->json($result);
+            }
+
             $stockClosing = new StockClosing();
             $stockClosing->closing_date = $params['tanggal'];
             $stockClosing->created_by = session('user_id');

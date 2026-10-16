@@ -133,6 +133,8 @@ let ClosingStock = {
                     setTimeout(function () {
                         window.location.reload();
                     }, 1000);
+                } else if (resp.is_warning) {
+                    message.sweetWarning("Peringatan", resp.message);
                 } else {
                     message.sweetError("Informasi", resp.message);
                 }

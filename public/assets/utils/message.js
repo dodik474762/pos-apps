@@ -142,4 +142,14 @@ var message = {
         });
     },
 
+    sweetWarning: (title = "Peringatan", message = "Data Belum Lengkap") => {
+        Swal.fire({
+            title: title,
+            html: message,
+            icon: "warning",
+            confirmButtonColor: "#5664d2",
+            // cancelButtonColor: "#ff3d60"
+        });
+    },
+
 };
