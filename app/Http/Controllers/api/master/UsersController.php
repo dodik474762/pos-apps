@@ -79,7 +79,7 @@ class UsersController extends Controller
         try {
             //code...
             list($nik, $name) = explode('//', $data['nik']);
-            $karyawan = Karyawan::where('nik', $data['nik'])
+            $karyawan = Karyawan::where('nik', trim($nik))
                 ->where('company', $company_id)
                 ->first();
             $roles = $data['id'] == '' ? new Users() : Users::find($data['id']);
