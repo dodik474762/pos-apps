@@ -676,6 +676,13 @@ class DeliveryOrderController extends Controller
                 return response()->json($result);
             }
 
+            // Kontrol posted berdasarkan post_date (bukan status).
+            $doCheck = DeliveryOrderHeader::where('id', $id)->first();
+            if (! empty($doCheck) && $doCheck->post_date != '') {
+                $result['message'] = 'Tidak dapat diposting karena sudah posted';
+                return response()->json($result);
+            }
+
             $journalService = new DeliveryOrderJournalService();
 
             // post_date hanya diisi setelah jurnal berhasil dibuat dan diposting,

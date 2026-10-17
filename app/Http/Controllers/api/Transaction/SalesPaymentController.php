@@ -986,6 +986,14 @@ class SalesPaymentController extends Controller
         try {
 
             $menu = SalesPaymentHeader::find($data['id']);
+
+            // Kontrol posted berdasarkan post_date (bukan status).
+            if (! empty($menu) && $menu->post_date != '') {
+                DB::rollBack();
+                $result['message'] = 'Tidak dapat diposting karena sudah posted';
+                return response()->json($result);
+            }
+
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->post_date = date('Y-m-d H:i:s');

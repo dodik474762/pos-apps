@@ -56,9 +56,7 @@ class JournalsController extends Controller
             if (isset($_POST['search']['end_date']) && $_POST['search']['end_date'] != '') {
                 $datadb->whereDate('m.journal_date', '<=', $_POST['search']['end_date']);
             }
-            if (isset($_POST['order'][0]['column'])) {
-                $datadb->orderBy('m.journal_no', $_POST['order'][0]['dir']);
-            }
+            $datadb->orderBy('m.id', 'desc');
             $data['recordsFiltered'] = $datadb->get()->count();
 
             if (isset($_POST['length'])) {

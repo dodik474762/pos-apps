@@ -1045,13 +1045,21 @@ class SalesReturnController extends Controller
                 return response()->json($result);
             }
 
+            // Kontrol posted berdasarkan post_date (bukan status).
+            $headerCheck = SalesReturnHdr::where('id', $id)->first();
+            if (! empty($headerCheck) && $headerCheck->post_date != '') {
+                $result['message'] = 'Tidak dapat diposting karena sudah posted';
+
+                return response()->json($result);
+            }
+
             $journalService = new SalesReturnJournalService();
 
             $journal = DB::transaction(function () use ($id, $journalService) {
                 $journal = $journalService->postFromSalesReturn($id, session('user_id'));
 
                 $header = SalesReturnHdr::where('id', $id)->first();
-                if (! empty($header) && $header->status != 'POSTED') {
+                if (! empty($header) && empty($header->post_date)) {
                     $header->status = 'POSTED';
                     $header->post_date = date('Y-m-d H:i:s');
                     $header->post_by = session('user_id');
