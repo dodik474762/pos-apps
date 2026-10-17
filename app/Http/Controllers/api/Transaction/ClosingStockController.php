@@ -310,6 +310,18 @@ class ClosingStockController extends Controller
             $stockClosing->company_id = $company_id;
             $stockClosing->save();
 
+            /* recalculate stock cards untuk tanggal yang di-closing */
+            $product_stock = ProductStock::select([
+                'product_stock.product',
+                'p.code as product_code'
+            ])
+                ->join('product as p', 'p.id', '=', 'product_stock.product')
+                ->whereNull('p.deleted')->get();
+
+            foreach ($product_stock as $key => $value) {
+                recalculateFrom($value->product_code, $params['tanggal'], $params['tanggal'], 1, null, null, $company_id);
+            }
+
 
             /*update stock cards close_date */
             // $stockCards = StockCard::where('stock_cards.trans_date', $params['tanggal'])
