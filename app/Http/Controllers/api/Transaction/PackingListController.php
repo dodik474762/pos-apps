@@ -1355,7 +1355,7 @@ class PackingListController extends Controller
                                 $disc_total_update  += $v->discount;
                                 $tax_total_update   += $v->tax_amount;
                                 $totalAmountUpdate  += ($v->price * $v->qty);
-                                $net_total_update   += (($v->price * $v->qty) - $v->discount + $v->tax_amount);
+                                $net_total_update   += (($v->price * $v->qty) - $v->discount);
                             }
 
                             $invoiceUpdate                 = SalesInvoiceHeader::find($invoiceId);

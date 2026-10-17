@@ -1114,9 +1114,9 @@ class SalesInvoiceController extends Controller
 
             $menu = SalesInvoiceHeader::find($data['id']);
 
-            if ($menu->status != 'DRAFT') {
+            if ($menu->post_date != '') {
                 DB::rollBack();
-                $result['message'] = 'Tidak dapat diposting karena status sudah tidak DRAFT';
+                $result['message'] = 'Tidak dapat diposting karena sudah posted';
                 return response()->json($result);
             }
             $menu->updated_by = session('user_id');
