@@ -39,7 +39,7 @@ class VendorBillController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
-            ->where('m.company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -100,10 +100,11 @@ class VendorBillController extends Controller
             // Ambil konfigurasi akun
             $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
                 ->where('account_type', 'hutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
-            $kasBankAccount = Coa::where('id', $data['account_id'])->first();
+            $kasBankAccount = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['account_id'])->first();
 
             if (! $hutangAccount || ! $kasBankAccount) {
                 DB::rollBack();
@@ -115,10 +116,20 @@ class VendorBillController extends Controller
             }
 
             // Simpan header
-            $roles = $data['id'] == '' ? new VendorBillHeader : VendorBillHeader::find($data['id']);
+            $roles = $data['id'] == '' ? new VendorBillHeader : VendorBillHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if ($data['id'] == '') {
-                $roles->payment_number = generateVPN(); // fungsi auto generate nomor pembayaran
+                $roles->payment_number = generateVPN($company_id); // fungsi auto generate nomor pembayaran
                 $roles->created_by = $users;
+                if ($company_id !== null && $company_id !== '') {
+                    $roles->company_id = $company_id;
+                }
+            } elseif (empty($roles)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Vendor Payment tidak ditemukan.',
+                ]);
             }
 
             $roles->payment_date = $data['payment_date'];
@@ -130,7 +141,9 @@ class VendorBillController extends Controller
             $roles->account_id = $data['account_id'];
             $roles->status = 'draft';
             $roles->currency = $currency_id;
-            $roles->company_id = $company_id;
+            if ($company_id !== null && $company_id !== '') {
+                $roles->company_id = $company_id;
+            }
             $roles->save();
 
             $hdrId = $roles->id;
@@ -138,7 +151,7 @@ class VendorBillController extends Controller
 
             // Loop data detail (invoice yang dibayar)
             foreach ($data['items'] as $key => $value) {
-                $invoice = PurchaseInvoiceHeader::find($value['id']);
+                $invoice = PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
                 if (empty($invoice)) {
                     DB::rollBack();
 
@@ -157,12 +170,16 @@ class VendorBillController extends Controller
                 $detail->purchase_invoice_id = $invoice->id;
                 $detail->amount_paid = $amountPaid;
                 $detail->remaining_balance = $remaining;
+                if ($company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->save();
 
                 // Update invoice
                 $totalPaidBefore = DB::table('vendor_payment_detail')
                     ->where('purchase_invoice_id', $invoice->id)
                     ->whereNull('deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->sum('amount_paid');
 
                 $invoice->status = ($totalPaidBefore >= $invoice->total_amount) ? 'paid' : 'posted';
@@ -208,10 +225,13 @@ class VendorBillController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
-            $payment = VendorBillHeader::with(['details'])->find($data['id']);
+            $payment = VendorBillHeader::with(['details'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('vendor_payment_header.company_id', $company_id))
+                ->find($data['id']);
             if (empty($payment)) {
                 DB::rollBack();
 
@@ -249,6 +269,7 @@ class VendorBillController extends Controller
             // ambil mapping akun untuk rollback GL
             $hutangAccount = AccountMapping::where('module', 'VENDOR_PAYMENT')
                 ->where('account_type', 'hutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -261,7 +282,7 @@ class VendorBillController extends Controller
                 ]);
             }
 
-            $kasBankAccount = Coa::find($payment->account_id);
+            $kasBankAccount = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($payment->account_id);
             if (! $kasBankAccount) {
                 DB::rollBack();
 
@@ -279,7 +300,7 @@ class VendorBillController extends Controller
 
             // Loop setiap detail payment
             foreach ($payment->details as $detail) {
-                $invoice = PurchaseInvoiceHeader::find($detail->purchase_invoice_id);
+                $invoice = PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($detail->purchase_invoice_id);
                 if (! $invoice) {
                     DB::rollBack();
 
@@ -295,6 +316,7 @@ class VendorBillController extends Controller
                     ->where('purchase_invoice_id', $invoice->id)
                     ->whereNull('deleted')
                     ->where('vendor_payment_id', '!=', $payment->id)
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->sum('amount_paid');
 
                 if ($totalPaid <= 0) {
@@ -332,12 +354,14 @@ class VendorBillController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'v.nama_vendor',
             ])
             ->join('vendor as v', 'v.id', 'm.vendor')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -348,8 +372,10 @@ class VendorBillController extends Controller
     public function delete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $payment = VendorBillHeader::where('id', $data['id'] ?? null)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
 
@@ -375,8 +401,10 @@ class VendorBillController extends Controller
     public function showModalPostJurnal(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $payment = VendorBillHeader::where('id', $data['id'] ?? null)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
 
@@ -386,11 +414,12 @@ class VendorBillController extends Controller
         $data['vendor_name'] = empty($payment)
             ? ''
             : DB::table('vendor')->where('id', $payment->vendor)->value('nama_vendor');
-        $data['bank_cash_accounts'] = $this->getListJournalBankCash();
+        $data['bank_cash_accounts'] = $this->getListJournalBankCash($company_id);
         $data['invoice_count'] = empty($payment)
             ? 0
             : DB::table('vendor_payment_detail')
             ->where('vendor_payment_id', $payment->id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->count();
 
@@ -410,6 +439,7 @@ class VendorBillController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         try {
             $id = $data['id'] ?? null;
@@ -421,14 +451,14 @@ class VendorBillController extends Controller
 
             $journalService = new SupplierPaymentJournalService();
 
-            $journal = DB::transaction(function () use ($data, $id, $journalService) {
+            $journal = DB::transaction(function () use ($data, $id, $journalService, $company_id) {
                 $journal = $journalService->postFromVendorPayment(
                     $id,
                     $data['bank_account_id'] ?? null,
                     session('user_id')
                 );
 
-                $payment = VendorBillHeader::where('id', $id)->first();
+                $payment = VendorBillHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
                 if (! empty($payment) && $payment->status != 'posted') {
                     $payment->status = 'posted';
                     $payment->save();
@@ -458,14 +488,19 @@ class VendorBillController extends Controller
      * dan bukan dari coa. Kelompok kas & bank dicari lewat posisinya di bawah
      * header Asset sehingga tidak bergantung kode akun.
      */
-    protected function getListJournalBankCash()
+    protected function getListJournalBankCash($company_id = null)
     {
+        if ($company_id === null) {
+            $company_id = session('id_company');
+        }
+
         $assetRoot = DB::table('accounts')
             ->select(['id'])
             ->where('is_header', 1)
             ->where('normal_balance', 'Debit')
             ->whereNull('parent_id')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('id')
             ->first();
 
@@ -479,6 +514,7 @@ class VendorBillController extends Controller
             ->where('is_header', 1)
             ->where('normal_balance', 'Debit')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where(function ($query) {
                 $query->where('name', 'like', '%CASH%')
                     ->orWhere('name', 'like', '%BANK%');
@@ -495,6 +531,7 @@ class VendorBillController extends Controller
             ->where('is_header', 0)
             ->where('is_active', 1)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get();
     }
@@ -510,12 +547,16 @@ class VendorBillController extends Controller
     {
         $data = $request->all();
         $vendorId = $data['vendor'];
+        $company_id = session('id_company');
         try {
             // code...
             $data['invoices'] = DB::table('purchase_invoice_header as h')
-                ->leftJoin('vendor_payment_detail as d', function ($join) {
+                ->leftJoin('vendor_payment_detail as d', function ($join) use ($company_id) {
                     $join->on('d.purchase_invoice_id', '=', 'h.id')
                         ->whereNull('d.deleted');
+                    if ($company_id !== null && $company_id !== '') {
+                        $join->where('d.company_id', $company_id);
+                    }
                 })
                 ->select(
                     'h.id',
@@ -527,6 +568,7 @@ class VendorBillController extends Controller
                 )
                 ->where('h.vendor', $vendorId)
                 ->whereNull('h.deleted')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('h.company_id', $company_id))
                 ->groupBy('h.id', 'h.invoice_number', 'h.invoice_date', 'h.total_amount')
                 ->having('outstanding', '>', 0)
                 ->get();
@@ -543,6 +585,7 @@ class VendorBillController extends Controller
     public function getListItemOutstandingPO(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         try {
             $data['po_details_outstanding'] = DB::table('purchase_order_detail as pod')
@@ -565,6 +608,7 @@ class VendorBillController extends Controller
                     'pod.subtotal',
                     'pod.status'
                 )
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pod.company_id', $company_id))
                 ->where('po.status', '!=', 'cancelled')
                 ->where('pod.status', '!=', 'received')
                 ->whereRaw('(pod.qty - IFNULL(pod.qty_received, 0)) > 0')

@@ -62,7 +62,11 @@ class SalesInvoiceController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses');
-        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
+        $company_id = session('id_company');
+        $data['salesmans'] = User::whereNull('deleted')
+            ->whereIn('user_group', [6, 4])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'nik', 'name']);
         $view = view('web.sales_invoice.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -77,6 +81,7 @@ class SalesInvoiceController extends Controller
     {
         $start_date = $start_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($start_date));
         $end_date = $end_date == '' ? date('Y-m-d') : date('Y-m-d', strtotime($end_date));
+        $company_id = session('id_company');
         $datadb = DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
@@ -96,6 +101,7 @@ class SalesInvoiceController extends Controller
             ->where('m.invoice_date', '>=', $start_date)
             ->where('m.invoice_date', '<=', $end_date)
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
 
         if ($belum_lunas == '1') {
@@ -136,14 +142,14 @@ class SalesInvoiceController extends Controller
     public function add(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoSI($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -163,14 +169,14 @@ class SalesInvoiceController extends Controller
     public function addFromDo(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoSI($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -195,7 +201,7 @@ class SalesInvoiceController extends Controller
         $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -213,10 +219,11 @@ class SalesInvoiceController extends Controller
             ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
             ->join('unit as u', 'u.id', 'sod.unit')
             ->whereNull('sales_invoice_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_invoice_detail.company_id', $company_id))
             ->orderBy('sales_invoice_detail.id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = $data['data']->do_id != '' ? view('web.sales_invoice.formadd', $data) : view('web.sales_invoice.formaddso', $data);
@@ -237,7 +244,7 @@ class SalesInvoiceController extends Controller
         $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -255,11 +262,12 @@ class SalesInvoiceController extends Controller
             ->join('product as p', 'p.id', 'sales_invoice_detail.product_id')
             ->join('unit as u', 'u.id', 'sod.unit')
             ->whereNull('sales_invoice_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_invoice_detail.company_id', $company_id))
             ->orderBy('sales_invoice_detail.id')
             ->get();
 
         $data['view_detail'] = 'detail';
-        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->invoice_number, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = $data['data']->do_id != '' ? view('web.sales_invoice.formadd', $data) : view('web.sales_invoice.formaddso', $data);
@@ -303,7 +311,9 @@ class SalesInvoiceController extends Controller
             'warehouses',
             'items.products',
             'items.so_detail.units'
-        ])->findOrFail($data['id']);
+        ])
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));
         $qr = '';
 
@@ -314,7 +324,7 @@ class SalesInvoiceController extends Controller
         $provinsi = Region::where('id', $data->customers->provinsi)->first();
         $provinsi_name = $provinsi->name ?? '-';
 
-        $max_print_faktur = Customer::where('id', $data->customers->id)->first();
+        $max_print_faktur = Customer::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->where('id', $data->customers->id)->first();
         if ($data->print_total >= $max_print_faktur->max_print_invoice) {
             return redirect()->back()->with('error', 'Faktur ' . $data->invoice_number . ' sudah dicetak ' . $data->print_total . ' kali');
         }
@@ -339,7 +349,7 @@ class SalesInvoiceController extends Controller
 
         $dataItems = $data->items;
         foreach ($dataItems as $key => $value) {
-            $invoice = SalesInvoiceHeader::find($value->invoice_id);
+            $invoice = SalesInvoiceHeader::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->find($value->invoice_id);
             /*cek stock */
             // $stock = DB::table('product_stock')
             //     ->where('product', $value['product_id'])
@@ -365,19 +375,30 @@ class SalesInvoiceController extends Controller
         }
 
         $total_print = $data->print_total == '' ? 0 : $data->print_total;
-        SalesInvoiceHeader::where('id', $data->id)->update([
-            'print_total' => $total_print + 1,
-            'print_by' => session('user_id'),
-            'print_date' => now(),
-            'reprint' => 0, // tidak reprint
-        ]);
-        $do = $data['do_id'] != '' ? DeliveryOrderHeader::where('id', $data->do_id)->first() : [];
-        $so = $data['do_id'] != '' ? SalesOrderHeader::where('id', $do->so_id)->first() : SalesOrderHeader::where('id', $data->sales_order)->first();
-        $userSalesman = Users::where('id', $so->salesman)->first();
+        $company_id = session('id_company');
+        SalesInvoiceHeader::where('id', $data->id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->update([
+                'print_total' => $total_print + 1,
+                'print_by' => session('user_id'),
+                'print_date' => now(),
+                'reprint' => 0, // tidak reprint
+            ]);
+        $do = $data['do_id'] != '' ? DeliveryOrderHeader::where('id', $data->do_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->first() : [];
+        $so = $data['do_id'] != ''
+            ? SalesOrderHeader::where('id', $do->so_id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->first()
+            : SalesOrderHeader::where('id', $data->sales_order)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->first();
+        $userSalesman = Users::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->where('id', $so->salesman)->first();
         // echo '<pre>';
         // print_r($userSalesman);
         // die;
-        $salesman = Karyawan::where('id', $so->salesman)->first();
+        $salesman = Karyawan::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->where('id', $so->salesman)->first();
         $salesman_name = ! empty($userSalesman) ? $userSalesman->username : '-';
 
         $tax = DB::table('tax')->where('id', $so->tax_id ?? 1)->first();
@@ -410,6 +431,7 @@ class SalesInvoiceController extends Controller
     public function multiplePrint(Request $request)
     {
         $ids = explode(',', $request->ids);
+        $company_id = session('id_company');
 
         $invoices = SalesInvoiceHeader::with([
             'so',
@@ -422,6 +444,7 @@ class SalesInvoiceController extends Controller
             'items.so_detail.units',
         ])
             ->whereIn('id', $ids)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->get();
 
         // echo '<pre>';
@@ -432,8 +455,8 @@ class SalesInvoiceController extends Controller
         foreach ($invoices as $data) {
             $dataItems = $data->items;
             foreach ($dataItems as $key => $value) {
-                $invoice = SalesInvoiceHeader::find($value->invoice_id);
-                $max_print_faktur = Customer::where('id', $invoice->customer_id)->first();
+                $invoice = SalesInvoiceHeader::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->find($value->invoice_id);
+                $max_print_faktur = Customer::when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))->where('id', $invoice->customer_id)->first();
                 if ($invoice->print_total >= $max_print_faktur->max_print_invoice) {
                     return redirect()->back()->with('error', 'Faktur ' . $invoice->invoice_number . ' sudah dicetak ' . $invoice->print_total . ' kali');
                 }
@@ -462,7 +485,8 @@ class SalesInvoiceController extends Controller
             }
 
             $total_print = empty($data->print_total) ? 0 : $data->print_total;
-            $invUpdate = SalesInvoiceHeader::where('id', $data->id);
+            $invUpdate = SalesInvoiceHeader::where('id', $data->id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id));
             $invUpdate->update([
                 'print_total' => $total_print + 1,
                 'print_by' => session('user_id'),

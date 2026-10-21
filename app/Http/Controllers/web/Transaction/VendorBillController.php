@@ -63,23 +63,27 @@ class VendorBillController extends Controller
 
     public function getListKasBank()
     {
+        $company_id = session('id_company');
         $datadb = DB::table('coa')->where('is_active', 1)
             ->where('parent_code', '1100')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get();
         return $datadb;
     }
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateVPN($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
-        $company_id = session('id_company');
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_invoices'] = [];
@@ -99,11 +103,15 @@ class VendorBillController extends Controller
     {
         $api = new TransactionVendorBillController;
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['cashBankAccounts'] = $this->getListKasBank();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_invoices'] = VendorBillDtl::where('vendor_payment_detail.vendor_payment_id', $data['id'])
@@ -114,6 +122,7 @@ class VendorBillController extends Controller
                 'vendor_payment_detail.amount_paid',
             ])
             ->join('purchase_invoice_header as pi', 'pi.id', 'vendor_payment_detail.purchase_invoice_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('vendor_payment_detail.company_id', $company_id))
             ->get();
         // echo '<pre>';
         // print_r($data['data_invoices']);die;

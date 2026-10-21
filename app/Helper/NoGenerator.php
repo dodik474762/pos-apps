@@ -125,10 +125,15 @@ function generateCodePengajuanLimitTop()
     return $no;
 }
 
-function generateVPN()
+function generateVPN($company_id = null)
 {
     $no = 'VP' . strtoupper(date('m')) . date('y');
-    $data = DB::table('vendor_payment_header')->where('payment_number', 'LIKE', '%' . $no . '%')->orderBy('payment_number', 'desc')->get()->toArray();
+    $data = DB::table('vendor_payment_header')
+        ->where('payment_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('payment_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -144,10 +149,15 @@ function generateVPN()
     return $no;
 }
 
-function generatePRN()
+function generatePRN($company_id = null)
 {
     $no = 'RE-' . strtoupper(date('m')) . date('y');
-    $data = DB::table('purchase_return')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('purchase_return')
+        ->where('code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('code', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -182,10 +192,15 @@ function generateCodePresence()
     return $no;
 }
 
-function generateNoPO()
+function generateNoPO($company_id = null)
 {
     $no = 'PO' . strtoupper(date('m')) . date('y');
-    $data = DB::table('purchase_order')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('purchase_order')
+        ->where('code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('code', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -206,7 +221,7 @@ function generateNoSO($company_id = null)
     $no = 'SO' . strtoupper(date('m')) . date('y');
     $data = DB::table('sales_order_headers')
         ->where('so_number', 'LIKE', '%' . $no . '%')
-        ->when($company_id !== null, fn($q) => $q->where('company_id', $company_id))
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
         ->orderBy('so_number', 'desc')
         ->get()
         ->toArray();
@@ -263,10 +278,15 @@ function generateNoDO()
     return $no;
 }
 
-function generateNoSI()
+function generateNoSI($company_id = null)
 {
     $no = 'SI' . strtoupper(date('m')) . date('y');
-    $data = DB::table('sales_invoice_header')->where('invoice_number', 'LIKE', '%' . $no . '%')->orderBy('invoice_number', 'desc')->get()->toArray();
+    $data = DB::table('sales_invoice_header')
+        ->where('invoice_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('invoice_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -282,10 +302,15 @@ function generateNoSI()
     return $no;
 }
 
-function generateNoSP()
+function generateNoSP($company_id = null)
 {
     $no = 'SP' . strtoupper(date('m')) . date('y');
-    $data = DB::table('sales_payment_header')->where('payment_code', 'LIKE', '%' . $no . '%')->orderBy('payment_code', 'desc')->get()->toArray();
+    $data = DB::table('sales_payment_header')
+        ->where('payment_code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('payment_code', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -301,10 +326,15 @@ function generateNoSP()
     return $no;
 }
 
-function generateNoPL()
+function generateNoPL($company_id = null)
 {
     $no = 'PL' . strtoupper(date('m')) . date('y');
-    $data = DB::table('packing_list')->where('packing_list_no', 'LIKE', '%' . $no . '%')->orderBy('packing_list_no', 'desc')->get()->toArray();
+    $data = DB::table('packing_list')
+        ->where('packing_list_no', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('packing_list_no', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -320,10 +350,15 @@ function generateNoPL()
     return $no;
 }
 
-function generateNoPLTagihan()
+function generateNoPLTagihan($company_id = null)
 {
     $no = 'PT' . strtoupper(date('m')) . date('y');
-    $data = DB::table('packing_list_salesman')->where('packing_list_no', 'LIKE', '%' . $no . '%')->orderBy('packing_list_no', 'desc')->get()->toArray();
+    $data = DB::table('packing_list_salesman')
+        ->where('packing_list_no', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('packing_list_no', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -339,10 +374,15 @@ function generateNoPLTagihan()
     return $no;
 }
 
-function generateNoReceivedCashier()
+function generateNoReceivedCashier($company_id = null)
 {
     $no = 'RCC' . strtoupper(date('m')) . date('y');
-    $data = DB::table('receive_payment_header')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('receive_payment_header')
+        ->where('code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('code', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -358,10 +398,15 @@ function generateNoReceivedCashier()
     return $no;
 }
 
-function generateNoReturn()
+function generateNoReturn($company_id = null)
 {
     $no = 'SR' . strtoupper(date('m')) . date('y');
-    $data = DB::table('sales_return')->where('return_number', 'LIKE', '%' . $no . '%')->orderBy('return_number', 'desc')->get()->toArray();
+    $data = DB::table('sales_return')
+        ->where('return_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('return_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -377,10 +422,15 @@ function generateNoReturn()
     return $no;
 }
 
-function generateNoCN()
+function generateNoCN($company_id = null)
 {
     $no = 'CN' . strtoupper(date('m')) . date('y');
-    $data = DB::table('credit_note')->where('credit_note_number', 'LIKE', '%' . $no . '%')->orderBy('credit_note_number', 'desc')->get()->toArray();
+    $data = DB::table('credit_note')
+        ->where('credit_note_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('credit_note_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -420,10 +470,15 @@ function generateNoJournal($prefix = 'JV', $company_id = null)
     return $no;
 }
 
-function generateNoReturOther()
+function generateNoReturOther($company_id = null)
 {
     $no = 'RH' . strtoupper(date('m')) . date('y');
-    $data = DB::table('sales_retur_of_consigment')->where('return_number', 'LIKE', '%' . $no . '%')->orderBy('return_number', 'desc')->get()->toArray();
+    $data = DB::table('sales_retur_of_consigment')
+        ->where('return_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('return_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -499,10 +554,15 @@ function generateGrNumber()
     return $no;
 }
 
-function generatePINumber()
+function generatePINumber($company_id = null)
 {
     $no = 'PI' . strtoupper(date('m')) . date('y');
-    $data = DB::table('purchase_invoice_header')->where('invoice_number', 'LIKE', '%' . $no . '%')->orderBy('invoice_number', 'desc')->get()->toArray();
+    $data = DB::table('purchase_invoice_header')
+        ->where('invoice_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('invoice_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -569,10 +629,15 @@ function cekStatusRequest($id_req)
     return $mostFrequentStatus;
 }
 
-function generateNoPayment()
+function generateNoPayment($company_id = null)
 {
     $no = 'PAY' . strtoupper(date('m')) . date('y');
-    $data = DB::table('payment_invoice')->where('no_payment', 'LIKE', '%' . $no . '%')->orderBy('no_payment', 'desc')->get()->toArray();
+    $data = DB::table('payment_invoice')
+        ->where('no_payment', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('no_payment', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -975,12 +1040,18 @@ function _terbilang(int $n, array $huruf): string
     }
 }
 
-function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '', $user_id = '')
+function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '', $user_id = '', $company_id = null)
 {
     $postingDate = now();
 
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
     $exist = GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
-        ->where('dc', $dc)->first();
+        ->where('dc', $dc)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->first();
 
     $userId = 0;
     $post = empty($exist) ? new GeneralLedger : $exist;
@@ -993,31 +1064,57 @@ function postingGL($reference = '', $account_id = 0, $account_name = '', $dc = '
     $post->currency = $currency;
     $post->description = $desc;
     $post->created_by = $user_id == '' ? $userId : $user_id;
+    if (empty($exist) && $company_id !== null && $company_id !== '') {
+        $post->company_id = $company_id;
+    }
     $post->save();
 }
 
-function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '')
+function cancelGL($reference = '', $account_id = 0, $account_name = '', $dc = '', $amount = 0, $currency = 1, $desc = '', $company_id = null)
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
     GeneralLedger::where('reference', $reference)->where('account_id', $account_id)
-        ->where('dc', $dc)->delete();
+        ->where('dc', $dc)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->delete();
 }
 
-function cancelAllGL($reference = '')
+function cancelAllGL($reference = '', $company_id = null)
 {
-    GeneralLedger::where('reference', $reference)->delete();
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
+    GeneralLedger::where('reference', $reference)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->delete();
 }
 
-function updateAllGL($reference = '', $to_reference = '')
+function updateAllGL($reference = '', $to_reference = '', $company_id = null)
 {
-    GeneralLedger::where('reference', $to_reference)->update(['reference' => $reference]);
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
+    GeneralLedger::where('reference', $to_reference)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->update(['reference' => $reference]);
 }
 
-function getGeneralLedger($reference = '')
+function getGeneralLedger($reference = '', $company_id = null)
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
     $general_ledgers = DB::table('general_ledgers as gl')
         ->join('coa as c', 'c.id', '=', 'gl.account_id')
         ->select('gl.*', 'c.account_code', 'c.account_name as account_name_coa')
         ->where('gl.reference', 'like', "%{$reference}%")
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('gl.company_id', $company_id))
         ->orderBy('gl.posting_date')
         ->orderBy('gl.id')
         ->get();
@@ -1274,16 +1371,21 @@ function getLargestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
-function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
+function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '', $company_id = null)
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
     $warehouseId = $warehouse;
 
-    $product_uom_large = ProductUom::whereNull('deleted')
+    $product_uom_large = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->whereNull('deleted')
         ->where('product', $product)
         ->where('state', 'large')
         ->first();
 
-    $product_uom_small = ProductUom::whereNull('deleted')
+    $product_uom_small = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->whereNull('deleted')
         ->where('product', $product)
         ->where('state', 'small')
         ->first();
@@ -1294,19 +1396,22 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         ->where('product', $product)
         ->where('unit', $baseUnit)
         ->where('warehouse', $warehouseId)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->first();
 
     $sell_price     = 0;
     $purchase_price = 0;
 
     if ($product_uom_large) {
-        $product_price = ProductUomPrice::where('product', $product)
+        $product_price = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->where('product', $product)
             ->where('unit', $product_uom_large->unit_tujuan)
             ->where('date_start', '<=', date('Y-m-d'))
             ->orderBy('id', 'desc')
             ->first();
 
-        $product_cost = ProductUomCost::where('product', $product)
+        $product_cost = ProductUomCost::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->where('product', $product)
             ->where('unit_id', $product_uom_large->unit_tujuan)
             ->where('date_start', '<=', date('Y-m-d'))
             ->where('is_active', '1')
@@ -1331,6 +1436,7 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
             'warehouse' => $warehouseId,
             'qty' => $type == 'add' ? $convertedQty : $convertedQty * -1,
             'avg_cost' => $value['price'] ?? 0,
+            'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
             'created_at' => now(),
         ]);
     }
@@ -1345,6 +1451,7 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         'reference_id' => $reference_id,
         'price' => $sell_price,
         'purchase_price' => $purchase_price,
+        'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
         'created_at' => now(),
     ]);
 }
@@ -1420,8 +1527,11 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
 //     ]);
 // }
 
-function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '')
+function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $company_id = null)
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
     $warehouseId = $warehouse;
 
     // Ambil data stok
@@ -1429,6 +1539,7 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
         ->where('product', $product)
         ->where('unit', $baseUnit)
         ->where('warehouse', $warehouseId)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->first();
 
     if ($stock) {
@@ -1453,13 +1564,19 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
         'move_type' => 'rollback',
         'reference_id' => $reference_id,
         'price' => $value['price'] ?? 0,
+        'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
         'created_at' => now(),
     ]);
 }
 
-function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0)
+function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0, $company_id = null)
 {
-    $datadb = Customer::where('id', $customer)->first();
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+    $datadb = Customer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->where('id', $customer)
+        ->first();
 
     if (!$datadb) {
         return [
@@ -1480,6 +1597,7 @@ function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0)
     $totalOutstanding = DB::table('sales_invoice_header')
         ->whereNull('deleted')
         ->where('customer_id', $customer)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->whereRaw('(total_amount - amount_paid) > 0');
 
     if ($exclude_id) {
@@ -1503,9 +1621,14 @@ function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0)
     ];
 }
 
-function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
+function checkCustomerCreditLimit($customer = 0, $exclude_id = '', $company_id = null)
 {
-    $datadb = Customer::where('id', $customer)->first();
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+    $datadb = Customer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->where('id', $customer)
+        ->first();
 
     $credit_limit = 0;
     if ($datadb) {
@@ -1539,7 +1662,8 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '')
             // ->whereIn('status', ['POSTED', 'PARTIAL PAID'])
             ->whereRaw('(total_amount - amount_paid) > 0')
             ->whereNull('deleted')
-            ->where('customer_id', $customer);
+            ->where('customer_id', $customer)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id));
         if ($exclude_id != '') {
             $countInvoiceOutstanding->where('id', '!=', $exclude_id);
         }
@@ -1600,11 +1724,11 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
 {
     $company_id = Users::where('id', $userId)->value('company_id');
 
-    $penjualanAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'penjualan barang')->with('account')->first();
-    $ppnKeluaranAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'ppn keluaran')->with('account')->first();
-    $discAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'diskon penjualan')->with('account')->first();
-    $depositAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'deposit pelanggan')->with('account')->first();
-    $piutangAcc = AccountMapping::where('module', 'SALES_RETURN')->where('account_type', 'piutang usaha')->with('account')->first();
+    $penjualanAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'penjualan barang')->with('account')->first();
+    $ppnKeluaranAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'ppn keluaran')->with('account')->first();
+    $discAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'diskon penjualan')->with('account')->first();
+    $depositAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'deposit pelanggan')->with('account')->first();
+    $piutangAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'piutang usaha')->with('account')->first();
 
     if (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc || !$piutangAcc) {
         throw new \Exception('Konfigurasi akun untuk Sales Return belum lengkap.');
@@ -1635,7 +1759,7 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $tax_total   = 0;
 
     foreach ($items as $item) {
-        $invDtl = SalesInvoiceDtl::find($item['invoice_detail_id']);
+        $invDtl = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['invoice_detail_id']);
         if (empty($invDtl)) continue;
 
         $qtyReturn  = (float)$item['qty_return'];
@@ -1671,10 +1795,10 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
         $invDtl->save();
 
         // Update stock
-        $so_detail = SalesOrderDetail::find($invDtl->so_detail_id);
+        $so_detail = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($invDtl->so_detail_id);
         if ($so_detail) {
             $qtyBaseUnit = getSmallestUnit($invDtl->product_id, $so_detail->unit, $qtyReturn);
-            $productUomLevel1 = ProductUom::where('product', $invDtl->product_id)->where('level', '1')->first();
+            $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $invDtl->product_id)->where('level', '1')->first();
             if ($productUomLevel1) {
                 stockUpdate($hdrId, $item['warehouse_id'], $invDtl->product_id, $productUomLevel1->unit_tujuan, $qtyBaseUnit['qty_in_base_unit'], $item, 'add', 'sales_return');
             }
@@ -1693,30 +1817,36 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $header->save();
 
     // Posting GL
-    $currency   = Currency::where('code', 'IDR')->first();
+    $currency   = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
     $currencyId = $currency->id;
 
-    postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
+    postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId, '', $company_id);
     // postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
-    postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId);
+    postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId, '', $company_id);
 
     if ($returnType == 'REFUND') {
-        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $net_total, $currencyId);
+        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $net_total, $currencyId, '', $company_id);
     }
     if ($returnType == 'DEPOSIT') {
-        postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId);
+        postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId, '', $company_id);
     }
 
     return $hdrId;
 }
 
-function getMaxReturCustomer($customer = 0)
+function getMaxReturCustomer($customer = 0, $company_id = null)
 {
-    $datadb = DB::table('customer')->where('id', $customer)->first();
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+    $datadb = DB::table('customer')->where('id', $customer)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->first();
     // ambil sales retur dalam satu bulan
 
     $total_refund = DB::table('sales_return')
         ->where('customer_id', $customer)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->whereMonth('created_at', date('m'))
         ->whereYear('created_at', date('Y'))
         ->whereNull('deleted')
@@ -1730,15 +1860,21 @@ function getMaxReturCustomer($customer = 0)
     return true;
 }
 
-function getMaxReturKaryawan($karyawan = 0)
+function getMaxReturKaryawan($karyawan = 0, $company_id = null)
 {
-    $datadb = DB::table('karyawan')->where('id', $karyawan)->first();
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+    $datadb = DB::table('karyawan')->where('id', $karyawan)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->first();
 
     $total_refund = DB::table('sales_return as sr')
         ->join('sales_invoice_header as sih', 'sih.id', 'sr.invoice_id')
         ->join('delivery_order_header as doh', 'doh.id', 'sih.do_id')
         ->join('sales_order_headers as soh', 'soh.id', 'doh.so_id')
         ->where('soh.salesman', $karyawan)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sr.company_id', $company_id))
         ->whereMonth('sr.created_at', date('m'))
         ->whereYear('sr.created_at', date('Y'))
         ->whereNull('sr.deleted')
@@ -1893,8 +2029,11 @@ function sanitizeDecimal($value): float
  * Hanya dipakai sebagai fallback (GR tanpa harga, saldo awal lama, keluar saat avg masih 0).
  * Prioritas: baris aktif terbaru dengan date_start <= tanggal; kalau tidak ada, baris aktif paling awal.
  */
-function getMasterCostBase(string $itemCode, ?string $date = null): float
+function getMasterCostBase(string $itemCode, ?string $date = null, $company_id = null): float
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
     static $cache = [];
 
     $date = $date ? substr($date, 0, 10) : date('Y-m-d');
@@ -1907,6 +2046,7 @@ function getMasterCostBase(string $itemCode, ?string $date = null): float
         ->join('product as p', 'p.id', '=', 'c.product')
         ->leftJoin('product_uom as pu', 'pu.id', '=', 'c.product_uom')
         ->where('p.code', $itemCode)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('c.company_id', $company_id))
         ->where('c.is_active', '1')
         ->select('c.cost', 'pu.nilai_konversi_terkecil as conv');
 
@@ -1922,9 +2062,13 @@ function getMasterCostBase(string $itemCode, ?string $date = null): float
 /**
  * Cost keluar dari DO asli (dipakai saat Cancel DO supaya barang balik di cost yang sama).
  */
-function getOriginalDoCost(string $itemCode, $doId): float
+function getOriginalDoCost(string $itemCode, $doId, $company_id = null): float
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
     return (float) (StockCard::where('item_code', $itemCode)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->where('reference_type', DeliveryOrderHeader::class)
         ->where('reference_id', $doId)
         ->where('qty_out', '>', 0)
@@ -1969,7 +2113,7 @@ function costMovement(array &$s, array $m): array
                 $unitCost = $s['avg'];              // retur, adjust +, GR tanpa harga
                 $source   = 'avg';
             } else {
-                $unitCost = getMasterCostBase($m['item_code'], $m['trans_date']);
+                $unitCost = getMasterCostBase($m['item_code'], $m['trans_date'], $company_id);
                 $source   = $unitCost > 0 ? 'master' : 'zero';
             }
             $valueIn = round($qtyPlus * $unitCost, 4);
@@ -1988,7 +2132,7 @@ function costMovement(array &$s, array $m): array
             $unitCost = $s['avg'];
             $source   = 'avg';
         } else {
-            $unitCost = getMasterCostBase($m['item_code'], $m['trans_date']);
+            $unitCost = getMasterCostBase($m['item_code'], $m['trans_date'], $company_id);
             $source   = $unitCost > 0 ? 'master' : 'zero';
         }
         $valueOut = round($qtyMinus * $unitCost, 4);
@@ -2035,6 +2179,7 @@ function recalculateFrom(
         $previousCard = StockCard::where('item_code', $itemCode)
             ->where('trans_date', '<', $fromDate)
             ->where('wh_code', $wh_code)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderByDesc('trans_date')
             ->orderByDesc('id')
             ->first();
@@ -2055,7 +2200,7 @@ function recalculateFrom(
     // Saldo awal ada qty tapi belum bernilai (data lama sebelum fitur valuasi) -> nilai dari cost master
     if ($state['qty'] > 0 && $state['value'] <= 0) {
         if ($state['avg'] <= 0) {
-            $state['avg'] = getMasterCostBase($itemCode, $fromDate);
+            $state['avg'] = getMasterCostBase($itemCode, $fromDate, $company_id);
         }
         $state['value'] = round($state['qty'] * $state['avg'], 4);
     }
@@ -2068,6 +2213,7 @@ function recalculateFrom(
     StockCard::where('item_code', $itemCode)
         ->where('trans_date', '>=', $fromDate)
         ->where('wh_code', $wh_code)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->when($toDate, fn($q) => $q->where('trans_date', '<=', $toDate))
         ->delete();
 
@@ -2134,7 +2280,7 @@ function recalculateFrom(
             'item_code'      => $itemCode,
             'is_purchase'    => $isPurchase,
             'purchase_value' => $trx['purchase_value'] ?? null,
-            'orig_cost'      => $isCancelDo ? getOriginalDoCost($itemCode, $trx['reference_id']) : null,
+            'orig_cost'      => $isCancelDo ? getOriginalDoCost($itemCode, $trx['reference_id'], $company_id) : null,
         ]));
 
         // echo '<pre>';
@@ -2197,7 +2343,7 @@ function propagateBalanceAfter(string $itemCode, string $afterDate, array $state
             'qty_return_in'    => $card->qty_return_in,
             'is_purchase'      => $isPurchase,
             'purchase_value'   => $isPurchase ? (float) $card->value_in : null,
-            'orig_cost'        => $isCancelDo ? getOriginalDoCost($itemCode, $card->reference_id) : null,
+            'orig_cost'        => $isCancelDo ? getOriginalDoCost($itemCode, $card->reference_id, $company_id) : null,
         ]);
 
         // Rantai sudah konsisten (qty & nilai) -> semua baris setelahnya juga konsisten, boleh berhenti
@@ -2238,10 +2384,14 @@ function propagateBalanceAfter(string $itemCode, string $afterDate, array $state
  * Kalau harga di GR sudah net/gross diskon atau pajak, sesuaikan rumusnya di sini.
  */
 
-function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $material = true, $type_stock = 'rm', $item_code = '')
+function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $material = true, $type_stock = 'rm', $item_code = '', $company_id = null)
 {
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
     $itemCodes = StockCard::distinct()->where('type_stock', $type_stock)
         ->when($item_code, fn($q) => $q->where('item_code', $item_code))
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->pluck('item_code');
 
     $report = [];
@@ -2250,12 +2400,14 @@ function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $materia
         // Opening = closing terakhir sebelum periode
         $prevCard = StockCard::where('item_code', $itemCode)
             ->where('trans_date', '<', $dateStart)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderByDesc('trans_date')->orderByDesc('id')
             ->first();
         $opening = $prevCard->closing_balance ?? 0;
 
         // Sum mutasi dalam periode
         $sum = StockCard::where('stock_cards.item_code', $itemCode)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereBetween('stock_cards.trans_date', [$dateStart, $dateEnd])
             ->selectRaw("
             SUM(stock_cards.qty_in) as total_in,
@@ -2271,6 +2423,7 @@ function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $materia
         // print_r($sum);die;
 
         $itemMst = DB::table('product')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('code', $itemCode)
             ->first();
 

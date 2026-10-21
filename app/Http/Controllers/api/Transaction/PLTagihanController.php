@@ -19,6 +19,7 @@ class PLTagihanController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -33,6 +34,7 @@ class PLTagihanController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('karyawan as k', 'k.nik', 'sl.nik')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -71,6 +73,7 @@ class PLTagihanController extends Controller
     {
         $data = $request->all();
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
         // 🔥 decode JSON string jadi array
@@ -81,12 +84,16 @@ class PLTagihanController extends Controller
 
             $existPL = PackingListSalesman::where('packing_date', $data['pl_date'])
                 ->where('salesman', $data['salesman'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->first();
             $header = empty($existPL) ? new PackingListSalesman() : $existPL;
 
             if (empty($existPL)) {
-                $header->packing_list_no = generateNoPLTagihan(); // misal helper
+                $header->packing_list_no = generateNoPLTagihan($company_id); // misal helper
                 $header->created_by = $userId;
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
             }
 
             $header->packing_date = $data['pl_date'];
@@ -99,7 +106,9 @@ class PLTagihanController extends Controller
             $hdrId = $header->id;
 
             // HAPUS dulu SEMUA detail packing list ini, di luar loop
-            PackingListSalesmanInvoice::where('packing_list_id', $hdrId)->delete();
+            PackingListSalesmanInvoice::where('packing_list_id', $hdrId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->delete();
 
             // === DETAIL DO===
             $details = empty($data['items']) ? [] : collect($data['items']);
@@ -115,6 +124,9 @@ class PLTagihanController extends Controller
 
                 $detail->packing_list_id = $hdrId;
                 $detail->invoice_id = $value['invoice_id'];
+                if ($company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->save();
             }
 

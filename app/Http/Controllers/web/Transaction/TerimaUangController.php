@@ -81,7 +81,11 @@ class TerimaUangController extends Controller
         // die;
         $invoices = $salesPayment->getListRekapan($data);
         $data['invoices'] = $invoices;
-        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
+        $company_id = session('id_company');
+        $data['salesmans'] = User::whereNull('deleted')
+            ->whereIn('user_group', [6, 4, 5])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'nik', 'name']);
         $view = view('web.terima_uang.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -117,6 +121,7 @@ class TerimaUangController extends Controller
     public function getPackingList($date, $users = 0)
     {
         $packing_date = $date->format('Y-m-d');
+        $company_id = session('id_company');
 
         $datadb = DB::table('packing_list as m')
             ->select([
@@ -149,6 +154,7 @@ class TerimaUangController extends Controller
                 return $q->whereNull('pld.status')->orWhere('pld.status', 'NOT DELIVERED');
             })
             ->where('pld.confirm_date', $packing_date)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('c.nama_customer')
             ->orderBy('doh.id', 'asc');
         $datadb->where('m.driver', $users);
@@ -182,6 +188,7 @@ class TerimaUangController extends Controller
         if (empty($customers)) {
             return [];
         }
+        $company_id = session('id_company');
         $datadb = DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
@@ -219,6 +226,7 @@ class TerimaUangController extends Controller
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'PAID', 'DRAFT'])
             ->whereIn('cc.id', $customers)
             // ->whereRaw('(m.total_amount - COALESCE(spd.allocated_amount, 0) - COALESCE(rpd.amount_paid, 0)) > 0')

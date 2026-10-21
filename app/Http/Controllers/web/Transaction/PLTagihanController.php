@@ -71,7 +71,11 @@ class PLTagihanController extends Controller
         $data['tanggal'] = $data['tanggal'] ?? date('Y-m-d');
         $invoices = $this->getAllInvoiceCetak($customers, $data['tanggal'], $salesman->id ?? null);
         $data['invoices'] = $invoices;
-        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'nik', 'name']);
+        $company_id = session('id_company');
+        $data['salesmans'] = User::whereNull('deleted')
+            ->whereIn('user_group', [6, 4])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'nik', 'name']);
         $view = view('web.pl_tagihan.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -129,7 +133,11 @@ class PLTagihanController extends Controller
     public function getAllInvoiceCetak($customers = [], $date = null, $salesman = null)
     {
         $date = $date ?? date('Y-m-d');
-        $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $date)->where('salesman_id', $salesman)->get();
+        $company_id = session('id_company');
+        $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', $date)
+            ->where('salesman_id', $salesman)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $invoices = $tagihanOther->pluck('invoice_id')->unique()->toArray();
         // echo '<pre>';
         // print_r($invoices);
@@ -173,6 +181,7 @@ class PLTagihanController extends Controller
             ->leftJoin('users as usr', 'usr.id', 'soh.salesman')
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             // ->where('m.invoice_number', 'SI06260805')
             ->whereRaw('(m.total_amount - m.amount_paid) > 0')
             // ==== bagian yang diubah ====
@@ -205,6 +214,7 @@ class PLTagihanController extends Controller
     public function getAllInvoiceCetakByIds($ids = [], $date = null)
     {
         $date = $date ?? date('Y-m-d');
+        $company_id = session('id_company');
         $datadb = empty($ids) ? [] : DB::table('sales_invoice_header as m')
             ->select([
                 'm.*',
@@ -243,6 +253,7 @@ class PLTagihanController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT', 'PAID'])
             ->whereIn('m.id', $ids)
             // ->where('m.invoice_date', '>=', $date)
@@ -261,7 +272,8 @@ class PLTagihanController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
-        $plTagihan = PackingListSalesman::where('id', $data['id'])->first();
+        $company_id = session('id_company');
+        $plTagihan = PackingListSalesman::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
         $data['salesman'] = $plTagihan->salesman;
         $data['tanggal'] = $plTagihan->packing_date;
         $company = CompanyModel::where('id', session('id_company'))->first();
@@ -282,7 +294,7 @@ class PLTagihanController extends Controller
         //     $inv_update->save();
         // }
 
-        $invoices = PackingListSalesmanInvoice::where('packing_list_salesman_invoice.packing_list_id', $data['id'])
+        $invoices = PackingListSalesmanInvoice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('packing_list_salesman_invoice.packing_list_id', $data['id'])
             ->select([
                 'sih.total_amount',
                 'sih.amount_paid',
@@ -307,6 +319,7 @@ class PLTagihanController extends Controller
                 return $q->on('doh.so_id', 'sih.sales_order')
                     ->whereNull('doh.deleted');
             })
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
             ->get();
         // echo '<pre>';
         // print_r($invoices);

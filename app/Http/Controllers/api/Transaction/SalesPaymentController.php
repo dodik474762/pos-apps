@@ -68,7 +68,7 @@ class SalesPaymentController extends Controller
             // ->where('m.id', '1157')
             // ->where('sih.invoice_number', 'SI07260237')
             ->whereNull('m.deleted')
-            ->where('m.company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
 
         if (isset($_POST)) {
@@ -119,6 +119,7 @@ class SalesPaymentController extends Controller
     public function getDataDo()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -137,6 +138,7 @@ class SalesPaymentController extends Controller
             ->join('currency as c', 'c.id', 'soh.currency')
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['draft'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -177,6 +179,7 @@ class SalesPaymentController extends Controller
     {
         DB::enableQueryLog();
         $data = $request->all();
+        $company_id = session('id_company');
 
         $exceptPoDetailId = [];
         if (! empty($data['itemsChoose'])) {
@@ -204,6 +207,7 @@ class SalesPaymentController extends Controller
             ->join('product as p', 'p.id', 'm.product')
             ->whereNull('m.deleted')
             ->whereNull('po.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
@@ -259,15 +263,20 @@ class SalesPaymentController extends Controller
         try {
 
             $users = Users::find($userId);
-            $company_id = $users->company_id;
+            $company_id = session('id_company');
+            if ($company_id === null || $company_id === '') {
+                $company_id = $users->company_id;
+            }
 
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
             $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'diskon bayar')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -280,17 +289,26 @@ class SalesPaymentController extends Controller
                 ]);
             }
 
-            $kasAccount = Coa::find($data['account_id']);
+            $kasAccount = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['account_id']);
             // === HEADER ===
 
             $header = empty($data['id'])
                 ? new SalesPaymentHeader()
-                : SalesPaymentHeader::find($data['id']);
+                : SalesPaymentHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($data['id'])) {
-                $header->payment_code = generateNoSP(); // misal helper
+                $header->payment_code = generateNoSP($company_id); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'PENDING';
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
+            } elseif (empty($header)) {
+                DB::rollBack();
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data Sales Payment tidak ditemukan.'
+                ]);
             }
 
             $header->payment_date = $data['payment_date'];
@@ -305,7 +323,9 @@ class SalesPaymentController extends Controller
             $header->bulk = $data['bulk'];
             $header->last_verificator = $users->user_group;
             $header->verificator_id = $userId;
-            $header->company_id = $company_id;
+            if ($company_id !== null && $company_id !== '') {
+                $header->company_id = $company_id;
+            }
             $header->verificator_date = date('Y-m-d H:i:s');
             $header->save();
 
@@ -325,7 +345,7 @@ class SalesPaymentController extends Controller
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($value['remove']) && $value['remove'] == 1) {
                     if (!empty($value['id'])) {
-                        $exist = SalesPaymentDtl::find($value['id']);
+                        $exist = SalesPaymentDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
@@ -344,7 +364,9 @@ class SalesPaymentController extends Controller
                     ]);
                 }
 
-                $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])->count();
+                $jumlahInvoicePayment = SalesPaymentDtl::where('invoice_id', $value['invoice_id'])
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->count();
                 $disc_amount = 0;
                 if ($jumlahInvoicePayment == 0 || $jumlahInvoicePayment == 1) {
                     $disc_amount = $value['discount_amount'];
@@ -368,19 +390,28 @@ class SalesPaymentController extends Controller
                 // Item baru atau update
                 $detail = empty($value['id'])
                     ? new SalesPaymentDtl()
-                    : SalesPaymentDtl::find($value['id']);
+                    : SalesPaymentDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
 
                 $detail->payment_id = $hdrId;
                 $detail->invoice_id = $value['invoice_id'];
                 $detail->allocated_amount = $value['allocated_amount'];
                 $detail->outstanding_amount = $value['outstanding_amount'];
-                $detail->company_id = $company_id;
+                if ($company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->line_no = $line_no++;
                 $detail->save();
 
                 /*mapping coa */
 
-                $invoice = SalesInvoiceHeader::find($value['invoice_id']);
+                $invoice = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['invoice_id']);
+                if (empty($invoice)) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message'  => 'Invoice tidak ditemukan.',
+                    ]);
+                }
                 // $totalInvoicePrev = $invoice->total_amount - $invoice->amount_paid;
 
                 // if ($totalInvoicePrev <= 0 && $invoice->status == "PAID" && $header->created_by != $userId) {
@@ -426,7 +457,7 @@ class SalesPaymentController extends Controller
             $currency = Currency::where('code', 'IDR')->first();
             $currencyId = $currency->id;
 
-            $update = SalesPaymentHeader::find($hdrId);
+            $update = SalesPaymentHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($hdrId);
             $update->total_amount = $totalAmount;
             $update->discount_amount = $disc_total;
             $update->net_amount = $net_total;
@@ -467,7 +498,10 @@ class SalesPaymentController extends Controller
                 ->format('Y-m-d');
 
             $users = Users::find($userId);
-            $company_id = $users->company_id;
+            $company_id = session('id_company');
+            if ($company_id === null || $company_id === '') {
+                $company_id = $users->company_id;
+            }
 
             // === PAYMENT METHOD & ACCOUNT MAPPING ===
             $paymentMethod = $data['payment_method'] ?? 'CASH';
@@ -508,7 +542,9 @@ class SalesPaymentController extends Controller
                 $header->coa_kas        = $data['account_id'];
                 $header->bulk           = 0;
                 $header->platform       = 'mobile';
-                $header->company_id = $company_id;
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
                 $header->save();
 
                 DB::commit();
@@ -543,11 +579,13 @@ class SalesPaymentController extends Controller
             // === COA & ACCOUNT MAPPING ===
             $piutangAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'piutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $discBayarAcc = AccountMapping::where('module', 'SALES_PAYMENT')
                 ->where('account_type', 'diskon bayar')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -559,10 +597,13 @@ class SalesPaymentController extends Controller
                 ]);
             }
 
-            $kasAccount = Coa::find($data['account_id']);
+            $kasAccount = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['account_id']);
 
             // === FIND INVOICE ===
-            $invoice = SalesInvoiceHeader::where('invoice_number', $invoice_number)->whereNull('deleted')->first();
+            $invoice = SalesInvoiceHeader::where('invoice_number', $invoice_number)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->whereNull('deleted')
+                ->first();
             if (!$invoice) {
                 DB::rollBack();
                 return response()->json([
@@ -582,7 +623,9 @@ class SalesPaymentController extends Controller
             }
 
             // === HITUNG DISKON (hanya berlaku di pembayaran pertama) ===
-            $jumlahPaymentSebelumnya = SalesPaymentDtl::where('invoice_id', $invoice->id)->count();
+            $jumlahPaymentSebelumnya = SalesPaymentDtl::where('invoice_id', $invoice->id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->count();
             $disc_amount = ($jumlahPaymentSebelumnya === 0) ? $invoice->discount_amount : 0;
 
             // total_amount dari mobile sudah NET (sudah dikurangi diskon)
@@ -606,7 +649,9 @@ class SalesPaymentController extends Controller
             $header->coa_kas         = $data['account_id'];
             $header->bulk            = 0;
             $header->platform        = 'mobile';
-            $header->company_id = $company_id;
+            if ($company_id !== null && $company_id !== '') {
+                $header->company_id = $company_id;
+            }
             $header->save();
 
             $hdrId     = $header->id;
@@ -617,7 +662,9 @@ class SalesPaymentController extends Controller
             $detail->payment_id        = $hdrId;
             $detail->invoice_id        = $invoice->id;
             $detail->allocated_amount  = $totalAmount;
-            $detail->company_id = $company_id;
+            if ($company_id !== null && $company_id !== '') {
+                $detail->company_id = $company_id;
+            }
             $detail->outstanding_amount = (float)$outstanding_before; // outstanding SEBELUM bayar ini
             $detail->line_no           = 1;
             $detail->save();
@@ -632,7 +679,7 @@ class SalesPaymentController extends Controller
             $invoice->save();
 
             // === CURRENCY ===
-            $currency = Currency::where('code', 'IDR')->firstOrFail();
+            $currency = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->firstOrFail();
 
             // === GL POSTING ===
             // Jurnal: Kas (D) / Diskon Bayar (D) vs Piutang (K)
@@ -685,7 +732,10 @@ class SalesPaymentController extends Controller
             }
 
             $users = Users::find($userId);
-            $company_id = $users->company_id;
+            $company_id = session('id_company');
+            if ($company_id === null || $company_id === '') {
+                $company_id = $users->company_id;
+            }
 
             // Group details by customer_id
             $customerDetails = [];
@@ -768,9 +818,10 @@ class SalesPaymentController extends Controller
 
         try {
             $userId = session('user_id');
+            $company_id = session('id_company');
 
             // ====== HEADER ======
-            $header = SalesPaymentHeader::find($id);
+            $header = SalesPaymentHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($id);
 
             if (! $header) {
                 return response()->json([
@@ -790,12 +841,15 @@ class SalesPaymentController extends Controller
             $reference = $header->payment_code;
 
             // ====== DETAIL ======
-            $details = SalesPaymentDtl::where('payment_id', $id)->whereNull('deleted')->get();
+            $details = SalesPaymentDtl::where('payment_id', $id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->whereNull('deleted')
+                ->get();
 
             foreach ($details as $dt) {
 
                 // Kembalikan amount_paid invoice
-                $invoice = SalesInvoiceHeader::where('id', $dt->invoice_id)->first();
+                $invoice = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $dt->invoice_id)->first();
                 if (!empty($invoice)) {
 
                     // Kembalikan nilai amount_paid
@@ -851,12 +905,14 @@ class SalesPaymentController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'c.nama_customer'
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -880,6 +936,7 @@ class SalesPaymentController extends Controller
 
     public function getListPackingListInvoice($id)
     {
+        $company_id = session('id_company');
         $datadb = PackingListDo::join('packing_list as pl', 'pl.id', 'packing_list_do.packing_list_id')
             ->select([
                 'sih.id as invoice_id',
@@ -890,6 +947,7 @@ class SalesPaymentController extends Controller
             ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PACKED'])
             ->distinct()
             ->where('pl.id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
             ->whereNull('pl.deleted')
             ->get()->toArray();
 
@@ -924,6 +982,7 @@ class SalesPaymentController extends Controller
         }
 
         $customerId = isset($data['customer']) ? $data['customer'] : '';
+        $company_id = session('id_company');
         try {
             //code...
             $datadb = DB::table('sales_invoice_header as sih')
@@ -948,6 +1007,7 @@ class SalesPaymentController extends Controller
                 // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNotIn('sih.status', ['CANCELED'])       // hanya invoice yang sudah diposting
                 ->whereNull('sih.deleted')            // tidak termasuk deleted
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
             if (!empty($invoiceIds)) {
@@ -981,11 +1041,17 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
 
-            $menu = SalesPaymentHeader::find($data['id']);
+            $menu = SalesPaymentHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Sales Payment tidak ditemukan';
+                return response()->json($result);
+            }
 
             // Kontrol posted berdasarkan post_date (bukan status).
             if (! empty($menu) && $menu->post_date != '') {
@@ -1033,7 +1099,7 @@ class SalesPaymentController extends Controller
         $date = isset($data['date']) ? $data['date'] : '';
 
         $items_checked = isset($data['items_checked']) ? $data['items_checked'] : [];
-
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
@@ -1050,6 +1116,7 @@ class SalesPaymentController extends Controller
                 ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
                 ->where('sales_payment_header.status', 'PENDING')
                 ->whereIn('sales_payment_header.id', $items_checked)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_payment_header.company_id', $company_id))
                 ->whereNull('sales_payment_header.deleted');
             if (isset($data['date'])) {
                 if ($data['date'] != '') {
@@ -1064,7 +1131,10 @@ class SalesPaymentController extends Controller
             }
 
             foreach ($data['data_payment'] as $key => $value) {
-                $menu = SalesPaymentHeader::find($value->id);
+                $menu = SalesPaymentHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->id);
+                if (empty($menu)) {
+                    continue;
+                }
                 $menu->updated_by = session('user_id');
                 $menu->status = 'POSTED';
                 $menu->save();

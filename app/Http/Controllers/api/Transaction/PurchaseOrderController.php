@@ -21,6 +21,7 @@ class PurchaseOrderController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -35,6 +36,7 @@ class PurchaseOrderController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -71,6 +73,7 @@ class PurchaseOrderController extends Controller
     {
         DB::enableQueryLog();
         $data = $request->all();
+        $company_id = session('id_company');
 
         $exceptPoDetailId = [];
         if (!empty($data['itemsChoose'])) {
@@ -98,6 +101,7 @@ class PurchaseOrderController extends Controller
             ->join('product as p', 'p.id', 'm.product')
             ->whereNull('m.deleted')
             ->whereNull('po.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
@@ -144,6 +148,7 @@ class PurchaseOrderController extends Controller
     {
         $data = $request->all();
         $users = session('user_id');
+        $company_id = session('id_company');
         // echo '<pre>';
         // print_r($data);die;
         $result['is_valid'] = false;
@@ -157,10 +162,20 @@ class PurchaseOrderController extends Controller
                 return response()->json($result);
             }
 
-            $roles = $data['id'] == '' ? new PurchaseOrder() : PurchaseOrder::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code = generateNoPO();
+                $roles = new PurchaseOrder();
+                $roles->code = generateNoPO($company_id);
                 $roles->created_by = $users;
+                if ($company_id !== null && $company_id !== '') {
+                    $roles->company_id = $company_id;
+                }
+            } else {
+                $roles = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Purchase Order tidak ditemukan';
+                    return response()->json($result);
+                }
             }
             $roles->po_date = $data['po_date'];
             $roles->remarks = $data['remarks'];
@@ -175,7 +190,12 @@ class PurchaseOrderController extends Controller
             $grand_total = 0;
             foreach ($data['items'] as $key => $value) {
                 if ($value['remove'] == '1') {
-                    $items = PurchaseOrderDetail::find($value['id']);
+                    $items = PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
+                    if (empty($items)) {
+                        DB::rollBack();
+                        $result['message'] = 'Detail Purchase Order tidak ditemukan';
+                        return response()->json($result);
+                    }
                     if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -185,7 +205,12 @@ class PurchaseOrderController extends Controller
                     $items->save();
                 } else {
                     list($product_uom, $product, $product_name) = explode('//', $value['product']);
-                    $items = $value['id'] == '' ? new PurchaseOrderDetail() : PurchaseOrderDetail::find($value['id']);
+                    $items = $value['id'] == '' ? new PurchaseOrderDetail() : PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
+                    if ($value['id'] != '' && empty($items)) {
+                        DB::rollBack();
+                        $result['message'] = 'Detail Purchase Order tidak ditemukan';
+                        return response()->json($result);
+                    }
                     $items->purchase_order = $hdrId;
                     $items->product = $product;
                     $items->unit = $value['unit'];
@@ -202,6 +227,9 @@ class PurchaseOrderController extends Controller
                     if ($value['id'] == '') {
                         $items->status = 'open';
                         $items->qty_received = 0;
+                        if ($company_id !== null && $company_id !== '') {
+                            $items->company_id = $company_id;
+                        }
                     }
                     $items->save();
 
@@ -217,6 +245,7 @@ class PurchaseOrderController extends Controller
                     /*uom cost price */
                     $existCost = ProductUomCost::where('product', $product)->where('unit_id', $value['unit'])
                         ->where('vendor', $data['vendor'])
+                        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                         ->first();
                     if (!empty($existCost)) {
                         if ($value['price'] > 0) {
@@ -235,6 +264,9 @@ class PurchaseOrderController extends Controller
                             $product_cost->product = $product;
                             $product_cost->unit_id = $value['unit'];
                             $product_cost->date_start = date('Y-m-d');
+                            if ($company_id !== null && $company_id !== '') {
+                                $product_cost->company_id = $company_id;
+                            }
                             $product_cost->save();
                         }
                     }
@@ -248,6 +280,9 @@ class PurchaseOrderController extends Controller
                     $historyCost->product = $product;
                     $historyCost->unit_id = $value['unit'];
                     $historyCost->date_start = date('Y-m-d');
+                    if ($company_id !== null && $company_id !== '') {
+                        $historyCost->company_id = $company_id;
+                    }
                     $historyCost->save();
                     /*uom cost history */
 
@@ -255,9 +290,11 @@ class PurchaseOrderController extends Controller
                 }
             }
 
-            $update = PurchaseOrder::find($hdrId);
-            $update->grand_total = $grand_total;
-            $update->save();
+            $update = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($hdrId);
+            if (!empty($update)) {
+                $update->grand_total = $grand_total;
+                $update->save();
+            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -273,10 +310,16 @@ class PurchaseOrderController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
-            $menu = PurchaseOrder::find($data['id']);
+            $menu = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Purchase Order tidak ditemukan';
+                return response()->json($result);
+            }
             if (strtoupper($menu->status) != 'DRAFT') {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena status sudah tidak draft';
@@ -298,10 +341,13 @@ class PurchaseOrderController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

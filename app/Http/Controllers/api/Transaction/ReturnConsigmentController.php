@@ -21,6 +21,7 @@ class ReturnConsigmentController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -36,6 +37,7 @@ class ReturnConsigmentController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor_id')
             ->join('product as p', 'p.id', 'm.product_id')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -76,6 +78,7 @@ class ReturnConsigmentController extends Controller
     {
         $data = $request->all();
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
         // echo '<pre>';
@@ -86,11 +89,13 @@ class ReturnConsigmentController extends Controller
 
             $inventoryAcc = AccountMapping::where('module', $data['status_supply'] == 'good' ? 'RETURN_GOOD' : 'RETURN_BAD')
                 ->where('account_type', 'inventory')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
             $otherAcc = AccountMapping::where('module', $data['status_supply'] == 'good' ? 'RETURN_GOOD' : 'RETURN_BAD')
                 ->where('account_type', $data['status_supply'] == 'good' ? 'retur penjualan' :  'barang rusak')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -106,12 +111,20 @@ class ReturnConsigmentController extends Controller
             // === HEADER ===
             $header = empty($data['id'])
                 ? new ReturnOfConsigment
-                : ReturnOfConsigment::find($data['id']);
+                : ReturnOfConsigment::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($data['id'])) {
-                $header->return_number = generateNoReturOther(); // misal helper
+                $header->return_number = generateNoReturOther($company_id); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
+            } elseif (empty($header)) {
+                DB::rollBack();
+                $result['message'] = 'Data retur tidak ditemukan';
+
+                return response()->json($result);
             }
 
             $header->return_date = $data['return_date'];
@@ -138,9 +151,9 @@ class ReturnConsigmentController extends Controller
             $totalAmount = $data['qty'] * $data['price'];
 
             if($data['status_supply']){
-                $productPrice = ProductUomPrice::find($data['price_id']);
+                $productPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['price_id']);
                 $qtyBaseUnit = getSmallestUnit($data['product_id'], $productPrice->unit, $data['qty']);
-                $productUomLevel1 = ProductUom::where('product', $data['product_id'])->where('level', '1')->first();
+                $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $data['product_id'])->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $data['product'] = $data['product_id'];
@@ -171,11 +184,12 @@ class ReturnConsigmentController extends Controller
         $data = $request->all();
         $id = $request->id;
         $userId = session('user_id');
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
             // Cari data retur berdasarkan ID
-            $header = ReturnOfConsigment::find($data['id']);
+            $header = ReturnOfConsigment::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (!$header) {
                 return response()->json([
                     'is_valid' => false,
@@ -202,9 +216,9 @@ class ReturnConsigmentController extends Controller
 
             // Revert stock updates if needed (mengurangi stok jika sudah ditambahkan sebelumnya)
             if ($header->status_supply) {
-                $productPrice = ProductUomPrice::find($header->price_id);
+                $productPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($header->price_id);
                 $qtyBaseUnit = getSmallestUnit($header->product_id, $productPrice->unit, $header->qty);
-                $productUomLevel1 = ProductUom::where('product', $header->product_id)->where('level', '1')->first();
+                $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $header->product_id)->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 // Mengurangi stok yang sudah ditambahkan saat retur
@@ -228,6 +242,7 @@ class ReturnConsigmentController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
@@ -236,6 +251,7 @@ class ReturnConsigmentController extends Controller
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -268,11 +284,18 @@ class ReturnConsigmentController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
 
-            $menu = ReturnOfConsigment::find($data['id']);
+            $menu = ReturnOfConsigment::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data retur tidak ditemukan';
+
+                return response()->json($result);
+            }
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();

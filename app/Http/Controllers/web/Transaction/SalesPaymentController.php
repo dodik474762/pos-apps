@@ -65,7 +65,11 @@ class SalesPaymentController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $data['akses_roles'] = session('akses');
-        $data['salesmans'] = User::whereNull('deleted')->whereIn('user_group', [6, 4, 5])->get(['id', 'nik', 'name']);
+        $company_id = session('id_company');
+        $data['salesmans'] = User::whereNull('deleted')
+            ->whereIn('user_group', [6, 4, 5])
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'nik', 'name']);
         $data['packing_lists'] = $this->getListPackingList($data);
         $view = view('web.sales_payment.index', $data);
         $put['title_content'] = $this->getTitle();
@@ -81,6 +85,7 @@ class SalesPaymentController extends Controller
     {
         $start = date('Y-m-d', strtotime($params['tanggal'] . ' -3 days'));
         $end = date('Y-m-d', strtotime($params['tanggal']));
+        $company_id = session('id_company');
         $packingLists = PackingList::whereBetween('packing_date', [$start, $end])
             ->select([
                 'packing_list_no',
@@ -93,6 +98,7 @@ class SalesPaymentController extends Controller
             })
             // ->where('packing_list_no', 'PL08260071')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('packing_list.company_id', $company_id))
             ->get()->toArray();
         // echo '<pre>';
         // print_r($packingLists);
@@ -106,6 +112,7 @@ class SalesPaymentController extends Controller
             ])
             ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')
             ->whereNull('packing_list_salesman.deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('packing_list_salesman.company_id', $company_id))
             ->get()->toArray();
 
         $plMerge = array_merge($packingLists, $packingListSales);
@@ -117,10 +124,12 @@ class SalesPaymentController extends Controller
 
     public function getListKasBank($payment_method = 'CASH')
     {
+        $company_id = session('id_company');
         $datadb = DB::table('coa')->where('is_active', 1)
             ->where('parent_code', '1100')
             ->whereNull('deleted')
             ->where('payment_method', $payment_method)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->get();
         return $datadb;
     }
@@ -132,12 +141,14 @@ class SalesPaymentController extends Controller
      */
     public function getListJournalBankCash()
     {
+        $company_id = session('id_company');
         $assetRoot = DB::table('accounts')
             ->select(['id'])
             ->where('is_header', 1)
             ->where('normal_balance', 'Debit')
             ->whereNull('parent_id')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->orderBy('id')
             ->first();
 
@@ -151,6 +162,7 @@ class SalesPaymentController extends Controller
             ->where('is_header', 1)
             ->where('normal_balance', 'Debit')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->where(function ($query) {
                 $query->where('name', 'like', '%CASH%')
                     ->orWhere('name', 'like', '%BANK%');
@@ -167,6 +179,7 @@ class SalesPaymentController extends Controller
             ->where('is_header', 0)
             ->where('is_active', 1)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get();
     }
@@ -174,14 +187,14 @@ class SalesPaymentController extends Controller
     public function add(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoSP($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -204,6 +217,7 @@ class SalesPaymentController extends Controller
 
     public function getListCustomer()
     {
+        $company_id = session('id_company');
         $datadb = SalesInvoiceHeader::whereNotIn('sales_invoice_header.status', ['CANCELED'])
             ->select([
                 'c.id as id',
@@ -216,6 +230,7 @@ class SalesPaymentController extends Controller
             ->join('term_of_payment as pt', 'pt.id', 'c.payment_terms')
             ->whereRaw('(sales_invoice_header.total_amount - sales_invoice_header.amount_paid) > 0')
             ->whereNull('sales_invoice_header.deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_invoice_header.company_id', $company_id))
             ->get()
             ->toArray();
 
@@ -225,14 +240,14 @@ class SalesPaymentController extends Controller
     public function addAll(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoSP($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -257,6 +272,7 @@ class SalesPaymentController extends Controller
 
     public function getListPackingListInvoice()
     {
+        $company_id = session('id_company');
         $datadb = PackingListDo::join('packing_list as pl', 'pl.id', 'packing_list_do.packing_list_id')
             ->select([
                 'pl.packing_list_no',
@@ -272,6 +288,7 @@ class SalesPaymentController extends Controller
             ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'DRAFT', 'PACKED'])
             ->distinct()
             ->whereNull('pl.deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
             ->get();
 
         // echo '<pre>';
@@ -288,7 +305,7 @@ class SalesPaymentController extends Controller
         $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -309,11 +326,12 @@ class SalesPaymentController extends Controller
             ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
             ->join('customer as c', 'sih.customer_id', 'c.id')
             ->whereNull('sales_payment_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_payment_detail.company_id', $company_id))
             ->orderBy('sales_payment_detail.id')
             ->get();
 
         $data['payment_method'] = $data['data']->payment_method;
-        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = session('akses');
@@ -336,7 +354,7 @@ class SalesPaymentController extends Controller
         $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->where('tax_type', 'Output')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
@@ -357,6 +375,7 @@ class SalesPaymentController extends Controller
             ->join('sales_invoice_header as sih', 'sih.id', 'sales_payment_detail.invoice_id')
             ->join('customer as c', 'sih.customer_id', 'c.id')
             ->whereNull('sales_payment_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_payment_detail.company_id', $company_id))
             ->orderBy('sales_payment_detail.id')
             ->get();
         // echo '<pre>';
@@ -364,7 +383,7 @@ class SalesPaymentController extends Controller
         // die;
 
         $data['payment_method'] = $data['data']->payment_method;
-        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->payment_code, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = session('akses');
@@ -403,7 +422,9 @@ class SalesPaymentController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = SalesPaymentHeader::with(['customers', 'items.invoice'])->findOrFail($data['id']);
+        $data = SalesPaymentHeader::with(['customers', 'items.invoice'])
+            ->when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('company_id', session('id_company')))
+            ->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         $qr = '';
         // echo '<pre>';
@@ -420,6 +441,7 @@ class SalesPaymentController extends Controller
 
     public function getListRekapanSalesman($customers, $tanggal, $salesman = '')
     {
+        $company_id = session('id_company');
         $rpdSub = DB::table('receive_payment_detail as rpd')
             ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
             ->join('receive_payment_header as rph', function ($q) {
@@ -427,6 +449,7 @@ class SalesPaymentController extends Controller
             })
             ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
             ->where('rpd.amount_paid', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('rpd.company_id', $company_id))
             ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
         // echo '<pre>';
@@ -501,6 +524,7 @@ class SalesPaymentController extends Controller
             // ->where('m.invoice_date', $date)
             ->whereNull('m.deleted')
             ->where('m.pl_date', $tanggal)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->when($salesman != '', function ($q) use ($salesman) {
                 return $q->where('m.pl_by', $salesman);
             })
@@ -576,6 +600,7 @@ class SalesPaymentController extends Controller
 
     public function getListRekapanDriver($nik, $tanggal)
     {
+        $company_id = session('id_company');
         $isMonday = date('l', strtotime($tanggal)) == 'Monday';
         $tanggalPackingDate = $isMonday
             ? date('Y-m-d', strtotime($tanggal . ' -2 day'))
@@ -588,6 +613,7 @@ class SalesPaymentController extends Controller
             })
             ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
             ->where('rpd.amount_paid', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('rpd.company_id', $company_id))
             ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
         $datadb = PackingList::query()
@@ -647,6 +673,7 @@ class SalesPaymentController extends Controller
             ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
             ->whereNull('pl.deleted')
             // ->where('sih.invoice_number', 'SI07261307')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
             ->where('pl.driver_name', $nik)
             ->where(function ($q) use ($tanggalPackingDate, $tanggal) {
                 return $q->where('pl.packing_date', $tanggalPackingDate)
@@ -665,6 +692,7 @@ class SalesPaymentController extends Controller
         if (empty($invoice_ids)) {
             return collect();
         }
+        $company_id = session('id_company');
         $datadb = SalesReturnHdr::whereNull('sales_return.deleted')
             ->select([
                 'sales_return.id',
@@ -675,7 +703,8 @@ class SalesPaymentController extends Controller
             ->whereIn('sales_return.invoice_id', $invoice_ids)
             ->where('sales_return.return_date', $date)
             ->where('sales_return.status', '!=', 'CANCELLED')
-            ->where('sales_return.return_type', 'RETURN');
+            ->where('sales_return.return_type', 'RETURN')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_return.company_id', $company_id));
         $datadb = $datadb->get();
 
         // echo "<pre>";
@@ -689,6 +718,7 @@ class SalesPaymentController extends Controller
     {
         $tanggal = date('Y-m-d', strtotime($params['date']));
         $pl_no = $params['packing_list'];
+        $company_id = session('id_company');
         $rpdSub = DB::table('receive_payment_detail as rpd')
             ->select('rpd.invoice_id', 'rpd.receive_id', DB::raw('SUM(rpd.amount_paid) as amount_paid'))
             ->join('receive_payment_header as rph', function ($q) {
@@ -696,10 +726,11 @@ class SalesPaymentController extends Controller
             })
             ->whereRaw('CAST(rph.visit_date as date) = ?', [$tanggal])
             ->where('rpd.amount_paid', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('rpd.company_id', $company_id))
             ->groupBy('rpd.invoice_id', 'rpd.receive_id');
 
         if (substr($pl_no, 0, 2) == 'PL') {
-            $packingLists = PackingList::where('packing_list.packing_list_no', $pl_no)
+            $packingLists = PackingList::when($company_id !== null && $company_id !== '', fn($q) => $q->where('packing_list.company_id', $company_id))->where('packing_list.packing_list_no', $pl_no)
                 ->select([
                     'packing_list.packing_list_no',
                     'packing_list.driver_name',
@@ -759,6 +790,7 @@ class SalesPaymentController extends Controller
                 ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
                 ->whereNull('packing_list.deleted')
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
                 ->get()->toArray();
         } else {
             $packingLists = [];
@@ -772,6 +804,7 @@ class SalesPaymentController extends Controller
                         ->whereNull('sph.deleted');
                 })
                 ->whereNull('spd.deleted')
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('spd.company_id', $company_id))
                 ->where('sph.payment_date', $tanggal) // <-- filter tanggal dari header
                 ->select([
                     'spd.id',
@@ -836,7 +869,8 @@ class SalesPaymentController extends Controller
                 ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->leftJoin('users as usr_payment', 'usr_payment.id', 'sales_payment_detail.payment_created_by')
                 // ->where('sih.invoice_number', 'SI06260453')
-                ->whereNull('packing_list_salesman.deleted');
+                ->whereNull('packing_list_salesman.deleted')
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id));
             // if ($pl_no != 'admin') {
             $packingListSales->where('packing_list_salesman.packing_list_no', $pl_no);
             // } else {
@@ -913,7 +947,8 @@ class SalesPaymentController extends Controller
                 ->leftJoin('region as kec', 'kec.id', 'cc.kecamatan')
                 ->join('term_of_payment as tp', 'tp.id', 'cc.payment_terms')
                 ->leftJoin('users as usr_payment', 'usr_payment.id', 'sph.created_by')
-                ->whereNull('sih.deleted');
+                ->whereNull('sih.deleted')
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id));
             // echo '<pre>';
             // print_r($packingAdmin->get()->toArray());
             // die;
@@ -958,7 +993,7 @@ class SalesPaymentController extends Controller
         $salesmans = isset($data['salesman']) ? $data['salesman'] : '';
         $user_group = '';
         if ($salesmans != '') {
-            $salesmans = User::find($salesmans);
+            $salesmans = User::when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('company_id', session('id_company')))->find($salesmans);
             $user_group = $salesmans->user_group;
         }
 
@@ -1041,7 +1076,8 @@ class SalesPaymentController extends Controller
             ->join('customer as c', 'c.id', 'sales_payment_header.customer_id')
             ->where('sales_payment_header.status', 'PENDING')
             ->whereNotNull('verificator_id')
-            ->whereNull('sales_payment_header.deleted');
+            ->whereNull('sales_payment_header.deleted')
+            ->when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('sales_payment_header.company_id', session('id_company')));
         if (isset($data['date'])) {
             if ($data['date'] != '') {
                 $data['data_payment'] = $data['data_payment']->where('payment_date', $data['date']);
@@ -1055,7 +1091,7 @@ class SalesPaymentController extends Controller
         // die;
         $salesmans = isset($data['salesman']) ? $data['salesman'] : '';
         if ($salesmans != '') {
-            $salesmans = User::find($salesmans);
+            $salesmans = User::when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('company_id', session('id_company')))->find($salesmans);
         }
         $data['salesmans'] = $salesmans;
 

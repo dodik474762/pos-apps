@@ -24,6 +24,7 @@ class PurchaseInvoiceController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -38,6 +39,7 @@ class PurchaseInvoiceController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -76,6 +78,7 @@ class PurchaseInvoiceController extends Controller
         $data = $request->all();
 
         $users = session('user_id');
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -91,21 +94,25 @@ class PurchaseInvoiceController extends Controller
 
             $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'hutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'grir')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'ppn masukan')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'diskon pembelian')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -120,10 +127,18 @@ class PurchaseInvoiceController extends Controller
 
             $currency_id = $currency->id;
 
-            $roles = $data['id'] == '' ? new PurchaseInvoiceHeader : PurchaseInvoiceHeader::find($data['id']);
+            $roles = $data['id'] == '' ? new PurchaseInvoiceHeader : PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if ($data['id'] == '') {
-                $roles->invoice_number = generatePINumber();
+                $roles->invoice_number = generatePINumber($company_id);
                 $roles->created_by = $users;
+                if ($company_id !== null && $company_id !== '') {
+                    $roles->company_id = $company_id;
+                }
+            } elseif (empty($roles)) {
+                DB::rollBack();
+                $result['message'] = 'Data Purchase Invoice tidak ditemukan';
+
+                return response()->json($result);
             }
             $roles->invoice_date = $data['invoice_date'];
             $roles->vendor = $data['vendor'];
@@ -139,7 +154,13 @@ class PurchaseInvoiceController extends Controller
             foreach ($data['items'] as $key => $value) {
                 [$po_number, $po_detail_id, $product, $product_name] = explode('//', $value['po_detail']);
                 if ($value['remove'] == '1') {
-                    $items = PurchaseInvoiceDtl::find($value['id_detail']);
+                    $items = PurchaseInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id_detail']);
+                    if (empty($items)) {
+                        DB::rollBack();
+                        $result['message'] = 'Detail Purchase Invoice tidak ditemukan';
+
+                        return response()->json($result);
+                    }
                     if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -149,10 +170,16 @@ class PurchaseInvoiceController extends Controller
                     $items->deleted = now();
                     $items->save();
                 } else {
-                    $items = $value['id_detail'] == '' ? new PurchaseInvoiceDtl : PurchaseInvoiceDtl::find($value['id_detail']);
+                    $items = $value['id_detail'] == '' ? new PurchaseInvoiceDtl : PurchaseInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id_detail']);
+                    if ($value['id_detail'] != '' && empty($items)) {
+                        DB::rollBack();
+                        $result['message'] = 'Detail Purchase Invoice tidak ditemukan';
+
+                        return response()->json($result);
+                    }
                     $status = $value['id_detail'] == '' ? '' : $items->status;
 
-                    $purchase_price_detail = PurchaseOrderDetail::find($po_detail_id);
+                    $purchase_price_detail = PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($po_detail_id);
                     if (empty($purchase_price_detail)) {
                         DB::rollBack();
                         $result['message'] = 'Data PO Item '.$product_name.' tidak ditemukan';
@@ -173,6 +200,9 @@ class PurchaseInvoiceController extends Controller
                     $items->subtotal = $purchase_price_detail->subtotal;
                     $items->diskon_total = $value['discount'];
                     $items->status = 'open';
+                    if ($value['id_detail'] == '' && $company_id !== null && $company_id !== '') {
+                        $items->company_id = $company_id;
+                    }
                     $items->save();
 
                     if ($value['id_detail'] != '') {
@@ -199,7 +229,9 @@ class PurchaseInvoiceController extends Controller
             }
 
             $data_po = array_unique($data_po);
-            $po = PurchaseOrder::whereIn('code', $data_po)->get();
+            $po = PurchaseOrder::whereIn('code', $data_po)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->get();
             foreach ($po as $key => $value) {
                 $value->status = 'invoiced';
                 $value->save();
@@ -220,30 +252,41 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
 
             $hutangAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'hutang usaha')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $grirAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'grir')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $ppnMasukanAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'ppn masukan')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $discAccount = AccountMapping::where('module', 'PURCHASE_INVOICE')
                 ->where('account_type', 'diskon pembelian')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
-            $menu = PurchaseInvoiceHeader::find($data['id']);
+            $menu = PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Purchase Invoice tidak ditemukan';
+
+                return response()->json($result);
+            }
             $invoice_number = $menu->invoice_number;
 
             $journalService = new PurchaseInvoiceJournalService();
@@ -267,7 +310,9 @@ class PurchaseInvoiceController extends Controller
             $menu->deleted_by = session('user_id');
             $menu->save();
 
-            $items = PurchaseInvoiceDtl::where('purchase_invoice_id', $data['id'])->get();
+            $items = PurchaseInvoiceDtl::where('purchase_invoice_id', $data['id'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->get();
 
 
             $data_po = [];
@@ -277,7 +322,13 @@ class PurchaseInvoiceController extends Controller
                 $value->deleted_by = session('user_id');
                 $value->save();
 
-                $po_detail = PurchaseOrderDetail::find($value->purchase_order_detail_id);
+                $po_detail = PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->purchase_order_detail_id);
+                if (empty($po_detail)) {
+                    DB::rollBack();
+                    $result['message'] = 'Detail Purchase Order tidak ditemukan';
+
+                    return response()->json($result);
+                }
                 $qty_total_outstanding_received = $po_detail->qty - ($po_detail->qty_received == '' ? 0 : $po_detail->qty_received);
                 if($qty_total_outstanding_received <= 0){
                     $po_detail->status = 'received';
@@ -298,7 +349,9 @@ class PurchaseInvoiceController extends Controller
             }
 
             $all_po = array_unique($all_po);
-            $po = PurchaseOrder::whereIn('id', $all_po)->get();
+            $po = PurchaseOrder::whereIn('id', $all_po)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->get();
             foreach ($po as $key => $value) {
                 if(isset($data_po[$value->id])){
                     $value->status = $data_po[$value->id];
@@ -324,12 +377,14 @@ class PurchaseInvoiceController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
             ->select([
                 'm.*',
                 'v.nama_vendor',
             ])
             ->join('vendor as v', 'v.id', 'm.vendor')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -340,8 +395,10 @@ class PurchaseInvoiceController extends Controller
     public function delete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $invoice = PurchaseInvoiceHeader::select(['id', 'invoice_number', 'status'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('id', $data['id'] ?? null)
             ->first();
 
@@ -363,8 +420,10 @@ class PurchaseInvoiceController extends Controller
     public function showModalPostJurnal(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $invoice = PurchaseInvoiceHeader::select(['id', 'invoice_number', 'invoice_date', 'total_amount', 'status'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('id', $data['id'] ?? null)
             ->whereNull('deleted')
             ->first();
@@ -388,6 +447,7 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         try {
             $id = $data['id'] ?? null;
@@ -401,10 +461,10 @@ class PurchaseInvoiceController extends Controller
 
             // Status invoice diubah hanya setelah jurnal berhasil dibuat dan
             // diposting, supaya invoice tidak ditandai posted tanpa jurnal.
-            $journal = DB::transaction(function () use ($id, $journalService) {
+            $journal = DB::transaction(function () use ($id, $journalService, $company_id) {
                 $journal = $journalService->postFromPurchaseInvoice($id, session('user_id'));
 
-                $invoice = PurchaseInvoiceHeader::where('id', $id)->first();
+                $invoice = PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
                 if (! empty($invoice)) {
                     $invoice->status = 'posted';
                     $invoice->save();
@@ -439,6 +499,7 @@ class PurchaseInvoiceController extends Controller
     public function getListItemOutstandingPO(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         try {
             $data['po_details_outstanding'] = DB::table('purchase_order_detail as pod')
@@ -461,6 +522,7 @@ class PurchaseInvoiceController extends Controller
                     'pod.subtotal',
                     'pod.status'
                 )
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pod.company_id', $company_id))
                 ->where('po.status', '!=', 'cancelled')
                 ->where('pod.status', '!=', 'received')
                 ->whereRaw('(pod.qty - IFNULL(pod.qty_received, 0)) > 0')

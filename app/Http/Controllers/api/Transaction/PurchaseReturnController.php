@@ -25,6 +25,7 @@ class PurchaseReturnController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -41,6 +42,7 @@ class PurchaseReturnController extends Controller
             ->join('warehouse as w', 'w.id', 'm.warehouse')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -81,6 +83,7 @@ class PurchaseReturnController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
         DB::beginTransaction();
@@ -103,23 +106,28 @@ class PurchaseReturnController extends Controller
 
                 $hutangAccount = AccountMapping::where('module', 'PURCHASE_RETURN')
                     ->where('account_type', 'hutang usaha')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->with('account')->first();
 
                 $ppnAccount = AccountMapping::where('module', 'PURCHASE_RETURN')
                     ->where('account_type', 'ppn masukan')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->with('account')->first();
 
                 $invAccount = AccountMapping::where('module', 'PURCHASE_RETURN')
                     ->where('account_type', 'inventory')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->with('account')->first();
             } else {
                 // Return dari GR (perpetual)
                 $returnAccount = AccountMapping::where('module', 'PURCHASE_RETURN')
                     ->where('account_type', 'inventory')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->with('account')->first();
 
                 $hutangAccount = AccountMapping::where('module', 'PURCHASE_RETURN')
                     ->where('account_type', 'grir')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->with('account')->first();
             }
 
@@ -133,10 +141,20 @@ class PurchaseReturnController extends Controller
             }
 
             // Simpan atau update header Purchase Return
-            $hdr = $data['id'] == '' ? new PurchaseReturn : PurchaseReturn::find($data['id']);
+            $hdr = $data['id'] == '' ? new PurchaseReturn : PurchaseReturn::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if ($data['id'] == '') {
-                $hdr->code = generatePRN(); // fungsi auto generate nomor retur pembelian
+                $hdr->code = generatePRN($company_id); // fungsi auto generate nomor retur pembelian
                 $hdr->created_by = $userId;
+                if ($company_id !== null && $company_id !== '') {
+                    $hdr->company_id = $company_id;
+                }
+            } elseif (empty($hdr)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data Purchase Return tidak ditemukan.',
+                ]);
             }
 
             $hdr->return_type = $data['return_type'];
@@ -155,7 +173,9 @@ class PurchaseReturnController extends Controller
             $returnNumber = $hdr->code;
 
             // Hapus detail lama jika ada
-            PurchaseReturnDtl::where('purchase_return_id', $hdrId)->delete();
+            PurchaseReturnDtl::where('purchase_return_id', $hdrId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->delete();
             // Simpan detail baru
             foreach ($data['items'] as $key => $value) {
                 $detail = new PurchaseReturnDtl;
@@ -168,6 +188,9 @@ class PurchaseReturnController extends Controller
                 $detail->reference_detail_id = $value['reference_detail'] ?? null;
                 $detail->created_at = now();
                 $detail->return_type = $data['return_type'];
+                if ($company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->save();
 
                 $amount = floatval($value['qty']) * floatval($value['unit_price']);
@@ -177,7 +200,15 @@ class PurchaseReturnController extends Controller
 
                 if ($data['return_type'] == 'FROM_INVOICE') {
                     // Return dari invoice
-                    $invoice_dtl = PurchaseInvoiceDtl::find($value['reference_detail']);
+                    $invoice_dtl = PurchaseInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['reference_detail']);
+                    if (empty($invoice_dtl)) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'is_valid' => false,
+                            'message' => 'Detail Purchase Invoice tidak ditemukan.',
+                        ]);
+                    }
                     $ppn = $invoice_dtl->tax;
                     $discount_percent = $invoice_dtl->discount_percent;
                     $discount_amount = $invoice_dtl->discount_amount / $invoice_dtl->qty;
@@ -209,7 +240,7 @@ class PurchaseReturnController extends Controller
 
                 $value['product'] = $value['item_id'];
                 $qtyBaseUnit = getSmallestUnit($value['item_id'], $value['unit'], $value['qty']);
-                $productUomLevel1 = ProductUom::where('product', $value['item_id'])->where('level', '1')->first();
+                $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $value['item_id'])->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
                 // stockUpdate($hdrId, $data['warehouse_id'], $value['item_id'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'min', 'purchase_return');
             }
@@ -229,13 +260,14 @@ class PurchaseReturnController extends Controller
     {
         $id = $request->id; // ID Purchase Return yang akan dihapus
         $userId = session('user_id');
+        $company_id = session('id_company');
 
         $result = ['is_valid' => false];
 
         DB::beginTransaction();
         try {
             // Cek data header
-            $hdr = PurchaseReturn::find($id);
+            $hdr = PurchaseReturn::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($id);
             if (! $hdr) {
                 return response()->json([
                     'is_valid' => false,
@@ -270,12 +302,14 @@ class PurchaseReturnController extends Controller
             $returnNumber = $hdr->code;
 
             // Ambil detail
-            $details = PurchaseReturnDtl::where('purchase_return_id', $hdrId)->get();
+            $details = PurchaseReturnDtl::where('purchase_return_id', $hdrId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->get();
 
             foreach ($details as $detail) {
                 // 🔹 Kembalikan stok (karena sebelumnya retur mengurangi stok)
                 $qtyBaseUnit = getSmallestUnit($detail->product, $detail->unit, $detail->qty);
-                $productUomLevel1 = ProductUom::where('product', $detail->product)->where('level', '1')->first();
+                $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $detail->product)->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 // Tambahkan kembali stok (reverse dari "min")
@@ -296,7 +330,9 @@ class PurchaseReturnController extends Controller
             }
 
             // 🔹 Hapus detail
-            PurchaseReturnDtl::where('purchase_return_id', $hdrId)->delete();
+            PurchaseReturnDtl::where('purchase_return_id', $hdrId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->delete();
 
             // 🔹 Hapus header
             $hdr->delete();
@@ -316,12 +352,14 @@ class PurchaseReturnController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'v.nama_vendor',
             ])
             ->join('vendor as v', 'v.id', 'm.vendor')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -332,8 +370,10 @@ class PurchaseReturnController extends Controller
     public function delete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $header = PurchaseReturn::where('id', $data['id'] ?? null)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
 
@@ -359,8 +399,10 @@ class PurchaseReturnController extends Controller
     public function showModalPostJurnal(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $header = PurchaseReturn::where('id', $data['id'] ?? null)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
 
@@ -375,7 +417,10 @@ class PurchaseReturnController extends Controller
         // Ringkasan per baris supaya user dapat meninjau akun tujuan sebelum jurnal dibuat.
         $rows = [];
         if (! empty($header)) {
-            $details = PurchaseReturnDtl::where('purchase_return_id', $header->id)->orderBy('id')->get();
+            $details = PurchaseReturnDtl::where('purchase_return_id', $header->id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->orderBy('id')
+                ->get();
 
             foreach ($details as $detail) {
                 $product = DB::table('product')->where('id', $detail->product)->whereNull('deleted')->first();
@@ -404,7 +449,9 @@ class PurchaseReturnController extends Controller
         $data['journal_rows'] = array_values($rows);
         $data['detail_count'] = empty($header)
             ? 0
-            : PurchaseReturnDtl::where('purchase_return_id', $header->id)->count();
+            : PurchaseReturnDtl::where('purchase_return_id', $header->id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->count();
 
         return view('web.purchase_return.modal.confirmpostjurnal', $data);
     }
@@ -424,6 +471,7 @@ class PurchaseReturnController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         try {
             $id = $data['id'] ?? null;
@@ -435,10 +483,10 @@ class PurchaseReturnController extends Controller
 
             $journalService = new PurchaseReturnJournalService();
 
-            $journal = DB::transaction(function () use ($id, $journalService) {
+            $journal = DB::transaction(function () use ($id, $journalService, $company_id) {
                 $journal = $journalService->postFromPurchaseReturn($id, session('user_id'));
 
-                $header = PurchaseReturn::where('id', $id)->first();
+                $header = PurchaseReturn::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
                 if (! empty($header) && $header->status != 'POSTED') {
                     $header->status = 'POSTED';
                     $header->save();
@@ -467,6 +515,7 @@ class PurchaseReturnController extends Controller
     {
         $vendor = $request->get('vendor');
         $returnType = $request->get('return_type'); // FROM_GR / FROM_INVOICE
+        $company_id = session('id_company');
 
         if ($returnType === 'FROM_GR') {
             // Ambil semua Goods Receipt milik supplier ini
@@ -478,6 +527,7 @@ class PurchaseReturnController extends Controller
                     'goods_receipt_header.total_amount'
                 )
                 ->where('goods_receipt_header.vendor', $vendor)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('goods_receipt_header.company_id', $company_id))
                 ->join('purchase_order as po', 'po.id', '=', 'goods_receipt_header.purchase_order')
                 ->whereNotIn('po.status', ['invoiced', 'closed', 'canceled'])
                 ->whereNull('goods_receipt_header.deleted')
@@ -488,6 +538,7 @@ class PurchaseReturnController extends Controller
             $references = DB::table('purchase_invoice_header')
                 ->select('id', 'invoice_number as reference_number', 'invoice_date as reference_date', 'total_amount')
                 ->where('vendor', $vendor)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->whereNull('deleted')
                 ->orderByDesc('invoice_date')
                 ->get();
@@ -502,11 +553,13 @@ class PurchaseReturnController extends Controller
     {
         $id = $request->get('id');
         $type = $request->get('type'); // FROM_GR atau FROM_INVOICE
+        $company_id = session('id_company');
 
         if ($type === 'FROM_GR') {
             $subReturn = DB::table('purchase_return_detail')
                 ->select('reference_detail_id', DB::raw('SUM(qty) as total_qty_returned'))
                 ->where('return_type', 'FROM_GR')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->groupBy('reference_detail_id');
 
             $details = DB::table('goods_receipt_detail as grd')
@@ -517,6 +570,7 @@ class PurchaseReturnController extends Controller
                     $join->on('prd.reference_detail_id', '=', 'grd.id');
                 })
                 ->where('grd.goods_receipt_header', $id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('grd.company_id', $company_id))
                 ->whereNull('grd.deleted')
                 ->select(
                     'grd.id as gr_detail_id',
@@ -533,6 +587,7 @@ class PurchaseReturnController extends Controller
             $subReturn = DB::table('purchase_return_detail')
                 ->select('reference_detail_id', DB::raw('SUM(qty) as total_qty_returned'))
                 ->where('return_type', 'FROM_INVOICE')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->groupBy('reference_detail_id');
 
             $details = DB::table('purchase_invoice_detail as pid')
@@ -543,6 +598,7 @@ class PurchaseReturnController extends Controller
                     $join->on('prd.reference_detail_id', '=', 'pid.id');
                 })
                 ->where('pid.purchase_invoice_id', $id)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pid.company_id', $company_id))
                 ->whereNull('pid.deleted')
                 ->select(
                     'pid.id as invoice_detail_id',
@@ -566,12 +622,16 @@ class PurchaseReturnController extends Controller
     {
         $data = $request->all();
         $vendorId = $data['vendor'];
+        $company_id = session('id_company');
         try {
             // code...
             $data['invoices'] = DB::table('purchase_invoice_header as h')
-                ->leftJoin('vendor_payment_detail as d', function ($join) {
+                ->leftJoin('vendor_payment_detail as d', function ($join) use ($company_id) {
                     $join->on('d.purchase_invoice_id', '=', 'h.id')
                         ->whereNull('d.deleted');
+                    if ($company_id !== null && $company_id !== '') {
+                        $join->where('d.company_id', $company_id);
+                    }
                 })
                 ->select(
                     'h.id',
@@ -583,6 +643,7 @@ class PurchaseReturnController extends Controller
                 )
                 ->where('h.vendor', $vendorId)
                 ->whereNull('h.deleted')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('h.company_id', $company_id))
                 ->groupBy('h.id', 'h.invoice_number', 'h.invoice_date', 'h.total_amount')
                 ->having('outstanding', '>', 0)
                 ->get();
@@ -599,6 +660,7 @@ class PurchaseReturnController extends Controller
     public function getListItemOutstandingPO(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         try {
             $data['po_details_outstanding'] = DB::table('purchase_order_detail as pod')
@@ -621,6 +683,7 @@ class PurchaseReturnController extends Controller
                     'pod.subtotal',
                     'pod.status'
                 )
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pod.company_id', $company_id))
                 ->where('po.status', '!=', 'cancelled')
                 ->where('pod.status', '!=', 'received')
                 ->whereRaw('(pod.qty - IFNULL(pod.qty_received, 0)) > 0')

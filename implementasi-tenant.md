@@ -67,7 +67,12 @@ DB::table('x')->insert([..., 'company_id' => $company_id]);
 
 - [x] Pengecekan DB: 89/89 tabel sudah punya `company_id` (diverifikasi via `SHOW COLUMNS` ke `pos2`).
 - [x] Fase 1 — Accounting / Journal Engine _(selesai)_
-- [ ] Fase 2 — AP/AR, Purchasing, Penjualan
+- [x] Fase 2 — AP/AR, Purchasing, Penjualan _(selesai)_
+  - API: PurchaseOrder, PurchaseInvoice, PurchaseReturn, VendorBill, PLTagihan, TerimaUang, ReturnConsigment, CreditNote, SalesInvoice, SalesPayment — list/detail/submit/delete/posting/outstanding/GL sudah di-scope `company_id`; nomor dokumen per tenant.
+  - Web: 10 controller modul yang sama di-scope (dropdown master, query detail, lookup cetak, generator nomor modul via `generateNoXX($company_id)`).
+  - `NoGenerator`: seluruh generator + helper GL (`postingGL`, `cancelGL`, `cancelAllGL`, `updateAllGL`, `getGeneralLedger`), `stockUpdate`, `stockRollback`, `createAutoReturn`, `getMaxReturCustomer`, `getMaxReturKaryawan`, `canInvoiceProcessCL`, `checkCustomerCreditLimit`, serta helper `stock_cards` (`getMasterCostBase`, `getOriginalDoCost`, `recalculateFrom`, `monthlyReportWithRangeDate`) menerima `$company_id` (default `session('id_company')`).
+  - Bug lama diperbaiki: `CreditNoteController` (referensi GL & lookup detail invoice), web `PurchaseInvoiceController::ubah()` (`$company_id` undefined), web VendorBill tax filter, generator `generateNoPO()` yang salah dipakai di modul lain.
+  - Deferred (bukan scope Fase 2): `SalesOrderController::saveInvoice()` (dipanggil dari SalesInvoice API), service `app/Services/Accounting/*` dan `api/Transaction/JournalsController`.
 - [ ] Fase 3 — Inventory / Product
 - [ ] Fase 4 — Delivery / Packing
 - [ ] Fase 5 — Master & sisanya

@@ -21,6 +21,7 @@ class CreditNoteController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -35,6 +36,7 @@ class CreditNoteController extends Controller
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -74,6 +76,7 @@ class CreditNoteController extends Controller
     {
         DB::enableQueryLog();
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -95,6 +98,7 @@ class CreditNoteController extends Controller
             ->whereIn('m.status', ['POSTED', 'PARTIAL PAID', 'PAID', 'PACKED'])
             ->where('m.customer_id', $data['customer'])
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -135,6 +139,7 @@ class CreditNoteController extends Controller
     public function getDataDo()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -153,6 +158,7 @@ class CreditNoteController extends Controller
             ->join('currency as c', 'c.id', 'soh.currency')
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['draft'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -193,6 +199,7 @@ class CreditNoteController extends Controller
     {
         DB::enableQueryLog();
         $data = $request->all();
+        $company_id = session('id_company');
 
         $exceptPoDetailId = [];
         if (! empty($data['itemsChoose'])) {
@@ -220,6 +227,7 @@ class CreditNoteController extends Controller
             ->join('product as p', 'p.id', 'm.product')
             ->whereNull('m.deleted')
             ->whereNull('po.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
@@ -267,6 +275,7 @@ class CreditNoteController extends Controller
     {
         $data = $request->all();
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
         // echo '<pre>';
@@ -277,21 +286,25 @@ class CreditNoteController extends Controller
 
             $penjualanAcc = AccountMapping::where('module', 'CREDIT_NOTE')
                 ->where('account_type', 'penjualan barang')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
             $ppnKeluaranAcc = AccountMapping::where('module', 'CREDIT_NOTE')
                 ->where('account_type', 'ppn keluaran')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $discAcc = AccountMapping::where('module', 'CREDIT_NOTE')
                 ->where('account_type', 'diskon penjualan')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $pendapatanAcc = AccountMapping::where('module', 'CREDIT_NOTE')
                 ->where('account_type', 'pendapatan')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -307,12 +320,20 @@ class CreditNoteController extends Controller
             // === HEADER ===
             $header = empty($data['id'])
                 ? new CreditNoteHdr
-                : CreditNoteHdr::find($data['id']);
+                : CreditNoteHdr::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($data['id'])) {
-                $header->credit_note_number = generateNoCN(); // misal helper
+                $header->credit_note_number = generateNoCN($company_id); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
+            } elseif (empty($header)) {
+                DB::rollBack();
+                $result['message'] = 'Data Credit Note tidak ditemukan';
+
+                return response()->json($result);
             }
 
             $header->credit_note_date = $data['credit_note_date'];
@@ -343,16 +364,18 @@ class CreditNoteController extends Controller
                 // Skip baris yang ditandai untuk dihapus
                 if (! empty($value['remove']) && $value['remove'] == 1) {
                     if (! empty($value['id'])) {
-                        $exist = CreditNoteDtl::find($value['id']);
+                        $exist = CreditNoteDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
                         if ($exist) {
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
                             $exist->save();
 
                             $cn_amount = (($value['unit_price'] * $value['qty_return']) - $value['discount_return'] + $value['tax_amount_return']);
-                            $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
-                            $invoice->credit_note_amount = $cn_amount;
-                            $invoice->save();
+                            $invoice = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['invoice_detail_id']);
+                            if (! empty($invoice)) {
+                                $invoice->credit_note_amount = $cn_amount;
+                                $invoice->save();
+                            }
                         }
                     }
 
@@ -362,7 +385,13 @@ class CreditNoteController extends Controller
                 // Item baru atau update
                 $detail = empty($value['id'])
                     ? new CreditNoteDtl
-                    : CreditNoteDtl::find($value['id']);
+                    : CreditNoteDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
+                if (! empty($value['id']) && empty($detail)) {
+                    DB::rollBack();
+                    $result['message'] = 'Detail Credit Note tidak ditemukan';
+
+                    return response()->json($result);
+                }
 
                 $detail->credit_note_id = $hdrId;
                 $detail->product_id = $value['product_id'];
@@ -374,6 +403,9 @@ class CreditNoteController extends Controller
                 $detail->tax_rate = $value['tax_rate'];
                 $detail->invoice_detail_id = $value['invoice_detail_id'];
                 $detail->tax = $value['tax'];
+                if (empty($value['id']) && $company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->save();
 
                 $disc_total += $value['discount_return'];
@@ -384,16 +416,20 @@ class CreditNoteController extends Controller
                 /* mapping coa */
 
                 $totalCnAmount = (($value['unit_price'] * $value['qty_return']) - $value['discount_return'] + $value['tax_amount_return']);
-                $invoice = SalesInvoiceDtl::find($value['invoice_detail_id']);
-                $invoice->credit_note_amount = $totalCnAmount;
-                $invoice->save();
+                $invoice = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['invoice_detail_id']);
+                if (! empty($invoice)) {
+                    $invoice->credit_note_amount = $totalCnAmount;
+                    $invoice->save();
+                }
             }
 
-            $updateHdr = CreditNoteHdr::find($hdrId);
-            $updateHdr->total_credit = $net_total;
-            $updateHdr->save();
+            $updateHdr = CreditNoteHdr::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($hdrId);
+            if (! empty($updateHdr)) {
+                $updateHdr->total_credit = $net_total;
+                $updateHdr->save();
+            }
 
-            $currency = Currency::where('code', 'IDR')->first();
+            $currency = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
             $currencyId = $currency->id;
 
             postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId);
@@ -419,12 +455,13 @@ class CreditNoteController extends Controller
         $data = $request->all();
         $id = $request->id;
         $userId = session('user_id');
+        $company_id = session('id_company');
 
         DB::beginTransaction();
 
         try {
 
-            $header = CreditNoteHdr::find($id);
+            $header = CreditNoteHdr::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($id);
 
             if (! $header) {
                 return response()->json([
@@ -441,11 +478,13 @@ class CreditNoteController extends Controller
             }
 
             // ambil semua detail termasuk yg sudah deleted
-            $details = CreditNoteDtl::where('credit_note_id', $id)->whereNull('deleted')->get();
+            $details = CreditNoteDtl::where('credit_note_id', $id)->whereNull('deleted')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->get();
 
             foreach ($details as $dt) {
 
-                $invoice = CreditNoteDtl::find($dt->invoice_detail_id);
+                $invoice = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($dt->invoice_detail_id);
 
                 if ($invoice) {
                     // Kembalikan return_qty
@@ -466,7 +505,7 @@ class CreditNoteController extends Controller
             }
 
             // Batalkan jurnal (GL)
-            cancelAllGL($header->return_number);
+            cancelAllGL($header->credit_note_number);
 
             // Ubah status
             $header->status = 'CANCELLED';
@@ -494,6 +533,7 @@ class CreditNoteController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -502,6 +542,7 @@ class CreditNoteController extends Controller
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -534,6 +575,7 @@ class CreditNoteController extends Controller
     {
         $data = $request->all();
         $invoice = $data['invoice'];
+        $company_id = session('id_company');
         $datadb = DB::table('sales_invoice_detail as sid')
             ->select(
                 'sid.id',
@@ -553,6 +595,7 @@ class CreditNoteController extends Controller
             )
             ->join('product as p', 'p.id', 'sid.product_id')
             ->whereNull('sid.deleted')            // tidak termasuk deleted
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sid.company_id', $company_id))
             ->where('sid.invoice_id', $invoice)
             ->get();
         // echo '<pre>';
@@ -567,11 +610,18 @@ class CreditNoteController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
 
-            $menu = CreditNoteHdr::find($data['id']);
+            $menu = CreditNoteHdr::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Credit Note tidak ditemukan';
+
+                return response()->json($result);
+            }
             $menu->updated_by = session('user_id');
             $menu->status = 'POSTED';
             $menu->save();

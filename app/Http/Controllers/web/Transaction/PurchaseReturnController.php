@@ -66,25 +66,31 @@ class PurchaseReturnController extends Controller
 
     public function getListKasBank()
     {
+        $company_id = session('id_company');
         $datadb = DB::table('coa')->where('is_active', 1)
             ->where('parent_code', '1100')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get();
         return $datadb;
     }
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generatePRN($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
 
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-        $company_id = session('id_company');
+        $data['warehouses'] = Warehouse::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = [];
@@ -104,14 +110,18 @@ class PurchaseReturnController extends Controller
     {
         $api = new TransactionPurchaseReturnController;
         $data = $request->all();
-        $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
-        $data['cashBankAccounts'] = $this->getListKasBank();
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
         $company_id = session('id_company');
+        $data['data'] = $api->getDetailData($data['id'])->original;
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
+        $data['cashBankAccounts'] = $this->getListKasBank();
+        $data['warehouses'] = Warehouse::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PurchaseReturnDtl::where('purchase_return_detail.purchase_return_id', $data['id'])
@@ -123,8 +133,11 @@ class PurchaseReturnController extends Controller
             ])
             ->join('product as p', 'p.id', '=', 'purchase_return_detail.product')
             ->join('unit as u', 'u.id', '=', 'purchase_return_detail.unit')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('purchase_return_detail.company_id', $company_id))
             ->get();
-        $data['reference'] = $data['data']->return_type == 'FROM_INVOICE' ? PurchaseInvoiceHeader::find($data['data']->reference_id) : GoodReceipt::find($data['data']->reference_id);
+        $data['reference'] = $data['data']->return_type == 'FROM_INVOICE'
+            ? PurchaseInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['data']->reference_id)
+            : GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['data']->reference_id);
         // echo '<pre>';
         // print_r($data['details']);die;
 

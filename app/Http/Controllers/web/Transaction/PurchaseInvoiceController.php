@@ -66,15 +66,17 @@ class PurchaseInvoiceController extends Controller
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generatePINumber($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
-        $company_id = session('id_company');
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = [];
@@ -93,11 +95,14 @@ class PurchaseInvoiceController extends Controller
     {
         $api = new TransactionPurchaseInvoiceController;
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['data_item'] = PurchaseInvoiceDtl::where('purchase_invoice_detail.purchase_invoice_id', $data['id'])
@@ -115,6 +120,7 @@ class PurchaseInvoiceController extends Controller
             ->join('product as p', 'p.id', 'purchase_invoice_detail.product')
             ->join('unit as u', 'u.id', 'purchase_invoice_detail.unit')
             ->whereNull('purchase_invoice_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('purchase_invoice_detail.company_id', $company_id))
             ->get();
 
         $data['title'] = 'Form ' . $this->getTitle();
@@ -134,7 +140,9 @@ class PurchaseInvoiceController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $data = PurchaseInvoiceHeader::with(['vendors', 'items.po_detail', 'items.products', 'items.units'])
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->findOrFail($data['id']);
         // echo '<pre>';
         // print_r($data);die;
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->invoice_number));

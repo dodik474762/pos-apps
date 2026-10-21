@@ -22,6 +22,7 @@ class TerimaUangController extends Controller
     {
         $data = $request->all();
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
 
@@ -34,12 +35,14 @@ class TerimaUangController extends Controller
             $kasBesar = AccountMapping::where('module', 'RECEIVED_CASH')
                 ->where('account_type', 'kas besar')
                 ->where('remarks', $data['type'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
             $terimaUangAcc = AccountMapping::where('module', 'RECEIVED_CASH')
                 ->where('account_type', $data['type'] == 'pending' ? 'penerimaan uang' : 'bank')
                 ->where('remarks', $data['type'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -53,13 +56,18 @@ class TerimaUangController extends Controller
                 ]);
             }
 
-            $exisReceived = ReceivePaymentHeader::where('salesman', $data['salesman'])->where('visit_date', $data['visit_date'])->first();
+            $exisReceived = ReceivePaymentHeader::where('salesman', $data['salesman'])->where('visit_date', $data['visit_date'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->first();
             $header = empty($exisReceived) ? new ReceivePaymentHeader() : $exisReceived;
 
             if (empty($exisReceived)) {
-                $header->code = generateNoReceivedCashier();
+                $header->code = generateNoReceivedCashier($company_id);
                 $header->created_by = $userId;
                 $header->status = 'PENDING';
+                if ($company_id !== null && $company_id !== '') {
+                    $header->company_id = $company_id;
+                }
             } else {
                 if ($header->status == 'POSTED') {
                     DB::rollBack();
@@ -84,7 +92,9 @@ class TerimaUangController extends Controller
 
             $total_amount = 0;
 
-            ReceivePaymentDetail::where('receive_id', $hdrId)->delete();
+            ReceivePaymentDetail::where('receive_id', $hdrId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->delete();
 
             $line = 1;
             foreach ($data['items'] as $key => $value) {
@@ -94,6 +104,9 @@ class TerimaUangController extends Controller
                 $detail->invoice_id = $value['invoice_id'];
                 $detail->amount_paid = $value['amount_paid'];
                 $detail->line_no = $line++;
+                if ($company_id !== null && $company_id !== '') {
+                    $detail->company_id = $company_id;
+                }
                 $detail->save();
 
                 $total_amount += $value['amount_paid'];
@@ -109,7 +122,7 @@ class TerimaUangController extends Controller
                 }
             }
 
-            $currency = Currency::where('code', 'IDR')->first();
+            $currency = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
             $currencyId = $currency->id;
             postingGL($reference, $kasBesar->account_id, $kasBesar->account->account_name, $kasBesar->cd, ($total_amount), $currencyId);
             postingGL($reference, $terimaUangAcc->account_id, $terimaUangAcc->account->account_name, $terimaUangAcc->cd, ($total_amount), $currencyId);

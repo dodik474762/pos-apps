@@ -66,8 +66,10 @@ class CreditNoteController extends Controller
 
     public function getListKasBank()
     {
+        $company_id = session('id_company');
         $datadb = DB::table('coa')->where('is_active', 1)
             ->where('parent_code', '1100')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get();
         return $datadb;
     }
@@ -75,15 +77,15 @@ class CreditNoteController extends Controller
     public function add(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoCN($company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         // $data['warehouses'] = Warehouse::whereNull('deleted')->get();
@@ -109,7 +111,7 @@ class CreditNoteController extends Controller
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
             ->where('tax_type', 'Output')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['cashBankAccounts'] = $this->getListKasBank();
@@ -128,10 +130,11 @@ class CreditNoteController extends Controller
             ->join('sales_invoice_detail as sid', 'sid.id', 'credit_note_detail.invoice_detail_id')
             ->join('product as p', 'p.id', 'credit_note_detail.product_id')
             ->whereNull('credit_note_detail.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('credit_note_detail.company_id', $company_id))
             ->orderBy('credit_note_detail.id')
             ->get();
 
-        $data['general_ledgers'] = getGeneralLedger($data['data']->credit_note_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->credit_note_number, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.credit_note.formadd', $data);
@@ -167,7 +170,9 @@ class CreditNoteController extends Controller
     {
         $data = $request->all();
         $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = CreditNoteHdr::with(['customers', 'items.invoice'])->findOrFail($data['id']);
+        $data = CreditNoteHdr::with(['customers', 'items.invoice'])
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->findOrFail($data['id']);
         $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->payment_code));
         // $qr = '';
         // echo '<pre>';
