@@ -23,7 +23,9 @@ class AccountPeriodBalanceService
             return $result;
         }
 
-        return DB::transaction(function () use ($periodId, $period, $result) {
+        $companyId = $period->company_id ?? null;
+
+        return DB::transaction(function () use ($periodId, $period, $result, $companyId) {
             $previousPeriod = AccountingPeriod::where('id', '<>', $periodId)
                 ->where(function ($q) use ($period) {
                     $q->where('year', '<', $period->year)
@@ -32,12 +34,14 @@ class AccountPeriodBalanceService
                                 ->where('month', '<', $period->month);
                         });
                 })
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->orderBy('year', 'desc')
                 ->orderBy('month', 'desc')
                 ->first();
 
             $accounts = Accounts::whereNull('deleted_at')
                 ->where('is_active', 1)
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->orderBy('code')
                 ->get();
 
@@ -47,13 +51,14 @@ class AccountPeriodBalanceService
                     $prevSnapshot = DB::table('account_period_balances')
                         ->where('account_id', $account->id)
                         ->where('accounting_period_id', $previousPeriod->id)
+                        ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                         ->first();
                     if (! empty($prevSnapshot)) {
                         $openingBalance = (float) $prevSnapshot->closing_balance;
                     }
                 }
 
-                $totals = $this->calculatePeriodTotals($account->id, $periodId);
+                $totals = $this->calculatePeriodTotals($account->id, $periodId, $companyId);
                 $totalDebit = $totals['total_debit'];
                 $totalCredit = $totals['total_credit'];
 
@@ -62,6 +67,7 @@ class AccountPeriodBalanceService
                 $existing = DB::table('account_period_balances')
                     ->where('account_id', $account->id)
                     ->where('accounting_period_id', $periodId)
+                    ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                     ->first();
 
                 if (! empty($existing)) {
@@ -76,6 +82,7 @@ class AccountPeriodBalanceService
                         ]);
                 } else {
                     DB::table('account_period_balances')->insert([
+                        'company_id' => $companyId,
                         'account_id' => $account->id,
                         'accounting_period_id' => $periodId,
                         'opening_balance' => $openingBalance,
@@ -92,13 +99,14 @@ class AccountPeriodBalanceService
         });
     }
 
-    protected function calculatePeriodTotals($accountId, $periodId)
+    protected function calculatePeriodTotals($accountId, $periodId, $companyId = null)
     {
         $data = DB::table('journal_details as jd')
             ->join('journal_headers as jh', 'jd.journal_id', '=', 'jh.id')
             ->where('jh.accounting_period_id', $periodId)
             ->where('jh.status', JournalService::STATUS_POSTED)
             ->where('jd.account_id', $accountId)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('jh.company_id', $companyId))
             ->selectRaw('COALESCE(SUM(jd.debit), 0) as total_debit, COALESCE(SUM(jd.credit), 0) as total_credit')
             ->first();
 

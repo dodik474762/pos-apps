@@ -43,14 +43,22 @@ class ProductCostResolver
      * @param  int  $productId
      * @param  int  $uom  id unit pada baris dokumen (delivery_order_detail.uom)
      * @param  array  $productNames  pemetaan product_id => nama untuk pesan error
+     * @param  int|null  $companyId  company aktif; null = fallback ke session
      * @return float
      *
      * @throws JournalValidationException
      */
-    public function resolve($productId, $uom, array $productNames = [])
+    public function resolve($productId, $uom, array $productNames = [], $companyId = null)
     {
         $productId = (int) $productId;
         $uom = (int) $uom;
+
+        if ($companyId === null || $companyId === '') {
+            $companyId = session('id_company');
+            if ($companyId === null || $companyId === '') {
+                $companyId = null;
+            }
+        }
 
         if ($productId <= 0) {
             throw new JournalValidationException(
@@ -66,7 +74,7 @@ class ProductCostResolver
             );
         }
 
-        $rows = $this->loadCostRows($productId);
+        $rows = $this->loadCostRows($productId, $companyId);
 
         if (count($rows) === 0) {
             throw new JournalValidationException(
@@ -92,7 +100,7 @@ class ProductCostResolver
                 return $this->round($cost);
             }
 
-            $factor = $this->conversionFactor($productId, $uom, (int) $row->unit_id);
+            $factor = $this->conversionFactor($productId, $uom, (int) $row->unit_id, $companyId);
 
             if ($factor === null) {
                 $errors[] = 'unit ' . $row->unit_id . ' tidak punya jalur konversi dari unit ' . $uom;
@@ -122,11 +130,12 @@ class ProductCostResolver
      * Baris cost aktif untuk produk, diurutkan tanggal terbaru.
      * Dengan begitu cost yang diakui adalah cost terakhir yang berlaku.
      */
-    protected function loadCostRows($productId)
+    protected function loadCostRows($productId, $companyId = null)
     {
         return DB::table('product_uom_cost')
             ->where('product', $productId)
             ->where('is_active', 1)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('date_start')
             ->orderByDesc('id')
             ->get(['unit_id', 'cost', 'date_start']);
@@ -136,13 +145,13 @@ class ProductCostResolver
      * Total faktor konversi dari $fromUom naik ke $toUom.
      * Mengembalikan null bila tidak ada rantai.
      */
-    protected function conversionFactor($productId, $fromUom, $toUom)
+    protected function conversionFactor($productId, $fromUom, $toUom, $companyId = null)
     {
         if ((int) $fromUom === (int) $toUom) {
             return 1.0;
         }
 
-        $chain = $this->loadChain($productId);
+        $chain = $this->loadChain($productId, $companyId);
         $factor = 1.0;
         $current = (int) $fromUom;
 
@@ -196,11 +205,12 @@ class ProductCostResolver
      * Rantai product_uom dikelompokkan per unit_dasar. Urutan level lalu id
      * membuat pemilihan langkah konsisten antar permintaan.
      */
-    protected function loadChain($productId)
+    protected function loadChain($productId, $companyId = null)
     {
         return DB::table('product_uom')
             ->where('product', $productId)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('level')
             ->orderBy('id')
             ->get(['unit_dasar', 'unit_tujuan', 'nilai_konversi', 'level', 'id'])

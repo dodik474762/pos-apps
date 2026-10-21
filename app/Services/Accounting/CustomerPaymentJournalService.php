@@ -63,8 +63,10 @@ class CustomerPaymentJournalService
             throw new JournalValidationException('Customer payment tidak ditemukan.');
         }
 
+        $companyId = $payment->company_id ?? null;
+
         // Idempotent: pembayaran yang sudah memiliki jurnal aktif tidak digandakan.
-        $existing = $this->getActiveJournal($payment->id);
+        $existing = $this->getActiveJournal($payment->id, $companyId);
         if (! empty($existing)) {
             return $existing;
         }
@@ -77,8 +79,8 @@ class CustomerPaymentJournalService
             );
         }
 
-        $accountBank = $this->resolveBankAccount($bankAccountId);
-        $accountAr = $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_AR);
+        $accountBank = $this->resolveBankAccount($bankAccountId, $companyId);
+        $accountAr = $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_AR, null, null, $companyId);
 
         $details = [
             [
@@ -102,6 +104,7 @@ class CustomerPaymentJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $payment->id,
             'description' => 'Customer Payment ' . $payment->payment_code,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -114,7 +117,7 @@ class CustomerPaymentJournalService
      * Jurnal yang masih aktif untuk pembayaran ini, yaitu DRAFT atau POSTED.
      * Jurnal REVERSED tidak dihitung karena pengaruhnya sudah dinetralkan.
      */
-    public function getActiveJournal($paymentId)
+    public function getActiveJournal($paymentId, $companyId = null)
     {
         if (empty($paymentId)) {
             return null;
@@ -127,6 +130,7 @@ class CustomerPaymentJournalService
             // dan posting ulang justru mengembalikan jurnal reversal.
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -136,27 +140,29 @@ class CustomerPaymentJournalService
      * Bila tidak ada pilihan, falls back ke rule CUSTOMER_PAYMENT / BANK supaya
      * pembayaran yang diconfirm tanpa membuka form tetap mendapat jurnal.
      */
-    protected function resolveBankAccount($bankAccountId)
+    protected function resolveBankAccount($bankAccountId, $companyId = null)
     {
         if (! empty($bankAccountId) && (int) $bankAccountId > 0) {
-            return $this->assertUsableAccount((int) $bankAccountId, true);
+            return $this->assertUsableAccount((int) $bankAccountId, true, $companyId);
         }
 
         return $this->assertUsableAccount(
-            $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_BANK),
-            false
+            $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_BANK, null, null, $companyId),
+            false,
+            $companyId
         );
     }
 
     /**
      * Akun wajib ada, bukan header, dan aktif.
      */
-    protected function assertUsableAccount($accountId, $fromUserSelection)
+    protected function assertUsableAccount($accountId, $fromUserSelection, $companyId = null)
     {
         $account = DB::table('accounts')
             ->select(['id', 'code', 'name', 'is_header', 'is_active'])
             ->where('id', $accountId)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         $source = $fromUserSelection ? 'pilihan Akun Bank/Cash di form pembayaran' : 'Account Mapping Rules';

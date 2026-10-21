@@ -15,6 +15,7 @@ class AccountsController extends Controller
 
     public function getData(){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -28,6 +29,7 @@ class AccountsController extends Controller
         ->join('account_types as at', 'm.account_type_id', '=', 'at.id')
         ->leftJoin('accounts as p', 'm.parent_id', '=', 'p.id')
         ->whereNull('m.deleted_at')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
         ->orderBy('m.code', 'asc');
         if(isset($_POST)){
             $data['recordsTotal'] = $datadb->get()->count();
@@ -60,10 +62,12 @@ class AccountsController extends Controller
     public function submit(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             if($data['id'] == ''){
                 $exist = Accounts::where('code', $data['code'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->whereNull('deleted_at')
                 ->first();
                 if(!empty($exist)){
@@ -72,12 +76,13 @@ class AccountsController extends Controller
                     return response()->json($result);
                 }
             }
-            $roles = $data['id'] == '' ? new Accounts() : Accounts::find($data['id']);
+            $roles = $data['id'] == '' ? new Accounts() : Accounts::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->code = $data['code'];
             $roles->name = $data['name'];
             $roles->account_type_id = $data['account_type_id'];
             $roles->parent_id = $data['parent_id'] == '' ? null : $data['parent_id'];
             $roles->level = $data['parent_id'] == '' ? 1 : (int) DB::table($this->getTableName())
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->where('id', $data['parent_id'])
                 ->value('level') + 1;
             $roles->normal_balance = $data['normal_balance'];
@@ -85,6 +90,9 @@ class AccountsController extends Controller
             $roles->is_control_account = $data['is_control_account'] ?? 0;
             $roles->is_active = $data['is_active'];
             $roles->description = $data['description'];
+            if ($company_id !== null && $company_id !== '') {
+                $roles->company_id = $company_id;
+            }
             $roles->save();
 
             DB::commit();
@@ -99,9 +107,10 @@ class AccountsController extends Controller
     public function confirmDelete(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
-            $menu = Accounts::find($data['id']);
+            $menu = Accounts::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted_at = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -116,10 +125,13 @@ class AccountsController extends Controller
 
     public function getDetailData($id){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+        ])
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+        ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

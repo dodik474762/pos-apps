@@ -57,8 +57,10 @@ class GoodReceiptJournalService
 
         $this->assertPostableStatus($gr);
 
+        $companyId = $gr->company_id ?? null;
+
         // Idempotent: penerimaan yang sudah memiliki jurnal tidak digandakan.
-        $existing = $this->getActiveJournal($gr->id);
+        $existing = $this->getActiveJournal($gr->id, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu diposting ulang.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -68,14 +70,14 @@ class GoodReceiptJournalService
             return $existing;
         }
 
-        $lines = $this->getLines($gr);
+        $lines = $this->getLines($gr, $companyId);
         if ($lines->isEmpty()) {
             throw new JournalValidationException(
                 'Detail penerimaan barang ' . $gr->gr_number . ' tidak ada, jurnal tidak dapat dibuat.'
             );
         }
 
-        $details = $this->buildDetails($gr, $lines);
+        $details = $this->buildDetails($gr, $lines, $companyId);
         if (empty($details)) {
             throw new JournalValidationException(
                 'Total penerimaan barang ' . $gr->gr_number . ' bernilai 0, jurnal tidak dapat dibuat.'
@@ -87,6 +89,7 @@ class GoodReceiptJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $gr->id,
             'description' => 'Penerimaan Barang ' . $gr->gr_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -118,7 +121,7 @@ class GoodReceiptJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * dihitung karena pengaruhnya di general ledger sudah dinetralkan.
      */
-    public function getActiveJournal($grId)
+    public function getActiveJournal($grId, $companyId = null)
     {
         if (empty($grId)) {
             return null;
@@ -131,6 +134,7 @@ class GoodReceiptJournalService
             // dan posting ulang justru mengembalikan jurnal reversal.
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -154,7 +158,7 @@ class GoodReceiptJournalService
      * supplier belum tentu ada. Bila baris PO tidak ditemukan, nilai
      * subtotal yang tersimpan di dipakai sebagai cadangan.
      */
-    protected function getLines($gr)
+    protected function getLines($gr, $companyId = null)
     {
         return DB::table('goods_receipt_detail as d')
             ->select([
@@ -171,6 +175,7 @@ class GoodReceiptJournalService
             ->leftJoin('product as p', 'p.id', '=', 'd.product')
             ->where('d.goods_receipt_header', $gr->id)
             ->whereNull('d.deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('d.company_id', $companyId))
             ->orderBy('d.id', 'asc')
             ->get();
     }
@@ -180,7 +185,7 @@ class GoodReceiptJournalService
      * resolusi mapping, digabung bila beberapa baris memakai akun yang sama,
      * ditambah satu baris credit GRNI.
      */
-    protected function buildDetails($gr, $lines)
+    protected function buildDetails($gr, $lines, $companyId = null)
     {
         $groups = [];
         $cache = [];
@@ -200,7 +205,7 @@ class GoodReceiptJournalService
                 );
             }
 
-            $accountId = $this->resolveAccount($cache, self::ROLE_INVENTORY, $gr->warehouse);
+            $accountId = $this->resolveAccount($cache, self::ROLE_INVENTORY, $gr->warehouse, $companyId);
 
             if (! isset($groups[$accountId])) {
                 $groups[$accountId] = ['amount' => 0];
@@ -227,7 +232,7 @@ class GoodReceiptJournalService
             );
         }
 
-        $accountGrni = $this->resolveAccount($cache, self::ROLE_GRNI, $gr->warehouse);
+        $accountGrni = $this->resolveAccount($cache, self::ROLE_GRNI, $gr->warehouse, $companyId);
 
         $details = [];
         $lineNo = 1;
@@ -278,7 +283,7 @@ class GoodReceiptJournalService
     /**
      * Resolusi akun per role, disimpan agar tidak berulang untuk tiap baris.
      */
-    protected function resolveAccount(&$cache, $role, $warehouseId = null)
+    protected function resolveAccount(&$cache, $role, $warehouseId = null, $companyId = null)
     {
         $key = $role.'|'.$warehouseId;
         if (! isset($cache[$key])) {
@@ -286,7 +291,8 @@ class GoodReceiptJournalService
                 self::TRANSACTION_TYPE,
                 $role,
                 null,
-                $warehouseId
+                $warehouseId,
+                $companyId
             );
         }
 

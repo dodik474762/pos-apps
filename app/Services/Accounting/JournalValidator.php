@@ -133,7 +133,7 @@ class JournalValidator
         }
 
         try {
-            $this->periodService->ensureOpen($journalDate);
+            $this->periodService->ensureOpen($journalDate, $header['company_id'] ?? null);
         } catch (JournalValidationException $e) {
             return [$e->getMessage()];
         }
@@ -272,10 +272,13 @@ class JournalValidator
             return [];
         }
 
+        $companyId = session('id_company');
+
         $rows = DB::table('accounts')
             ->select(['id', 'code', 'name', 'is_header', 'is_active'])
             ->whereIn('id', $accountIds)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->get();
 
         $result = [];

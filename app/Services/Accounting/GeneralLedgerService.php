@@ -22,9 +22,11 @@ class GeneralLedgerService
             ];
         }
 
+        $companyId = $period->company_id ?? ($account->company_id ?? null);
+
         $openingBalance = $this->getOpeningBalance($account, $period);
 
-        $mutations = $this->getMutations($accountId, $periodId);
+        $mutations = $this->getMutations($accountId, $periodId, $companyId);
 
         $lines = [];
         $running = $openingBalance;
@@ -64,18 +66,23 @@ class GeneralLedgerService
 
     protected function getOpeningBalance($account, $period)
     {
+        $companyId = $period->company_id ?? null;
+
         $previousPeriod = AccountingPeriod::where(function ($q) use ($period) {
             $q->where('year', '<', $period->year)
                 ->orWhere(function ($qq) use ($period) {
                     $qq->where('year', $period->year)
                         ->where('month', '<', $period->month);
                 });
-        })->orderBy('year', 'desc')->orderBy('month', 'desc')->first();
+        })
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
+            ->orderBy('year', 'desc')->orderBy('month', 'desc')->first();
 
         if (! empty($previousPeriod) && $previousPeriod->status === AccountingPeriodService::STATUS_CLOSED) {
             $prevSnapshot = DB::table('account_period_balances')
                 ->where('account_id', $account->id)
                 ->where('accounting_period_id', $previousPeriod->id)
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->first();
             if (! empty($prevSnapshot)) {
                 return (float) $prevSnapshot->closing_balance;
@@ -86,6 +93,7 @@ class GeneralLedgerService
             $snapshot = DB::table('account_period_balances')
                 ->where('account_id', $account->id)
                 ->where('accounting_period_id', $period->id)
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->first();
             if (! empty($snapshot)) {
                 return (float) $snapshot->opening_balance;
@@ -100,19 +108,21 @@ class GeneralLedgerService
                 $q->where('jh.journal_date', '<', $period->start_date)
                     ->orWhere('jh.accounting_period_id', '<', $period->id);
             })
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('jh.company_id', $companyId))
             ->selectRaw('COALESCE(SUM(CASE WHEN ? = "DEBIT" THEN jd.debit - jd.credit ELSE jd.credit - jd.debit END), 0) as bal', [strtoupper($account->normal_balance)])
             ->first();
 
         return (float) ($opening->bal ?? 0);
     }
 
-    protected function getMutations($accountId, $periodId)
+    protected function getMutations($accountId, $periodId, $companyId = null)
     {
         return DB::table('journal_details as jd')
             ->join('journal_headers as jh', 'jd.journal_id', '=', 'jh.id')
             ->where('jh.accounting_period_id', $periodId)
             ->where('jh.status', JournalService::STATUS_POSTED)
             ->where('jd.account_id', $accountId)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('jh.company_id', $companyId))
             ->select([
                 'jh.journal_date',
                 'jh.journal_no',

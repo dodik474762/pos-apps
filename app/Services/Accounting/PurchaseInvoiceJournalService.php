@@ -67,8 +67,10 @@ class PurchaseInvoiceJournalService
 
         $this->assertPostableStatus($invoice);
 
+        $companyId = $invoice->company_id ?? null;
+
         // Idempotent: invoice yang sudah memiliki jurnal tidak digandakan.
-        $existing = $this->getActiveJournal($invoice->id);
+        $existing = $this->getActiveJournal($invoice->id, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu diposting ulang.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -78,14 +80,14 @@ class PurchaseInvoiceJournalService
             return $existing;
         }
 
-        $lines = $this->getLines($invoice);
+        $lines = $this->getLines($invoice, $companyId);
         if ($lines->isEmpty()) {
             throw new JournalValidationException(
                 'Detail Purchase Invoice ' . $invoice->invoice_number . ' tidak ada, jurnal tidak dapat dibuat.'
             );
         }
 
-        $details = $this->buildDetails($invoice, $lines);
+        $details = $this->buildDetails($invoice, $lines, $companyId);
         if (empty($details)) {
             throw new JournalValidationException(
                 'Total Purchase Invoice ' . $invoice->invoice_number . ' bernilai 0, jurnal tidak dapat dibuat.'
@@ -97,6 +99,7 @@ class PurchaseInvoiceJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $invoice->id,
             'description' => 'Purchase Invoice ' . $invoice->invoice_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -128,7 +131,7 @@ class PurchaseInvoiceJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * dihitung karena pengaruhnya di general ledger sudah dinetralkan.
      */
-    public function getActiveJournal($invoiceId)
+    public function getActiveJournal($invoiceId, $companyId = null)
     {
         if (empty($invoiceId)) {
             return null;
@@ -141,6 +144,7 @@ class PurchaseInvoiceJournalService
             // dan posting ulang justru mengembalikan jurnal reversal.
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -162,8 +166,15 @@ class PurchaseInvoiceJournalService
      * Baris detail invoice beserta flag is_stock dari master product dan penanda
      * apakah baris tersebut sudah pernah diterima di modul Receiving.
      */
-    protected function getLines($invoice)
+    protected function getLines($invoice, $companyId = null)
     {
+        $receivedSql = 'SELECT 1 FROM goods_receipt_detail grd'
+            . ' WHERE grd.purchase_order_detail = d.purchase_order_detail_id'
+            . ' AND grd.deleted IS NULL';
+        if ($companyId !== null && $companyId !== '') {
+            $receivedSql .= ' AND grd.company_id = ' . (int) $companyId;
+        }
+
         return DB::table('purchase_invoice_detail as d')
             ->select([
                 'd.id',
@@ -174,16 +185,13 @@ class PurchaseInvoiceJournalService
                 'p.name as product_name',
                 'p.is_stock',
                 DB::raw(
-                    'CASE WHEN EXISTS ('
-                    . 'SELECT 1 FROM goods_receipt_detail grd'
-                    . ' WHERE grd.purchase_order_detail = d.purchase_order_detail_id'
-                    . ' AND grd.deleted IS NULL'
-                    . ') THEN 1 ELSE 0 END as is_received'
+                    'CASE WHEN EXISTS (' . $receivedSql . ') THEN 1 ELSE 0 END as is_received'
                 ),
             ])
             ->leftJoin('product as p', 'p.id', '=', 'd.product')
             ->where('d.purchase_invoice_id', $invoice->id)
             ->whereNull('d.deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('d.company_id', $companyId))
             ->orderBy('d.id', 'asc')
             ->get();
     }
@@ -193,7 +201,7 @@ class PurchaseInvoiceJournalService
      * digabung bila beberapa baris invoice memakai akun yang sama, ditambah satu
      * baris credit untuk account payable.
      */
-    protected function buildDetails($invoice, $lines)
+    protected function buildDetails($invoice, $lines, $companyId = null)
     {
         $groups = [];
         $cache = [];
@@ -214,7 +222,7 @@ class PurchaseInvoiceJournalService
             }
 
             $role = $this->resolveRole($line);
-            $accountId = $this->resolveAccount($cache, $role);
+            $accountId = $this->resolveAccount($cache, $role, $companyId);
 
             if (! isset($groups[$accountId])) {
                 $groups[$accountId] = [
@@ -244,7 +252,7 @@ class PurchaseInvoiceJournalService
             );
         }
 
-        $accountAp = $this->resolveAccount($cache, self::ROLE_AP);
+        $accountAp = $this->resolveAccount($cache, self::ROLE_AP, $companyId);
 
         $details = [];
         $lineNo = 1;
@@ -298,14 +306,15 @@ class PurchaseInvoiceJournalService
     /**
      * Resolusi akun per role, disimpan agar tidak berulang untuk tiap baris.
      */
-    protected function resolveAccount(&$cache, $role)
+    protected function resolveAccount(&$cache, $role, $companyId = null)
     {
         if (! isset($cache[$role])) {
             $cache[$role] = $this->resolver->resolve(
                 self::TRANSACTION_TYPE,
                 $role,
                 null,
-                null
+                null,
+                $companyId
             );
         }
 

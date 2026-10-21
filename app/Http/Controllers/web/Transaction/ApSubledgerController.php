@@ -48,7 +48,9 @@ class ApSubledgerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses_session');
+        $company_id = session('id_company');
         $data['suppliers'] = Vendor::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('nama_vendor')
             ->get(['id', 'code', 'nama_vendor'])
             ->toArray();
@@ -70,7 +72,9 @@ class ApSubledgerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses_session');
+        $company_id = session('id_company');
         $data['supplier'] = \App\Models\Master\Vendor::where('id', $request->supplier_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
         $data['start_date'] = $request->start_date;
@@ -88,6 +92,7 @@ class ApSubledgerController extends Controller
         $invoices = DB::table('ap_invoices')
             ->where('supplier_id', $supplierId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('invoice_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('invoice_date', '<=', $endDate))
             ->get();
@@ -95,6 +100,7 @@ class ApSubledgerController extends Controller
         $payments = DB::table('ap_payments')
             ->where('supplier_id', $supplierId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('payment_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('payment_date', '<=', $endDate))
             ->get();
@@ -102,6 +108,7 @@ class ApSubledgerController extends Controller
         $creditNotes = DB::table('ap_credit_notes')
             ->where('supplier_id', $supplierId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('credit_note_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('credit_note_date', '<=', $endDate))
             ->get();

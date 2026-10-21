@@ -90,8 +90,10 @@ class SalesReturnJournalService
 
         $this->assertPostableStatus($return);
 
+        $companyId = $return->company_id ?? null;
+
         // Idempotent: sales return yang sudah punya jurnal aktif tidak digandakan.
-        $existing = $this->getActiveJournal($return->id);
+        $existing = $this->getActiveJournal($return->id, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu diposting ulang.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -101,14 +103,14 @@ class SalesReturnJournalService
             return $existing;
         }
 
-        $lines = $this->getLines($return);
+        $lines = $this->getLines($return, $companyId);
         if ($lines->isEmpty()) {
             throw new JournalValidationException(
                 'Detail sales return ' . $return->return_number . ' tidak ada, jurnal tidak dapat dibuat.'
             );
         }
 
-        $details = $this->buildDetails($return, $lines);
+        $details = $this->buildDetails($return, $lines, $companyId);
         if (empty($details)) {
             throw new JournalValidationException(
                 'Total sales return ' . $return->return_number . ' bernilai 0, jurnal tidak dapat dibuat.'
@@ -120,6 +122,7 @@ class SalesReturnJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $return->id,
             'description' => 'Sales Return ' . $return->return_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -150,7 +153,7 @@ class SalesReturnJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * dihitung karena pengaruhnya di general ledger sudah dinetralkan.
      */
-    public function getActiveJournal($returnId)
+    public function getActiveJournal($returnId, $companyId = null)
     {
         if (empty($returnId)) {
             return null;
@@ -163,6 +166,7 @@ class SalesReturnJournalService
             // dan posting ulang justru mengembalikan jurnal reversal.
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -177,10 +181,11 @@ class SalesReturnJournalService
         }
     }
 
-    protected function getLines($return)
+    protected function getLines($return, $companyId = null)
     {
         return SalesReturnDtl::where('return_id', $return->id)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('id', 'asc')
             ->get();
     }
@@ -190,11 +195,11 @@ class SalesReturnJournalService
      * hasil resolusi mapping sehingga beberapa produk pada satu akun tetap
      * menjadi satu baris, dan total debit selalu sama dengan total credit.
      */
-    protected function buildDetails($return, $lines)
+    protected function buildDetails($return, $lines, $companyId = null)
     {
         $damaged = $this->isDamaged($return->types);
 
-        $productNames = $this->getProductNames($lines);
+        $productNames = $this->getProductNames($lines, $companyId);
         $cache = [];
 
         $revenue = [];
@@ -213,9 +218,9 @@ class SalesReturnJournalService
             $productName = $productNames[$productId] ?? ('product #' . $productId);
 
             // --- sisi pendapatan: mengikuti Sales Invoice asal ---
-            $salesValue = $this->resolveSalesValue($return, $line, $productName);
-            $accountSalesReturn = $this->resolveAccount($cache, self::ROLE_SALES_RETURN);
-            $accountAr = $this->resolveAccount($cache, self::ROLE_AR);
+            $salesValue = $this->resolveSalesValue($return, $line, $productName, $companyId);
+            $accountSalesReturn = $this->resolveAccount($cache, self::ROLE_SALES_RETURN, $companyId);
+            $accountAr = $this->resolveAccount($cache, self::ROLE_AR, $companyId);
 
             $this->accumulate(
                 $revenue,
@@ -228,12 +233,12 @@ class SalesReturnJournalService
             $totalRevenue += $salesValue;
 
             // --- sisi persediaan: mengikuti Delivery Order asal ---
-            $cogs = $this->resolveCogs($return, $line, $productName);
-            $accountCogs = $this->resolveAccount($cache, self::ROLE_COGS);
+            $cogs = $this->resolveCogs($return, $line, $productName, $companyId);
+            $accountCogs = $this->resolveAccount($cache, self::ROLE_COGS, $companyId);
 
             if ($damaged) {
                 // Barang rusak tidak kembali ke stok, jadi debit ke akun kerugian.
-                $accountLoss = $this->resolveAccount($cache, self::ROLE_LOSS);
+                $accountLoss = $this->resolveAccount($cache, self::ROLE_LOSS, $companyId);
                 $this->accumulate(
                     $inventoryLoss,
                     $accountLoss,
@@ -243,7 +248,7 @@ class SalesReturnJournalService
                     'HPP retur barang rusak ' . $return->return_number
                 );
             } else {
-                $accountInventory = $this->resolveAccount($cache, self::ROLE_INVENTORY);
+                $accountInventory = $this->resolveAccount($cache, self::ROLE_INVENTORY, $companyId);
                 $this->accumulate(
                     $inventoryGood,
                     $accountInventory,
@@ -354,7 +359,7 @@ class SalesReturnJournalService
      * Subtotal baris invoice diprorate terhadap qty_return agar retur sebagian
      * menghasilkan nilai yang proporsional.
      */
-    protected function resolveSalesValue($return, $line, $productName)
+    protected function resolveSalesValue($return, $line, $productName, $companyId = null)
     {
         $invoiceDetail = null;
         if (! empty($line->invoice_detail_id)) {
@@ -364,6 +369,7 @@ class SalesReturnJournalService
                 // header sales return, supaya nilai jual tidak diambil dari invoice lain.
                 ->where('invoice_id', $return->invoice_id)
                 ->whereNull('deleted')
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->first();
         }
 
@@ -421,11 +427,11 @@ class SalesReturnJournalService
      * delivery_order_detail. Bila DO tidak ditemukan, proses dihentikan karena
      * HPP tidak boleh ditebak.
      */
-    protected function resolveCogs($return, $line, $productName)
+    protected function resolveCogs($return, $line, $productName, $companyId = null)
     {
-        $doDetail = $this->findDeliveryOrderLine($line, $productName, $return);
+        $doDetail = $this->findDeliveryOrderLine($line, $productName, $return, $companyId);
         $qty = $this->validator->toAmount($line->qty_return);
-        $cost = $this->resolveCost($doDetail->product_id, $doDetail->uom, $productName);
+        $cost = $this->resolveCost($doDetail->product_id, $doDetail->uom, $productName, $companyId);
 
         return $this->validator->toAmount($cost * $qty);
     }
@@ -433,7 +439,7 @@ class SalesReturnJournalService
     /**
      * Baris DO yang mengirim produk pada Sales Invoice asal.
      */
-    protected function findDeliveryOrderLine($line, $productName, $return)
+    protected function findDeliveryOrderLine($line, $productName, $return, $companyId = null)
     {
         if (empty($line->invoice_detail_id)) {
             throw new JournalValidationException(
@@ -445,6 +451,7 @@ class SalesReturnJournalService
         $soDetailId = DB::table('sales_invoice_detail')
             ->where('id', $line->invoice_detail_id)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->value('so_detail_id');
 
         if (empty($soDetailId)) {
@@ -461,6 +468,7 @@ class SalesReturnJournalService
             ->whereNull('d.deleted')
             ->whereNull('h.deleted')
             ->where('h.status', '!=', 'CANCELED')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('d.company_id', $companyId))
             ->orderBy('d.id', 'asc')
             ->first();
 
@@ -483,11 +491,11 @@ class SalesReturnJournalService
      * diakui jurnal Delivery Order. Tidak ada fallback ke cost satuan lain
      * tanpa konversi karena itu membuat HPP kelipatan dari satuan sebenarnya.
      */
-    protected function resolveCost($productId, $uom, $productName = '')
+    protected function resolveCost($productId, $uom, $productName = '', $companyId = null)
     {
         $names = empty($productName) ? [] : [$productId => $productName];
 
-        return $this->costResolver->resolve($productId, $uom, $names);
+        return $this->costResolver->resolve($productId, $uom, $names, $companyId);
     }
 
     /**
@@ -495,16 +503,16 @@ class SalesReturnJournalService
      * Account mapping rules tidak punya kolom product_category_id pada tabel
      * produk, sehingga scope kategori diteruskan apa adanya oleh resolver.
      */
-    protected function resolveAccount(&$cache, $role)
+    protected function resolveAccount(&$cache, $role, $companyId = null)
     {
         if (! isset($cache[$role])) {
-            $cache[$role] = $this->resolver->resolve(self::TRANSACTION_TYPE, $role);
+            $cache[$role] = $this->resolver->resolve(self::TRANSACTION_TYPE, $role, null, null, $companyId);
         }
 
         return $cache[$role];
     }
 
-    protected function getProductNames($lines)
+    protected function getProductNames($lines, $companyId = null)
     {
         $ids = [];
         foreach ($lines as $line) {
@@ -514,6 +522,7 @@ class SalesReturnJournalService
         $rows = DB::table('product')
             ->select(['id', 'name'])
             ->whereIn('id', array_values(array_unique($ids)))
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->get();
 
         $names = [];

@@ -35,9 +35,9 @@ class JournalService
         ];
     }
 
-    public function generateJournalNo($prefix = 'JV')
+    public function generateJournalNo($prefix = 'JV', $companyId = null)
     {
-        return generateNoJournal($prefix);
+        return generateNoJournal($prefix, $companyId);
     }
 
     /**
@@ -84,14 +84,20 @@ class JournalService
 
     public function getDetailList($journalId)
     {
+        $companyId = session('id_company');
+
         return JournalDetail::where('journal_id', $journalId)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('line_no', 'asc')
             ->get();
     }
 
     public function find($id)
     {
-        $journal = JournalHeader::find($id);
+        $companyId = session('id_company');
+
+        $journal = JournalHeader::when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
+            ->find($id);
         if (empty($journal)) {
             return null;
         }
@@ -109,12 +115,26 @@ class JournalService
     }
 
     /**
+     * Company aktif: dari payload bila ada, selain itu dari session.
+     */
+    protected function resolveCompanyId($data = [])
+    {
+        $companyId = $data['company_id'] ?? null;
+        if ($companyId === null || $companyId === '') {
+            $companyId = session('id_company');
+        }
+        return ($companyId === null || $companyId === '') ? null : $companyId;
+    }
+
+    /**
      * Membuat jurnal baru berstatus DRAFT.
      */
     public function create($data = [], $isAutomatic = false)
     {
         $details = $this->normalizeDetails($data['details'] ?? []);
         $header = $this->buildHeader($data);
+        $companyId = $this->resolveCompanyId($data);
+        $header['company_id'] = $companyId;
 
         $errors = $this->validator->validate($header, $details, true);
         $errors = array_merge($errors, $this->validator->validateReference($header, $isAutomatic));
@@ -122,11 +142,14 @@ class JournalService
             throw new JournalValidationException(implode(' ', $errors), $errors);
         }
 
-        $period = $this->periodService->ensureOpen($header['journal_date']);
+        $period = $this->periodService->ensureOpen($header['journal_date'], $companyId);
 
-        return DB::transaction(function () use ($header, $details, $period) {
+        return DB::transaction(function () use ($header, $details, $period, $companyId) {
             $journal = new JournalHeader();
-            $journal->journal_no = $this->generateJournalNo();
+            if ($companyId !== null) {
+                $journal->company_id = $companyId;
+            }
+            $journal->journal_no = $this->generateJournalNo('JV', $companyId);
             $journal->journal_date = $header['journal_date'];
             $journal->accounting_period_id = $period->id;
             $journal->reference_type = $header['reference_type'];
@@ -136,7 +159,7 @@ class JournalService
             $journal->reversal_of_id = $header['reversal_of_id'] ?? null;
             $journal->save();
 
-            $this->syncDetails($journal->id, $details);
+            $this->syncDetails($journal->id, $details, $companyId);
 
             return $journal;
         });
@@ -150,13 +173,15 @@ class JournalService
         $data['id'] = $id;
         $details = $this->normalizeDetails($data['details'] ?? []);
         $header = $this->buildHeader($data);
+        $companyId = $this->resolveCompanyId($data);
+        $header['company_id'] = $companyId;
 
         $errors = $this->validator->validate($header, $details, false);
         if (! empty($errors)) {
             throw new JournalValidationException(implode(' ', $errors), $errors);
         }
 
-        $period = $this->periodService->ensureOpen($header['journal_date']);
+        $period = $this->periodService->ensureOpen($header['journal_date'], $companyId);
 
         return DB::transaction(function () use ($id, $header, $details, $period) {
             $journal = JournalHeader::where('id', $id)->lockForUpdate()->first();
@@ -174,7 +199,7 @@ class JournalService
             $journal->description = $header['description'];
             $journal->save();
 
-            $this->syncDetails($journal->id, $details);
+            $this->syncDetails($journal->id, $details, $journal->company_id);
 
             return $journal;
         });
@@ -201,11 +226,14 @@ class JournalService
         });
     }
 
-    public function syncDetails($journalId, $details = [])
+    public function syncDetails($journalId, $details = [], $companyId = null)
     {
         JournalDetail::where('journal_id', $journalId)->delete();
         foreach ($details as $detail) {
             $row = new JournalDetail();
+            if ($companyId !== null && $companyId !== '') {
+                $row->company_id = $companyId;
+            }
             $row->journal_id = $journalId;
             $row->line_no = $detail['line_no'];
             $row->account_id = $detail['account_id'];
@@ -236,6 +264,8 @@ class JournalService
      */
     public function getQuery()
     {
+        $companyId = session('id_company');
+
         return DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -247,6 +277,7 @@ class JournalService
             ])
             ->leftJoin('accounting_periods as ap', 'm.accounting_period_id', '=', 'ap.id')
             ->leftJoin('users as uj', 'm.posted_by', '=', 'uj.id')
-            ->leftJoin('journal_headers as ur', 'm.reversal_of_id', '=', 'ur.id');
+            ->leftJoin('journal_headers as ur', 'm.reversal_of_id', '=', 'ur.id')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('m.company_id', $companyId));
     }
 }

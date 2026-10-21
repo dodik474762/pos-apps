@@ -396,10 +396,15 @@ function generateNoCN()
     return $no;
 }
 
-function generateNoJournal($prefix = 'JV')
+function generateNoJournal($prefix = 'JV', $company_id = null)
 {
     $no = $prefix . strtoupper(date('m')) . date('y');
-    $data = DB::table('journal_headers')->where('journal_no', 'LIKE', '%' . $no . '%')->orderBy('journal_no', 'desc')->get()->toArray();
+    $data = DB::table('journal_headers')
+        ->where('journal_no', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->orderBy('journal_no', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {

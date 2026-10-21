@@ -43,8 +43,10 @@ class AccountMappingRulesController extends Controller
 
     public function getListAccount()
     {
+        $company_id = session('id_company');
         return Accounts::select('id', 'code', 'name')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('is_active', 1)
             ->where('is_header', 0)
             ->orderBy('code')
@@ -69,12 +71,14 @@ class AccountMappingRulesController extends Controller
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['account_list'] = $this->getListAccount();
         $data['warehouse_list'] = Warehouse::select('id', 'name', 'code')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('name')
             ->get()
             ->toArray();
@@ -95,11 +99,13 @@ class AccountMappingRulesController extends Controller
     public function ubah(Request $request)
     {
         $api = new MasterAccountMappingRulesController();
+        $company_id = session('id_company');
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['account_list'] = $this->getListAccount();
         $data['warehouse_list'] = Warehouse::select('id', 'name', 'code')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('name')
             ->get()
             ->toArray();

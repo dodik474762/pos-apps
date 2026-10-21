@@ -15,6 +15,7 @@ class ArSubledgerController extends Controller
 
     public function getData(Request $request)
     {
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -28,6 +29,7 @@ class ArSubledgerController extends Controller
             ->join('customer as c', 'c.id', 'ai.customer_id')
             ->whereNull('ai.deleted_at')
             ->whereNull('c.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('ai.company_id', $company_id))
             ->orderBy('ai.invoice_date', 'desc')
             ->orderBy('ai.id', 'desc');
 
@@ -47,7 +49,9 @@ class ArSubledgerController extends Controller
             $datadb->where('ai.status', $request->status);
         }
 
-        $data['recordsTotal'] = DB::table('ar_invoices')->whereNull('deleted_at')->count();
+        $data['recordsTotal'] = DB::table('ar_invoices')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->whereNull('deleted_at')->count();
 
         if ($request->filled('search.value')) {
             $keyword = $request->input('search.value');
@@ -90,8 +94,10 @@ class ArSubledgerController extends Controller
 
     public function getCustomerList(Request $request)
     {
+        $company_id = session('id_company');
         $customers = DB::table('customer')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('nama_customer')
             ->get(['id', 'code', 'nama_customer']);
 
@@ -103,6 +109,7 @@ class ArSubledgerController extends Controller
         $customerId = $request->input('customer_id');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+        $company_id = session('id_company');
 
         if (empty($customerId)) {
             return response()->json([
@@ -116,6 +123,7 @@ class ArSubledgerController extends Controller
         $invoices = DB::table('ar_invoices')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('invoice_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('invoice_date', '<=', $endDate))
             ->orderBy('invoice_date')
@@ -125,6 +133,7 @@ class ArSubledgerController extends Controller
         $payments = DB::table('ar_payments')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('payment_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('payment_date', '<=', $endDate))
             ->orderBy('payment_date')
@@ -134,6 +143,7 @@ class ArSubledgerController extends Controller
         $creditNotes = DB::table('ar_credit_notes')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('credit_note_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('credit_note_date', '<=', $endDate))
             ->orderBy('credit_note_date')
@@ -207,6 +217,7 @@ class ArSubledgerController extends Controller
 
     public function getDetailData($id)
     {
+        $company_id = session('id_company');
         $datadb = DB::table('ar_invoices as ai')
             ->select([
                 'ai.*',
@@ -217,6 +228,7 @@ class ArSubledgerController extends Controller
             ->where('ai.id', $id)
             ->whereNull('ai.deleted_at')
             ->whereNull('c.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('ai.company_id', $company_id))
             ->first();
 
         return response()->json($datadb);

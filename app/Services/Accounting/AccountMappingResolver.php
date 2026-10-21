@@ -30,15 +30,20 @@ class AccountMappingResolver
      *
      * @throws JournalValidationException
      */
-    public function resolve($transactionType, $role, $productCategoryId = null, $warehouseId = null)
+    public function resolve($transactionType, $role, $productCategoryId = null, $warehouseId = null, $companyId = null)
     {
         $transactionType = trim((string) $transactionType);
         $role = trim((string) $role);
 
+        if ($companyId === null || $companyId === '') {
+            $sessionCompany = session('id_company');
+            $companyId = ($sessionCompany === null || $sessionCompany === '') ? null : $sessionCompany;
+        }
+
         $categoryId = $this->normalizeKey($productCategoryId);
         $warehouseKey = $this->normalizeKey($warehouseId);
 
-        $rule = $this->findRule($transactionType, $role, $categoryId, $warehouseKey);
+        $rule = $this->findRule($transactionType, $role, $categoryId, $warehouseKey, $companyId);
 
         if (empty($rule)) {
             throw new JournalValidationException(
@@ -49,19 +54,20 @@ class AccountMappingResolver
             );
         }
 
-        return $this->assertUsableAccount($rule, $transactionType, $role);
+        return $this->assertUsableAccount($rule, $transactionType, $role, $companyId);
     }
 
     /**
      * Mencoba urutan fallback dari paling spesifik ke paling umum.
      */
-    protected function findRule($transactionType, $role, $categoryId, $warehouseId)
+    protected function findRule($transactionType, $role, $categoryId, $warehouseId, $companyId = null)
     {
         foreach ($this->buildScopes($categoryId, $warehouseId) as $scope) {
             $query = AccountMappingRules::where('transaction_type', $transactionType)
                 ->where('account_role', $role)
                 ->where('is_active', 1)
-                ->whereNull('deleted_at');
+                ->whereNull('deleted_at')
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId));
 
             $query->where(function ($q) use ($scope) {
                 $q->where(function ($q2) use ($scope) {
@@ -112,12 +118,13 @@ class AccountMappingResolver
     /**
      * Akun hasil mapping wajib ada, bukan header, dan aktif.
      */
-    protected function assertUsableAccount($rule, $transactionType, $role)
+    protected function assertUsableAccount($rule, $transactionType, $role, $companyId = null)
     {
         $account = DB::table('accounts')
             ->select(['id', 'code', 'name', 'is_header', 'is_active'])
             ->where('id', $rule->account_id)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         if (empty($account)) {

@@ -62,24 +62,42 @@ class AccountingPeriodService
     }
 
     /**
+     * Company aktif: eksplisit bila diberikan, selain itu dari session.
+     */
+    public function resolveCompanyId($companyId = null)
+    {
+        if ($companyId !== null && $companyId !== '') {
+            return $companyId;
+        }
+        $sessionCompany = session('id_company');
+        return ($sessionCompany === null || $sessionCompany === '') ? null : $sessionCompany;
+    }
+
+    /**
      * Cari periode akuntansi yang mencakup sebuah tanggal.
      */
-    public function findByDate($date = '')
+    public function findByDate($date = '', $companyId = null)
     {
         $date = $this->normalizeDate($date);
         if (empty($date)) {
             return null;
         }
 
+        $companyId = $this->resolveCompanyId($companyId);
+
         return AccountingPeriod::where('start_date', '<=', $date)
             ->where('end_date', '>=', $date)
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->first();
     }
 
-    public function findByYearMonth($year, $month)
+    public function findByYearMonth($year, $month, $companyId = null)
     {
+        $companyId = $this->resolveCompanyId($companyId);
+
         return AccountingPeriod::where('year', $year)
             ->where('month', $month)
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->first();
     }
 
@@ -94,14 +112,14 @@ class AccountingPeriodService
     /**
      * Aturan 6: journal date harus berada pada accounting period OPEN.
      */
-    public function ensureOpen($date = '')
+    public function ensureOpen($date = '', $companyId = null)
     {
         $date = $this->normalizeDate($date);
         if (empty($date)) {
             throw new JournalValidationException('Tanggal jurnal tidak valid.');
         }
 
-        $period = $this->findByDate($date);
+        $period = $this->findByDate($date, $companyId);
         if (empty($period)) {
             throw new JournalValidationException('Periode akuntansi untuk tanggal ' . date('d-m-Y', strtotime($date)) . ' belum dibuat, jurnal tidak dapat diproses.');
         }
@@ -139,7 +157,9 @@ class AccountingPeriodService
             return $result;
         }
 
-        $exist = $this->findByYearMonth($year, $month);
+        $companyId = $this->resolveCompanyId($data['company_id'] ?? null);
+
+        $exist = $this->findByYearMonth($year, $month, $companyId);
         if (! empty($exist) && (empty($data['id']) || $exist->id != $data['id'])) {
             $result['message'] = 'Periode ' . $this->getPeriodLabel($exist) . ' sudah ada';
             return $result;
@@ -154,6 +174,9 @@ class AccountingPeriodService
         DB::beginTransaction();
         try {
             $period = empty($data['id']) ? new AccountingPeriod() : AccountingPeriod::find($data['id']);
+            if (empty($data['id']) && $companyId !== null) {
+                $period->company_id = $companyId;
+            }
             $period->year = $year;
             $period->month = $month;
             $period->start_date = $startDate;
@@ -194,6 +217,7 @@ class AccountingPeriodService
             $draftJournal = DB::table('journal_headers')
                 ->whereBetween('journal_date', [$period->start_date, $period->end_date])
                 ->where('status', JournalService::STATUS_DRAFT)
+                ->when(! empty($period->company_id), fn ($q) => $q->where('company_id', $period->company_id))
                 ->count();
             if ($draftJournal > 0) {
                 throw new \RuntimeException('Periode masih memiliki ' . $draftJournal . ' jurnal DRAFT, tidak dapat ditutup. Silakan posting atau hapus jurnal DRAFT terlebih dahulu.');
@@ -206,6 +230,7 @@ class AccountingPeriodService
                             ->where('month', '<', $period->month);
                     });
             })
+                ->when(! empty($period->company_id), fn ($q) => $q->where('company_id', $period->company_id))
                 ->orderBy('year', 'desc')
                 ->orderBy('month', 'desc')
                 ->first();
@@ -272,14 +297,18 @@ class AccountingPeriodService
 
         DB::beginTransaction();
         try {
+            $companyId = $this->resolveCompanyId(null);
             for ($month = 1; $month <= 12; $month++) {
-                $exist = $this->findByYearMonth($year, $month);
+                $exist = $this->findByYearMonth($year, $month, $companyId);
                 if (! empty($exist)) {
                     $skipped++;
                     continue;
                 }
 
                 $period = new AccountingPeriod();
+                if ($companyId !== null) {
+                    $period->company_id = $companyId;
+                }
                 $period->year = $year;
                 $period->month = $month;
                 $period->start_date = date('Y-m-01', strtotime($year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-01'));
@@ -303,7 +332,9 @@ class AccountingPeriodService
 
     public function getListPeriod($year = null)
     {
-        $query = AccountingPeriod::select('*');
+        $companyId = $this->resolveCompanyId(null);
+        $query = AccountingPeriod::select('*')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId));
         if (! empty($year)) {
             $query->where('year', $year);
         }

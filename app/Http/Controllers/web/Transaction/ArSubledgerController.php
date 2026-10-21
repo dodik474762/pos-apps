@@ -48,7 +48,9 @@ class ArSubledgerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses_session');
+        $company_id = session('id_company');
         $data['customers'] = Customer::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('nama_customer')
             ->get(['id', 'code', 'nama_customer'])
             ->toArray();
@@ -70,7 +72,9 @@ class ArSubledgerController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['akses_session'] = session('akses_session');
+        $company_id = session('id_company');
         $data['customer'] = \App\Models\Master\Customer::where('id', $request->customer_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->first();
         $data['start_date'] = $request->start_date;
@@ -88,6 +92,7 @@ class ArSubledgerController extends Controller
         $invoices = DB::table('ar_invoices')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('invoice_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('invoice_date', '<=', $endDate))
             ->get();
@@ -95,6 +100,7 @@ class ArSubledgerController extends Controller
         $payments = DB::table('ar_payments')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('payment_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('payment_date', '<=', $endDate))
             ->get();
@@ -102,6 +108,7 @@ class ArSubledgerController extends Controller
         $creditNotes = DB::table('ar_credit_notes')
             ->where('customer_id', $customerId)
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->when($startDate, fn($q) => $q->where('credit_note_date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('credit_note_date', '<=', $endDate))
             ->get();

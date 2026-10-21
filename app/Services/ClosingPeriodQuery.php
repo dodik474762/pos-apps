@@ -221,8 +221,11 @@ class ClosingPeriodQuery
      */
     public static function openPeriods(): array
     {
+        $companyId = self::activeCompanyId();
+
         return DB::table('accounting_periods')
             ->where('status', 'OPEN')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('start_date')
             ->orderByDesc('id')
             ->get()
@@ -240,9 +243,12 @@ class ClosingPeriodQuery
     public static function resolvePeriod($periodId = null): array
     {
         if (! empty($periodId)) {
+            $companyId = self::activeCompanyId();
+
             $period = DB::table('accounting_periods')
                 ->where('status', 'OPEN')
                 ->where('id', $periodId)
+                ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
                 ->first();
 
             if (! empty($period)) {
@@ -269,6 +275,16 @@ class ClosingPeriodQuery
         $description = trim((string) ($period->description ?? ''));
 
         return $description === '' ? $label : $label . ' (' . $description . ')';
+    }
+
+    /**
+     * Company aktif dari session; null/'' berarti tanpa filter.
+     */
+    private static function activeCompanyId()
+    {
+        $companyId = session('id_company');
+
+        return ($companyId === null || $companyId === '') ? null : $companyId;
     }
 
     public static function searchColumns(string $type): array
@@ -298,6 +314,7 @@ class ClosingPeriodQuery
     {
         $dateStart = $dateStart ?: self::periodStart();
         $dateEnd = $dateEnd ?: self::periodEnd();
+        $companyId = self::activeCompanyId();
 
         switch ($type) {
             case 'gr':
@@ -319,6 +336,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->where('m.status', '!=', 'completed')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->where(function ($query) use ($dateStart, $dateEnd) {
                         $query->whereBetween('m.received_date', [$dateStart, $dateEnd])
                             ->orWhere(function ($sub) use ($dateStart, $dateEnd) {
@@ -342,6 +360,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->where('m.status', '!=', 'posted')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.invoice_date', [$dateStart, $dateEnd]);
 
             case 'vb':
@@ -361,6 +380,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->where('m.status', '!=', 'posted')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.payment_date', [$dateStart, $dateEnd]);
 
             case 'pr':
@@ -382,6 +402,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->where('m.status', '!=', 'POSTED')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.return_date', [$dateStart, $dateEnd]);
 
             case 'si':
@@ -404,6 +425,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.post_date')
                     ->whereNull('m.deleted')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.invoice_date', [$dateStart, $dateEnd]);
 
             case 'do':
@@ -423,6 +445,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->whereNull('m.post_date')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.do_date', [$dateStart, $dateEnd]);
 
             case 'sp':
@@ -442,6 +465,7 @@ class ClosingPeriodQuery
                     ])
                     ->whereNull('m.deleted')
                     ->whereNull('m.post_date')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.payment_date', [$dateStart, $dateEnd]);
 
             case 'sr':
@@ -463,6 +487,7 @@ class ClosingPeriodQuery
                     ->whereNull('m.deleted')
                     ->whereNull('m.post_date')
                     ->where('m.return_type', 'RETURN')
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.return_date', [$dateStart, $dateEnd]);
 
             case 'sc':
@@ -475,6 +500,7 @@ class ClosingPeriodQuery
                         'm.created_at',
                         'u.name as created_by_name',
                     ])
+                    ->when($companyId !== null, fn ($q) => $q->where('m.company_id', $companyId))
                     ->whereBetween('m.closing_date', [$dateStart, $dateEnd]);
 
             default:

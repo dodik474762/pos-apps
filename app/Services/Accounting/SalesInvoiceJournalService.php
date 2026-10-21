@@ -38,10 +38,13 @@ class SalesInvoiceJournalService
             throw new JournalValidationException('Sales invoice tidak ditemukan.');
         }
 
+        $companyId = $invoice->company_id ?? null;
+
         // Idempotent: invoice yang sudah memiliki jurnal aktif tidak digandakan.
         $existing = JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $invoice->id)
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
         if (! empty($existing)) {
             return $existing;
@@ -55,8 +58,8 @@ class SalesInvoiceJournalService
         $taxAmount = $this->validator->toAmount($invoice->tax_amount);
         $revenueAmount = round($total - $taxAmount, 2);
 
-        $accountAr = $this->resolveAccount(self::ROLE_AR);
-        $accountRevenue = $this->resolveAccount(self::ROLE_REVENUE);
+        $accountAr = $this->resolveAccount(self::ROLE_AR, $companyId);
+        $accountRevenue = $this->resolveAccount(self::ROLE_REVENUE, $companyId);
 
         $details = [];
         $details[] = [
@@ -69,7 +72,7 @@ class SalesInvoiceJournalService
 
         $lineNo = 2;
         if ($taxAmount > JournalValidator::EPSILON) {
-            $accountTax = $this->resolveAccount(self::ROLE_TAX);
+            $accountTax = $this->resolveAccount(self::ROLE_TAX, $companyId);
             $details[] = [
                 'line_no' => $lineNo,
                 'account_id' => $accountTax,
@@ -93,6 +96,7 @@ class SalesInvoiceJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $invoice->id,
             'description' => 'Sales Invoice ' . $invoice->invoice_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -104,12 +108,13 @@ class SalesInvoiceJournalService
     /**
      * Mengambil account_id dari Account Mapping berdasarkan transaction_type dan account_role.
      */
-    public function resolveAccount($role)
+    public function resolveAccount($role, $companyId = null)
     {
         $rule = AccountMappingRules::where('transaction_type', self::TRANSACTION_TYPE)
             ->where('account_role', $role)
             ->where('is_active', 1)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         if (empty($rule)) {
@@ -124,6 +129,7 @@ class SalesInvoiceJournalService
             ->select(['id', 'code', 'name', 'is_header', 'is_active'])
             ->where('id', $rule->account_id)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         if (empty($account)) {

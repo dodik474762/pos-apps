@@ -38,6 +38,7 @@ class JournalReversalService
             // Tidak boleh dilakukan dua kali untuk jurnal yang sama.
             $existing = JournalHeader::where('reversal_of_id', $original->id)
                 ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+                ->when(! empty($original->company_id), fn ($q) => $q->where('company_id', $original->company_id))
                 ->first();
             if (! empty($existing)) {
                 throw new JournalValidationException('Jurnal ' . $original->journal_no . ' sudah pernah direversal melalui jurnal ' . $existing->journal_no . '.');
@@ -67,7 +68,10 @@ class JournalReversalService
             $description = $this->buildDescription($original, $data['description'] ?? '');
 
             $reversal = new JournalHeader();
-            $reversal->journal_no = generateNoJournal('JVR');
+            if (! empty($original->company_id)) {
+                $reversal->company_id = $original->company_id;
+            }
+            $reversal->journal_no = generateNoJournal('JVR', $original->company_id);
             $reversal->journal_date = $reversalDate;
             $reversal->accounting_period_id = $period->id;
             $reversal->reference_type = $original->reference_type;
@@ -80,7 +84,7 @@ class JournalReversalService
             $reversal->save();
 
             $journalService = new JournalService();
-            $journalService->syncDetails($reversal->id, $details);
+            $journalService->syncDetails($reversal->id, $details, $reversal->company_id);
 
             // Jurnal asli menjadi REVERSED.
             $original->status = JournalService::STATUS_REVERSED;

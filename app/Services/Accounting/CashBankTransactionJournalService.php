@@ -87,8 +87,14 @@ class CashBankTransactionJournalService
 
         $direction = $this->resolveDirection($params['direction'] ?? null);
 
+        // Tidak ada header dokumen yang dimuat di sini; company aktif diambil dari session.
+        $companyId = session('id_company');
+        if ($companyId === null || $companyId === '') {
+            $companyId = null;
+        }
+
         // Idempoten: transaksi yang sudah punya jurnal aktif tidak digandakan.
-        $existing = $this->getActiveJournal($referenceId);
+        $existing = $this->getActiveJournal($referenceId, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu dicoba lagi.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -99,10 +105,11 @@ class CashBankTransactionJournalService
         }
 
         $amount = $this->resolveAmount($params['amount'] ?? null);
-        $bankAccountId = $this->resolveBankAccount($params['bank_or_cash_account_id'] ?? null);
+        $bankAccountId = $this->resolveBankAccount($params['bank_or_cash_account_id'] ?? null, $companyId);
         $contraAccountId = $this->resolveContraAccount(
             $params['contra_account_id'] ?? null,
-            $params['default_contra_role'] ?? null
+            $params['default_contra_role'] ?? null,
+            $companyId
         );
 
         if ($bankAccountId === $contraAccountId) {
@@ -118,6 +125,7 @@ class CashBankTransactionJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $referenceId,
             'description' => $this->buildDescription($params, $direction),
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -148,7 +156,7 @@ class CashBankTransactionJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * lagi mengunci transaksi.
      */
-    public function getActiveJournal($referenceId)
+    public function getActiveJournal($referenceId, $companyId = null)
     {
         if (empty($referenceId)) {
             return null;
@@ -158,6 +166,7 @@ class CashBankTransactionJournalService
             ->where('reference_id', $referenceId)
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -242,7 +251,7 @@ class CashBankTransactionJournalService
      * Akun kas/bank dipilih user, tidak lewat mapping. Akun wajib ada, bukan
      * header, aktif, dan benar-benar berada di bawah header CASH & BANK.
      */
-    protected function resolveBankAccount($accountId)
+    protected function resolveBankAccount($accountId, $companyId = null)
     {
         if (empty($accountId)) {
             throw new JournalValidationException(
@@ -250,9 +259,9 @@ class CashBankTransactionJournalService
             );
         }
 
-        $account = $this->assertUsableAccount($accountId, 'pilihan Akun Bank/Cash di form Kas/Bank');
+        $account = $this->assertUsableAccount($accountId, 'pilihan Akun Bank/Cash di form Kas/Bank', $companyId);
 
-        if (! $this->isCashBankAccount((int) $accountId)) {
+        if (! $this->isCashBankAccount((int) $accountId, $companyId)) {
             throw new JournalValidationException(
                 'Akun ' . $account->code . ' (' . $account->name . ') bukan akun Kas/Bank. '
                 . 'Akun Bank/Cash harus berada di bawah header ' . self::CASH_BANK_PARENT_CODE . '.'
@@ -268,19 +277,21 @@ class CashBankTransactionJournalService
      * dioverride karena parameter ini hanya dipakai bila form tidak mengirim
      * akun lawan.
      */
-    protected function resolveContraAccount($accountId, $defaultRole)
+    protected function resolveContraAccount($accountId, $defaultRole, $companyId = null)
     {
         if (! empty($accountId)) {
             return (int) $this->assertUsableAccount(
                 $accountId,
-                'pilihan Akun Lawan di form Kas/Bank'
+                'pilihan Akun Lawan di form Kas/Bank',
+                $companyId
             )->id;
         }
 
         if (! empty($defaultRole)) {
             return (int) $this->assertUsableAccount(
-                $this->resolver->resolve(self::TRANSACTION_TYPE, $defaultRole),
-                false
+                $this->resolver->resolve(self::TRANSACTION_TYPE, $defaultRole, null, null, $companyId),
+                false,
+                $companyId
             )->id;
         }
 
@@ -295,12 +306,13 @@ class CashBankTransactionJournalService
     /**
      * Akun wajib ada, bukan header account, dan aktif. Aturan 5 Journal Engine.
      */
-    protected function assertUsableAccount($accountId, $fromUserSelection)
+    protected function assertUsableAccount($accountId, $fromUserSelection, $companyId = null)
     {
         $account = DB::table('accounts')
             ->select(['id', 'code', 'name', 'is_header', 'is_active', 'parent_id'])
             ->where('id', $accountId)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         $source = $fromUserSelection ? 'form Kas/Bank' : 'Account Mapping Rules';
@@ -328,11 +340,12 @@ class CashBankTransactionJournalService
      * Menelusuri parent_id naik sampai ketemu header CASH & BANK. Akun di bawah
      * header tersebut dianggap akun kas/bank yang sah.
      */
-    protected function isCashBankAccount($accountId)
+    protected function isCashBankAccount($accountId, $companyId = null)
     {
         $parentId = DB::table('accounts')
             ->where('id', $accountId)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->value('parent_id');
 
         $guard = 0;
@@ -341,6 +354,7 @@ class CashBankTransactionJournalService
                 ->select(['id', 'code', 'is_header'])
                 ->where('id', $parentId)
                 ->whereNull('deleted_at')
+                ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                 ->first();
 
             if (empty($parent)) {

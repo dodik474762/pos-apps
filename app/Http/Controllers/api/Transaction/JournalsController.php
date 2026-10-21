@@ -152,6 +152,7 @@ class JournalsController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $journal = $this->journalService->getQuery()->where('m.id', $id)->first();
         if (empty($journal)) {
             $query = DB::getQueryLog();
@@ -159,8 +160,10 @@ class JournalsController extends Controller
         }
 
         $details = $this->journalService->getDetailList($id)
-            ->map(function ($row) {
-                $account = Accounts::select('code', 'name')->find($row->account_id);
+            ->map(function ($row) use ($company_id) {
+                $account = Accounts::select('code', 'name')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->find($row->account_id);
                 $row->account_code = empty($account) ? '' : $account->code;
                 $row->account_name = empty($account) ? '' : $account->name;
                 return $row;
@@ -174,10 +177,12 @@ class JournalsController extends Controller
 
     public function getAccountList(Request $request)
     {
+        $company_id = session('id_company');
         $accounts = Accounts::select('id', 'code', 'name', 'normal_balance')
             ->whereNull('deleted_at')
             ->where('is_active', 1)
             ->where('is_header', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get()
             ->toArray();

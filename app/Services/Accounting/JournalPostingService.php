@@ -100,9 +100,12 @@ class JournalPostingService
             $accountIds[] = $detail['account_id'] ?? null;
         }
 
+        $companyId = $journal->company_id ?? null;
+
         $accounts = DB::table('accounts')
             ->select(['id', 'code', 'name'])
             ->whereIn('id', array_filter(array_unique($accountIds)))
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->get()
             ->keyBy('id');
 
@@ -121,6 +124,9 @@ class JournalPostingService
             $account = $accounts[$detail['account_id']] ?? null;
 
             $gl = new GeneralLedger();
+            if ($companyId !== null && $companyId !== '') {
+                $gl->company_id = $companyId;
+            }
             $gl->reference = $journal->journal_no;
             $gl->posting_date = $journal->journal_date;
             $gl->account_id = $detail['account_id'];

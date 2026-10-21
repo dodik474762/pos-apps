@@ -42,8 +42,10 @@ class AccountsController extends Controller
 
     public function getListData($exclude_id = null)
     {
+        $company_id = session('id_company');
         $query = Accounts::select('id', 'code', 'name')
             ->whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code');
         if(!empty($exclude_id)){
             $query->where('id', '!=', $exclude_id);

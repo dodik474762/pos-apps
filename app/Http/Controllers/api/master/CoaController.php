@@ -15,6 +15,7 @@ class CoaController extends Controller
 
     public function getData(){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -23,6 +24,7 @@ class CoaController extends Controller
             'm.*',
         ])
         ->whereNull('m.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
         ->orderBy('m.account_code', 'asc');
         if(isset($_POST)){
             $data['recordsTotal'] = $datadb->get()->count();
@@ -57,11 +59,13 @@ class CoaController extends Controller
     public function submit(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
             if($data['id'] == ''){
                 $exist = Coa::where('account_code', $data['account_code'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->whereNull('deleted')
                 ->first();
                 if(!empty($exist)){
@@ -70,7 +74,7 @@ class CoaController extends Controller
                     return response()->json($result);
                 }
             }
-            $roles = $data['id'] == '' ? new Coa() : Coa::find($data['id']);
+            $roles = $data['id'] == '' ? new Coa() : Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->account_code = $data['account_code'];
             $roles->account_name = $data['account_name'];
             $roles->parent_code = $data['parent_code'] == '' ? null : $data['parent_code'];
@@ -79,6 +83,9 @@ class CoaController extends Controller
             $roles->normal_balance = $data['normal_balance'];
             $roles->description = $data['description'];
             $roles->is_active = $data['is_active'];
+            if ($company_id !== null && $company_id !== '') {
+                $roles->company_id = $company_id;
+            }
             $roles->save();
 
             DB::commit();
@@ -94,10 +101,11 @@ class CoaController extends Controller
     public function confirmDelete(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
-            $menu = Coa::find($data['id']);
+            $menu = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->deleted_by = session('user_id');
             $menu->save();
@@ -114,10 +122,13 @@ class CoaController extends Controller
 
     public function getDetailData($id){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+        ])
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+        ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

@@ -20,6 +20,7 @@ class AccountMappingRulesController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -28,6 +29,7 @@ class AccountMappingRulesController extends Controller
             ])
             ->leftJoin('accounts as a', 'm.account_id', '=', 'a.id')
             ->whereNull('m.deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.transaction_type', 'asc')
             ->orderBy('m.account_role', 'asc');
         if (isset($_POST)) {

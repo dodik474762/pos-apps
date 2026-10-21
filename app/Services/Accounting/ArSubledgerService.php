@@ -90,6 +90,25 @@ class ArSubledgerService
     }
 
     /**
+     * Company aktif dari record (bila ada), selain itu dari session.
+     * null berarti tanpa filter (kompatibel mundur).
+     */
+    protected function getCompanyId($preferred = null)
+    {
+        if ($preferred !== null && $preferred !== '') {
+            return (int) $preferred;
+        }
+
+        $companyId = session('id_company');
+
+        if ($companyId === null || $companyId === '') {
+            return null;
+        }
+
+        return (int) $companyId;
+    }
+
+    /**
      * Titik masuk tunggal. Dipanggil modul setelah jurnal di-post.
      *
      * Jurnal yang belum POSTED diabaikan, sehingga subledger tidak pernah
@@ -114,22 +133,23 @@ class ArSubledgerService
             return false;
         }
 
+        $companyId = $this->getCompanyId($journal->company_id ?? null);
         $referenceType = (string) $journal->reference_type;
 
         if ($referenceType === self::REFERENCE_INVOICE) {
-            $this->formInvoice($journal);
+            $this->formInvoice($journal, $companyId);
 
             return true;
         }
 
         if ($referenceType === self::REFERENCE_PAYMENT) {
-            $this->formPayment($journal);
+            $this->formPayment($journal, $companyId);
 
             return true;
         }
 
         if ($referenceType === self::REFERENCE_CREDIT_NOTE) {
-            $this->formCreditNote($journal);
+            $this->formCreditNote($journal, $companyId);
 
             return true;
         }
@@ -145,6 +165,7 @@ class ArSubledgerService
      */
     public function reverseFromJournal($journal)
     {
+        $companyId = $this->getCompanyId($journal->company_id ?? null);
         $referenceType = (string) $journal->reference_type;
         $referenceId = (int) $journal->reference_id;
 
@@ -153,15 +174,15 @@ class ArSubledgerService
         }
 
         if ($referenceType === self::REFERENCE_INVOICE) {
-            return $this->reverseInvoice($referenceId);
+            return $this->reverseInvoice($referenceId, $companyId);
         }
 
         if ($referenceType === self::REFERENCE_PAYMENT) {
-            return $this->reverseSource(self::SOURCE_PAYMENT, $referenceId);
+            return $this->reverseSource(self::SOURCE_PAYMENT, $referenceId, $companyId);
         }
 
         if ($referenceType === self::REFERENCE_CREDIT_NOTE) {
-            return $this->reverseSource(self::SOURCE_CREDIT_NOTE, $referenceId);
+            return $this->reverseSource(self::SOURCE_CREDIT_NOTE, $referenceId, $companyId);
         }
 
         return false;
@@ -170,11 +191,15 @@ class ArSubledgerService
     /**
      * Invoice membentuk tagihan AR.
      */
-    protected function formInvoice($journal)
+    protected function formInvoice($journal, $companyId = null)
     {
         $invoiceId = (int) $journal->reference_id;
+        $companyId = $this->getCompanyId($companyId);
 
-        $invoice = DB::table('sales_invoice_header')->where('id', $invoiceId)->first();
+        $invoice = DB::table('sales_invoice_header')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $invoiceId)
+            ->first();
 
         if (empty($invoice)) {
             throw new JournalValidationException(
@@ -187,9 +212,14 @@ class ArSubledgerService
             );
         }
 
-        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_INVOICE, 'debit');
+        $companyId = $this->getCompanyId($invoice->company_id ?? $companyId);
 
-        $existing = DB::table('ar_invoices')->where('sales_invoice_id', $invoiceId)->first();
+        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_INVOICE, 'debit', $companyId);
+
+        $existing = DB::table('ar_invoices')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('sales_invoice_id', $invoiceId)
+            ->first();
 
         $dueDate = empty($invoice->due_date) ? $invoice->invoice_date : $invoice->due_date;
 
@@ -201,6 +231,10 @@ class ArSubledgerService
             'invoice_amount' => $amount,
             'updated_at' => now(),
         ];
+
+        if ($companyId !== null) {
+            $attributes['company_id'] = $companyId;
+        }
 
         if (empty($existing)) {
             DB::table('ar_invoices')->insert($attributes + [
@@ -229,11 +263,15 @@ class ArSubledgerService
     /**
      * Payment membentuk penerimaan kas dan langsung dialokasikan ke invoice.
      */
-    protected function formPayment($journal)
+    protected function formPayment($journal, $companyId = null)
     {
         $paymentId = (int) $journal->reference_id;
+        $companyId = $this->getCompanyId($companyId);
 
-        $payment = DB::table('sales_payment_header')->where('id', $paymentId)->first();
+        $payment = DB::table('sales_payment_header')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $paymentId)
+            ->first();
 
         if (empty($payment)) {
             throw new JournalValidationException(
@@ -246,7 +284,9 @@ class ArSubledgerService
             );
         }
 
-        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_PAYMENT, 'credit');
+        $companyId = $this->getCompanyId($payment->company_id ?? $companyId);
+
+        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_PAYMENT, 'credit', $companyId);
 
         $record = $this->upsertSourceRecord(
             'ar_payments',
@@ -256,7 +296,8 @@ class ArSubledgerService
                 'customer_id' => (int) $payment->customer_id,
                 'payment_date' => $payment->payment_date,
                 'amount' => $amount,
-            ]
+            ],
+            $companyId
         );
 
         $this->allocate(
@@ -265,18 +306,23 @@ class ArSubledgerService
             $record['customer_id'],
             $record['amount'],
             $this->toAmount($record['allocated_amount']),
-            $payment->payment_date
+            $payment->payment_date,
+            $companyId
         );
     }
 
     /**
      * Sales Return membentuk kredit nota dan langsung dialokasikan ke invoice.
      */
-    protected function formCreditNote($journal)
+    protected function formCreditNote($journal, $companyId = null)
     {
         $returnId = (int) $journal->reference_id;
+        $companyId = $this->getCompanyId($companyId);
 
-        $return = DB::table('sales_return')->where('id', $returnId)->first();
+        $return = DB::table('sales_return')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $returnId)
+            ->first();
 
         if (empty($return)) {
             throw new JournalValidationException(
@@ -289,7 +335,9 @@ class ArSubledgerService
             );
         }
 
-        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_CREDIT_NOTE, 'credit');
+        $companyId = $this->getCompanyId($return->company_id ?? $companyId);
+
+        $amount = $this->arAmountFromJournal($journal, self::TRANSACTION_CREDIT_NOTE, 'credit', $companyId);
 
         $record = $this->upsertSourceRecord(
             'ar_credit_notes',
@@ -299,7 +347,8 @@ class ArSubledgerService
                 'customer_id' => (int) $return->customer_id,
                 'credit_note_date' => $return->return_date,
                 'amount' => $amount,
-            ]
+            ],
+            $companyId
         );
 
         $this->allocate(
@@ -308,7 +357,8 @@ class ArSubledgerService
             $record['customer_id'],
             $record['amount'],
             $this->toAmount($record['allocated_amount']),
-            $return->return_date
+            $return->return_date,
+            $companyId
         );
     }
 
@@ -320,17 +370,27 @@ class ArSubledgerService
      *
      * @return array  source_id, customer_id, amount, allocated_amount
      */
-    protected function upsertSourceRecord($table, $foreignKey, $foreignId, $attributes)
+    protected function upsertSourceRecord($table, $foreignKey, $foreignId, $attributes, $companyId = null)
     {
-        $existing = DB::table($table)->where($foreignKey, $foreignId)->first();
+        $companyId = $this->getCompanyId($companyId);
+
+        $existing = DB::table($table)
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where($foreignKey, $foreignId)
+            ->first();
 
         $amount = $this->toAmount($attributes['amount']);
         $allocated = 0;
 
+        if ($companyId !== null) {
+            $attributes['company_id'] = $companyId;
+        }
+
         if (! empty($existing)) {
             $this->releaseAllocationsFor(
                 $this->sourceTypeFor($table),
-                (int) $existing->id
+                (int) $existing->id,
+                $companyId
             );
             $allocated = 0;
 
@@ -370,8 +430,10 @@ class ArSubledgerService
      * @param  string  $allocationDate
      * @return float  total alokasi baru
      */
-    protected function allocate($sourceType, $sourceId, $customerId, $amount, $alreadyAllocated = 0, $allocationDate = null)
+    protected function allocate($sourceType, $sourceId, $customerId, $amount, $alreadyAllocated = 0, $allocationDate = null, $companyId = null)
     {
+        $companyId = $this->getCompanyId($companyId);
+
         $allocatedBefore = $this->toAmount($alreadyAllocated);
         $available = $amount - $allocatedBefore;
 
@@ -384,6 +446,7 @@ class ArSubledgerService
             ->whereIn('status', [self::INVOICE_OPEN, self::INVOICE_PARTIALLY_PAID])
             ->where('outstanding_amount', '>', self::EPSILON)
             ->whereNull('deleted_at')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('due_date', 'asc')
             ->orderBy('invoice_date', 'asc')
             ->orderBy('id', 'asc')
@@ -405,7 +468,7 @@ class ArSubledgerService
                 continue;
             }
 
-            DB::table('ar_allocations')->insert([
+            $allocationData = [
                 'source_type' => $sourceType,
                 'source_id' => $sourceId,
                 'ar_invoice_id' => (int) $invoice->id,
@@ -414,9 +477,16 @@ class ArSubledgerService
                 'status' => self::ALLOCATION_ACTIVE,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
 
-            $this->applyToInvoiceBalance((int) $invoice->id, $take);
+            $allocationCompanyId = $this->getCompanyId($invoice->company_id ?? $companyId);
+            if ($allocationCompanyId !== null) {
+                $allocationData['company_id'] = $allocationCompanyId;
+            }
+
+            DB::table('ar_allocations')->insert($allocationData);
+
+            $this->applyToInvoiceBalance((int) $invoice->id, $take, $companyId);
 
             $total += $take;
         }
@@ -432,9 +502,15 @@ class ArSubledgerService
      * Credit note memakai jalur yang sama karena sama-sama mengurangi
      * tagihan pelanggan.
      */
-    protected function applyToInvoiceBalance($invoiceId, $amount)
+    protected function applyToInvoiceBalance($invoiceId, $amount, $companyId = null)
     {
-        $invoice = DB::table('ar_invoices')->where('id', $invoiceId)->lockForUpdate()->first();
+        $companyId = $this->getCompanyId($companyId);
+
+        $invoice = DB::table('ar_invoices')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $invoiceId)
+            ->lockForUpdate()
+            ->first();
 
         if (empty($invoice)) {
             return;
@@ -459,9 +535,15 @@ class ArSubledgerService
     /**
      * Mengembalikan outstanding invoice ketika alokasi dibatalkan.
      */
-    protected function restoreInvoiceBalance($invoiceId, $amount)
+    protected function restoreInvoiceBalance($invoiceId, $amount, $companyId = null)
     {
-        $invoice = DB::table('ar_invoices')->where('id', $invoiceId)->lockForUpdate()->first();
+        $companyId = $this->getCompanyId($companyId);
+
+        $invoice = DB::table('ar_invoices')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $invoiceId)
+            ->lockForUpdate()
+            ->first();
 
         if (empty($invoice) || $invoice->status === self::INVOICE_REVERSED) {
             return;
@@ -481,18 +563,24 @@ class ArSubledgerService
     /**
      * Membatalkan reversal untuk payment atau credit note.
      */
-    protected function reverseSource($sourceType, $referenceId)
+    protected function reverseSource($sourceType, $referenceId, $companyId = null)
     {
+        $companyId = $this->getCompanyId($companyId);
         $table = $sourceType === self::SOURCE_PAYMENT ? 'ar_payments' : 'ar_credit_notes';
         $foreignKey = $sourceType === self::SOURCE_PAYMENT ? 'customer_payment_id' : 'sales_return_id';
 
-        $record = DB::table($table)->where($foreignKey, $referenceId)->first();
+        $record = DB::table($table)
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where($foreignKey, $referenceId)
+            ->first();
 
         if (empty($record)) {
             return false;
         }
 
-        $this->releaseAllocationsFor($sourceType, (int) $record->id);
+        $companyId = $this->getCompanyId($record->company_id ?? $companyId);
+
+        $this->releaseAllocationsFor($sourceType, (int) $record->id, $companyId);
 
         DB::table($table)->where('id', $record->id)->update([
             'allocated_amount' => 0,
@@ -509,15 +597,23 @@ class ArSubledgerService
      * Invoice tidak boleh dihapus dari subledger karena general_ledger masih
      * menyimpan jejaknya, sehingga statusnya ditandai REVERSED.
      */
-    protected function reverseInvoice($salesInvoiceId)
+    protected function reverseInvoice($salesInvoiceId, $companyId = null)
     {
-        $invoice = DB::table('ar_invoices')->where('sales_invoice_id', $salesInvoiceId)->first();
+        $companyId = $this->getCompanyId($companyId);
+
+        $invoice = DB::table('ar_invoices')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('sales_invoice_id', $salesInvoiceId)
+            ->first();
 
         if (empty($invoice)) {
             return false;
         }
 
+        $companyId = $this->getCompanyId($invoice->company_id ?? $companyId);
+
         $allocations = DB::table('ar_allocations')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->where('ar_invoice_id', (int) $invoice->id)
             ->where('status', self::ALLOCATION_ACTIVE)
             ->lockForUpdate()
@@ -535,7 +631,8 @@ class ArSubledgerService
             $this->reduceSourceAllocated(
                 $allocation->source_type,
                 (int) $allocation->source_id,
-                $this->toAmount($allocation->allocated_amount)
+                $this->toAmount($allocation->allocated_amount),
+                $companyId
             );
         }
 
@@ -552,9 +649,12 @@ class ArSubledgerService
     /**
      * Melepas semua alokasi aktif milik satu sumber.
      */
-    protected function releaseAllocationsFor($sourceType, $sourceId)
+    protected function releaseAllocationsFor($sourceType, $sourceId, $companyId = null)
     {
+        $companyId = $this->getCompanyId($companyId);
+
         $allocations = DB::table('ar_allocations')
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
             ->where('source_type', $sourceType)
             ->where('source_id', $sourceId)
             ->where('status', self::ALLOCATION_ACTIVE)
@@ -570,7 +670,8 @@ class ArSubledgerService
 
             $this->restoreInvoiceBalance(
                 (int) $allocation->ar_invoice_id,
-                $this->toAmount($allocation->allocated_amount)
+                $this->toAmount($allocation->allocated_amount),
+                $companyId
             );
         }
     }
@@ -578,11 +679,16 @@ class ArSubledgerService
     /**
      * Mengurangi allocated_amount sumber ketika alokasinya dibatalkan.
      */
-    protected function reduceSourceAllocated($sourceType, $sourceId, $amount)
+    protected function reduceSourceAllocated($sourceType, $sourceId, $amount, $companyId = null)
     {
+        $companyId = $this->getCompanyId($companyId);
         $table = $sourceType === self::SOURCE_PAYMENT ? 'ar_payments' : 'ar_credit_notes';
 
-        $record = DB::table($table)->where('id', $sourceId)->lockForUpdate()->first();
+        $record = DB::table($table)
+            ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
+            ->where('id', $sourceId)
+            ->lockForUpdate()
+            ->first();
 
         if (empty($record)) {
             return;
@@ -653,12 +759,15 @@ class ArSubledgerService
      * @param  string  $transactionType
      * @param  string  $side  debit atau credit
      */
-    protected function arAmountFromJournal($journal, $transactionType, $side)
+    protected function arAmountFromJournal($journal, $transactionType, $side, $companyId = null)
     {
-        $accountId = $this->resolver->resolve($transactionType, self::ROLE_AR);
+        $companyId = $this->getCompanyId($companyId ?? ($journal->company_id ?? null));
+
+        $accountId = $this->resolver->resolve($transactionType, self::ROLE_AR, null, null, $companyId);
 
         $amount = $this->toAmount(
             DB::table('journal_details')
+                ->when($companyId !== null, fn ($q) => $q->where('company_id', $companyId))
                 ->where('journal_id', $journal->id)
                 ->where('account_id', $accountId)
                 ->sum($side)

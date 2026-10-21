@@ -59,10 +59,13 @@ class CoaController extends Controller
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['coa_parent'] = Coa::where('account_type', 'Header')->get();
+        $data['coa_parent'] = Coa::where('account_type', 'Header')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $view = view('web.coa.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -75,9 +78,12 @@ class CoaController extends Controller
     public function ubah(Request $request)
     {
         $api = new MasterCoaController();
+        $company_id = session('id_company');
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['coa_parent'] = Coa::where('account_type', 'Header')->get();
+        $data['coa_parent'] = Coa::where('account_type', 'Header')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

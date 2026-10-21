@@ -45,10 +45,12 @@ class JournalsController extends Controller
 
     public function getAccountList()
     {
+        $company_id = session('id_company');
         return Accounts::select('id', 'code', 'name', 'normal_balance')
             ->whereNull('deleted_at')
             ->where('is_active', 1)
             ->where('is_header', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get()
             ->toArray();

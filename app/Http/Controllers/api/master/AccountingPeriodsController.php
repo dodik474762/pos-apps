@@ -24,11 +24,13 @@ class AccountingPeriodsController extends Controller
 
     public function getData()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select(['m.*'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.year', 'desc')
             ->orderBy('m.month', 'desc');
         if (isset($_POST)) {
@@ -88,14 +90,17 @@ class AccountingPeriodsController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
-            $period = AccountingPeriod::find($data['id']);
+            $period = AccountingPeriod::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($period)) {
                 throw new \RuntimeException('Periode akuntansi tidak ditemukan');
             }
 
-            $journal = DB::table('journal_headers')->where('accounting_period_id', $period->id)->count();
+            $journal = DB::table('journal_headers')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('accounting_period_id', $period->id)->count();
             if ($journal > 0) {
                 throw new \RuntimeException('Periode memiliki ' . $journal . ' jurnal sehingga tidak dapat dihapus');
             }
@@ -114,8 +119,10 @@ class AccountingPeriodsController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select(['m.*'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();

@@ -53,10 +53,13 @@ class DeliveryOrderJournalService
 
         $this->assertPostableStatus($do);
 
+        $companyId = $do->company_id ?? null;
+
         // Idempotent: DO yang sudah memiliki jurnal aktif tidak digandakan.
         $existing = JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $do->id)
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
         if (! empty($existing)) {
             return $existing;
@@ -66,6 +69,7 @@ class DeliveryOrderJournalService
             ->select(['id', 'product_id', 'uom', 'qty', 'line_no'])
             ->where('do_id', $do->id)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('line_no', 'asc')
             ->orderBy('id', 'asc')
             ->get();
@@ -76,7 +80,7 @@ class DeliveryOrderJournalService
             );
         }
 
-        $details = $this->buildDetails($do, $lines);
+        $details = $this->buildDetails($do, $lines, $companyId);
         if (empty($details)) {
             throw new JournalValidationException(
                 'Total HPP DO ' . $do->do_number . ' bernilai 0, jurnal tidak dapat dibuat.'
@@ -88,6 +92,7 @@ class DeliveryOrderJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $do->id,
             'description' => 'Delivery Order ' . $do->do_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -154,9 +159,9 @@ class DeliveryOrderJournalService
      * Baris dikelompokkan berdasarkan pasangan akun COGS dan INVENTORY hasil
      * resolusi mapping, sehingga normally tetap menghasilkan 2 baris detail.
      */
-    protected function buildDetails($do, $lines)
+    protected function buildDetails($do, $lines, $companyId = null)
     {
-        $productNames = $this->getProductNames($lines);
+        $productNames = $this->getProductNames($lines, $companyId);
 
         $groups = [];
         foreach ($lines as $line) {
@@ -166,20 +171,22 @@ class DeliveryOrderJournalService
             }
 
             $productId = (int) $line->product_id;
-            $cost = $this->resolveCost($productId, $line->uom, $productNames);
+            $cost = $this->resolveCost($productId, $line->uom, $productNames, $companyId);
             $amount = $this->validator->toAmount($qty * $cost);
 
             $accountCogs = $this->resolver->resolve(
                 self::TRANSACTION_TYPE,
                 self::ROLE_COGS,
                 null,
-                $do->warehouse_id
+                $do->warehouse_id,
+                $companyId
             );
             $accountInventory = $this->resolver->resolve(
                 self::TRANSACTION_TYPE,
                 self::ROLE_INVENTORY,
                 null,
-                $do->warehouse_id
+                $do->warehouse_id,
+                $companyId
             );
 
             $key = $accountCogs . '|' . $accountInventory;
@@ -231,12 +238,12 @@ class DeliveryOrderJournalService
      * satuan yang lebih kecil. Tidak ada lagi fallback ke cost satuan lain
      * tanpa konversi karena itu membuat HPP kelipatan dari satuan sebenarnya.
      */
-    protected function resolveCost($productId, $uom, $productNames = [])
+    protected function resolveCost($productId, $uom, $productNames = [], $companyId = null)
     {
-        return $this->costResolver->resolve($productId, $uom, $productNames);
+        return $this->costResolver->resolve($productId, $uom, $productNames, $companyId);
     }
 
-    protected function getProductNames($lines)
+    protected function getProductNames($lines, $companyId = null)
     {
         $ids = [];
         foreach ($lines as $line) {
@@ -246,6 +253,7 @@ class DeliveryOrderJournalService
         $rows = DB::table('product')
             ->select(['id', 'name'])
             ->whereIn('id', array_values(array_unique($ids)))
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->get();
 
         $names = [];

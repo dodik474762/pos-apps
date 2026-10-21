@@ -36,15 +36,18 @@ class GeneralLedgerController extends Controller
 
     public function index(Request $request)
     {
+        $company_id = session('id_company');
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
         $data['accounts'] = Accounts::whereNull('deleted_at')
             ->where('is_active', 1)
             ->where('is_header', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get();
-        $data['periods'] = AccountingPeriod::orderBy('year', 'desc')->orderBy('month', 'desc')->get();
+        $data['periods'] = AccountingPeriod::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->orderBy('year', 'desc')->orderBy('month', 'desc')->get();
 
         $monthList = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',

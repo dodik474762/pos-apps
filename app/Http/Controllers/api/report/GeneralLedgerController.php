@@ -21,10 +21,13 @@ class GeneralLedgerController extends Controller
 
     public function getData(Request $request)
     {
+        $company_id = session('id_company');
         $accountId = $request->input('account_id');
         $periodId = $request->input('accounting_period_id');
-        $account = Accounts::whereNull('deleted_at')->find($accountId);
-        $period = AccountingPeriod::find($periodId);
+        $account = Accounts::whereNull('deleted_at')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->find($accountId);
+        $period = AccountingPeriod::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($periodId);
 
         $result = $this->service->getLedger($accountId, $periodId);
 
@@ -42,10 +45,12 @@ class GeneralLedgerController extends Controller
 
     public function getAccountList(Request $request)
     {
+        $company_id = session('id_company');
         $accounts = Accounts::select('id', 'code', 'name', 'normal_balance')
             ->whereNull('deleted_at')
             ->where('is_active', 1)
             ->where('is_header', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('code')
             ->get();
 
@@ -54,7 +59,9 @@ class GeneralLedgerController extends Controller
 
     public function getPeriodList(Request $request)
     {
-        $periods = AccountingPeriod::orderBy('year', 'desc')
+        $company_id = session('id_company');
+        $periods = AccountingPeriod::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->get();
 

@@ -87,8 +87,10 @@ class PurchaseReturnJournalService
 
         $this->assertPostableStatus($return);
 
+        $companyId = $return->company_id ?? null;
+
         // Idempoten: retur yang sudah punya jurnal aktif tidak digandakan.
-        $existing = $this->getActiveJournal($return->id);
+        $existing = $this->getActiveJournal($return->id, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu dicoba lagi.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -98,14 +100,14 @@ class PurchaseReturnJournalService
             return $existing;
         }
 
-        $lines = $this->getLines($return);
+        $lines = $this->getLines($return, $companyId);
         if ($lines->isEmpty()) {
             throw new JournalValidationException(
                 'Detail purchase return ' . $return->code . ' tidak ada, jurnal tidak dapat dibuat.'
             );
         }
 
-        $details = $this->buildDetails($return, $lines);
+        $details = $this->buildDetails($return, $lines, $companyId);
         if (empty($details)) {
             throw new JournalValidationException(
                 'Total purchase return ' . $return->code . ' bernilai 0, jurnal tidak dapat dibuat.'
@@ -117,6 +119,7 @@ class PurchaseReturnJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $return->id,
             'description' => 'Purchase Return ' . $return->code,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -147,7 +150,7 @@ class PurchaseReturnJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * lagi mengunci transaksi.
      */
-    public function getActiveJournal($returnId)
+    public function getActiveJournal($returnId, $companyId = null)
     {
         if (empty($returnId)) {
             return null;
@@ -157,6 +160,7 @@ class PurchaseReturnJournalService
             ->where('reference_id', $returnId)
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -174,15 +178,17 @@ class PurchaseReturnJournalService
     /**
      * Baris detail retur beserta flag is_stock dari master product.
      */
-    protected function getLines($return)
+    protected function getLines($return, $companyId = null)
     {
         return PurchaseReturnDtl::where('purchase_return_id', $return->id)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('id', 'asc')
             ->get()
-            ->map(function ($line) {
+            ->map(function ($line) use ($companyId) {
                 $product = DB::table('product')
                     ->where('id', $line->product)
                     ->whereNull('deleted')
+                    ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
                     ->first();
 
                 $line->product_id = empty($product) ? null : (int) $product->id;
@@ -198,7 +204,7 @@ class PurchaseReturnJournalService
      * AP atau GRNI, sisi credit per akun INVENTORY atau EXPENSE, sehingga
      * beberapa baris dengan akun sama tetap menjadi satu baris.
      */
-    protected function buildDetails($return, $lines)
+    protected function buildDetails($return, $lines, $companyId = null)
     {
         $debitSide = [];
         $creditSide = [];
@@ -221,13 +227,13 @@ class PurchaseReturnJournalService
 
             $productName = $line->product_name;
             $source = $this->resolveSource($return, $line);
-            $amount = $this->resolveAmount($return, $line, $source, $productName);
+            $amount = $this->resolveAmount($return, $line, $source, $productName, $companyId);
 
             $debitRole = $source === self::SOURCE_INVOICE ? self::ROLE_AP : self::ROLE_GRNI;
             $creditRole = $this->resolveCreditRole($line, $productName);
 
-            $debitAccount = $this->resolveAccount($cache, $debitRole);
-            $creditAccount = $this->resolveAccount($cache, $creditRole);
+            $debitAccount = $this->resolveAccount($cache, $debitRole, $companyId);
+            $creditAccount = $this->resolveAccount($cache, $creditRole, $companyId);
 
             $debitLabel = ($debitRole === self::ROLE_AP ? 'Hutang pembelian ' : 'GRNI ')
                 . $return->code;
@@ -354,7 +360,7 @@ class PurchaseReturnJournalService
      * Nilai perolehan barang yang dikembalikan, diambil dari dokumen asal
      * lalu diprorate terhadap qty retur. Tidak dihitung ulang dari harga beli.
      */
-    protected function resolveAmount($return, $line, $source, $productName)
+    protected function resolveAmount($return, $line, $source, $productName, $companyId = null)
     {
         if (empty($line->reference_detail_id)) {
             throw new JournalValidationException(
@@ -367,10 +373,10 @@ class PurchaseReturnJournalService
         $qtyReturn = $this->validator->toAmount($line->qty);
 
         if ($source === self::SOURCE_INVOICE) {
-            return $this->amountFromInvoice($return, $line, $productName, $qtyReturn);
+            return $this->amountFromInvoice($return, $line, $productName, $qtyReturn, $companyId);
         }
 
-        return $this->amountFromReceiving($return, $line, $productName, $qtyReturn);
+        return $this->amountFromReceiving($return, $line, $productName, $qtyReturn, $companyId);
     }
 
     /**
@@ -378,7 +384,7 @@ class PurchaseReturnJournalService
      * PurchaseInvoiceJournalService membukukannya di sisi persediaan, sehingga
      * memakai nilai yang sama membuat entry pembelian terbalik utuh.
      */
-    protected function amountFromInvoice($return, $line, $productName, $qtyReturn)
+    protected function amountFromInvoice($return, $line, $productName, $qtyReturn, $companyId = null)
     {
         $detail = DB::table('purchase_invoice_detail')
             ->where('id', $line->reference_detail_id)
@@ -386,6 +392,7 @@ class PurchaseReturnJournalService
             // retur, supaya nilai diambil dari invoice yang benar.
             ->where('purchase_invoice_id', $return->reference_id)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         if (empty($detail)) {
@@ -432,13 +439,14 @@ class PurchaseReturnJournalService
      * itu nilai yang pernah diakui saat penerimaan. Bila kosong, harga di
      * Purchase Order dipakai karena itu sumber yang sama dengan jurnal Receiving.
      */
-    protected function amountFromReceiving($return, $line, $productName, $qtyReturn)
+    protected function amountFromReceiving($return, $line, $productName, $qtyReturn, $companyId = null)
     {
         $detail = DB::table('goods_receipt_detail as d')
             ->leftJoin('purchase_order_detail as pod', 'pod.id', '=', 'd.purchase_order_detail')
             ->where('d.id', $line->reference_detail_id)
             ->where('d.goods_receipt_header', $return->reference_id)
             ->whereNull('d.deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('d.company_id', $companyId))
             ->first([
                 'd.qty_received',
                 'd.subtotal',
@@ -489,14 +497,15 @@ class PurchaseReturnJournalService
      * product.category pada tabel produk berupa varchar, bukan id numerik,
      * sehingga scope kategori diteruskan apa adanya oleh resolver.
      */
-    protected function resolveAccount(&$cache, $role)
+    protected function resolveAccount(&$cache, $role, $companyId = null)
     {
         if (! isset($cache[$role])) {
             $cache[$role] = $this->resolver->resolve(
                 self::TRANSACTION_TYPE,
                 $role,
                 null,
-                null
+                null,
+                $companyId
             );
         }
 

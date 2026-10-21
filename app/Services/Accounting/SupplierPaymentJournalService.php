@@ -80,8 +80,10 @@ class SupplierPaymentJournalService
 
         $this->assertPostableStatus($payment);
 
+        $companyId = $payment->company_id ?? null;
+
         // Idempotent: pembayaran yang sudah memiliki jurnal aktif tidak digandakan.
-        $existing = $this->getActiveJournal($payment->id);
+        $existing = $this->getActiveJournal($payment->id, $companyId);
         if (! empty($existing)) {
             // Jurnal tertinggal DRAFT, misalnya posting sebelumnya gagal, lalu diposting ulang.
             if ($existing->status === JournalService::STATUS_DRAFT) {
@@ -99,10 +101,10 @@ class SupplierPaymentJournalService
             );
         }
 
-        $this->assertAllocations($payment, $amount);
+        $this->assertAllocations($payment, $amount, $companyId);
 
-        $accountAp = $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_AP);
-        $accountBank = $this->resolveBankAccount($bankAccountId);
+        $accountAp = $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_AP, null, null, $companyId);
+        $accountBank = $this->resolveBankAccount($bankAccountId, $companyId);
 
         $details = [
             [
@@ -126,6 +128,7 @@ class SupplierPaymentJournalService
             'reference_type' => self::REFERENCE_TYPE,
             'reference_id' => $payment->id,
             'description' => 'Vendor Payment ' . $payment->payment_number,
+            'company_id' => $companyId,
             'details' => $details,
         ];
 
@@ -157,7 +160,7 @@ class SupplierPaymentJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * dihitung karena pengaruhnya di general ledger sudah dinetralkan.
      */
-    public function getActiveJournal($paymentId)
+    public function getActiveJournal($paymentId, $companyId = null)
     {
         if (empty($paymentId)) {
             return null;
@@ -170,6 +173,7 @@ class SupplierPaymentJournalService
             // dan posting ulang justru mengembalikan jurnal reversal.
             ->whereNull('reversal_of_id')
             ->whereIn('status', [JournalService::STATUS_DRAFT, JournalService::STATUS_POSTED])
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->orderByDesc('id')
             ->first();
     }
@@ -191,7 +195,7 @@ class SupplierPaymentJournalService
      * Detail alokasi wajib ada, invoice yang dirujuk harus masih valid, dan
      * jumlah amount_paid harus sama dengan total_payment pada header.
      */
-    protected function assertAllocations($payment, $amount)
+    protected function assertAllocations($payment, $amount, $companyId = null)
     {
         $details = $payment->details;
         if ($details->isEmpty()) {
@@ -205,6 +209,7 @@ class SupplierPaymentJournalService
         $validInvoices = DB::table('purchase_invoice_header')
             ->whereIn('id', $invoiceIds)
             ->whereNull('deleted')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->pluck('id');
 
         $missing = $invoiceIds->diff($validInvoices);
@@ -237,27 +242,29 @@ class SupplierPaymentJournalService
      *
      * Bila tidak ada pilihan, falls back ke rule SUPPLIER_PAYMENT / BANK.
      */
-    protected function resolveBankAccount($bankAccountId)
+    protected function resolveBankAccount($bankAccountId, $companyId = null)
     {
         if (! empty($bankAccountId) && (int) $bankAccountId > 0) {
-            return $this->assertUsableAccount((int) $bankAccountId, true);
+            return $this->assertUsableAccount((int) $bankAccountId, true, $companyId);
         }
 
         return $this->assertUsableAccount(
-            $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_BANK),
-            false
+            $this->resolver->resolve(self::TRANSACTION_TYPE, self::ROLE_BANK, null, null, $companyId),
+            false,
+            $companyId
         );
     }
 
     /**
      * Akun wajib ada, bukan header, dan aktif.
      */
-    protected function assertUsableAccount($accountId, $fromUserSelection)
+    protected function assertUsableAccount($accountId, $fromUserSelection, $companyId = null)
     {
         $account = DB::table('accounts')
             ->select(['id', 'code', 'name', 'is_header', 'is_active'])
             ->where('id', $accountId)
             ->whereNull('deleted_at')
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             ->first();
 
         $source = $fromUserSelection
