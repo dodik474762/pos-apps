@@ -15,19 +15,24 @@ class ReportVisitController extends Controller
 
     public function getData()
     {
-        DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
 
-        $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
+
+        // Presence: 1 baris per salesman per hari
+        $presence = DB::table('presence')
+            ->selectRaw('creator, DATE(presence_date) as presence_day, MIN(start_date) as start_date')
+            ->whereDate('presence_date', '>=', $tanggal)
+            ->whereDate('presence_date', '<=', $tanggal_end)
+            ->groupBy('creator', DB::raw('DATE(presence_date)'));
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
                 'm.id',
                 'm.salesman',
-                // 'm.unit',
                 'm.so_date',
                 'c.nama_customer',
                 'c.code as customer_code',
@@ -41,128 +46,129 @@ class ReportVisitController extends Controller
                 'm.platform',
                 'pr.start_date as absen_time',
                 DB::raw("
-            SEC_TO_TIME(
-                GREATEST(
-                    TIMESTAMPDIFF(
-                        SECOND,
-                        COALESCE(
-                            (
-                                SELECT prev.check_out_time
-                                FROM sales_order_headers AS prev
-                                WHERE prev.salesman = m.salesman
-                                  AND DATE(prev.so_date) = DATE(m.so_date)
-                                  AND prev.check_in_time < m.check_in_time
-                                  AND prev.deleted IS NULL
-                                ORDER BY prev.check_in_time DESC
-                                LIMIT 1
+                SEC_TO_TIME(
+                    GREATEST(
+                        TIMESTAMPDIFF(
+                            SECOND,
+                            COALESCE(
+                                (
+                                    SELECT prev.check_out_time
+                                    FROM sales_order_headers AS prev
+                                    WHERE prev.salesman = m.salesman
+                                      AND DATE(prev.so_date) = DATE(m.so_date)
+                                      AND prev.check_in_time < m.check_in_time
+                                      AND prev.deleted IS NULL
+                                    ORDER BY prev.check_in_time DESC
+                                    LIMIT 1
+                                ),
+                                pr.start_date  -- fallback: jam absen jika kunjungan pertama
                             ),
-                            pr.start_date  -- fallback: jam absen jika kunjungan pertama
+                            m.check_in_time
                         ),
-                        m.check_in_time
-                    ),
-                0 )
-            ) AS lama_di_jalan
-        "),
+                    0)
+                ) AS lama_di_jalan
+            "),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
-            ->leftJoin('presence as pr', 'pr.creator', 'm.salesman')
-            ->where(function ($q) use ($tanggal, $tanggal_end) {
-                $q->whereDate('m.so_date', '>=', $tanggal)
-                    ->whereDate('m.so_date', '<=', $tanggal_end);
+            ->leftJoinSub($presence, 'pr', function ($join) {
+                $join->on('pr.creator', '=', 'm.salesman')
+                    ->on('pr.presence_day', '=', DB::raw('DATE(m.so_date)'));
             })
-            ->where(function ($q) use ($tanggal, $tanggal_end) {
-                $q->whereDate('pr.presence_date', '>=', $tanggal)
-                    ->whereDate('pr.presence_date', '<=', $tanggal_end);
-            })
-            ->whereNull('m.deleted')
-            ->orderBy('usr.name', 'asc')
-            ->orderBy('m.check_in_time', 'asc');
+            ->whereDate('m.so_date', '>=', $tanggal)
+            ->whereDate('m.so_date', '<=', $tanggal_end)
+            ->whereNull('m.deleted');
+        // ->where('c.code', 'CUST09260056'); // hapus baris ini jika hanya untuk testing
 
-        if (isset($_POST)) {
-            $data['recordsTotal'] = $datadb->get()->count();
+        // Total (tanpa search)
+        $data['recordsTotal'] = (clone $datadb)->count();
 
-            if (isset($_POST['search']['value'])) {
-                $keyword = $_POST['search']['value'];
-                $datadb->where(function ($query) use ($keyword) {
-                    $query->where('m.salesman', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('c.channel_outlet', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
-                });
-            }
-
-            if (isset($_POST['order'][0]['column'])) {
-                switch ($_POST['order'][0]['column']) {
-                    case 0:
-                        $datadb->orderBy('m.salesman', $_POST['order'][0]['dir']);
-                        break;
-                    case 1:
-                        $datadb->orderBy('m.so_date', $_POST['order'][0]['dir']);
-                        break;
-                    case 2:
-                        $datadb->orderBy('c.nama_customer', $_POST['order'][0]['dir']);
-                        break;
-                    case 3:
-                        $datadb->orderBy('c.code', $_POST['order'][0]['dir']);
-                        break;
-                    case 4:
-                        $datadb->orderBy('c.channel_outlet', $_POST['order'][0]['dir']);
-                        break;
-                    case 5:
-                        $datadb->orderByRaw('m.check_in_time ' . $_POST['order'][0]['dir']);
-                        break;
-                    case 6:
-                        $datadb->orderByRaw('m.check_out_time ' . $_POST['order'][0]['dir']);
-                        break;
-                    case 7:
-                        $datadb->orderByRaw('m.salesman ' . $_POST['order'][0]['dir']);
-                        break;
-                    default:
-                        $datadb->orderBy('m.salesman', 'asc');
-                        break;
-                }
-            }
-
-            $data['recordsFiltered'] = $datadb->get()->count();
-
-            if (isset($_POST['length'])) {
-                $datadb->limit($_POST['length']);
-            }
-            if (isset($_POST['start'])) {
-                $datadb->offset($_POST['start']);
-            }
+        // Search
+        if (!empty($_POST['search']['value'])) {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('m.salesman', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('c.channel_outlet', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('m.remarks', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
+            });
         }
 
-        $resultdb = [];
-        $datadb = $datadb->get()->toArray();
+        $data['recordsFiltered'] = (clone $datadb)->count();
 
-        foreach ($datadb as $value) {
-            $resultdb[] = $value;
+        // Order (divalidasi, anti SQL injection)
+        $dir = strtolower($_POST['order'][0]['dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+        $col = $_POST['order'][0]['column'] ?? null;
+
+        switch ((string) $col) {
+            case '0':
+                $datadb->orderBy('m.salesman', $dir);
+                break;
+            case '1':
+                $datadb->orderBy('m.so_date', $dir);
+                break;
+            case '2':
+                $datadb->orderBy('c.nama_customer', $dir);
+                break;
+            case '3':
+                $datadb->orderBy('c.code', $dir);
+                break;
+            case '4':
+                $datadb->orderBy('c.channel_outlet', $dir);
+                break;
+            case '5':
+                $datadb->orderBy('m.check_in_time', $dir);
+                break;
+            case '6':
+                $datadb->orderBy('m.check_out_time', $dir);
+                break;
+            case '7':
+                $datadb->orderBy('m.salesman', $dir);
+                break;
+            default:
+                $datadb->orderBy('usr.name', 'asc')->orderBy('m.check_in_time', 'asc');
+                break;
         }
 
-        $data['data'] = $resultdb;
-        $data['draw'] = $_POST['draw'];
+        // Paging
+        if (isset($_POST['length']) && (int) $_POST['length'] > 0) {
+            $datadb->limit((int) $_POST['length']);
+            $datadb->offset((int) ($_POST['start'] ?? 0));
+        }
 
-        $query = DB::getQueryLog();
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'] ?? 0;
+
         return json_encode($data);
     }
 
     public function getDataSummary()
     {
-        DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
 
-        $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
+        $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
+
+        // Presence: 1 baris per salesman per hari (absen paling awal)
+        $presence = DB::table('presence')
+            ->selectRaw('creator, DATE(presence_date) as presence_day, MIN(start_date) as start_date')
+            ->whereDate('presence_date', '>=', $tanggal)
+            ->whereDate('presence_date', '<=', $tanggal_end)
+            ->groupBy('creator', DB::raw('DATE(presence_date)'));
+
+        // Daily visit: 1 baris per user per tanggal
+        $dailyVisit = DB::table('daily_visit')
+            ->selectRaw('users, date_visit, MIN(id) as id, MAX(total_visit) as total_visit')
+            ->whereNull('deleted')
+            ->groupBy('users', 'date_visit');
 
         $datadb = DB::table('sales_order_headers as m')
             ->select([
@@ -173,41 +179,29 @@ class ReportVisitController extends Controller
                 'dv.total_visit',
                 DB::raw('MAX(m.check_out_time) as jam_kembali'),
 
-                // Waktu Jual = SUM durasi di setiap outlet (check_in s/d check_out tiap outlet)
+                // Waktu Jual = SUM durasi tiap outlet
                 DB::raw('SEC_TO_TIME(
                 GREATEST(
-                    SUM(
-                        GREATEST(
-                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
-                        0)
-                    ),
+                    SUM(GREATEST(TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time), 0)),
                 0)
             ) as waktu_jual'),
 
                 // Rata-rata lama transaksi per outlet
                 DB::raw('TIME_FORMAT(
                 SEC_TO_TIME(
-                    AVG(
-                        GREATEST(
-                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
-                        0)
-                    )
+                    AVG(GREATEST(TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time), 0))
                 ),
             "%H:%i:%s") as avg_lama_transaksi'),
 
-                // Lama di Jalan = Total Keluar Kantor - Waktu Jual (SUM tiap outlet)
+                // Lama di Jalan = Total Keluar Kantor - Waktu Jual
                 DB::raw('SEC_TO_TIME(
                 GREATEST(
                     TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time))
-                    - SUM(
-                        GREATEST(
-                            TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time),
-                        0)
-                    ),
+                    - SUM(GREATEST(TIMESTAMPDIFF(SECOND, m.check_in_time, m.check_out_time), 0)),
                 0)
             ) as lama_di_jalan'),
 
-                // Total Keluar Kantor = dari jam absen s/d check_out terakhir
+                // Total Keluar Kantor = absen s/d check_out terakhir
                 DB::raw('SEC_TO_TIME(
                 GREATEST(
                     TIMESTAMPDIFF(SECOND, pr.start_date, MAX(m.check_out_time)),
@@ -216,105 +210,76 @@ class ReportVisitController extends Controller
 
                 DB::raw('COUNT(m.id) as total_call'),
 
-                // // Total Call Sesuai PJP
-                // DB::raw('SUM(CASE 
-                // WHEN m.remarks NOT IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
-                // OR m.remarks IS NULL 
-                // THEN 1 ELSE 0 END) as total_call_pjp'),
+                // Call sesuai PJP
+                DB::raw('SUM(CASE WHEN EXISTS (
+                SELECT 1 FROM daily_visit_customer dvd
+                WHERE dvd.daily_visit = dv.id AND dvd.customer = m.customer_id
+            ) THEN 1 ELSE 0 END) as total_call_pjp'),
 
-                // // Total Call Extra Call
-                // DB::raw('SUM(CASE 
-                // WHEN m.remarks IN ("TAGIHAN", "ORDER BY TELPON", "TOKO TELPON", "TURUN BARANG", "MENGEJAR OMSET") 
-                // THEN 1 ELSE 0 END) as total_call_extra'),
-
-                // CALL SESUAI PJP
-                DB::raw('SUM(
-                CASE
-                    WHEN dvd.customer IS NOT NULL THEN 1
-                    ELSE 0
-                END
-            ) as total_call_pjp'),
-
-                // CALL DI LUAR PJP
-                DB::raw('SUM(
-                CASE
-                    WHEN dvd.customer IS NULL THEN 1
-                    ELSE 0
-                END
-            ) as total_call_extra'),
+                // Call di luar PJP
+                DB::raw('SUM(CASE WHEN NOT EXISTS (
+                SELECT 1 FROM daily_visit_customer dvd
+                WHERE dvd.daily_visit = dv.id AND dvd.customer = m.customer_id
+            ) THEN 1 ELSE 0 END) as total_call_extra'),
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
-            ->leftJoin('presence as pr', function ($join) use ($tanggal, $tanggal_end) {
+            ->leftJoinSub($presence, 'pr', function ($join) {
                 $join->on('pr.creator', '=', 'm.salesman')
-                    ->whereBetween('pr.presence_date', [$tanggal, $tanggal_end]);
+                    ->on('pr.presence_day', '=', DB::raw('DATE(m.so_date)'));
             })
-            ->leftJoin('daily_visit as dv', function ($q) {
-                return $q->on('dv.date_visit', 'm.so_date')
-                    ->on('dv.users', 'm.salesman')
-                    ->whereNull('dv.deleted');
+            ->leftJoinSub($dailyVisit, 'dv', function ($join) {
+                $join->on('dv.users', '=', 'm.salesman')
+                    ->on('dv.date_visit', '=', 'm.so_date');
             })
-            // JOIN DETAIL PJP
-            ->leftJoin('daily_visit_customer as dvd', function ($join) {
-                $join->on('dvd.daily_visit', '=', 'dv.id')
-                    ->on('dvd.customer', '=', 'm.customer_id');
-            })
-            // ->where('usr.username', 'SLS-001')
-            ->where(function ($q) use ($tanggal, $tanggal_end) {
-                return $q->whereBetween('m.so_date', [$tanggal, $tanggal_end]);
-            })
+            ->whereDate('m.so_date', '>=', $tanggal)
+            ->whereDate('m.so_date', '<=', $tanggal_end)
             ->whereNull('m.deleted')
-            ->groupBy('m.salesman', 'usr.name', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'k.nama_lengkap')
-            ->orderBy('usr.name', 'asc');
+            ->groupBy('m.salesman', 'usr.name', 'k.nama_lengkap', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'dv.id');
 
-        if (isset($_POST)) {
-            $data['recordsTotal'] = $datadb->get()->count();
+        // Total (tanpa search)
+        $data['recordsTotal'] = DB::query()->fromSub((clone $datadb), 'x')->count();
 
-            if (isset($_POST['search']['value']) && $_POST['search']['value'] != '') {
-                $keyword = $_POST['search']['value'];
-                $datadb->where(function ($query) use ($keyword) {
-                    $query->where('usr.name', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
-                });
-            }
-
-            if (isset($_POST['order'][0]['column'])) {
-                switch ($_POST['order'][0]['column']) {
-                    case 1:
-                        $datadb->orderBy('usr.name', $_POST['order'][0]['dir']);
-                        break;
-                    case 2:
-                        $datadb->orderBy('m.so_date', $_POST['order'][0]['dir']);
-                        break;
-                    case 3:
-                        $datadb->orderBy('pr.start_date', $_POST['order'][0]['dir']);
-                        break;
-                    default:
-                        $datadb->orderBy('usr.name', 'asc');
-                        break;
-                }
-            }
-
-            $data['recordsFiltered'] = $datadb->get()->count();
-
-            if (isset($_POST['length'])) {
-                $datadb->limit($_POST['length']);
-            }
-            if (isset($_POST['start'])) {
-                $datadb->offset($_POST['start']);
-            }
+        // Search
+        if (!empty($_POST['search']['value'])) {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('usr.name', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('k.nama_lengkap', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('m.so_date', 'LIKE', '%' . $keyword . '%');
+            });
         }
 
-        $resultdb = [];
-        $datadb = $datadb->get()->toArray();
+        $data['recordsFiltered'] = DB::query()->fromSub((clone $datadb), 'x')->count();
 
-        foreach ($datadb as $value) {
-            $resultdb[] = $value;
+        // Order (divalidasi, anti SQL injection)
+        $dir = strtolower($_POST['order'][0]['dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+        $col = $_POST['order'][0]['column'] ?? null;
+
+        switch ((string) $col) {
+            case '1':
+                $datadb->orderBy('usr.name', $dir);
+                break;
+            case '2':
+                $datadb->orderBy('m.so_date', $dir);
+                break;
+            case '3':
+                $datadb->orderBy('pr.start_date', $dir);
+                break;
+            default:
+                $datadb->orderBy('usr.name', 'asc')->orderBy('m.so_date', 'asc');
+                break;
         }
 
-        $data['data'] = $resultdb;
-        $data['draw'] = $_POST['draw'];
+        // Paging
+        if (isset($_POST['length']) && (int) $_POST['length'] > 0) {
+            $datadb->limit((int) $_POST['length']);
+            $datadb->offset((int) ($_POST['start'] ?? 0));
+        }
+
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'] ?? 0;
 
         return json_encode($data);
     }
