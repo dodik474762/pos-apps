@@ -64,10 +64,11 @@ class ProductAdjustmentStockController extends Controller
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['akses_session'] = strtolower(session('akses'));
         $view = view('web.adjustment_stock.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -82,8 +83,9 @@ class ProductAdjustmentStockController extends Controller
     {
         $api = new TransactionProductAdjustmentStockController();
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['akses_session'] = strtolower(session('akses'));
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
@@ -91,7 +93,9 @@ class ProductAdjustmentStockController extends Controller
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
-        $data['list_items'] = ProductAdjustmentStockDtl::where('product_adjustment_stock_dtl.header_id', $data['id'])
+        $company_id = session('id_company');
+        $data['list_items'] = ProductAdjustmentStockDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_adjustment_stock_dtl.company_id', $company_id))
+            ->where('product_adjustment_stock_dtl.header_id', $data['id'])
             ->select([
                 'product_adjustment_stock_dtl.*',
                 'p.name as product_name',

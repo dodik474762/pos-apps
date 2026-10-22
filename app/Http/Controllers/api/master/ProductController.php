@@ -41,8 +41,10 @@ class ProductController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        $company_id = session('id_company');
         $stock = DB::table('product_stock')
             ->select('product', DB::raw('SUM(qty) as stock'))
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('product');
 
         $datadb = DB::table($this->getTableName() . ' as m')
@@ -62,7 +64,8 @@ class ProductController extends Controller
                 $join->on('ps.product', '=', 'm.id');
             })
             ->leftJoin('unit as u', 'u.id', '=', 'm.unit')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -107,6 +110,7 @@ class ProductController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -127,6 +131,7 @@ class ProductController extends Controller
                     ->where('puc.is_active', '1');
             })
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -168,12 +173,14 @@ class ProductController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         try {
+            $company_id = session('id_company');
             $productIds = [];
             if (isset($data['user_id'])) {
                 $users = DB::table('users')->where('id', $data['user_id'])->first();
                 $karyawan = DB::table('karyawan')->where('nik', $users->nik)->first();
                 $karyawanId = $karyawan->id;
                 $productIds = DB::table('karyawan_has_product')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->where('karyawan', $karyawanId)
                     ->pluck('product')
                     ->toArray();
@@ -181,6 +188,7 @@ class ProductController extends Controller
 
             $stock = DB::table('product_stock')
                 ->select('product', DB::raw('SUM(qty) as stock'))
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->groupBy('product');
 
             $datadb = DB::table($this->getTableName() . ' as m')
@@ -218,6 +226,7 @@ class ProductController extends Controller
                 ->whereNull('m.deleted')
                 // ->where('m.code', 'PQ02')
                 // ->where('ps.qty', '>', 0)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
                 ->orderBy('m.id', 'desc')
                 ->orderBy('pup.id', 'asc');
 
@@ -242,10 +251,11 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = true;
+        $company_id = session('id_company');
 
-
-        $totalRows = Product::whereNull('deleted')->count();
+        $totalRows = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
         $datadb = Product::whereNull('product.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product.company_id', $company_id))
             ->where('product.id', '>', $data['last_id'])
             ->limit($data['length'])
             ->orderBy('product.id', 'asc');
@@ -285,10 +295,11 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = true;
+        $company_id = session('id_company');
 
-
-        $totalRows = ProductCatalog::whereNull('deleted')->count();
+        $totalRows = ProductCatalog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
         $datadb = ProductCatalog::whereNull('product_catalog.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_catalog.company_id', $company_id))
             ->where('product_catalog.id', '>', $data['last_id'])
             ->limit($data['length'])
             ->orderBy('product_catalog.id', 'asc');
@@ -406,7 +417,11 @@ class ProductController extends Controller
         // print_r($groupByIdProduct);
         // die;
 
-        $vendors = DB::table('vendor')->whereNull('deleted')->get()->toArray();
+        $company_id = session('id_company');
+
+        $vendors = DB::table('vendor')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->whereNull('deleted')->get()->toArray();
         $vendorGrouped = collect($vendors)->groupBy('nama_vendor')->toArray();
         // echo '<pre>';
         // print_r($vendorGrouped);
@@ -438,6 +453,7 @@ class ProductController extends Controller
                     $prod->sku_name = $group['items'][0]['sku_name'];
                     $prod->category = $group['items'][0]['kategori_barang_sku'];
                     $prod->sub_brand = $group['items'][0]['sub_brand_name'];
+                    setCompanyId($prod, $company_id);
                     $prod->save();
                     $productId = $prod->id;
 
@@ -475,6 +491,7 @@ class ProductController extends Controller
                         $product_satuan->level = 1;
                         $product_satuan->state = 'small';
                         $product_satuan->nilai_konversi_terkecil = 1;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -485,6 +502,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-01-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan renceng
@@ -495,6 +513,7 @@ class ProductController extends Controller
                         $product_satuan->nilai_konversi = $satuan_kecil_ke_renceng;
                         $product_satuan->level = 2;
                         $product_satuan->nilai_konversi_terkecil = $satuan_tengah_ke_renceng * $satuan_kecil_ke_renceng;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -505,6 +524,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-01-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan menengah
@@ -515,6 +535,7 @@ class ProductController extends Controller
                         $product_satuan->nilai_konversi = $satuan_tengah_ke_renceng;
                         $product_satuan->level = 3;
                         $product_satuan->nilai_konversi_terkecil = $satuan_kecil_ke_renceng;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -525,6 +546,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-01-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan besar
@@ -536,6 +558,7 @@ class ProductController extends Controller
                         $product_satuan->level = 4;
                         $product_satuan->state = 'large';
                         $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
                         $productSatuanId = $product_satuan->id;
 
@@ -547,6 +570,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-01-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert harga beli
@@ -567,10 +591,11 @@ class ProductController extends Controller
                             $productCost->date_start = '2026-01-01';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
+                            setCompanyId($productCost, $company_id);
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -604,6 +629,7 @@ class ProductController extends Controller
                         $product_satuan->level = 1;
                         $product_satuan->state = 'small';
                         $product_satuan->nilai_konversi_terkecil = 1;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -614,6 +640,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan menengah
@@ -624,6 +651,7 @@ class ProductController extends Controller
                         $product_satuan->nilai_konversi = $satuan_menengah_ke_kecil;
                         $product_satuan->level = 2;
                         $product_satuan->nilai_konversi_terkecil = $satuan_menengah_ke_kecil;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -634,6 +662,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan besar
@@ -645,6 +674,7 @@ class ProductController extends Controller
                         $product_satuan->level = 3;
                         $product_satuan->state = 'large';
                         $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
                         $productSatuanId = $product_satuan->id;
 
@@ -656,6 +686,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert harga beli
@@ -676,10 +707,11 @@ class ProductController extends Controller
                             $productCost->date_start = '2026-05-06';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
+                            setCompanyId($productCost, $company_id);
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -709,6 +741,7 @@ class ProductController extends Controller
                         $product_satuan->level = 1;
                         $product_satuan->state = 'small';
                         $product_satuan->nilai_konversi_terkecil = 1;
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
 
                         $productPrice = new ProductUomPrice();
@@ -719,6 +752,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert product satuan besar
@@ -730,6 +764,7 @@ class ProductController extends Controller
                         $product_satuan->level = 2;
                         $product_satuan->state = 'large';
                         $product_satuan->nilai_konversi_terkecil = $satuan_terkecil['isi_satuan'];
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
                         $productSatuanId = $product_satuan->id;
 
@@ -741,6 +776,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-05-06';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert harga beli
@@ -761,10 +797,11 @@ class ProductController extends Controller
                             $productCost->date_start = '2026-05-06';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
+                            setCompanyId($productCost, $company_id);
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -789,6 +826,7 @@ class ProductController extends Controller
                         $product_satuan->level = 1;
                         $product_satuan->state = 'large';
                         $product_satuan->nilai_konversi_terkecil = $satuan_besar['isi_satuan'];
+                        setCompanyId($product_satuan, $company_id);
                         $product_satuan->save();
                         $productSatuanId = $product_satuan->id;
 
@@ -800,6 +838,7 @@ class ProductController extends Controller
                         $productPrice->date_start = '2026-01-01';
                         $productPrice->min_qty = 1;
                         $productPrice->max_qty = 99999;
+                        setCompanyId($productPrice, $company_id);
                         $productPrice->save();
 
                         //insert harga beli
@@ -820,9 +859,10 @@ class ProductController extends Controller
                             $productCost->date_start = '2026-01-01';
                             $productCost->is_active = 1;
                             $productCost->product_uom = $productSatuanId;
+                            setCompanyId($productCost, $company_id);
                             $productCost->save();
                         }
-                        $productUpdate = Product::find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -853,6 +893,7 @@ class ProductController extends Controller
     public function submit_stock($items)
     {
         $imported = 0;
+        $company_id = session('id_company');
         // echo '<pre>';
         // print_r($items);
         // die;
@@ -862,18 +903,21 @@ class ProductController extends Controller
             $adjs->code = 'ADJJUN2026';
             $adjs->remarks = 'IMPORTED';
             $adjs->warehouse = 1;
+            setCompanyId($adjs, $company_id);
             $adjs->save();
             $adjsId = $adjs->id;
 
             foreach ($items as $key => $value) {
                 $product_code = $value['kode_produk'];
-                $product = Product::where('code', $product_code)->first();
+                $product = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', $product_code)->first();
                 $konversi_in_pcs = str_replace(',', '', trim($value['perhitungan_fisik']));
 
                 $konversi_in_pcs = $konversi_in_pcs == '' ?  0 : $konversi_in_pcs;
-                ProductStock::where('product', $product->id)->delete();
+                ProductStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->where('product', $product->id)->delete();
 
-                $product_uom_small = ProductUom::whereNull('deleted')
+                $product_uom_small = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->whereNull('deleted')
                     ->where('product', $product->id)
                     ->where('state', 'small')
                     ->first();
@@ -889,6 +933,7 @@ class ProductController extends Controller
                 $adjDtl->unit = $unit;
                 $adjDtl->warehouse = $warehouse;
                 $adjDtl->qty = $konversi_in_pcs;
+                setCompanyId($adjDtl, $company_id);
                 $adjDtl->save();
 
                 stockUpdate(
@@ -899,7 +944,8 @@ class ProductController extends Controller
                     $konversi_in_pcs,
                     $item,
                     'add',
-                    'adjustment stock'
+                    'adjustment stock',
+                    $company_id
                 );
 
                 // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $productId);
@@ -923,7 +969,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $user = session()->all();
-
+        $company_id = session('id_company');
 
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -948,10 +994,18 @@ class ProductController extends Controller
             // ========================
             // SIMPAN PRODUCT
             // ========================
-            $roles = $data['id'] == '' ? new Product() : Product::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code    = generateCodeProduct();
+                $roles = new Product();
+                $roles->code    = generateCodeProduct($company_id);
                 $roles->creator = session('user_id');
+                setCompanyId($roles, $company_id);
+            } else {
+                $roles = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Product tidak ditemukan';
+                    return response()->json($result);
+                }
             }
             $roles->name        = $data['name'];
             $roles->model_number = $data['model_number'];
@@ -990,6 +1044,7 @@ class ProductController extends Controller
                 $log->files       = isset($fileName) ? $fileName : null;
                 $log->path_files  = isset($dbpathlamp) ? $dbpathlamp : null;
                 $log->creator     = session('user_id');
+                setCompanyId($log, $company_id);
                 $log->save();
             }
 
@@ -1022,9 +1077,10 @@ class ProductController extends Controller
                     }
 
                     $product_uom = isset($data['level_id'][$i])
-                        ? ProductUom::find($data['level_id'][$i])
+                        ? ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['level_id'][$i])
                         : new ProductUom();
 
+                    setCompanyId($product_uom, $company_id);
                     $product_uom->product                 = $data['id'];
                     $product_uom->unit_dasar              = $data['unit_dasar'][$i];
                     $product_uom->unit_tujuan             = $data['unit_tujuan'][$i];
@@ -1073,9 +1129,11 @@ class ProductController extends Controller
 
             // Update unit terkecil di product
             if ($unit_dasar_id != 0) {
-                $update       = Product::find($data['id']);
-                $update->unit = $unit_dasar_id;
-                $update->save();
+                $update       = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (! empty($update)) {
+                    $update->unit = $unit_dasar_id;
+                    $update->save();
+                }
             }
 
             // ========================
@@ -1084,7 +1142,7 @@ class ProductController extends Controller
             if (isset($data['uom_id']) && !empty($data['uom_id'])) {
                 for ($i = 0; $i < count($data['uom_id']); $i++) {
                     $product_uom_price = isset($data['price_uom'][$i])
-                        ? ProductUomPrice::find($data['price_uom'][$i])
+                        ? ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['price_uom'][$i])
                         : new ProductUomPrice();
 
                     if ($product_uom_price->type == 'RETAIL') {
@@ -1108,6 +1166,7 @@ class ProductController extends Controller
                             }
                         }
 
+                        setCompanyId($product_uom_price, $company_id);
                         $product_uom_price->save();
                     } else {
                         // ── NON-RETAIL ──
@@ -1122,6 +1181,7 @@ class ProductController extends Controller
 
                             // Simpan harga untuk unit yang diinput (unit terbesar)
                             $product_uom_price             = new ProductUomPrice();
+                            setCompanyId($product_uom_price, $company_id);
                             $product_uom_price->product    = $data['id'];
                             $product_uom_price->unit       = $data['uom_id'][$i];
                             $product_uom_price->price_list = $data['type_price'][$i];
@@ -1151,6 +1211,7 @@ class ProductController extends Controller
                                 if ($key == 0) continue; // skip unit terbesar, sudah disimpan
 
                                 $sub                   = new ProductUomPrice();
+                                setCompanyId($sub, $company_id);
                                 $sub->product          = $data['id'];
                                 $sub->unit             = $h['unit_id'];
                                 $sub->price_list       = $data['type_price'][$i];
@@ -1204,6 +1265,7 @@ class ProductController extends Controller
                 if (!empty($pricingApply)) {
                     foreach ($pricingApply as $p) {
                         $product_uom_price              = new ProductUomPrice();
+                        setCompanyId($product_uom_price, $company_id);
                         $product_uom_price->product     = $data['id'];
                         $product_uom_price->unit        = $p['unit_tujuan'];
                         $product_uom_price->price_list  = 2;
@@ -1223,8 +1285,9 @@ class ProductController extends Controller
             if (isset($data['uom_disc_id']) && !empty($data['uom_disc_id'])) {
                 for ($i = 0; $i < count($data['uom_disc_id']); $i++) {
                     $product_disc_strata                   = isset($data['disc_strata_id'][$i])
-                        ? ProductDisc::find($data['disc_strata_id'][$i])
+                        ? ProductDisc::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['disc_strata_id'][$i])
                         : new ProductDisc();
+                    setCompanyId($product_disc_strata, $company_id);
                     $product_disc_strata->product          = $data['id'];
                     $product_disc_strata->unit             = $data['uom_disc_id'][$i];
                     $product_disc_strata->min_qty          = $data['min_disc_qty'][$i];
@@ -1257,8 +1320,9 @@ class ProductController extends Controller
                     list($unit, $unit_name)                     = explode('//', $data['product_free_unit'][$i]);
 
                     $product_disc_free              = isset($data['disc_free_id'][$i])
-                        ? ProductFreeGood::find($data['disc_free_id'][$i])
+                        ? ProductFreeGood::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['disc_free_id'][$i])
                         : new ProductFreeGood();
+                    setCompanyId($product_disc_free, $company_id);
                     $product_disc_free->product     = $data['id'];
                     $product_disc_free->unit        = $data['uom_disc_free_id'][$i];
                     $product_disc_free->min_qty     = $data['min_free_qty'][$i];
@@ -1315,7 +1379,13 @@ class ProductController extends Controller
             //     return response()->json($result);
             // }
 
-            $menu = Product::find($data['id']);
+            $company_id = session('id_company');
+            $menu = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Product tidak ditemukan';
+                return response()->json($result);
+            }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -1337,8 +1407,15 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $product_uom = ProductUom::find($data['id']);
-            $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
+            $company_id = session('id_company');
+            $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($product_uom)) {
+                DB::rollBack();
+                $result['message'] = 'Data Product UOM tidak ditemukan';
+                return response()->json($result);
+            }
+            $product_uom_price = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('unit', $product_uom->unit_dasar)
                 ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
             if (!empty($product_uom_price)) {
                 DB::rollBack();
@@ -1346,7 +1423,7 @@ class ProductController extends Controller
                 return response()->json($result);
             }
 
-            ProductUom::find($data['id'])->delete();
+            ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id'])->delete();
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
@@ -1368,7 +1445,8 @@ class ProductController extends Controller
         try {
             //code...
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
-            ProductUomPrice::where('id', $data['id'])->delete();
+            $company_id = session('id_company');
+            ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
             // ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
             // if(!empty($product_uom_price)){
@@ -1396,7 +1474,8 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            ProductDisc::where('id', $data['id'])->delete();
+            $company_id = session('id_company');
+            ProductDisc::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
             // $product_uom = ProductUom::find($data['id']);
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
@@ -1426,7 +1505,8 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            ProductFreeGood::where('id', $data['id'])->delete();
+            $company_id = session('id_company');
+            ProductFreeGood::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
             // $product_uom = ProductUom::find($data['id']);
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
@@ -1451,10 +1531,12 @@ class ProductController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])->where('m.id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
@@ -1469,7 +1551,8 @@ class ProductController extends Controller
     public function addItemLevel(Request $request)
     {
         $data = $request->all();
-        $data['data_satuan'] = Unit::whereNull('deleted')->get();
+        $company_id = session('id_company');
+        $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         return view('web.product.product-item-level', $data);
     }
 
@@ -1500,7 +1583,9 @@ class ProductController extends Controller
     public function addItemPrice(Request $request)
     {
         $data = $request->all();
-        $product_uoms = ProductUom::where('product', $data['id'])
+        $company_id = session('id_company');
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+            ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
             ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
@@ -1531,7 +1616,9 @@ class ProductController extends Controller
     public function addItemDiscStrata(Request $request)
     {
         $data = $request->all();
-        $product_uoms = ProductUom::where('product', $data['id'])
+        $company_id = session('id_company');
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+            ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
             ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
@@ -1552,7 +1639,8 @@ class ProductController extends Controller
             ];
         }
         $data['data_satuan'] = $result_satuan;
-        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        $company_id = session('id_company');
+        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         return view('web.product.product-disc-strata', $data);
     }
@@ -1560,7 +1648,9 @@ class ProductController extends Controller
     public function addItemDiscFreeGood(Request $request)
     {
         $data = $request->all();
-        $product_uoms = ProductUom::where('product', $data['id'])
+        $company_id = session('id_company');
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+            ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
             ->join('unit as ut', 'ut.id', 'product_uom.unit_tujuan')
@@ -1581,7 +1671,8 @@ class ProductController extends Controller
             ];
         }
         $data['data_satuan'] = $result_satuan;
-        $data['data_customer_category'] = CustomerCategory::whereNull('deleted')->get();
+        $company_id = session('id_company');
+        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         return view('web.product.product-disc-free', $data);
     }
 
@@ -1606,11 +1697,18 @@ class ProductController extends Controller
         try {
             DB::commit();
 
-            $update = ProductUomPrice::find($data['id']);
+            $company_id = session('id_company');
+            $update = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($update)) {
+                DB::rollBack();
+                $result['message'] = 'Data Product UOM Price tidak ditemukan';
+                return response()->json($result);
+            }
             $update->price = $data['price'];
             $update->save();
 
             $uomPrice = new ProductUomPriceLog();
+            setCompanyId($uomPrice, $company_id);
             $uomPrice->product = $data['id'];
             $uomPrice->unit = $update->unit;
             $uomPrice->channel = $update->channel;
@@ -1641,7 +1739,9 @@ class ProductController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
 
-        $product_uom = ProductUom::whereNull('deleted')
+        $company_id = session('id_company');
+        $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->whereNull('deleted')
             ->where('product', $data['id'])
             ->orderBy('level')
             ->get();
@@ -1657,7 +1757,8 @@ class ProductController extends Controller
                 // Carton : (300.000 / 12) * 12 = 300.000 ✅
                 // Pcs    : (300.000 / 12) * 1  = 25.000  ✅
 
-                $uomPrice = ProductUomPrice::where('product', $data['id'])
+                $uomPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->where('product', $data['id'])
                     ->whereNull('deleted')
                     ->where('unit', $uom->unit_tujuan)
                     ->where('date_start', '<=', date('Y-m-d'))
@@ -1671,6 +1772,7 @@ class ProductController extends Controller
                     $uomPrice->save();
                 } else {
                     $uomPrice = new ProductUomPrice();
+                    setCompanyId($uomPrice, $company_id);
                     $uomPrice->product = $data['id'];
                     $uomPrice->unit = $uom->unit_tujuan;
                     $uomPrice->channel = 'RETAIL UMUM';
@@ -1685,6 +1787,7 @@ class ProductController extends Controller
                 }
 
                 $uomPrice = new ProductUomPriceLog();
+                setCompanyId($uomPrice, $company_id);
                 $uomPrice->product = $data['id'];
                 $uomPrice->unit = $uom->unit_tujuan;
                 $uomPrice->channel = 'RETAIL UMUM';

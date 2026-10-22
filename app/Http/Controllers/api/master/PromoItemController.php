@@ -20,6 +20,7 @@ class PromoItemController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -28,6 +29,7 @@ class PromoItemController extends Controller
                 'm.*',
             ])
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -63,16 +65,29 @@ class PromoItemController extends Controller
         // echo '<pre>';
         // print_r($data);
         // die;
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
 
             list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $data['promo_item'][0]['product']);
-            $units = DB::table('unit')->where('name', $unit_name)->first();
+            $units = DB::table('unit')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('name', $unit_name)->first();
             $unitsId = $units->id;
 
-            $roles = $data['id'] == '' ? new PromoItem() : PromoItem::find($data['id']);
+            if ($data['id'] == '') {
+                $roles = new PromoItem();
+                setCompanyId($roles, $company_id);
+            } else {
+                $roles = PromoItem::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Promo Item tidak ditemukan';
+                    return response()->json($result);
+                }
+            }
             $roles->promo_name = $data['promo_name'];
             $roles->min_qty = $data['min_qty'];
             $roles->max_qty = $data['max_qty'];
@@ -95,14 +110,17 @@ class PromoItemController extends Controller
             $roles->save();
             $headerId = $roles->id;
 
-            PromoItemProduct::where('product_promo_item', $headerId)->delete();
+            PromoItemProduct::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product_promo_item', $headerId)->delete();
             foreach ($data['promo_item'] as $key => $value) {
                 if ($value['remove'] != '1') {
                     list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
-                    $units = DB::table('unit')->where('name', $unit_name)->first();
+                    $units = DB::table('unit')
+                        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                        ->where('name', $unit_name)->first();
                     $unitsId = $units->id;
 
                     $items = new PromoItemProduct();
+                    setCompanyId($items, $company_id);
                     $items->product_promo_item = $headerId;
                     $items->product = $product_id;
                     $items->unit = $unitsId;
@@ -110,21 +128,24 @@ class PromoItemController extends Controller
                     $items->save();
                 } else {
                     if ($value['id'] != '') {
-                        PromoItemProduct::where('id', $value['id'])->delete();
+                        PromoItemProduct::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                     }
                 }
             }
 
-            PromoItemProductFree::where('product_promo_item', $headerId)->delete();
+            PromoItemProductFree::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product_promo_item', $headerId)->delete();
             if (isset($data['free_product'])) {
                 foreach ($data['free_product'] as $key => $value) {
                     if ($value['remove'] != '1') {
                         if ($value['product'] != '') {
                             list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
-                            $units = DB::table('unit')->where('name', $unit_name)->first();
+                            $units = DB::table('unit')
+                                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                                ->where('name', $unit_name)->first();
                             $unitsId = $units->id;
 
                             $items = new PromoItemProductFree();
+                            setCompanyId($items, $company_id);
                             $items->product_promo_item = $headerId;
                             $items->free_product = $product_id;
                             $items->free_unit = $unitsId;
@@ -136,22 +157,25 @@ class PromoItemController extends Controller
                         }
                     } else {
                         if ($value['id'] != '') {
-                            PromoItemProductFree::where('id', $value['id'])->delete();
+                            PromoItemProductFree::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                         }
                     }
                 }
             }
 
-            PromoItemProductSyarat::where('product_promo_item', $headerId)->delete();
+            PromoItemProductSyarat::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product_promo_item', $headerId)->delete();
             if (isset($data['product_syarat'])) {
                 foreach ($data['product_syarat'] as $key => $value) {
                     if ($value['remove'] != '1') {
                         if ($value['product'] != '') {
                             list($product_uom, $product_id, $product_name, $unit_name) = explode('//', $value['product']);
-                            $units = DB::table('unit')->where('name', $unit_name)->first();
+                            $units = DB::table('unit')
+                                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                                ->where('name', $unit_name)->first();
                             $unitsId = $units->id;
 
                             $items = new PromoItemProductSyarat();
+                            setCompanyId($items, $company_id);
                             $items->product_promo_item = $headerId;
                             $items->product = $product_id;
                             $items->unit = $unitsId;
@@ -162,7 +186,7 @@ class PromoItemController extends Controller
                         }
                     } else {
                         if ($value['id'] != '') {
-                            PromoItemProductSyarat::where('id', $value['id'])->delete();
+                            PromoItemProductSyarat::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                         }
                     }
                 }
@@ -185,7 +209,13 @@ class PromoItemController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = PromoItem::find($data['id']);
+            $company_id = session('id_company');
+            $menu = PromoItem::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Promo Item tidak ditemukan';
+                return response()->json($result);
+            }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -202,10 +232,12 @@ class PromoItemController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])->where('m.id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

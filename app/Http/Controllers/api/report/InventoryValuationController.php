@@ -22,6 +22,7 @@ class InventoryValuationController extends Controller
         $dateEnd   = $_POST['date_end']   ?? date('Y-m-d');
         $typeStock = $_POST['type_stock'] ?? 'rm';
         $itemCode  = $_POST['item_code']  ?? '';
+        $company_id = session('id_company');
 
         $baseQuery = DB::table('stock_cards as sc')
             ->leftJoin('product as p', 'p.code', '=', 'sc.item_code')
@@ -57,6 +58,7 @@ class InventoryValuationController extends Controller
             ->where('sc.type_stock', $typeStock)
             // ->where('sc.item_code', 'PROD-08260001')
             ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sc.company_id', $company_id))
             ->when($itemCode, fn($q) => $q->where('sc.item_code', $itemCode))
             ->orderBy('sc.item_code')
             ->orderBy('sc.trans_date')
@@ -160,6 +162,16 @@ class InventoryValuationController extends Controller
         $dateEnd   = $_POST['date_end']   ?? date('Y-m-d');
         $typeStock = $_POST['type_stock'] ?? 'rm';
         $itemCode  = $_POST['item_code']  ?? '';
+        $company_id = session('id_company');
+        // Filter tenant untuk subquery raw SQL. company_id selalu integer dari
+        // session, jadi aman di-casting ke int sebelum disisipkan ke string query.
+        // Tiap scope punya filter sendiri karena aliasnya berbeda (f dan l).
+        $fCompanyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND f.company_id = ' . (int) $company_id
+            : '';
+        $lCompanyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND l.company_id = ' . (int) $company_id
+            : '';
 
         $baseQuery = DB::table('stock_cards as sc')
             ->leftJoin('product as p', 'p.code', '=', 'sc.item_code')
@@ -181,7 +193,7 @@ class InventoryValuationController extends Controller
                  WHERE f.item_code = sc.item_code
                    AND f.wh_code = sc.wh_code
                    AND f.type_stock = sc.type_stock
-                   AND f.trans_date BETWEEN ? AND ?
+                   AND f.trans_date BETWEEN ? AND ?" . $fCompanyFilter . "
                  ORDER BY f.trans_date ASC, f.id ASC
                  LIMIT 1) as opening_value"),
 
@@ -190,13 +202,14 @@ class InventoryValuationController extends Controller
                  WHERE l.item_code = sc.item_code
                    AND l.wh_code = sc.wh_code
                    AND l.type_stock = sc.type_stock
-                   AND l.trans_date BETWEEN ? AND ?
+                   AND l.trans_date BETWEEN ? AND ?" . $lCompanyFilter . "
                  ORDER BY l.trans_date DESC, l.id DESC
                  LIMIT 1) as closing_value"),
             ])
             ->addBinding([$dateStart, $dateEnd, $dateStart, $dateEnd], 'select')
             ->where('sc.type_stock', $typeStock)
             ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sc.company_id', $company_id))
             ->when($itemCode, fn($q) => $q->where('sc.item_code', $itemCode))
             ->groupBy('sc.item_code', 'sc.wh_code', 'sc.type_stock');
 

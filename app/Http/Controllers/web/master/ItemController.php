@@ -63,8 +63,9 @@ class ItemController extends Controller
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
-        $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
+        $company_id = session('id_company');
+        $data['product_type'] = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
+        $data['product_unit'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
         $data['product_logs'] = [];
         $view = view('web.item.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -77,7 +78,9 @@ class ItemController extends Controller
 
     public function getProductLog($product)
     {
-        $data = ItemLog::where('items_log.item', $product)
+        $company_id = session('id_company');
+        $data = ItemLog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('items_log.company_id', $company_id))
+            ->where('items_log.item', $product)
             ->select([
                 'items_log.*',
                 'usr.username'
@@ -92,8 +95,9 @@ class ItemController extends Controller
         $api = new MasterItemController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['product_type'] = ProductType::whereNull('deleted')->get()->toArray();
-        $data['product_unit'] = Unit::whereNull('deleted')->get()->toArray();
+        $company_id = session('id_company');
+        $data['product_type'] = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
+        $data['product_unit'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
 
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();

@@ -98,20 +98,21 @@ class GoodReceiptController extends Controller
 
     public function add()
     {
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoPO($company_id);
         $data['akses'] = strtolower(session('akses'));
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-        $company_id = session('id_company');
+        $data['vendors'] = Vendor::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
+        $data['purchase_orders'] = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('purchase_order.company_id', $company_id))
+            ->whereNull('purchase_order.deleted')
             ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
             ->with(['vendors'])
             ->get();
@@ -130,17 +131,18 @@ class GoodReceiptController extends Controller
     {
         $api = new TransactionGoodReceiptController();
         $data = $request->all();
+        $company_id = session('id_company');
         $data['akses'] = strtolower(session('akses'));
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['vendors'] = Vendor::whereNull('deleted')->get();
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
-        $company_id = session('id_company');
+        $data['vendors'] = Vendor::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['taxes'] = Tax::where('is_active', 1)
             ->whereNull('deleted')
-            ->where('company_id', $company_id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['data_item'] = GoodReceiptDtl::where('goods_receipt_detail.goods_receipt_header', $data['id'])
+        $data['data_item'] = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('goods_receipt_detail.company_id', $company_id))
+            ->where('goods_receipt_detail.goods_receipt_header', $data['id'])
             ->select([
                 'goods_receipt_detail.*',
                 'p.id as product_id',
@@ -155,11 +157,12 @@ class GoodReceiptController extends Controller
             ->whereNull('goods_receipt_detail.deleted')
             ->get();
 
-        $data['purchase_orders'] = PurchaseOrder::whereNull('purchase_order.deleted')
+        $data['purchase_orders'] = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('purchase_order.company_id', $company_id))
+            ->whereNull('purchase_order.deleted')
             ->whereIn('purchase_order.status', ['draft', 'approved', 'partial-received'])
             ->with(['vendors'])
             ->get();
-        $data['general_ledgers'] = getGeneralLedger($data['data']->gr_number);
+        $data['general_ledgers'] = getGeneralLedger($data['data']->gr_number, $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $view = view('web.good_receipt.formadd', $data);
@@ -174,8 +177,10 @@ class GoodReceiptController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = GoodReceipt::with(['po', 'po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
+        $company_id = session('id_company');
+        $company = CompanyModel::where('id', $company_id)->first();
+        $data = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->with(['po', 'po.vendors', 'po.warehouses', 'items.products', 'items.units'])->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->gr_number));
         $qr = '';
         // echo '<pre>';

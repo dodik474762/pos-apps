@@ -23,6 +23,14 @@ class ReportStockController extends Controller
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
+        $company_id = session('id_company');
+        // Filter tenant untuk subquery raw SQL. company_id selalu integer dari
+        // session, jadi aman di-casting ke int sebelum disisipkan ke string query.
+        $companyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND pod.company_id = ' . (int) $company_id
+                . ' AND po.company_id = ' . (int) $company_id
+                . ' AND pu_pod.company_id = ' . (int) $company_id
+            : '';
 
         $datadb = DB::table('product_stock_move as m')
             ->select([
@@ -49,7 +57,7 @@ class ReportStockController extends Controller
                 AND po.warehouse = m.warehouse
                 AND po.status = "draft"
                 AND po.deleted IS NULL
-                AND pod.deleted IS NULL
+                AND pod.deleted IS NULL' . $companyFilter . '
                 AND po.po_date <= "' . $tanggal . '"
             ) as qty_po_draft'),
 
@@ -91,7 +99,7 @@ class ReportStockController extends Controller
     AND po.warehouse = m.warehouse
     AND po.status = "draft"
     AND po.deleted IS NULL
-    AND pod.deleted IS NULL
+    AND pod.deleted IS NULL' . $companyFilter . '
     AND po.po_date <= "' . $tanggal . '"
 ), 2) as stock_future'),
 
@@ -113,7 +121,7 @@ class ReportStockController extends Controller
                         AND po.warehouse = m.warehouse
                         AND po.status = "draft"
                         AND po.deleted IS NULL
-                        AND pod.deleted IS NULL
+                        AND pod.deleted IS NULL' . $companyFilter . '
                         AND po.po_date <= "' . $tanggal . '"
                     )
                 )
@@ -152,7 +160,7 @@ class ReportStockController extends Controller
                     AND po.warehouse = m.warehouse
                     AND po.status = "draft"
                     AND po.deleted IS NULL
-                    AND pod.deleted IS NULL
+                    AND pod.deleted IS NULL' . $companyFilter . '
                     AND po.po_date <= "' . $tanggal . '"
                 )
             ) / NULLIF(
@@ -180,6 +188,7 @@ class ReportStockController extends Controller
             })
             // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
             ->where('m.id', '>', '18013')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -275,6 +284,7 @@ class ReportStockController extends Controller
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
+        $company_id = session('id_company');
 
         $datadb = ProductStockMove::from('product_stock_move as m')
             ->select([
@@ -348,6 +358,7 @@ class ReportStockController extends Controller
                     ->whereDate('m.created_at', '<=', $tanggal);
             })
             // ->whereDate('m.created_at', '<=', $tanggal)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -866,6 +877,18 @@ class ReportStockController extends Controller
 
         $tanggalMulai = '2026-07-31 23:59:59';
         $tanggalAkhir = $tanggal . ' 23:59:59';
+        $company_id = session('id_company');
+        // Filter tenant untuk subquery raw SQL (harga & harga historis).
+        // Tiap scope punya filter sendiri karena aliasnya berbeda.
+        $pupCompanyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND pup.company_id = ' . (int) $company_id
+            : '';
+        $puCompanyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND pu.company_id = ' . (int) $company_id
+            : '';
+        $m2CompanyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND m2.company_id = ' . (int) $company_id
+            : '';
 
         // ============================================================
         // QUERY RINGAN untuk recordsTotal — tanpa join uom/unit, tanpa subquery price
@@ -874,6 +897,7 @@ class ReportStockController extends Controller
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->select(DB::raw('COUNT(DISTINCT m.product, m.warehouse) as aggregate'))
             ->value('aggregate') ?? 0;
 
@@ -886,7 +910,8 @@ class ReportStockController extends Controller
             ->leftJoin('vendor as v', 'p.vendor', 'v.id')
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
-            ->where('m.id', '>', '18013');
+            ->where('m.id', '>', '18013')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST['search']['value']) && $_POST['search']['value'] !== '') {
             $keyword = $_POST['search']['value'];
@@ -935,18 +960,18 @@ class ReportStockController extends Controller
                AND pup.date_start <= ?
                AND (pup.date_end IS NULL OR pup.date_end >= ?)
                AND (pup.channel = \'RETAIL UMUM\' OR pup.channel IS NULL)
-               AND pup.customer IS NULL
+               AND pup.customer IS NULL' . $pupCompanyFilter . '
                AND pup.unit = (SELECT pu.unit_tujuan FROM product_uom pu
-                               WHERE pu.product = m.product AND pu.deleted IS NULL
+                               WHERE pu.product = m.product AND pu.deleted IS NULL' . $puCompanyFilter . '
                                ORDER BY pu.level DESC LIMIT 1)
              ORDER BY pup.date_start DESC, pup.id DESC LIMIT 1),
             (SELECT m2.price FROM product_stock_move m2
              WHERE m2.product = m.product AND m2.warehouse = m.warehouse
-               AND m2.price > 0 AND m2.created_at <= ?
+               AND m2.price > 0 AND m2.created_at <= ?' . $m2CompanyFilter . '
              ORDER BY m2.created_at ASC LIMIT 1),
             (SELECT m2.price FROM product_stock_move m2
              WHERE m2.product = m.product AND m2.warehouse = m.warehouse
-               AND m2.created_at <= ?
+               AND m2.created_at <= ?' . $m2CompanyFilter . '
              ORDER BY m2.created_at ASC LIMIT 1)
         ) as price'),
             ])
@@ -988,6 +1013,7 @@ class ReportStockController extends Controller
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             // ->where('p.id', '1372')
             ->groupBy(
                 'm.product',

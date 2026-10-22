@@ -29,6 +29,13 @@ class ClosingStockController extends Controller
         $typeStock = $_POST['type_stock'] ?? 'rm';
         $itemCode  = $_POST['item_code']  ?? '';
 
+        $company_id = session('id_company');
+        // Filter tenant untuk raw SQL di bawah. company_id selalu integer dari session,
+        // jadi aman di-casting ke int sebelum disisipkan ke string query.
+        $companyFilter = ($company_id !== null && $company_id !== '')
+            ? ' AND company_id = ' . (int) $company_id
+            : '';
+
         // Agregasi mutasi periode per item_code (ganti loop foreach -> 1x SUM ter-GROUP BY)
         $periodSumSql = "(
         SELECT
@@ -40,7 +47,8 @@ class ClosingStockController extends Controller
             SUM(qty_transfer_in)  as total_transfer_in,
             SUM(qty_return_in)    as total_return_in
         FROM stock_cards
-        WHERE trans_date BETWEEN '" . $dateStart . "' AND '" . $dateEnd . "'
+        WHERE trans_date BETWEEN '" . $dateStart . "' AND '" . $dateEnd . "'"
+            . $companyFilter . "
         GROUP BY item_code
     ) as ps";
 
@@ -49,7 +57,8 @@ class ClosingStockController extends Controller
         SELECT DISTINCT item_code
         FROM stock_cards
         WHERE type_stock = '" . $typeStock . "'"
-            . ($itemCode ? " AND item_code = '" . $itemCode . "'" : "") . "
+            . ($itemCode ? " AND item_code = '" . $itemCode . "'" : "")
+            . $companyFilter . "
     ) as sc";
 
         $datadb = DB::table(DB::raw($itemListSql))
@@ -65,7 +74,8 @@ class ClosingStockController extends Controller
                 SELECT closing_balance
                 FROM stock_cards
                 WHERE item_code = sc.item_code
-                  AND trans_date < '" . $dateStart . "'
+                  AND trans_date < '" . $dateStart . "'"
+                    . $companyFilter . "
                 ORDER BY trans_date DESC, id DESC
                 LIMIT 1
             ), 0) as opening_balance"),
@@ -85,7 +95,8 @@ class ClosingStockController extends Controller
                     SELECT closing_balance
                     FROM stock_cards
                     WHERE item_code = sc.item_code
-                      AND trans_date < '" . $dateStart . "'
+                      AND trans_date < '" . $dateStart . "'"
+                        . $companyFilter . "
                     ORDER BY trans_date DESC, id DESC
                     LIMIT 1
                 ), 0)
@@ -168,6 +179,7 @@ class ClosingStockController extends Controller
         $typeStock = $_POST['type_stock'] ?? 'rm';
         $itemCode  = $_POST['item_code']  ?? '';
         $dateNow = $_POST['tanggal'] ?? date('Y-m-d');
+        $company_id = session('id_company');
 
         $datadb = DB::table('stock_cards as sc')
             ->leftJoin('product as p', 'p.code', '=', 'sc.item_code')
@@ -193,7 +205,8 @@ class ClosingStockController extends Controller
           AND (
                 prev.trans_date < sc.trans_date
                 OR (prev.trans_date = sc.trans_date AND prev.id < sc.id)
-          )
+          )"
+            . ($company_id !== null && $company_id !== '' ? ' AND prev.company_id = ' . (int) $company_id : '') . "
         ORDER BY prev.trans_date DESC, prev.id DESC
         LIMIT 1
     ), 2) as opening_balance_row"),
@@ -208,6 +221,7 @@ class ClosingStockController extends Controller
             // ->where('p.id', 116)
             // ->where('trans_date', $dateNow)
             ->whereBetween('sc.trans_date', [$dateStart, $dateEnd])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sc.company_id', $company_id))
             ->when($itemCode, fn($q) => $q->where('sc.item_code', $itemCode))
             ->orderBy('sc.item_code')
             ->orderBy('sc.trans_date')
@@ -277,20 +291,21 @@ class ClosingStockController extends Controller
 
         DB::beginTransaction();
         try {
-            $closing = StockClosing::where('closing_date', $params['tanggal'])->first();
+            $company_id = session('id_company');
+
+            $closing = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('closing_date', $params['tanggal'])->first();
             if (!empty($closing)) {
                 DB::rollBack();
                 $result['message'] = 'Tanggal ' . date('d F Y', strtotime($params['tanggal'])) . ' sudah di-closing.';
                 return response()->json($result);
             }
 
-            $company_id = session('id_company');
-
             // ===== WARNING: pastikan tanggal closing sebelumnya sudah di-closing =====
             $requestedDate = Carbon::parse($params['tanggal'])->format('Y-m-d');
             $prevDate      = Carbon::parse($requestedDate)->subDay()->format('Y-m-d');
 
-            $lastClosing = StockClosing::where('company_id', $company_id)
+            $lastClosing = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->where('closing_date', '<', $requestedDate)
                 ->orderBy('closing_date', 'desc')
                 ->first();
@@ -307,14 +322,15 @@ class ClosingStockController extends Controller
             $stockClosing = new StockClosing();
             $stockClosing->closing_date = $params['tanggal'];
             $stockClosing->created_by = session('user_id');
-            $stockClosing->company_id = $company_id;
+            setCompanyId($stockClosing, $company_id);
             $stockClosing->save();
 
             /* recalculate stock cards untuk tanggal yang di-closing */
-            $product_stock = ProductStock::select([
-                'product_stock.product',
-                'p.code as product_code'
-            ])
+            $product_stock = ProductStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_stock.company_id', $company_id))
+                ->select([
+                    'product_stock.product',
+                    'p.code as product_code'
+                ])
                 ->join('product as p', 'p.id', '=', 'product_stock.product')
                 ->whereNull('p.deleted')->get();
 
@@ -412,10 +428,11 @@ class ClosingStockController extends Controller
             //     recalculateFrom('0', $params['tanggal_awal'], $params['tanggal'], $stockCard->wh_code, null, $stockCard->product);
             // }
 
-            $product_stock = ProductStock::select([
-                'product_stock.product',
-                'p.code as product_code'
-            ])
+            $product_stock = ProductStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_stock.company_id', $company_id))
+                ->select([
+                    'product_stock.product',
+                    'p.code as product_code'
+                ])
                 ->join('product as p', 'p.id', '=', 'product_stock.product')
                 // ->where('p.id', '1372')
                 ->whereNull('p.deleted')->get();

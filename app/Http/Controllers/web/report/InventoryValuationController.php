@@ -44,7 +44,7 @@ class InventoryValuationController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $lastClosing = StockClosing::where('company_id', $company_id)
+        $lastClosing = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('closing_date', 'desc')
             ->first();
         $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');

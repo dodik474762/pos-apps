@@ -138,7 +138,10 @@ class PromoItemController extends Controller
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
-        $data['promo_item'] = DB::table('product_promo_item_detail')->where('product_promo_item_detail.product_promo_item', $data['id'])
+        $company_id = session('id_company');
+        $data['promo_item'] = DB::table('product_promo_item_detail')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_promo_item_detail.company_id', $company_id))
+            ->where('product_promo_item_detail.product_promo_item', $data['id'])
             ->select(['product_promo_item_detail.*', 'p.name as product_name', 'u.name as unit_name'])
             ->join('product as p', 'p.id', '=', 'product_promo_item_detail.product')
             ->join('unit as u', 'u.id', '=', 'product_promo_item_detail.unit')
@@ -146,10 +149,14 @@ class PromoItemController extends Controller
             ->get()->toArray();
         // echo '<pre>';
         // print_r($data['promo_item']);die;
-        $data['product_free'] = DB::table('product_promo_item_detail_free')->where('product_promo_item_detail_free.product_promo_item', $data['id'])
+        $data['product_free'] = DB::table('product_promo_item_detail_free')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_promo_item_detail_free.company_id', $company_id))
+            ->where('product_promo_item_detail_free.product_promo_item', $data['id'])
             ->select(['product_promo_item_detail_free.*'])->get()->toArray();
 
-        $data['product_syarat'] = DB::table('product_promo_item_syarat')->where('product_promo_item_syarat.product_promo_item', $data['id'])
+        $data['product_syarat'] = DB::table('product_promo_item_syarat')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_promo_item_syarat.company_id', $company_id))
+            ->where('product_promo_item_syarat.product_promo_item', $data['id'])
             ->select(['product_promo_item_syarat.*', 'p.name as product_name', 'u.name as unit_name'])
             ->join('product as p', 'p.id', '=', 'product_promo_item_syarat.product')
             ->join('unit as u', 'u.id', '=', 'product_promo_item_syarat.unit')

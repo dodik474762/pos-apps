@@ -69,10 +69,37 @@ function getRomawiMonth($date = '')
     return $romawi[$month];
 }
 
-function generateCodeProduct()
+/**
+ * Menempelkan company_id ke sebuah model Eloquent.
+ *
+ * Kolom company_id di database bersifat NOT NULL DEFAULT 1, jadi menulis null
+ * akan membuat INSERT/UPDATE gagal. Bila company aktif tidak diketahui
+ * (session kosong / route tanpa login), kolom dibiarkan tidak berubah sehingga
+ * nilai DEFAULT database yang berlaku, sama seperti sebelum scoping tenant.
+ *
+ * @param  mixed  $model
+ * @param  mixed  $company_id  null = ambil dari session
+ * @return mixed
+ */
+function setCompanyId($model, $company_id = null)
+{
+    if ($company_id === null) {
+        $company_id = session('id_company');
+    }
+
+    if ($company_id !== null && $company_id !== '') {
+        $model->company_id = $company_id;
+    }
+
+    return $model;
+}
+
+function generateCodeProduct($company_id = null)
 {
     $no = 'PROD-' . strtoupper(date('m')) . date('y');
-    $data = DB::table('product')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('product')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -240,10 +267,12 @@ function generateNoSO($company_id = null)
     return $no;
 }
 
-function generateNoAdjStock()
+function generateNoAdjStock($company_id = null)
 {
     $no = 'ADJ' . strtoupper(date('m')) . date('y');
-    $data = DB::table('product_adjustment_stock_header')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('product_adjustment_stock_header')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -535,10 +564,12 @@ function generatePlanCode()
     return $no;
 }
 
-function generateGrNumber()
+function generateGrNumber($company_id = null)
 {
     $no = 'GR' . strtoupper(date('m')) . date('y');
-    $data = DB::table('goods_receipt_header')->where('gr_number', 'LIKE', '%' . $no . '%')->orderBy('gr_number', 'desc')->get()->toArray();
+    $data = DB::table('goods_receipt_header')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->where('gr_number', 'LIKE', '%' . $no . '%')->orderBy('gr_number', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -1150,9 +1181,10 @@ function hitungKonversiKeSatuanTerkecil($product_uom, $unit, &$cache = [])
     return $hasil;
 }
 
-function konversiSatuan($productId, $unitDari, $unitKe, $qty = 1)
+function konversiSatuan($productId, $unitDari, $unitKe, $qty = 1, $company_id = null)
 {
-    $product_uom = ProductUom::whereNull('deleted')
+    $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->whereNull('deleted')
         ->where('product', $productId)
         ->orderBy('level')
         ->get();
@@ -1211,9 +1243,10 @@ function pecahDariSatuanTerkecil($product_uom, $totalTerkecil)
     return $hasil;
 }
 
-function normalisasiQtyUom($productId, array $inputs)
+function normalisasiQtyUom($productId, array $inputs, $company_id = null)
 {
-    $product_uom = ProductUom::whereNull('deleted')
+    $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        ->whereNull('deleted')
         ->where('product', $productId)
         ->orderBy('level')
         ->get();
@@ -1235,7 +1268,7 @@ function hitungHargaPerSatuan($price, $product_uom, $unitTerbesar, $unitTujuan, 
     return ($price / $konversiTerbesar) * $konversiTujuan;
 }
 
-function getSmallestUnit($productId, $fromUnitId, $qty = 1)
+function getSmallestUnit($productId, $fromUnitId, $qty = 1, $company_id = null)
 {
     $multiplier = 1;
     $currentUnit = $fromUnitId;
@@ -1243,6 +1276,7 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     while (true) {
         // Ambil konversi dari unit saat ini
         $conversion = DB::table('product_uom')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('product', $productId)
             ->where('unit_tujuan', $currentUnit)
             ->whereNull('deleted')
@@ -1268,7 +1302,7 @@ function getSmallestUnit($productId, $fromUnitId, $qty = 1)
     ];
 }
 
-function getHargaSemuaUnit($productId, $hargaUnit, $unitId)
+function getHargaSemuaUnit($productId, $hargaUnit, $unitId, $company_id = null)
 {
     $result = [];
 
@@ -1283,6 +1317,7 @@ function getHargaSemuaUnit($productId, $hargaUnit, $unitId)
     // Cari konversi dari unit ini ke unit lebih kecil
     // unit_tujuan = unitId ini, unit_dasar = unit lebih kecil
     $conversion = DB::table('product_uom')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->where('product', $productId)
         ->where('unit_tujuan', $unitId)
         ->whereNull('deleted')
@@ -1296,7 +1331,8 @@ function getHargaSemuaUnit($productId, $hargaUnit, $unitId)
         $subResult = getHargaSemuaUnit(
             $productId,
             $hargaUnitLebihKecil,
-            $conversion->unit_dasar
+            $conversion->unit_dasar,
+            $company_id
         );
 
         $result = array_merge($result, $subResult);
@@ -1306,10 +1342,11 @@ function getHargaSemuaUnit($productId, $hargaUnit, $unitId)
 }
 
 
-function getSmallestUnitV2($productId, $fromUnitId, $qty = 1)
+function getSmallestUnitV2($productId, $fromUnitId, $qty = 1, $company_id = null)
 {
     // Ambil konversi dari unit saat ini
     $conversion = DB::table('product_uom')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->where('product', $productId)
         ->where('unit_tujuan', $fromUnitId)
         ->whereNull('deleted')
@@ -1320,10 +1357,11 @@ function getSmallestUnitV2($productId, $fromUnitId, $qty = 1)
 
 
 
-function getLargestUnit($productId, $fromUnitId, $qty = 1)
+function getLargestUnit($productId, $fromUnitId, $qty = 1, $company_id = null)
 {
     // Ambil semua konversi unit untuk produk terkait
     $data_product_uom = DB::table('product_uom')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
         ->where('product', $productId)
         ->whereNull('deleted')
         ->orderBy('level')
@@ -1430,18 +1468,23 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
                 'updated_at' => now(),
             ]);
     } else {
-        DB::table('product_stock')->insert([
+        $stockInsert = [
             'product' => $product,
             'unit' => $baseUnit,
             'warehouse' => $warehouseId,
             'qty' => $type == 'add' ? $convertedQty : $convertedQty * -1,
             'avg_cost' => $value['price'] ?? 0,
-            'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
             'created_at' => now(),
-        ]);
+        ];
+        // company_id NOT NULL: hanya diisi bila company aktif diketahui, kalau tidak
+        // database memakai DEFAULT sehingga perilaku sama seperti sebelum scoping tenant.
+        if ($company_id !== null && $company_id !== '') {
+            $stockInsert['company_id'] = $company_id;
+        }
+        DB::table('product_stock')->insert($stockInsert);
     }
 
-    DB::table('product_stock_move')->insert([
+    $stockMoveInsert = [
         'product' => $product,
         'unit' => $baseUnit,
         'warehouse' => $warehouseId,
@@ -1451,9 +1494,12 @@ function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit 
         'reference_id' => $reference_id,
         'price' => $sell_price,
         'purchase_price' => $purchase_price,
-        'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
         'created_at' => now(),
-    ]);
+    ];
+    if ($company_id !== null && $company_id !== '') {
+        $stockMoveInsert['company_id'] = $company_id;
+    }
+    DB::table('product_stock_move')->insert($stockMoveInsert);
 }
 
 // function stockUpdate($reference_id = 0, $warehouse = 0, $product = 0, $baseUnit = 0, $convertedQty = 0, $value = [], $type = '', $move_type = '')
@@ -1555,7 +1601,7 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
     }
 
     // Catat pergerakan rollback di product_stock_move
-    DB::table('product_stock_move')->insert([
+    $stockMoveInsert = [
         'product' => $product,
         'unit' => $baseUnit,
         'warehouse' => $warehouseId,
@@ -1564,9 +1610,13 @@ function stockRollback($reference_id = 0, $warehouse = 0, $product = 0, $baseUni
         'move_type' => 'rollback',
         'reference_id' => $reference_id,
         'price' => $value['price'] ?? 0,
-        'company_id' => $company_id !== null && $company_id !== '' ? $company_id : null,
         'created_at' => now(),
-    ]);
+    ];
+    // company_id NOT NULL: hanya diisi bila company aktif diketahui.
+    if ($company_id !== null && $company_id !== '') {
+        $stockMoveInsert['company_id'] = $company_id;
+    }
+    DB::table('product_stock_move')->insert($stockMoveInsert);
 }
 
 function canInvoiceProcessCL($customer, $total = 0, $exclude_id = 0, $company_id = null)
@@ -2085,6 +2135,7 @@ function getOriginalDoCost(string $itemCode, $doId, $company_id = null): float
  */
 function costMovement(array &$s, array $m): array
 {
+    $company_id = $m['company_id'] ?? null;
     $adj      = (float) ($m['qty_adjust'] ?? 0);
     $qtyPlus  = (float) $m['qty_in'] + (float) $m['qty_transfer_in'] + (float) $m['qty_return_in'] + max($adj, 0);
     $qtyMinus = (float) $m['qty_out'] + (float) $m['qty_transfer_out'] + abs(min($adj, 0));
@@ -2248,11 +2299,11 @@ function recalculateFrom(
     }
 
     // 3. Ambil ulang transaksi dari tabel sumber
-    $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code);
-    $sales     = mapSales($itemCode, $fromDate, $toDate, $wh_code);
-    $adjust    = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code);
-    $returns   = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code);
-    $cancelDo  = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code);
+    $purchases = mapPurchases($itemCode, $fromDate, $toDate, $wh_code, $company_id);
+    $sales     = mapSales($itemCode, $fromDate, $toDate, $wh_code, $company_id);
+    $adjust    = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code, $company_id);
+    $returns   = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code, $company_id);
+    $cancelDo  = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code, $company_id);
 
     $transactions = collect()
         ->merge($purchases)
@@ -2281,6 +2332,7 @@ function recalculateFrom(
             'is_purchase'    => $isPurchase,
             'purchase_value' => $trx['purchase_value'] ?? null,
             'orig_cost'      => $isCancelDo ? getOriginalDoCost($itemCode, $trx['reference_id'], $company_id) : null,
+            'company_id'     => $company_id,
         ]));
 
         // echo '<pre>';
@@ -2456,9 +2508,10 @@ function monthlyReportWithRangeDate(string $dateStart, string $dateEnd, $materia
     return $report;
 }
 
-function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
 {
     return GoodReceiptDtl::query()
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('goods_receipt_detail.company_id', $company_id))
         ->join('product as p', function ($q) {
             return $q->on('p.id', '=', 'goods_receipt_detail.product');
         })
@@ -2508,7 +2561,7 @@ function mapPurchases(string $itemCode, string $fromDate, ?string $toDate, $wh_c
         ]);
 }
 
-function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
 {
     // return DeliveryOrderDtl::query()
     //     ->join('product as p', function ($q) {
@@ -2576,6 +2629,7 @@ function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code 
         ->where('p.code', $itemCode)
         ->whereDate('psm.created_at', '>=', $fromDate)
         ->when($toDate, fn($q) => $q->whereDate('psm.created_at', '<=', $toDate))
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('psm.company_id', $company_id))
         ->select([
             'psm.reference_id',
             'p.name as product_name',
@@ -2607,7 +2661,7 @@ function mapSales(string $itemCode, string $fromDate, ?string $toDate, $wh_code 
         ]);
 }
 
-function mapCancelDo(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+function mapCancelDo(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
 {
     return DB::table('product_stock_move as psm')
         ->join('product as p', 'p.id', '=', 'psm.product')
@@ -2616,6 +2670,7 @@ function mapCancelDo(string $itemCode, string $fromDate, ?string $toDate, $wh_co
         ->where('p.code', $itemCode)
         ->whereDate('psm.created_at', '>=', $fromDate)
         ->when($toDate, fn($q) => $q->whereDate('psm.created_at', '<=', $toDate))
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('psm.company_id', $company_id))
         ->select([
             'psm.reference_id',
             'p.name as product_name',
@@ -2648,9 +2703,10 @@ function mapCancelDo(string $itemCode, string $fromDate, ?string $toDate, $wh_co
 }
 
 
-function mapAdjustments(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+function mapAdjustments(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
 {
     return ProductAdjustmentStockDtl::query()
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_adjustment_stock_dtl.company_id', $company_id))
         ->join('product as p', function ($q) {
             return $q->on('p.id', '=', 'product_adjustment_stock_dtl.product');
         })
@@ -2700,9 +2756,10 @@ function mapAdjustments(string $itemCode, string $fromDate, ?string $toDate, $wh
         ]);
 }
 
-function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1')
+function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
 {
     return SalesReturnDtl::query()
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_return_detail.company_id', $company_id))
         ->join('product as p', function ($q) {
             return $q->on('p.id', '=', 'sales_return_detail.product_id');
         })

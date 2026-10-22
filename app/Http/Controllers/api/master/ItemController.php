@@ -20,6 +20,7 @@ class ItemController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -32,6 +33,7 @@ class ItemController extends Controller
             ->join('product_type as pt', 'pt.id', 'm.product_type')
             ->join('unit as u', 'u.id', 'm.unit')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -68,10 +70,11 @@ class ItemController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = true;
+        $company_id = session('id_company');
 
-
-        $totalRows = Item::whereNull('deleted')->count();
+        $totalRows = Item::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
         $datadb = Item::whereNull('items.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('items.company_id', $company_id))
             ->where('items.id', '>', $data['last_id'])
             ->limit($data['length'])
             ->orderBy('items.id', 'asc');
@@ -110,6 +113,7 @@ class ItemController extends Controller
     public function submit(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
@@ -133,10 +137,18 @@ class ItemController extends Controller
 
             $dbpathlamp = '/' . $dir . '/';
 
-            $roles = $data['id'] == '' ? new Item() : Item::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code = generateCodeProduct();
+                $roles = new Item();
+                $roles->code = generateCodeProduct($company_id);
                 $roles->creator = session('user_id');
+                setCompanyId($roles, $company_id);
+            } else {
+                $roles = Item::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Item tidak ditemukan';
+                    return redirect()->action([MasterItemController::class, 'index'], ['error' => $result['message']]);
+                }
             }
             $roles->name = $data['name'];
             $roles->model_number = $data['model_number'];
@@ -161,6 +173,7 @@ class ItemController extends Controller
                 $roles->files = isset($fileName) ? $fileName : $roles->files;
                 $roles->path_files = isset($dbpathlamp) ? $dbpathlamp : $roles->path_files;
                 $roles->creator = session('user_id');
+                setCompanyId($roles, $company_id);
                 $roles->save();
             }
             DB::commit();
@@ -186,7 +199,13 @@ class ItemController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = Item::find($data['id']);
+            $company_id = session('id_company');
+            $menu = Item::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Item tidak ditemukan';
+                return response()->json($result);
+            }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -203,10 +222,12 @@ class ItemController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])->where('m.id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

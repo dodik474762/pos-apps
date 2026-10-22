@@ -44,7 +44,7 @@ class ClosingStockController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $lastClosing = StockClosing::where('company_id', $company_id)
+        $lastClosing = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('closing_date', 'desc')
             ->first();
         $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');
@@ -55,8 +55,8 @@ class ClosingStockController extends Controller
         if (!isset($data['date_start'])) {
             $data['date_start'] = !empty($lastClosing) ? Carbon::parse($lastClosing->closing_date)->format('Y-m-d') : Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
         }
-        $data['closing'] = StockClosing::where('closing_date', $data['tanggal'])
-            ->where('company_id', $company_id)
+        $data['closing'] = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->where('closing_date', $data['tanggal'])
             ->first();
         $view = view('web.closing_stock.index', $data);
         $put['title_content'] = $this->getTitle();
@@ -71,7 +71,7 @@ class ClosingStockController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $lastClosing = StockClosing::where('company_id', $company_id)
+        $lastClosing = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->orderBy('closing_date', 'desc')
             ->first();
         $data['tanggal'] = isset($request->tanggal) ? $request->tanggal : date('Y-m-d');
@@ -82,8 +82,8 @@ class ClosingStockController extends Controller
         if (!isset($data['date_start'])) {
             $data['date_start'] = !empty($lastClosing) ? Carbon::parse($lastClosing->closing_date)->format('Y-m-d') : Carbon::parse($data['tanggal'])->startOfMonth()->format('Y-m-d');
         }
-        $data['closing'] = StockClosing::where('closing_date', $data['tanggal'])
-            ->where('company_id', $company_id)
+        $data['closing'] = StockClosing::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->where('closing_date', $data['tanggal'])
             ->first();
         $view = view('web.closing_stock.stock-card', $data);
         $put['title_content'] = $this->getTitle();

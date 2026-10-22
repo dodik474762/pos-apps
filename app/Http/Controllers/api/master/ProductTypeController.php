@@ -15,6 +15,7 @@ class ProductTypeController extends Controller
 
     public function getData(){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -23,6 +24,7 @@ class ProductTypeController extends Controller
             'm.*',
         ])
         ->whereNull('m.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
         ->orderBy('m.id', 'desc');
         if(isset($_POST)){
             $data['recordsTotal'] = $datadb->get()->count();
@@ -55,11 +57,22 @@ class ProductTypeController extends Controller
 
     public function submit(Request $request){
         $data = $request->all();
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             //code...
-            $roles = $data['id'] == '' ? new ProductType() : ProductType::find($data['id']);
+            if ($data['id'] == '') {
+                $roles = new ProductType();
+                setCompanyId($roles, $company_id);
+            } else {
+                $roles = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Product Type tidak ditemukan';
+                    return response()->json($result);
+                }
+            }
             $roles->type = $data['type'];
             $roles->remarks = $data['remarks'];
             $roles->save();
@@ -80,7 +93,13 @@ class ProductTypeController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = ProductType::find($data['id']);
+            $company_id = session('id_company');
+            $menu = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Product Type tidak ditemukan';
+                return response()->json($result);
+            }
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -96,10 +115,12 @@ class ProductTypeController extends Controller
 
     public function getDetailData($id){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+        ])->where('m.id', $id)
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

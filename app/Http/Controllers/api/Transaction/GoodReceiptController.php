@@ -25,6 +25,7 @@ class GoodReceiptController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -39,6 +40,7 @@ class GoodReceiptController extends Controller
             ->join('vendor as v', 'v.id', 'm.vendor')
             ->join('currency as c', 'c.id', 'm.currency')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -79,12 +81,19 @@ class GoodReceiptController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $users = session('user_id');
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             // code...
-            $currency = Currency::where('code', 'IDR')->first();
-            $po = PurchaseOrder::find($data['purchase_order']);
+            $currency = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
+            $po = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['purchase_order']);
+            if (empty($po)) {
+                DB::rollBack();
+                $result['message'] = 'Purchase Order tidak ditemukan';
+
+                return response()->json($result);
+            }
             $warehouse = $po->warehouse;
 
             if (empty($currency)) {
@@ -94,12 +103,14 @@ class GoodReceiptController extends Controller
                 return response()->json($result);
             }
 
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+            $inventoryAccount = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('module', 'GOOD_RECEIPT')
                 ->where('account_type', 'inventory')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+            $grirAccount = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('module', 'GOOD_RECEIPT')
                 ->where('account_type', 'grir')
                 ->with('account')
                 ->first();
@@ -113,10 +124,19 @@ class GoodReceiptController extends Controller
                 ]);
             }
 
-            $roles = $data['id'] == '' ? new GoodReceipt : GoodReceipt::find($data['id']);
             if ($data['id'] == '') {
-                $roles->gr_number = generateGrNumber();
+                $roles = new GoodReceipt();
+                $roles->gr_number = generateGrNumber($company_id);
                 $roles->created_by = $users;
+                setCompanyId($roles, $company_id);
+            } else {
+                $roles = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                if (empty($roles)) {
+                    DB::rollBack();
+                    $result['message'] = 'Data Penerimaan Barang tidak ditemukan';
+
+                    return response()->json($result);
+                }
             }
             $roles->received_date = $data['received_date'];
             $roles->purchase_order = $data['purchase_order'];
@@ -132,7 +152,7 @@ class GoodReceiptController extends Controller
             $gr_number = $roles->gr_number;
 
             if ($data['id'] != '') {
-                cancelAllGL($gr_number);
+                cancelAllGL($gr_number, $company_id);
             }
 
             $grand_total = 0;
@@ -143,7 +163,13 @@ class GoodReceiptController extends Controller
             $poGrandTotal = 0;
             foreach ($data['items'] as $key => $value) {
                 if ($value['remove'] == '1') {
-                    $items = GoodReceiptDtl::find($value['id_detail']);
+                    $items = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id_detail']);
+                    if (empty($items)) {
+                        DB::rollBack();
+                        $result['message'] = 'Detail Penerimaan Barang tidak ditemukan';
+
+                        return response()->json($result);
+                    }
                     if ($items->status != 'open') {
                         DB::rollBack();
                         $result['message'] = 'Tidak dapat dihapus karena status sudah tidak open';
@@ -153,10 +179,22 @@ class GoodReceiptController extends Controller
                     $items->deleted = now();
                     $items->save();
                 } else {
-                    $items = $value['id_detail'] == '' ? new GoodReceiptDtl : GoodReceiptDtl::find($value['id_detail']);
-                    $status = $value['id_detail'] == '' ? '' : $items->status;
+                    if ($value['id_detail'] == '') {
+                        $items = new GoodReceiptDtl;
+                        setCompanyId($items, $company_id);
+                        $status = '';
+                    } else {
+                        $items = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id_detail']);
+                        if (empty($items)) {
+                            DB::rollBack();
+                            $result['message'] = 'Detail Penerimaan Barang tidak ditemukan';
 
-                    $update = PurchaseOrderDetail::where('id', $value['id'])->first();
+                            return response()->json($result);
+                        }
+                        $status = $items->status;
+                    }
+
+                    $update = PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->first();
                     if (empty($update)) {
                         DB::rollBack();
                         $result['message'] = 'Data PO Item ' . $value['product'] . ' tidak ditemukan';
@@ -166,10 +204,10 @@ class GoodReceiptController extends Controller
 
                     if ($data['id'] != '') {
                         // Cek data lama di detail GR
-                        $oldDetail = GoodReceiptDtl::find($value['id_detail']);
+                        $oldDetail = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id_detail']);
                         if ($oldDetail) {
                             // Hitung qty dalam base unit
-                            $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received);
+                            $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received, $company_id);
                             $qtyBaseUnitOld = $qtyBaseUnitOld['qty_in_base_unit'];
 
                             // Rollback stok lama
@@ -178,7 +216,7 @@ class GoodReceiptController extends Controller
                                 'price' => $update->purchase_price ?? 0,
                             ];
 
-                            $productUomLevel1 = ProductUom::where('product', $oldDetail->product)->where('level', '1')->first();
+                            $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $oldDetail->product)->where('level', '1')->first();
 
                             // rollback stok lama (kebalikan dari add)
                             stockRollback(
@@ -188,7 +226,8 @@ class GoodReceiptController extends Controller
                                 $productUomLevel1->unit_tujuan,
                                 $qtyBaseUnitOld,
                                 $valueRollback,
-                                'add' // karena sebelumnya 'add', rollback-nya kebalikannya
+                                'add', // karena sebelumnya 'add', rollback-nya kebalikannya
+                                $company_id
                             );
                             // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $oldDetail->product);
                         }
@@ -251,18 +290,18 @@ class GoodReceiptController extends Controller
                     }
                     $update->save();
 
-                    $qtyBaseUnit = getSmallestUnit($value['product'], $value['unit'], $value['qty_received']);
-                    $productUomLevel1 = ProductUom::where('product', $value['product'])->where('level', '1')->first();
+                    $qtyBaseUnit = getSmallestUnit($value['product'], $value['unit'], $value['qty_received'], $company_id);
+                    $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $value['product'])->where('level', '1')->first();
                     $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                     $value['price'] = $purchase_price;
-                    stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt');
+                    stockUpdate($hdrId, $warehouse, $value['product'], $productUomLevel1->unit_tujuan, $qtyBaseUnit, $value, 'add', 'good_receipt', $company_id);
                     // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $value['product']);
                     $grand_total += $subtotal;
 
                     $reference = $gr_number . '-' . $value['id'];
-                    postingGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $subtotal, $update->currency);
-                    postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($subtotal), $update->currency);
+                    postingGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $subtotal, $update->currency, '', '', $company_id);
+                    postingGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, ($subtotal), $update->currency, '', '', $company_id);
                 }
             }
 
@@ -274,9 +313,11 @@ class GoodReceiptController extends Controller
             }
             $po->save();
 
-            $update = GoodReceipt::find($hdrId);
-            $update->total_amount = $grand_total;
-            $update->save();
+            $update = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($hdrId);
+            if (! empty($update)) {
+                $update->total_amount = $grand_total;
+                $update->save();
+            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -292,25 +333,34 @@ class GoodReceiptController extends Controller
     public function confirmDelete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
 
 
-            $inventoryAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+            $inventoryAccount = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('module', 'GOOD_RECEIPT')
                 ->where('account_type', 'inventory')
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
-            $grirAccount = AccountMapping::where('module', 'GOOD_RECEIPT')
+            $grirAccount = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('module', 'GOOD_RECEIPT')
                 ->where('account_type', 'grir')
                 ->with('account')
                 ->first();
 
-            $menu = GoodReceipt::find($data['id']);
+            $menu = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (empty($menu)) {
+                DB::rollBack();
+                $result['message'] = 'Data Penerimaan Barang tidak ditemukan';
+
+                return response()->json($result);
+            }
 
             $journalService = new GoodReceiptJournalService();
-            $activeJournal = $journalService->getActiveJournal($data['id']);
+            $activeJournal = $journalService->getActiveJournal($data['id'], $company_id);
             if (! empty($activeJournal)) {
                 DB::rollBack();
                 $result['message'] = 'Tidak dapat dihapus karena jurnal ' . $activeJournal->journal_no
@@ -337,8 +387,8 @@ class GoodReceiptController extends Controller
             $menu->deleted_by = session('user_id');
             $menu->save();
 
-            $items = GoodReceiptDtl::where('goods_receipt_header', $data['id'])->get();
-            $po = PurchaseOrder::find($menu->purchase_order);
+            $items = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('goods_receipt_header', $data['id'])->get();
+            $po = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($menu->purchase_order);
             $warehouse = $po->warehouse;
 
             $totalFullyReceived = 0;
@@ -346,10 +396,10 @@ class GoodReceiptController extends Controller
             $totalOpen = 0;
             foreach ($items as $value) {
                 // Cek data lama di detail GR
-                $oldDetail = GoodReceiptDtl::find($value->id);
+                $oldDetail = GoodReceiptDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->id);
                 if ($oldDetail) {
                     // Hitung qty dalam base unit
-                    $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received);
+                    $qtyBaseUnitOld = getSmallestUnit($oldDetail->product, $oldDetail->unit, $oldDetail->qty_received, $company_id);
                     $qtyBaseUnitOld = $qtyBaseUnitOld['qty_in_base_unit'];
 
                     // Rollback stok lama
@@ -358,7 +408,7 @@ class GoodReceiptController extends Controller
                         'price' => $update->purchase_price ?? 0,
                     ];
 
-                    $productUomLevel1 = ProductUom::where('product', $oldDetail->product)->where('level', '1')->first();
+                    $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $oldDetail->product)->where('level', '1')->first();
 
                     // rollback stok lama (kebalikan dari add)
                     stockRollback(
@@ -368,7 +418,8 @@ class GoodReceiptController extends Controller
                         $productUomLevel1->unit_tujuan,
                         $qtyBaseUnitOld,
                         $valueRollback,
-                        'add' // karena sebelumnya 'add', rollback-nya kebalikannya
+                        'add', // karena sebelumnya 'add', rollback-nya kebalikannya
+                        $company_id
                     );
 
                     // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $warehouse, null, $oldDetail->product);
@@ -379,7 +430,10 @@ class GoodReceiptController extends Controller
                 $value->deleted_by = session('user_id');
                 $value->save();
 
-                $update = PurchaseOrderDetail::where('id', $value->purchase_order_detail)->first();
+                $update = PurchaseOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value->purchase_order_detail)->first();
+                if (empty($update)) {
+                    continue;
+                }
                 $update->qty_received = $update->qty_received - $value->qty_received;
 
                 if ($update->qty - $update->qty_received == 0) {
@@ -398,12 +452,12 @@ class GoodReceiptController extends Controller
                 $update->save();
 
                 $reference = $menu->gr_number . '-' . $value->purchase_order_detail;
-                cancelGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $value->subtotal, $menu->currency);
-                cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $value->subtotal, $menu->currency);
+                cancelGL($reference, $inventoryAccount->account_id, $inventoryAccount->account->account_name, $inventoryAccount->cd, $value->subtotal, $menu->currency, '', $company_id);
+                cancelGL($reference, $grirAccount->account_id, $grirAccount->account->account_name, $grirAccount->cd, $value->subtotal, $menu->currency, '', $company_id);
             }
 
 
-            $po = PurchaseOrder::find($menu->purchase_order);
+            $po = PurchaseOrder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($menu->purchase_order);
             if ($totalFullyReceived == count($items->toArray())) {
                 $po->status = 'received';
             }
@@ -430,6 +484,7 @@ class GoodReceiptController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -440,7 +495,8 @@ class GoodReceiptController extends Controller
             ])
             ->join('purchase_order as po', 'po.id', 'm.purchase_order')
             ->join('vendor as v', 'v.id', 'po.vendor')
-            ->where('m.id', $id);
+            ->where('m.id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
 
@@ -451,7 +507,10 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
 
-        $gr = GoodReceipt::select(['id', 'gr_number', 'status'])
+        $company_id = session('id_company');
+
+        $gr = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->select(['id', 'gr_number', 'status'])
             ->where('id', $data['id'] ?? null)
             ->first();
 
@@ -461,7 +520,7 @@ class GoodReceiptController extends Controller
 
         $journalService = new GoodReceiptJournalService();
         $journal = $journalService->getJournalForGoodReceipt($data['id'] ?? null);
-        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null);
+        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null, $company_id);
 
         $data['journal_no'] = empty($journal) ? '' : $journal->journal_no;
         $data['journal_status'] = empty($journal) ? '' : $journal->status;
@@ -474,7 +533,10 @@ class GoodReceiptController extends Controller
     {
         $data = $request->all();
 
-        $gr = GoodReceipt::select(['id', 'gr_number', 'received_date', 'total_amount', 'status'])
+        $company_id = session('id_company');
+
+        $gr = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->select(['id', 'gr_number', 'received_date', 'total_amount', 'status'])
             ->where('id', $data['id'] ?? null)
             ->whereNull('deleted')
             ->first();
@@ -510,13 +572,14 @@ class GoodReceiptController extends Controller
             }
 
             $journalService = new GoodReceiptJournalService();
+            $company_id = session('id_company');
 
             // Status penerimaan diubah hanya setelah jurnal berhasil dibuat dan
             // diposting, supaya barang tidak ditandai selesai tanpa jurnal.
-            $journal = DB::transaction(function () use ($id, $journalService) {
+            $journal = DB::transaction(function () use ($id, $journalService, $company_id) {
                 $journal = $journalService->postFromGoodReceipt($id, session('user_id'));
 
-                $gr = GoodReceipt::where('id', $id)->first();
+                $gr = GoodReceipt::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
                 if (! empty($gr)) {
                     $gr->status = 'completed';
                     $gr->save();
@@ -547,6 +610,7 @@ class GoodReceiptController extends Controller
     public function getListItemOutstandingPO(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         try {
             $data['po_details_outstanding'] = DB::table('purchase_order_detail as pod')
@@ -573,6 +637,7 @@ class GoodReceiptController extends Controller
                 ->where('pod.status', '!=', 'received')
                 ->whereRaw('(pod.qty - IFNULL(pod.qty_received, 0)) > 0')
                 ->where('po.id', $data['po'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pod.company_id', $company_id))
                 ->orderBy('po.id', 'desc')
                 ->get();
         } catch (\Throwable $th) {
