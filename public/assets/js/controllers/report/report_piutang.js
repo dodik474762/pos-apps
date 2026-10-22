@@ -267,6 +267,10 @@ let ReportPiutang = {
                     },
                 },
                 {
+                    data: "payment_terms",
+                    title: "PAYMENT TERM",
+                },
+                {
                     data: "kecamatan",
                     title: "KECAMATAN",
                     className: "text-end",

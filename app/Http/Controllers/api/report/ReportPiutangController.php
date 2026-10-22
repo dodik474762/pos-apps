@@ -61,12 +61,15 @@ class ReportPiutangController extends Controller
                 'sih.due_date',
                 'sih.total_amount',
                 'sih.amount_paid',
-                'sih.invoice_number'
+                'sih.invoice_number',
+                'top.remarks as payment_terms',
             ])
             ->join('customer as c', 'c.id', 'm.customer_id')
             ->join('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
             })
+            ->leftJoin('customer as cc', 'cc.id', 'sih.customer_id')
+            ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->leftJoin('users as usr', 'usr.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'usr.nik')
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
@@ -114,7 +117,8 @@ class ReportPiutangController extends Controller
                         ->orWhere('m.check_in_time', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('m.check_out_time', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%');
+                        ->orWhere('usr.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('top.remarks', 'LIKE', '%' . $keyword . '%');
                 });
             }
 

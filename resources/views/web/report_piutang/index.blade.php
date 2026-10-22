@@ -48,15 +48,14 @@
                                 <!--end col-->
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <input type="date" class="form-control"
-                                            id="filter-tanggal"
-                                            value="{{ date('Y-m-d') }}"
-                                            placeholder="Select date">
+                                        <input type="date" class="form-control" id="filter-tanggal"
+                                            value="{{ date('Y-m-d') }}" placeholder="Select date">
                                     </div>
                                 </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
-                                        <button type="button" class="btn btn-primary w-100" onclick="ReportPiutang.getData();"> <i
+                                        <button type="button" class="btn btn-primary w-100"
+                                            onclick="ReportPiutang.getData();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -71,8 +70,8 @@
                         <div>
                             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All" href="#list-data"
-                                        role="tab" aria-selected="true">
+                                    <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
+                                        href="#list-data" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
@@ -100,6 +99,7 @@
                                                     <th>TANGGAL FAKTUR</th>
                                                     <th>KODE CUSTOMER</th>
                                                     <th>NAMA CUSTOMER</th>
+                                                    <th>PAYMENT TERM</th>
                                                     <th>KECAMATAN</th>
                                                     <th>KABUPATEN/KOTA</th>
                                                     <th>CHANNEL</th>
