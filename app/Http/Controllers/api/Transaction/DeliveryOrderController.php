@@ -25,6 +25,7 @@ class DeliveryOrderController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -41,6 +42,7 @@ class DeliveryOrderController extends Controller
             ->join('sales_order_headers as so', 'so.id', 'm.so_id')
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -79,6 +81,7 @@ class DeliveryOrderController extends Controller
     public function getDataSo()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -105,6 +108,7 @@ class DeliveryOrderController extends Controller
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['draft', 'partial', 'submited'])
             ->where('m.total_amount', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -143,6 +147,7 @@ class DeliveryOrderController extends Controller
     public function getDataProductPoDetail(Request $request)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data = $request->all();
 
         $exceptPoDetailId = [];
@@ -173,6 +178,7 @@ class DeliveryOrderController extends Controller
             ->whereNull('po.deleted')
             ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
 
         if (! empty($exceptPoDetailId)) {
@@ -218,6 +224,7 @@ class DeliveryOrderController extends Controller
     {
         $data = $request->all();
         $userId = session('user_id');
+        $company_id = session('id_company');
         $result = ['is_valid' => false];
 
         // echo '<pre>';
@@ -229,17 +236,18 @@ class DeliveryOrderController extends Controller
             // === HEADER ===
             $header = empty($data['id'])
                 ? new DeliveryOrderHeader()
-                : DeliveryOrderHeader::find($data['id']);
+                : DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($data['id'])) {
-                $header->do_number = generateNoDO(); // misal helper
+                $header->do_number = generateNoDO($company_id); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
+                setCompanyId($header, $company_id);
             }
 
             list($cust_id, $cust_name) = explode('//', $data['customer_id']);
 
-            $sales_orderdb = SalesOrderHeader::find($data['so_id']);
+            $sales_orderdb = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['so_id']);
             $data['warehouse_id'] = $sales_orderdb->warehouse;
 
             $header->do_date = $data['do_date'];
@@ -258,7 +266,7 @@ class DeliveryOrderController extends Controller
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
-                        $exist = DeliveryOrderDtl::find($item['id']);
+                        $exist = DeliveryOrderDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['id']);
                         if ($exist && $exist->status !== 'DRAFT') {
                             DB::rollBack();
                             return response()->json([
@@ -278,16 +286,17 @@ class DeliveryOrderController extends Controller
                 // Item baru atau update
                 $detail = empty($item['id'])
                     ? new DeliveryOrderDtl()
-                    : DeliveryOrderDtl::find($item['id']);
+                    : DeliveryOrderDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['id']);
 
                 /*cek stock */
                 $stock = DB::table('product_stock')
                     ->where('product', $item['product_id'])
                     ->where('warehouse', $data['warehouse_id'])
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                     ->lockForUpdate()
                     ->first();
                 if (empty($stock)) {
-                    $productsDb = Product::find($item['product_id']);
+                    $productsDb = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['product_id']);
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
@@ -296,11 +305,11 @@ class DeliveryOrderController extends Controller
                 }
 
                 // konversi DULU
-                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty']);
+                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty'], $company_id);
                 $qtyDeduct = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item['qty'] : 0;
 
                 if ($stock && ($stock->qty - $qtyDeduct < 0)) {
-                    $productsDb = Product::find($item['product_id']);
+                    $productsDb = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['product_id']);
                     DB::rollBack();
                     return response()->json([
                         'is_valid' => false,
@@ -315,9 +324,10 @@ class DeliveryOrderController extends Controller
                 $detail->uom = $item['uom'];
                 $detail->note = $item['note'];
                 $detail->line_no = $line_no++;
+                setCompanyId($detail, $company_id);
                 $detail->save();
 
-                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty']);
+                $qtyBaseUnit = getSmallestUnitV2($item['product_id'], $item['uom'], $item['qty'], $company_id);
                 $productUomLevel1 =  $qtyBaseUnit;
                 // $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
                 $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item['qty'] : 0;
@@ -331,7 +341,8 @@ class DeliveryOrderController extends Controller
                     $qtyBaseUnit,
                     $item,
                     'min',
-                    'delivery_order'
+                    'delivery_order',
+                    $company_id
                 );
 
                 // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $data['warehouse_id'], null, $item['product_id']);
@@ -344,11 +355,11 @@ class DeliveryOrderController extends Controller
             $header->total_qty = $total_qty;
             $header->save();
 
-            $so = SalesOrderHeader::find($data['so_id']);
+            $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['so_id']);
             $so->status = 'confirmed';
             $so->save();
 
-            $dev_status_log = DeliveryOrderStatusLog::where('do_id', $hdrId)->first();
+            $dev_status_log = DeliveryOrderStatusLog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('do_id', $hdrId)->first();
             if (empty($dev_status_log)) {
                 $dev_status_log = new DeliveryOrderStatusLog();
                 $dev_status_log->do_id = $hdrId;
@@ -356,6 +367,7 @@ class DeliveryOrderController extends Controller
                 $dev_status_log->status_to = 'DRAFT';
                 $dev_status_log->changed_by = $userId;
                 $dev_status_log->changed_at = now();
+                setCompanyId($dev_status_log, $company_id);
                 $dev_status_log->save();
             }
 
@@ -377,6 +389,7 @@ class DeliveryOrderController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
         $userId = session('user_id');
+        $company_id = session('id_company');
 
         DB::beginTransaction();
         try {
@@ -391,6 +404,7 @@ class DeliveryOrderController extends Controller
             $so = SalesOrderHeader::whereIn('sales_order_headers.id', $soIds)
                 ->select(['sales_order_headers.*'])
                 ->whereNull('sales_order_headers.deleted')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_order_headers.company_id', $company_id))
                 ->with(['items'])
                 ->get();
 
@@ -403,11 +417,12 @@ class DeliveryOrderController extends Controller
             foreach ($so as $key => $value) {
                 // === HEADER ===
                 $header = new DeliveryOrderHeader();
-                $header->do_number = generateNoDO(); // misal helper
+                $header->do_number = generateNoDO($company_id); // misal helper
                 $header->created_by = $userId;
                 $header->status = 'DRAFT';
+                setCompanyId($header, $company_id);
 
-                $sales_orderdb = SalesOrderHeader::find($value->id);
+                $sales_orderdb = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->id);
                 $data['warehouse_id'] = $sales_orderdb->warehouse;
 
                 $cust_id = $value->customer_id;
@@ -433,10 +448,11 @@ class DeliveryOrderController extends Controller
                     $stock = DB::table('product_stock')
                         ->where('product', $item->product_id)
                         ->where('warehouse', $data['warehouse_id'])
+                        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                         ->lockForUpdate()
                         ->first();
                     if (empty($stock)) {
-                        $productsDb = Product::find($item->product_id);
+                        $productsDb = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item->product_id);
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
@@ -444,11 +460,11 @@ class DeliveryOrderController extends Controller
                         ]);
                     }
 
-                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty);
+                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty, $company_id);
                     $qtyDeduct = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item->qty : 0;
 
                     if ($stock && ($stock->qty - $qtyDeduct < 0)) {
-                        $productsDb = Product::find($item->product_id);
+                        $productsDb = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item->product_id);
                         DB::rollBack();
                         return response()->json([
                             'is_valid' => false,
@@ -463,9 +479,10 @@ class DeliveryOrderController extends Controller
                     $detail->uom = $item->unit;
                     $detail->note = $item->is_free_good == 1 ? 'FREE GOOD' : null;
                     $detail->line_no = $line_no++;
+                    setCompanyId($detail, $company_id);
                     $detail->save();
 
-                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty);
+                    $qtyBaseUnit = getSmallestUnitV2($item->product_id, $item->unit, $item->qty, $company_id);
                     $productUomLevel1 =  $qtyBaseUnit;
                     $qtyBaseUnit = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $item->qty : 0;
 
@@ -478,7 +495,8 @@ class DeliveryOrderController extends Controller
                         $qtyBaseUnit,
                         $pushItem,
                         'min',
-                        'delivery_order'
+                        'delivery_order',
+                        $company_id
                     );
                     $totalQty += $item->qty;
 
@@ -493,11 +511,11 @@ class DeliveryOrderController extends Controller
                 $header->total_qty = $total_qty;
                 $header->save();
 
-                $so = SalesOrderHeader::find($value->id);
+                $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->id);
                 $so->status = 'confirmed';
                 $so->save();
 
-                $dev_status_log = DeliveryOrderStatusLog::where('do_id', $hdrId)->first();
+                $dev_status_log = DeliveryOrderStatusLog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('do_id', $hdrId)->first();
                 if (empty($dev_status_log)) {
                     $dev_status_log = new DeliveryOrderStatusLog();
                     $dev_status_log->do_id = $hdrId;
@@ -505,6 +523,7 @@ class DeliveryOrderController extends Controller
                     $dev_status_log->status_to = 'DRAFT';
                     $dev_status_log->changed_by = $userId;
                     $dev_status_log->changed_at = now();
+                    setCompanyId($dev_status_log, $company_id);
                     $dev_status_log->save();
                 }
             }
@@ -524,11 +543,12 @@ class DeliveryOrderController extends Controller
     public function confirmDelete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $result['is_valid'] = false;
         DB::beginTransaction();
         try {
             // code...
-            $menu = DeliveryOrderHeader::find($data['id']);
+            $menu = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($menu)) {
                 DB::rollBack();
                 $result['message'] = 'Delivery order tidak ditemukan.';
@@ -539,7 +559,7 @@ class DeliveryOrderController extends Controller
             // Jurnal HPP yang masih aktif (DRAFT atau POSTED) harus direversal
             // terlebih dahulu, baru Delivery Order boleh dihapus.
             $journalService = new DeliveryOrderJournalService();
-            $activeJournal = $journalService->getActiveJournal($menu->id);
+            $activeJournal = $journalService->getActiveJournal($menu->id, $company_id);
             if (! empty($activeJournal)) {
                 DB::rollBack();
                 $result['message'] = 'Delivery Order ' . $menu->do_number
@@ -556,14 +576,14 @@ class DeliveryOrderController extends Controller
 
             $wh_id = $menu->warehouse_id;
 
-            $delivery_dtl = DeliveryOrderDtl::where('do_id', $data['id'])->get();
+            $delivery_dtl = DeliveryOrderDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('do_id', $data['id'])->get();
             foreach ($delivery_dtl as $item) {
                 $item->deleted = date('Y-m-d H:i:s');
                 $item->deleted_by = session('user_id');
                 $item->save();
 
-                $qtyBaseUnit = getSmallestUnit($item->product_id, $item->uom, $item->qty);
-                $productUomLevel1 = ProductUom::where('product', $item->product_id)->where('level', '1')->first();
+                $qtyBaseUnit = getSmallestUnit($item->product_id, $item->uom, $item->qty, $company_id);
+                $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $item->product_id)->where('level', '1')->first();
                 $qtyBaseUnit = $qtyBaseUnit['qty_in_base_unit'];
 
                 $value['product'] = $item->product_id;
@@ -575,15 +595,16 @@ class DeliveryOrderController extends Controller
                     $qtyBaseUnit,
                     $value,
                     'add',
-                    'cancel_delivery_order'
+                    'cancel_delivery_order',
+                    $company_id
                 );
 
                 // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $wh_id, null, $item->product_id);
             }
 
-            DeliveryOrderStatusLog::where('do_id', $data['id'])->delete();
+            DeliveryOrderStatusLog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('do_id', $data['id'])->delete();
 
-            $so = SalesOrderHeader::find($menu->so_id);
+            $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($menu->so_id);
             $so->status = 'draft';
             $so->save();
 
@@ -601,6 +622,7 @@ class DeliveryOrderController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -609,6 +631,7 @@ class DeliveryOrderController extends Controller
             ])
             ->join('sales_order_headers as so', 'so.id', 'm.so_id')
             ->join('customer as c', 'c.id', 'm.customer_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -619,8 +642,10 @@ class DeliveryOrderController extends Controller
     public function delete(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $do = DeliveryOrderHeader::select(['id', 'do_number', 'status'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('id', $data['id'] ?? null)
             ->first();
 
@@ -629,8 +654,8 @@ class DeliveryOrderController extends Controller
         $data['is_draft'] = ! empty($do) && $do->status == 'DRAFT';
 
         $journalService = new DeliveryOrderJournalService();
-        $journal = $journalService->getJournalForDeliveryOrder($data['id'] ?? null);
-        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null);
+        $journal = $journalService->getJournalForDeliveryOrder($data['id'] ?? null, $company_id);
+        $activeJournal = $journalService->getActiveJournal($data['id'] ?? null, $company_id);
 
         $data['journal_no'] = empty($journal) ? '' : $journal->journal_no;
         $data['journal_status'] = empty($journal) ? '' : $journal->status;
@@ -642,8 +667,10 @@ class DeliveryOrderController extends Controller
     public function showModalPostJurnal(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
 
         $do = DeliveryOrderHeader::select(['id', 'do_number', 'do_date', 'status'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('id', $data['id'] ?? null)
             ->first();
 
@@ -667,6 +694,7 @@ class DeliveryOrderController extends Controller
     public function postJurnal(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $result['is_valid'] = false;
 
         try {
@@ -677,7 +705,7 @@ class DeliveryOrderController extends Controller
             }
 
             // Kontrol posted berdasarkan post_date (bukan status).
-            $doCheck = DeliveryOrderHeader::where('id', $id)->first();
+            $doCheck = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
             if (! empty($doCheck) && $doCheck->post_date != '') {
                 $result['message'] = 'Tidak dapat diposting karena sudah posted';
                 return response()->json($result);
@@ -687,10 +715,10 @@ class DeliveryOrderController extends Controller
 
             // post_date hanya diisi setelah jurnal berhasil dibuat dan diposting,
             // supaya DO tidak ditandai sudah posted tanpa jurnal.
-            $journal = DB::transaction(function () use ($id, $journalService) {
+            $journal = DB::transaction(function () use ($id, $journalService, $company_id) {
                 $journal = $journalService->postFromDeliveryOrder($id, session('user_id'));
 
-                $dopost = DeliveryOrderHeader::where('id', $id)->first();
+                $dopost = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $id)->first();
                 if (! empty($dopost)) {
                     $dopost->post_date = date('Y-m-d H:i:s');
                     $dopost->post_by = session('user_id');
@@ -715,7 +743,9 @@ class DeliveryOrderController extends Controller
     public function getSoDetail(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $datadb = SalesOrderDetail::where('sales_order_details.sales_order_id', $data['so_id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_order_details.company_id', $company_id))
             ->select([
                 'sales_order_details.*',
                 'u.name as unit_name',

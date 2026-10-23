@@ -69,11 +69,12 @@ class DeliveryOrderController extends Controller
     public function add(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = [];
-        $data['code'] = generateNoPO();
+        $data['code'] = generateNoPO($company_id);
         $data['title'] = 'Form '.$this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['details'] = [];
         $view = view('web.delivery_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -89,9 +90,11 @@ class DeliveryOrderController extends Controller
     {
         $api = new TransactionDeliveryOrderController();
         $data = $request->all();
+        $company_id = session('id_company');
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['warehouses'] = Warehouse::whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['details'] = DeliveryOrderDtl::where('delivery_order_detail.do_id', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('delivery_order_detail.company_id', $company_id))
             ->select([
                 'delivery_order_detail.*',
                 'p.id as product_id',
@@ -119,10 +122,12 @@ class DeliveryOrderController extends Controller
     public function getCustomer($salesmanId){
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
+        $company_id = session('id_company');
 
         $customers = DB::table('sales_plan_detail as d')
             ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('h.company_id', $company_id))
             ->where('h.salesman', $salesmanId)
             ->where('h.period_year', $periodYear)
             ->where('h.period_month', $periodMonth)
@@ -137,8 +142,11 @@ class DeliveryOrderController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = DeliveryOrderHeader::with(['customers', 'warehouses','items.products', 'items.units'])->findOrFail($data['id']);
+        $company_id = session('id_company');
+        $company = CompanyModel::where('id', $company_id)->first();
+        $data = DeliveryOrderHeader::with(['customers', 'warehouses','items.products', 'items.units'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->findOrFail($data['id']);
         // $qr = base64_encode(QrCode::format('png')->size(80)->generate($data->do_number));
         $qr = '';
         // echo '<pre>';

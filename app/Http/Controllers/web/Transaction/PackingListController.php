@@ -209,6 +209,7 @@ class PackingListController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_do.company_id', $company_id))
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'c.id as customer_id'])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
@@ -266,6 +267,7 @@ class PackingListController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListDo::where('packing_list_do.packing_list_id', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_do.company_id', $company_id))
             ->select(['packing_list_do.*', 'c.code as customer_code', 'c.nama_customer', 'doh.do_number', 'doh.do_date', 'c.id as customer_id'])
             ->with(['detail', 'detail.deliveryDetail', 'detail.deliveryDetail.units', 'detail.product'])
             ->leftJoin('delivery_order_header as doh', 'doh.id', 'packing_list_do.delivery_order_id')
@@ -321,6 +323,7 @@ class PackingListController extends Controller
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
         $data['details'] = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_sales_return.company_id', $company_id))
             ->select(['packing_list_sales_return.*', 'c.code as customer_code', 'c.nama_customer', 'sr.return_number as do_number', 'sr.return_date as do_date', 'c.id as customer_id'])
             ->with(['detail', 'detail.returnDetail', 'detail.returnDetail.invoice.so_detail.units', 'detail.product'])
             ->leftJoin('sales_return as sr', 'sr.id', 'packing_list_sales_return.sales_return_id')
@@ -355,10 +358,12 @@ class PackingListController extends Controller
     {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
+        $company_id = session('id_company');
 
         $customers = DB::table('sales_plan_detail as d')
             ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('h.company_id', $company_id))
             ->where('h.salesman', $salesmanId)
             ->where('h.period_year', $periodYear)
             ->where('h.period_month', $periodMonth)
@@ -372,7 +377,9 @@ class PackingListController extends Controller
 
     public function getListInvoicePl($id)
     {
+        $company_id = session('id_company');
         $plInvoice = PackingListDo::where('packing_list_do.packing_list_id', $id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_do.company_id', $company_id))
             ->select([
                 'packing_list_do.*',
                 'c.code as customer_code',
@@ -404,8 +411,9 @@ class PackingListController extends Controller
     public function cetak(Request $request)
     {
         $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PackingList::where('id', $data['id'])->first();
+        $company_id = session('id_company');
+        $company = CompanyModel::where('id', $company_id)->first();
+        $data = PackingList::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->first();
         // echo '<pre>';
         // print_r($data);die;
         $details = $this->getListInvoicePl($data->id);
@@ -414,6 +422,7 @@ class PackingListController extends Controller
         $doIds = $details->pluck('delivery_order_id')->toArray();
 
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_detail.company_id', $company_id))
             ->select([
                 'packing_list_detail.*',
                 'doh.do_number',
@@ -440,12 +449,14 @@ class PackingListController extends Controller
             $remark = '';
             $groupByItemUom = collect($items)->groupBy('delivery_detail.uom');
             $uomIds = $groupByItemUom->keys()->toArray();
-            $units = DB::table('unit')->whereIn('id', $uomIds)->get();
+            $units = DB::table('unit')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->whereIn('id', $uomIds)->get();
 
             foreach ($items as $v) {
                 $remark .= $v['remark'] . ' / ';
                 $delivery_detail = $v['delivery_detail'];
-                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed']);
+                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed'], $company_id);
                 $qtyProductInSmall = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $v['qty_packed'] : 0;
                 $totalInSmallQty += $qtyProductInSmall;
             }
@@ -455,10 +466,12 @@ class PackingListController extends Controller
             foreach ($items as $v) {
                 $inputs[] = ['unit' => $v['delivery_detail']['uom'], 'qty' => $v['qty_packed']];
             }
-            $hasilNormalisasi = normalisasiQtyUom($key, $inputs);
+            $hasilNormalisasi = normalisasiQtyUom($key, $inputs, $company_id);
 
-            $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
-            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
+            $levelSmallestUnit = DB::table('product_uom')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('product', $key)->where('level', '1')->first();
+            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty, $company_id);
 
             $qtyOriginal = $largestUnit['qty_in_largest_unit'];
             $qtyLarges = ceil($qtyOriginal);
@@ -467,6 +480,7 @@ class PackingListController extends Controller
 
             // === Ambil daftar unit (id => nama) milik product ini, urut dari level terbesar ke terkecil ===
             $allProductUom = DB::table('product_uom')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->where('product', $key)
                 ->orderByDesc('level')
                 ->get();
@@ -475,6 +489,7 @@ class PackingListController extends Controller
             // die;
 
             $unitNames = DB::table('unit')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->whereIn('id', $allProductUom->pluck('unit_tujuan')->toArray())
                 ->pluck('name', 'id');
 
@@ -528,7 +543,7 @@ class PackingListController extends Controller
 
 
 
-        $productSatuan = ProductUom::where('product', '1')->get()->toArray();
+        $productSatuan = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', '1')->get()->toArray();
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
@@ -543,11 +558,13 @@ class PackingListController extends Controller
     public function cetak_sr(Request $request)
     {
         $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PackingList::where('id', $data['id'])->first();
+        $company_id = session('id_company');
+        $company = CompanyModel::where('id', $company_id)->first();
+        $data = PackingList::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->first();
         // echo '<pre>';
         // print_r($data);die;
         $details = PackingListReturn::where('packing_list_sales_return.packing_list_id', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_sales_return.company_id', $company_id))
             ->select([
                 'packing_list_sales_return.*',
                 'c.code as customer_code',
@@ -568,6 +585,7 @@ class PackingListController extends Controller
 
         $doIds = $details->pluck('sales_return_id')->toArray();
         $packingListDetail = PackingListReturnDtl::whereIn('packing_list_sales_return_detail.sales_return_id', $doIds)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_sales_return_detail.company_id', $company_id))
             ->select([
                 'packing_list_sales_return_detail.*',
                 'sr.return_number as do_number',
@@ -593,7 +611,7 @@ class PackingListController extends Controller
             foreach ($value as $items) {
                 foreach ($items as $item) {
                     if (strtolower($item->returnDetail->invoice->so_detail->units->name) != 'karton' && strtolower($item->returnDetail->invoice->so_detail->units->name) != 'box') {
-                        $largestUnit = getLargestUnit($item->product->id, $item->returnDetail->id, $item->qty_packed);
+                        $largestUnit = getLargestUnit($item->product->id, $item->returnDetail->id, $item->qty_packed, $company_id);
                         $qtyLarge = $largestUnit['qty_in_largest_unit'];
                         $productLargest[$item->product->code] = isset($productLargest[$item->product->code]) ? $productLargest[$item->product->code] + $qtyLarge : $qtyLarge;
                     }
@@ -605,7 +623,7 @@ class PackingListController extends Controller
 
 
 
-        $productSatuan = ProductUom::where('product', '1')->get()->toArray();
+        $productSatuan = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', '1')->get()->toArray();
 
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
@@ -618,8 +636,9 @@ class PackingListController extends Controller
     public function cetakSj(Request $request)
     {
         $data = $request->all();
-        $company = CompanyModel::where('id', session('id_company'))->first();
-        $data = PackingList::where('id', $data['id'])->first();
+        $company_id = session('id_company');
+        $company = CompanyModel::where('id', $company_id)->first();
+        $data = PackingList::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->first();
         if ($data->sj_number == '') {
             $data->sj_number = str_replace('PL', 'SJ', $data->packing_list_no);
             $data->sj_date = date('Y-m-d H:i:s');
@@ -629,6 +648,7 @@ class PackingListController extends Controller
         // echo '<pre>';
         // print_r($data);die;
         $details = PackingListDo::where('packing_list_do.packing_list_id', $data->id)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_do.company_id', $company_id))
             ->select([
                 'packing_list_do.*',
                 'c.code as customer_code',
@@ -655,6 +675,7 @@ class PackingListController extends Controller
         // print_r($details);die;
         $doIds = $details->pluck('delivery_order_id')->toArray();
         $packingListDetail = PackingListDtl::whereIn('packing_list_detail.delivery_order_id', $doIds)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('packing_list_detail.company_id', $company_id))
             ->select([
                 'packing_list_detail.*',
                 'doh.do_number',
@@ -672,18 +693,22 @@ class PackingListController extends Controller
             $remark = '';
             $groupByItemUom = collect($items)->groupBy('delivery_detail.uom');
             $uomIds = $groupByItemUom->keys()->toArray();
-            $units = DB::table('unit')->whereIn('id', $uomIds)->get();
+            $units = DB::table('unit')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->whereIn('id', $uomIds)->get();
 
             foreach ($items as $v) {
                 $remark .= $v['remark'] . ' / ';
                 $delivery_detail = $v['delivery_detail'];
-                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed']);
+                $qtyBaseUnit = getSmallestUnitV2($delivery_detail['product_id'], $delivery_detail['uom'], $v['qty_packed'], $company_id);
                 $qtyProductInSmall = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $v['qty_packed'] : 0;
                 $totalInSmallQty += $qtyProductInSmall;
             }
 
-            $levelSmallestUnit = DB::table('product_uom')->where('product', $key)->where('level', '1')->first();
-            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty);
+            $levelSmallestUnit = DB::table('product_uom')
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->where('product', $key)->where('level', '1')->first();
+            $largestUnit = getLargestUnit($key, $levelSmallestUnit->unit_dasar, $totalInSmallQty, $company_id);
 
             $qtyOriginal = $largestUnit['qty_in_largest_unit'];
             $qtyLarges = ceil($qtyOriginal);

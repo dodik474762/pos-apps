@@ -1,7 +1,7 @@
 # Implementasi Tenant (company_id) — Rencana & Progres
 
 Tanggal: 22 Oktober 2026
-Status: **Fase 3 selesai** (Fase 1 & 2 selesai)
+Status: **Fase 4 selesai** (Fase 1–3 selesai)
 
 ## 1. Hasil pengecekan
 
@@ -70,7 +70,7 @@ DB::table('product_stock')->insert($insert);
   - `app/Helper/NoGenerator.php` (`generateNoJournal` dkk)
 - [x] **Fase 2 — AP/AR, Purchasing, Penjualan** — controller api+web: PurchaseOrder, PurchaseInvoice, PurchaseReturn, VendorBill, SalesInvoice, SalesPayment, TerimaUang, CreditNote, PLTagihan, ReturnConsigment + `NoGenerator` (`generateNoPO/SI/SP/CN/PL/Payment`)
 - [x] **Fase 3 — Inventory / Product** — Product, Item, ProductType, PromoItem (api+web), ProductDiscount/FreeGood, ClosingStock, ProductAdjustmentStock, GoodReceipt, ReportStock, InventoryValuation
-- [ ] **Fase 4 — Delivery / Packing** — api+web DeliveryOrder, PackingList, PackingListReturn, PackingListSalesman
+- [x] **Fase 4 — Delivery / Packing** — api+web DeliveryOrder, PackingList, PackingListReturn, PackingListSalesman _(selesai)_
 - [ ] **Fase 5 — Master & sisanya** — Branch, CustomerCategory, CustomerLimitTop, Dayoff, RoutingApproval, Karyawan, Users, Document, DailyVisit, Presence, Sessions (mobile_session), Dashboard, ReportPenjualan
 
 ## 4. Catatan risiko yang sudah diantisipasi
@@ -104,6 +104,16 @@ DB::table('product_stock')->insert($insert);
 | 9 | Sisa data uji di DB setelah rollback | ✅ 0 baris sisa (`PROD-TEST-FASE3`, `ITEM-TEST-FASE3`, `TYPES-TEST`, `PROMO-TEST-FASE3`, dst.) |
 | 10 | `vendor/bin/pint --test` | ℹ️ 17 file yang sama sudah gagal Pint sebelum perubahan (style issues warisan) — tidak diformat ulang agar diff tetap fokus pada tenant |
 
+### Hasil verifikasi Fase 4 (23 Oktober 2026)
+
+| No | Pemeriksaan | Hasil |
+|---|---|---|
+| 1 | `php -l` 6 file yang diubah | ✅ tidak ada error sintaks |
+| 2 | `php artisan route:list` | ✅ 629 route tetap terdaftar |
+| 3 | Audit grep `company_id` pada file Fase 4 | ✅ seluruh file memuat referensi `company_id` |
+| 4 | Smoke test list API (session `id_company` = 1) | ✅ DO 5.146 / PL 162 / SR 0 / DO outstanding 98 / Sales Retur 334 / PL report 5.403 / PL received 29.856 baris — semua query berjalan |
+| 5 | Smoke test `getDataPackingList` (mobile) | ✅ `is_valid = true`, data ter-scope tampil |
+
 ## 6. Progres
 
 - [x] Pengecekan DB: 89/89 tabel sudah punya `company_id` (diverifikasi via `SHOW COLUMNS` ke `pos2`).
@@ -122,5 +132,10 @@ DB::table('product_stock')->insert($insert);
   - **Report**: `ReportStockController` (getData, getDataStock, getDataStockDetail — raw SQL `product_stock_move`, subquery PO draft & harga), `InventoryValuationController` (getData, getSummary — raw SQL `stock_cards` + subquery opening/closing value).
   - **`NoGenerator`**: helper baru `setCompanyId($model, $company_id)`; `generateCodeProduct`, `generateNoAdjStock`, `generateGrNumber` menerima `$company_id`; helper konversi satuan (`getSmallestUnit`, `getSmallestUnitV2`, `getLargestUnit`, `getHargaSemuaUnit`, `konversiSatuan`, `normalisasiQtyUom`) di-scope `product_uom`; helper `mapPurchases/mapSales/mapCancelDo/mapAdjustments/mapReturnsIn` di-scope tenant; `costMovement` menerima `company_id` lewat array `$m`; `stockUpdate`/`stockRollback` insert `company_id` hanya bila company diketahui (kolom NOT NULL).
   - **Bug lama diperbaiki**: `ProductAdjustmentStockController::confirmDelete()` memakai `RoutingHeader` (kelas tidak di-import → fatal error) diganti `ProductAdjustmentStock`; `costMovement()` memakai `$company_id` yang tidak pernah terdefinisi; `submit_import()` memakai `$company_id` sebelum di-assign; `ClosingStockController` lookup `stock_closing` memakai `where('company_id', null)` (selalu kosong) → diganti `when()`.
-- [ ] Fase 4 — Delivery / Packing
+- [x] Fase 4 — Delivery / Packing _(selesai)_
+  - **API**: `DeliveryOrderController` (getData, getDataSo, getDataProductPoDetail, submit, generate, confirmDelete, getDetailData, delete, showModalPostJurnal, postJurnal, getSoDetail), `PackingListController` (getData, getDataReport, getDataReportReceived, getDataSr, getDataDO, getDataSalesRetur, getDataProductPoDetail, submit, submitSr, confirmDelete, confirmReceive, confirmCancel, getDetailData, receive, getSRConfirmed, getDOConfirmed, getDODetailConfirmed, getSRDetailConfirmed, getDataPackingList, getDataPackingListPickup, confirmDeliver, confirmDeliverPickup) — list/detail/submit/delete/receive/deliver di-scope `company_id`; `company_id` ditulis ke `delivery_order_header`, `delivery_order_detail`, `delivery_order_status_log`, `packing_list`, `packing_list_do`, `packing_list_detail`, `packing_list_sales_return`, `packing_list_sales_return_detail`, `sales_payment_header`, `sales_payment_detail`.
+  - **Web**: `DeliveryOrderController` (add, ubah, getCustomer, cetak), `PackingListController` (add, add_sr, ubah, receive, ubah_sr, getCustomer, getListInvoicePl, cetak, cetak_sr, cetakSj) — dropdown warehouse, detail DO/PL/SR, lookup invoice, cetak PDF, dan helper konversi satuan di-scope tenant.
+  - **`NoGenerator`**: `generateNoDO($company_id)` menerima `$company_id` dan memfilter `delivery_order_header`; `generateNoPL`/`generateNoSP` sudah menerima `$company_id` dan dipakai pada submit PL dan payment delivery.
+  - **Journal**: `DeliveryOrderJournalService` (sudah ter-scope sejak Fase 1) ditambah parameter opsional `$companyId` pada `getJournalForDeliveryOrder()` dan `getActiveJournal()`; pemanggil API meneruskan company aktif.
+  - **GL/Stock**: `postingGL`, `cancelAllGL`, `stockUpdate`, `getSmallestUnit`, `getSmallestUnitV2`, `getLargestUnit`, `normalisasiQtyUom`, `createAutoReturn` dipanggil dengan `$company_id` pada alur delivery/packing.
 - [ ] Fase 5 — Master & sisanya

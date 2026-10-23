@@ -288,10 +288,15 @@ function generateNoAdjStock($company_id = null)
     return $no;
 }
 
-function generateNoDO()
+function generateNoDO($company_id = null)
 {
     $no = 'DO' . strtoupper(date('m')) . date('y');
-    $data = DB::table('delivery_order_header')->where('do_number', 'LIKE', '%' . $no . '%')->orderBy('do_number', 'desc')->get()->toArray();
+    $data = DB::table('delivery_order_header')
+        ->where('do_number', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('do_number', 'desc')
+        ->get()
+        ->toArray();
 
     $seq = 1;
     if (! empty($data)) {

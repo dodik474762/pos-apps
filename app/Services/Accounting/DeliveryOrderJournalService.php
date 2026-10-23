@@ -105,7 +105,7 @@ class DeliveryOrderJournalService
      * Jurnal terakhir yang merujuk DO, dipakai untuk validasi hapus.
      * Mengembalikan null apabila DO belum pernah dijurnalkan.
      */
-    public function getJournalForDeliveryOrder($doId)
+    public function getJournalForDeliveryOrder($doId, $companyId = null)
     {
         if (empty($doId)) {
             return null;
@@ -113,6 +113,7 @@ class DeliveryOrderJournalService
 
         return JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $doId)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             // Jurnal reversal memakai reference yang sama, sehingga yang dicari di sini
             // adalah jurnal asal transaksi, bukan jurnal pembalikannya.
             ->whereNull('reversal_of_id')
@@ -124,7 +125,7 @@ class DeliveryOrderJournalService
      * Jurnal yang masih aktif, yaitu DRAFT atau POSTED. Jurnal REVERSED tidak
      * dihitung karena pengaruhnya di general ledger sudah dinetralkan.
      */
-    public function getActiveJournal($doId)
+    public function getActiveJournal($doId, $companyId = null)
     {
         if (empty($doId)) {
             return null;
@@ -132,6 +133,7 @@ class DeliveryOrderJournalService
 
         return JournalHeader::where('reference_type', self::REFERENCE_TYPE)
             ->where('reference_id', $doId)
+            ->when($companyId !== null && $companyId !== '', fn ($q) => $q->where('company_id', $companyId))
             // Jurnal reversal mewarisi reference_type dan reference_id, jadi harus dikecualikan.
             // Kalau tidak, reversal akan dianggap jurnal aktif sehingga hapus tetap terkunci
             // dan posting ulang justru mengembalikan jurnal reversal.
