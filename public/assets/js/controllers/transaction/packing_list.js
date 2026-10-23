@@ -1349,7 +1349,7 @@ let PackingList = {
         PackingList.getDODetailConfirmed(data_id);
     },
 
-    generateCheckedDO: () => {
+    generateCheckedDO: async () => {
         const checkboxes = $("input.checkbox-so:checked");
 
         if (checkboxes.length === 0) {
@@ -1363,16 +1363,20 @@ let PackingList = {
         // Tutup modal dulu
         $("button.btn-close").trigger("click");
 
-        // Loop setiap checkbox yang dicentang
-        checkboxes.each((index, elm) => {
+        // Loop setiap checkbox yang dicentang secara berurutan
+        for (const elm of checkboxes) {
             const td = $(elm).closest("td");
             const data_id = td.find("a").attr("data_id");
 
             if (data_id) {
-                PackingList.getDOConfirmed(data_id);
-                PackingList.getDODetailConfirmed(data_id);
+                try {
+                    await PackingList.getDOConfirmed(data_id);
+                    await PackingList.getDODetailConfirmed(data_id);
+                } catch (e) {
+                    // Lanjut ke DO berikutnya
+                }
             }
-        });
+        }
     },
 
     pilihDataSR: (elm, e) => {
@@ -1421,7 +1425,7 @@ let PackingList = {
             do_id: do_id,
         };
 
-        $.ajax({
+        return $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
@@ -1453,7 +1457,7 @@ let PackingList = {
             do_id: do_id,
         };
 
-        $.ajax({
+        return $.ajax({
             type: "POST",
             dataType: "html",
             data: params,
