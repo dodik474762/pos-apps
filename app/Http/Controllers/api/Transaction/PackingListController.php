@@ -321,6 +321,7 @@ class PackingListController extends Controller
             })
             ->whereNull('m.deleted')
             ->where('soh.total_amount', '>', 0)
+            ->where('m.do_date', '>', '2026-07-31')
             ->whereIn('m.status', ['CONFIRMED', 'DRAFT'])
             ->orderBy('m.id', 'asc');
         if (!empty($do_choose)) {
