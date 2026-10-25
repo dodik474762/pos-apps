@@ -136,6 +136,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [LoginController::class, 'index']);
 Route::post('/user/signIn', [LoginController::class, 'signIn']);
 Route::get('/user/signOut', [LoginController::class, 'signOut']);
+Route::get('/user/changePassword', [UsersController::class, 'changePassword'])->name('user.changePassword');
+Route::post('/user/changePassword', [UsersController::class, 'submitChangePassword'])->name('user.changePassword.submit');
 Route::post('api_mobile/auth/login', [LoginController::class, 'signInApps']);
 
 Route::get('/landing', [LandingPageController::class, 'index'])->name('landing');
