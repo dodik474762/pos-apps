@@ -71,7 +71,7 @@ class KaryawanController extends Controller
         $datadb = KaryawanGroup::whereNull('karyawan_group.deleted')
             ->select(['karyawan_group.*', 'd.keterangan as group_name'])
             ->join('dictionary as d', 'd.term_id', 'karyawan_group.group')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('karyawan_group.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('karyawan_group.company_id', $company_id))
             ->where('karyawan_group.karyawan', $id)
             ->get()->toArray();
 
@@ -83,7 +83,7 @@ class KaryawanController extends Controller
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->get()->toArray();
+        $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->where('id', session('id_company'))->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
@@ -100,39 +100,41 @@ class KaryawanController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListProduct($id){
+    public function getListProduct($id)
+    {
         $company_id = session('id_company');
         $datadb = KaryawanHasProduct::whereNull('karyawan_has_product.deleted')
-        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('karyawan_has_product.company_id', $company_id))
-        ->select(['karyawan_has_product.*', 'p.code as kode_product', 'p.name as nama_product'])
-        ->join('product as p', 'p.id', 'karyawan_has_product.product')
-        ->where('karyawan_has_product.karyawan', $id)
-        ->get();
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('karyawan_has_product.company_id', $company_id))
+            ->select(['karyawan_has_product.*', 'p.code as kode_product', 'p.name as nama_product'])
+            ->join('product as p', 'p.id', 'karyawan_has_product.product')
+            ->where('karyawan_has_product.karyawan', $id)
+            ->get();
         return $datadb;
     }
 
-    public function getAllProduct(){
+    public function getAllProduct()
+    {
         $company_id = session('id_company');
         $datadb = DB::table('product as p')->whereNull('p.deleted')
-        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('p.company_id', $company_id))
-        ->select([
-            'p.*',
-            'v.nama_vendor',
-            'pup.price as harga_satuan_besar'
-        ])
-        ->leftJoin('vendor as v', 'v.id', 'p.vendor')
-        ->leftJoin('product_uom as pu', function($join) {
-            $join->on('pu.product', '=', 'p.id')
-                 ->where('pu.state', '=', 'large')
-                 ->whereNull('pu.deleted');
-        })
-        ->leftJoin('product_uom_price as pup', function($join) {
-            $join->on('pup.product', '=', 'p.id')
-                 ->on('pup.unit', '=', 'pu.unit_tujuan')
-                 ->where('pup.price_list', '=', 2)
-                 ->whereNull('pup.deleted');
-        })
-        ->get();
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('p.company_id', $company_id))
+            ->select([
+                'p.*',
+                'v.nama_vendor',
+                'pup.price as harga_satuan_besar'
+            ])
+            ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+            ->leftJoin('product_uom as pu', function ($join) {
+                $join->on('pu.product', '=', 'p.id')
+                    ->where('pu.state', '=', 'large')
+                    ->whereNull('pu.deleted');
+            })
+            ->leftJoin('product_uom_price as pup', function ($join) {
+                $join->on('pup.product', '=', 'p.id')
+                    ->on('pup.unit', '=', 'pu.unit_tujuan')
+                    ->where('pup.price_list', '=', 2)
+                    ->whereNull('pup.deleted');
+            })
+            ->get();
         return $datadb;
     }
 
@@ -144,7 +146,7 @@ class KaryawanController extends Controller
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
         $data['list_bank'] = $this->getListBankAccount();
-        $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->get()->toArray();
+        $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->where('id', session('id_company'))->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
         $data['karyawan_group'] = $this->getListKaryawanGroup($data['id']);
         $data['karyawan_product'] = $this->getListProduct($data['id']);
