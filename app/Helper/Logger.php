@@ -37,6 +37,7 @@ function createDocTransaction($content, $doc_trans, $state, $remarks = ''){
     if($remarks != ''){
         $doc->remarks = $remarks;
     }
+    setCompanyId($doc, session('id_company'));
     $doc->save();
 }
 
@@ -57,5 +58,6 @@ function createDocTransactionMobile($content, $nik, $doc_trans, $state, $remarks
     if($remarks != ''){
         $doc->remarks = $remarks;
     }
+    setCompanyId($doc, session('id_company'));
     $doc->save();
 }

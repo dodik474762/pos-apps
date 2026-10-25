@@ -18,6 +18,7 @@ class CustomerLimitTopController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -34,7 +35,8 @@ class CustomerLimitTopController extends Controller
             ->join('customer as c', 'c.id', 'm.customer')
             ->leftJoin('term_of_payment as top_new', 'top_new.id', 'm.new_payment_terms')
             ->leftJoin('term_of_payment as top_cur', 'top_cur.id', 'm.current_payment_terms')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -68,6 +70,7 @@ class CustomerLimitTopController extends Controller
     public function getDataAcc()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -88,7 +91,8 @@ class CustomerLimitTopController extends Controller
                     ->orWhereNull('m.admin_sales_date')
                     ->orWhereNull('m.om_date');
             })
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -122,6 +126,7 @@ class CustomerLimitTopController extends Controller
     public function getDataAccHistory()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -138,6 +143,7 @@ class CustomerLimitTopController extends Controller
             ->leftJoin('term_of_payment as top_new', 'top_new.id', 'm.new_payment_terms')
             ->leftJoin('term_of_payment as top_cur', 'top_cur.id', 'm.current_payment_terms')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereIn('m.status', ['APPROVED', 'REJECTED']);
 
         if (isset($_POST)) {
@@ -174,14 +180,15 @@ class CustomerLimitTopController extends Controller
         date_default_timezone_set('Asia/Jakarta');
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
-            $customer = Customer::find($data['customer']);
+            $customer = Customer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['customer']);
 
             $roles = $data['id'] == '' ? new CustomerLimitTop() : CustomerLimitTop::find($data['id']);
             if ($data['id'] == '') {
-                $roles->code = generateCodePengajuanLimitTop();
+                $roles->code = generateCodePengajuanLimitTop($company_id);
                 $roles->current_credit_limit = $customer->credit_limit;
                 $roles->current_payment_terms = $customer->payment_terms;
                 $roles->submitted_by = session('user_id');
@@ -207,6 +214,7 @@ class CustomerLimitTopController extends Controller
                 $roles->new_payment_terms = null;
             }
             $roles->reason = isset($data['reason']) ? $data['reason'] : '';
+            setCompanyId($roles, $company_id);
             $roles->save();
 
             DB::commit();
@@ -228,7 +236,8 @@ class CustomerLimitTopController extends Controller
         try {
             //code...
             $akses = strtolower(session('akses'));
-            $roles = CustomerLimitTop::find($data['id']);
+            $company_id = session('id_company');
+            $roles = CustomerLimitTop::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if ($roles->status == 'APPROVED' || $roles->status == 'REJECTED') {
                 $result['message'] = 'Pengajuan Sudah Diproses';
@@ -259,7 +268,7 @@ class CustomerLimitTopController extends Controller
                     $roles->approved_date = date('Y-m-d H:i:s');
 
                     /* apply ke master customer */
-                    $customer = Customer::find($roles->customer);
+                    $customer = Customer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($roles->customer);
                     if ($roles->new_credit_limit !== null) {
                         $customer->credit_limit = $roles->new_credit_limit;
                     }
@@ -289,7 +298,8 @@ class CustomerLimitTopController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = CustomerLimitTop::find($data['id']);
+            $company_id = session('id_company');
+            $menu = CustomerLimitTop::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -306,6 +316,7 @@ class CustomerLimitTopController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -317,6 +328,7 @@ class CustomerLimitTopController extends Controller
             ->join('customer as c', 'c.id', 'm.customer')
             ->leftJoin('term_of_payment as top_new', 'top_new.id', 'm.new_payment_terms')
             ->leftJoin('term_of_payment as top_cur', 'top_cur.id', 'm.current_payment_terms')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         return response()->json($data);
@@ -325,12 +337,14 @@ class CustomerLimitTopController extends Controller
     public function getDetailCustomer(Request $request)
     {
         $data = $request->all();
+        $company_id = session('id_company');
         $datadb = DB::table('customer as c')
             ->select([
                 'c.*',
                 'top.remarks as current_top_name',
             ])
             ->leftJoin('term_of_payment as top', 'top.id', 'c.payment_terms')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('c.company_id', $company_id))
             ->where('c.id', $data['customer'])
             ->first();
 

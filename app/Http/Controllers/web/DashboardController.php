@@ -76,7 +76,9 @@ class DashboardController extends Controller
 
     public function getListGroupKaryawan()
     {
+        $company_id = session('id_company');
         $data = DB::table('karyawan_group as kg')->whereNull('kg.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('kg.company_id', $company_id))
             ->select(['kg.*', 'dic.keterangan as group_name'])
             ->join('karyawan as kry', 'kry.id', '=', 'kg.karyawan')
             ->join('dictionary as dic', 'dic.term_id', '=', 'kg.group')
@@ -90,10 +92,12 @@ class DashboardController extends Controller
     {
         $year = ($year == '') ? date('Y') : $year;
 
+        $company_id = session('id_company');
         $totalPO = DB::table('purchase_order')
             ->whereYear('po_date', $year)
             ->where('is_active', 1)
-            ->whereNull('deleted');
+            ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id));
         $summaryPO = $totalPO->sum('grand_total');
         $jumlahPO = $totalPO->count();
 
@@ -110,16 +114,19 @@ class DashboardController extends Controller
         // total pesanan = SO yang benar-benar sudah terbit jadi invoice.
         // status 'correction' tidak dihitung, dan SO yang belum jadi invoice diabaikan
         // supaya basisnya sama dengan card Total Penjualan.
+        $company_id = session('id_company');
         $totalSales = DB::table('sales_order_headers')
             ->whereYear('so_date', $year)
             ->where('total_amount', '>', 0)
             ->whereNull('deleted')
             ->whereIn('status', ['confirmed', 'draft'])
-            ->whereExists(function ($q) use ($year) {
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->whereExists(function ($q) use ($year, $company_id) {
                 $q->select(DB::raw(1))
                     ->from('sales_invoice_header as sih')
                     ->whereColumn('sih.sales_order', 'sales_order_headers.id')
                     ->whereNull('sih.deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
                     ->whereYear('sih.invoice_date', $year);
             });
 
@@ -136,10 +143,13 @@ class DashboardController extends Controller
     {
         $year = ($year == '') ? date('Y') : $year;
 
+        $company_id = session('id_company');
+        $costCompany = ($company_id !== null && $company_id !== '') ? ' AND puc.company_id = ' . (int) $company_id : '';
         $invoiceBase = DB::table('sales_invoice_header')
             ->whereNull('deleted')
             // ->where('invoice_number', 'SI06260204')
             ->whereYear('invoice_date', $year)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereIn('status', self::STATUS_INVOICE);
 
         // total tagihan outstanding: hanya invoice yang masih punya sisa tagihan
@@ -169,6 +179,7 @@ class DashboardController extends Controller
             })
             // ->where('sih.invoice_number', 'SI06260204')
             ->whereNull('sih.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
             ->whereNull('sid.deleted')
             ->whereNull('sid.flag_cancel')
             // ->where('sid.product_id', 120)
@@ -184,7 +195,7 @@ class DashboardController extends Controller
           END
         * COALESCE((
             SELECT puc.cost FROM product_uom_cost puc 
-            WHERE puc.product = sid.product_id AND puc.date_start <= sih.invoice_date 
+            WHERE puc.product = sid.product_id AND puc.date_start <= sih.invoice_date{$costCompany}
             ORDER BY puc.date_start DESC LIMIT 1
           ), 0)
     ) as total_cogs
@@ -231,9 +242,11 @@ class DashboardController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         // daftar invoice outstanding: basisnya sama dengan card Total Tagihan Outstanding
+        $company_id = session('id_company');
         $outstandingReceivable = DB::table('sales_invoice_header as sih')
             ->whereNull('sih.deleted')
             ->whereYear('sih.invoice_date', $year)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
             ->whereIn('sih.status', self::STATUS_INVOICE)
             ->whereRaw('(sih.total_amount - sih.amount_paid) > 0');
 
@@ -293,9 +306,11 @@ class DashboardController extends Controller
         $data = $request->all();
         $year = isset($data['year']) ? $data['year'] : date('Y');
 
+        $company_id = session('id_company');
         // penjualan valid per bulan, basisnya sama dengan card Total Penjualan
         $validPerBulan = DB::table('sales_invoice_header')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereIn('status', self::STATUS_INVOICE)
             ->whereYear('invoice_date', $year)
             ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
@@ -308,6 +323,7 @@ class DashboardController extends Controller
                 $q->whereNotNull('deleted')->orWhere('status', 'CANCELED');
             })
             ->whereYear('invoice_date', $year)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
             ->groupBy('bulan')
             ->pluck('total', 'bulan');
@@ -332,6 +348,7 @@ class DashboardController extends Controller
         $data = $request->all();
         $date_visit = $data['date_visit'];
         $salesman = $data['salesman'];
+        $company_id = session('id_company');
 
         $result['is_valid'] = true;
         $datadb = DB::table('sales_order_headers as soh')
@@ -342,6 +359,7 @@ class DashboardController extends Controller
             ])
             ->join('customer as c', 'c.id', '=', 'soh.customer_id')
             ->where('soh.platform', 'mobile')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('soh.company_id', $company_id))
             ->whereNull('soh.deleted');
         if ($salesman != '') {
             $datadb->where('soh.salesman', $salesman);

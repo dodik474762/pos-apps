@@ -1,7 +1,7 @@
 # Implementasi Tenant (company_id) — Rencana & Progres
 
 Tanggal: 22 Oktober 2026
-Status: **Fase 4 selesai** (Fase 1–3 selesai)
+Status: **Fase 5 selesai** (Fase 1–4 selesai)
 
 ## 1. Hasil pengecekan
 
@@ -71,7 +71,7 @@ DB::table('product_stock')->insert($insert);
 - [x] **Fase 2 — AP/AR, Purchasing, Penjualan** — controller api+web: PurchaseOrder, PurchaseInvoice, PurchaseReturn, VendorBill, SalesInvoice, SalesPayment, TerimaUang, CreditNote, PLTagihan, ReturnConsigment + `NoGenerator` (`generateNoPO/SI/SP/CN/PL/Payment`)
 - [x] **Fase 3 — Inventory / Product** — Product, Item, ProductType, PromoItem (api+web), ProductDiscount/FreeGood, ClosingStock, ProductAdjustmentStock, GoodReceipt, ReportStock, InventoryValuation
 - [x] **Fase 4 — Delivery / Packing** — api+web DeliveryOrder, PackingList, PackingListReturn, PackingListSalesman _(selesai)_
-- [ ] **Fase 5 — Master & sisanya** — Branch, CustomerCategory, CustomerLimitTop, Dayoff, RoutingApproval, Karyawan, Users, Document, DailyVisit, Presence, Sessions (mobile_session), Dashboard, ReportPenjualan
+- [x] **Fase 5 — Master & sisanya** — Branch, CustomerCategory, CustomerLimitTop, Dayoff, RoutingApproval, Karyawan, Users, Document, DailyVisit, Presence, Sessions (mobile_session), Dashboard, ReportPenjualan _(selesai)_
 
 ## 4. Catatan risiko yang sudah diantisipasi
 
@@ -114,6 +114,17 @@ DB::table('product_stock')->insert($insert);
 | 4 | Smoke test list API (session `id_company` = 1) | ✅ DO 5.146 / PL 162 / SR 0 / DO outstanding 98 / Sales Retur 334 / PL report 5.403 / PL received 29.856 baris — semua query berjalan |
 | 5 | Smoke test `getDataPackingList` (mobile) | ✅ `is_valid = true`, data ter-scope tampil |
 
+### Hasil verifikasi Fase 5 (25 Oktober 2026)
+
+| No | Pemeriksaan | Hasil |
+|---|---|---|
+| 1 | `php -l` 19 file yang diubah | ✅ tidak ada error sintaks |
+| 2 | `php artisan route:list` | ✅ 625 route tetap terdaftar |
+| 3 | Audit grep `company_id` pada file Fase 5 | ✅ seluruh controller Fase 5 memuat referensi `company_id` |
+| 4 | Smoke test jalur baca (26 method: master Branch/CustomerCategory/CustomerLimitTop/Dayoff/RoutingApproval/Karyawan/Users, Sessions, Presensi, ReportVisit, ReportPenjualan, Dashboard, dropdown web) | ✅ 26 OK / 0 FAIL |
+| 5 | Smoke test jalur tulis dalam transaksi + rollback (Branch, CustomerCategory, Dayoff, Karyawan, CustomerLimitTop, DailyVisit via `getSalesRoutePlan`) | ✅ 6 OK / 0 FAIL — `company_id` = 1 terisi di header + detail; 0 baris sisa setelah rollback |
+| 6 | Cek kolom `company_id` tabel Fase 5 (`branch`, `customer_category`, `customer_limit_top`, `dayoff`, `routing_*`, `karyawan*`, `users`, `document*`, `daily_visit*`, `presence`, `mobile_session`) | ✅ semua `BIGINT UNSIGNED NOT NULL DEFAULT 1` |
+
 ## 6. Progres
 
 - [x] Pengecekan DB: 89/89 tabel sudah punya `company_id` (diverifikasi via `SHOW COLUMNS` ke `pos2`).
@@ -138,4 +149,13 @@ DB::table('product_stock')->insert($insert);
   - **`NoGenerator`**: `generateNoDO($company_id)` menerima `$company_id` dan memfilter `delivery_order_header`; `generateNoPL`/`generateNoSP` sudah menerima `$company_id` dan dipakai pada submit PL dan payment delivery.
   - **Journal**: `DeliveryOrderJournalService` (sudah ter-scope sejak Fase 1) ditambah parameter opsional `$companyId` pada `getJournalForDeliveryOrder()` dan `getActiveJournal()`; pemanggil API meneruskan company aktif.
   - **GL/Stock**: `postingGL`, `cancelAllGL`, `stockUpdate`, `getSmallestUnit`, `getSmallestUnitV2`, `getLargestUnit`, `normalisasiQtyUom`, `createAutoReturn` dipanggil dengan `$company_id` pada alur delivery/packing.
-- [ ] Fase 5 — Master & sisanya
+- [x] Fase 5 — Master & sisanya _(selesai)_
+  - **API master**: `BranchController`, `CustomerCategoryController`, `CustomerLimitTopController` (getData, getDataAcc, getDataAccHistory, submit, approve, confirmDelete, getDetailData, getDetailCustomer), `DayoffController`, `RoutingApprovalController` (header + permission + reminder), `KaryawanController` (getData, submit, confirmDelete, getDetailData, saveProduct, deleteProduct), `UsersController` (getData, submit, confirmDelete, getDetailData) — list/detail/submit/delete di-scope `company_id`; `company_id` ditulis ke `branch`, `customer_category`, `customer_limit_top`, `dayoff`, `routing_header`, `routing_permission`, `routing_reminder`, `karyawan`, `karyawan_group`, `karyawan_has_product`, `product_uom_price`, `product_uom_price_log`, `users`.
+  - **Web master**: `CustomerLimitTopController` (dropdown TOP/customer), `KaryawanController` (karyawan group, produk karyawan, semua produk), `RoutingApprovalController` (routing item + reminder), `UsersController` (dropdown roles + branch) di-scope tenant.
+  - **`NoGenerator`**: `generateNoDocument`, `generateCodePengajuanLimitTop`, `generateCodePresence` menerima `$company_id` opsional; `createLogTransaction` menulis `company_id` ke `document_transaction`.
+  - **`Helper/Logger`**: `createDocTransaction` dan `createDocTransactionMobile` menulis `company_id` ke `document_transaction`.
+  - **Kehadiran / kunjungan**: `PresensiController` (API getDataPresensi, submitPresensi, getData, confirmDelete, submit web) — `company_id` diturunkan dari user untuk mobile (`Users::value('company_id')`) atau `session('id_company')` untuk web, lalu ditulis ke `presence`; `SalesPlanController::getSalesRoutePlan` menulis `company_id` ke `daily_visit` + `daily_visit_customer`.
+  - **Sessions**: `SessionsController` (API) memfilter `mobile_session.company_id`.
+  - **Dashboard**: `getSummaryPO`, `getSummarySO`, `getSummaryInvoice` (termasuk subquery COGS `product_uom_cost`), `getInvoiceOutstanding`, `getGrafikPenjualan`, `getMapVisit`, `getListGroupKaryawan` di-scope tenant.
+  - **Report**: `ReportVisitController` (raw SQL `presence`, `daily_visit`, `daily_visit_customer`, subquery `prev`) dan `ReportPenjualanController` (main query, `sales_return`, `sales_invoice_detail`, `product_uom`, `sales_order_promo`, `daily_visit`, `sales_invoice_header`) di-scope tenant dengan alias per subquery.
+  - **Catatan**: `ReportPenjualanControllerV1.php` tidak diubah karena tidak terdaftar di `routes/web.php` (file lama/tidak dipakai).

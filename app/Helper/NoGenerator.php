@@ -42,10 +42,12 @@ function digit_count($length, $value)
     return $value;
 }
 
-function generateNoDocument()
+function generateNoDocument($company_id = null)
 {
     $no = 'DOC' . date('y') . strtoupper(date('M'));
-    $data = DB::table('document')->where('no_document', 'LIKE', '%' . $no . '%')->orderBy('no_document', 'desc')->get()->toArray();
+    $data = DB::table('document')->where('no_document', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('no_document', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -134,10 +136,12 @@ function generateCodeCustomer()
     return $no;
 }
 
-function generateCodePengajuanLimitTop()
+function generateCodePengajuanLimitTop($company_id = null)
 {
     $no = 'PLT' . strtoupper(date('m')) . date('y');
-    $data = DB::table('customer_limit_top')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('customer_limit_top')->where('code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -200,10 +204,12 @@ function generatePRN($company_id = null)
     return $no;
 }
 
-function generateCodePresence()
+function generateCodePresence($company_id = null)
 {
     $no = 'AB-' . strtoupper(date('m')) . date('y');
-    $data = DB::table('purchase_return')->where('code', 'LIKE', '%' . $no . '%')->orderBy('code', 'desc')->get()->toArray();
+    $data = DB::table('purchase_return')->where('code', 'LIKE', '%' . $no . '%')
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+        ->orderBy('code', 'desc')->get()->toArray();
 
     $seq = 1;
     if (! empty($data)) {
@@ -845,6 +851,7 @@ function createLogTransaction($users = 0, $code = '0', $desc = '', $remarks = nu
     $log->no_document = $code;
     $log->remarks = $remarks;
     $log->state = $state;
+    setCompanyId($log, session('id_company'));
     $log->save();
 }
 

@@ -15,6 +15,7 @@ class CustomerCategoryController extends Controller
 
     public function getData(){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -23,6 +24,7 @@ class CustomerCategoryController extends Controller
             'm.*',
         ])
         ->whereNull('m.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
         ->orderBy('m.id', 'desc');
         if(isset($_POST)){
             $data['recordsTotal'] = $datadb->get()->count();
@@ -57,12 +59,14 @@ class CustomerCategoryController extends Controller
     public function submit(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
-            $roles = $data['id'] == '' ? new CustomerCategory() : CustomerCategory::find($data['id']);
+            $roles = $data['id'] == '' ? new CustomerCategory() : CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->category = $data['category'];
             $roles->remarks = $data['remarks'];
+            setCompanyId($roles, $company_id);
             $roles->save();
 
             DB::commit();
@@ -81,7 +85,8 @@ class CustomerCategoryController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = CustomerCategory::find($data['id']);
+            $company_id = session('id_company');
+            $menu = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -97,10 +102,13 @@ class CustomerCategoryController extends Controller
 
     public function getDetailData($id){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+        ])
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+        ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

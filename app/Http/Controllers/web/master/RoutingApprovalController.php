@@ -89,7 +89,9 @@ class RoutingApprovalController extends Controller
         $data['list_approval'] = Dictionary::whereNull('deleted')->where('context', 'ROUTE_MODULE')->get()->toArray();
         $data['list_module'] = Menu::whereNull('deleted')->whereNotNull('parent')->where('routing', 1)->whereNull('deleted')->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
+        $company_id = session('id_company');
         $data['routing_item'] = RoutingPermission::where('routing_permission.routing_header', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('routing_permission.company_id', $company_id))
             ->select(['routing_permission.*', 'k.nama_lengkap as name_user'])
             ->join('users as u', 'u.id', 'routing_permission.users')
             ->join('karyawan as k', 'k.nik', 'u.nik')
@@ -97,6 +99,7 @@ class RoutingApprovalController extends Controller
             ->orderBy('routing_permission.id', 'asc')
             ->get()->toArray();
         $data['routing_reminder_item'] = RoutingReminder::where('routing_reminder.routing_header', $data['id'])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('routing_reminder.company_id', $company_id))
             ->select(['routing_reminder.*', 'k.nama_lengkap as name_user'])
             ->join('users as u', 'u.id', 'routing_reminder.users')
             ->join('karyawan as k', 'k.nik', 'u.nik')

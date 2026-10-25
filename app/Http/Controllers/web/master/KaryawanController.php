@@ -67,9 +67,11 @@ class KaryawanController extends Controller
 
     public function getListKaryawanGroup($id)
     {
+        $company_id = session('id_company');
         $datadb = KaryawanGroup::whereNull('karyawan_group.deleted')
             ->select(['karyawan_group.*', 'd.keterangan as group_name'])
             ->join('dictionary as d', 'd.term_id', 'karyawan_group.group')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('karyawan_group.company_id', $company_id))
             ->where('karyawan_group.karyawan', $id)
             ->get()->toArray();
 
@@ -99,7 +101,9 @@ class KaryawanController extends Controller
     }
 
     public function getListProduct($id){
+        $company_id = session('id_company');
         $datadb = KaryawanHasProduct::whereNull('karyawan_has_product.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('karyawan_has_product.company_id', $company_id))
         ->select(['karyawan_has_product.*', 'p.code as kode_product', 'p.name as nama_product'])
         ->join('product as p', 'p.id', 'karyawan_has_product.product')
         ->where('karyawan_has_product.karyawan', $id)
@@ -108,7 +112,9 @@ class KaryawanController extends Controller
     }
 
     public function getAllProduct(){
+        $company_id = session('id_company');
         $datadb = DB::table('product as p')->whereNull('p.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('p.company_id', $company_id))
         ->select([
             'p.*',
             'v.nama_vendor',

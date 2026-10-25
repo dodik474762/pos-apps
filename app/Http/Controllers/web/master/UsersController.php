@@ -60,8 +60,13 @@ class UsersController extends Controller
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')->get()->toArray();
-        $data['data_branch'] = Branch::whereNull('deleted')->get();
+        $company_id = session('id_company');
+        $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get()->toArray();
+        $data['data_branch'] = Branch::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $view = view('web.users.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -76,10 +81,15 @@ class UsersController extends Controller
         $api = new MasterUsersController();
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')->get()->toArray();
+        $company_id = session('id_company');
+        $data['data_roles'] = Roles::whereNull('deleted')->where('group', '!=', 'SUPERADMIN')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get()->toArray();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['data_branch'] = Branch::whereNull('deleted')->get();
+        $data['data_branch'] = Branch::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $view = view('web.users.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();

@@ -21,6 +21,7 @@ class SessionsController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -31,7 +32,8 @@ class SessionsController extends Controller
             ])
             ->join('users as u', 'u.id', 'm.users')
             ->join('karyawan as k', 'k.nik', 'u.nik')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();

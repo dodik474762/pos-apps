@@ -21,10 +21,13 @@ class ReportVisitController extends Controller
 
         $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
+        $company_id  = session('id_company');
+        $companyFilter = ($company_id !== null && $company_id !== '') ? ' AND prev.company_id = ' . (int) $company_id : '';
 
         // Presence: 1 baris per salesman per hari
         $presence = DB::table('presence')
             ->selectRaw('creator, DATE(presence_date) as presence_day, MIN(start_date) as start_date')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereDate('presence_date', '>=', $tanggal)
             ->whereDate('presence_date', '<=', $tanggal_end)
             ->groupBy('creator', DB::raw('DATE(presence_date)'));
@@ -57,7 +60,7 @@ class ReportVisitController extends Controller
                                     WHERE prev.salesman = m.salesman
                                       AND DATE(prev.so_date) = DATE(m.so_date)
                                       AND prev.check_in_time < m.check_in_time
-                                      AND prev.deleted IS NULL
+                                      AND prev.deleted IS NULL{$companyFilter}
                                     ORDER BY prev.check_in_time DESC
                                     LIMIT 1
                                 ),
@@ -78,6 +81,7 @@ class ReportVisitController extends Controller
             })
             ->whereDate('m.so_date', '>=', $tanggal)
             ->whereDate('m.so_date', '<=', $tanggal_end)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNull('m.deleted');
         // ->where('c.code', 'CUST09260056'); // hapus baris ini jika hanya untuk testing
 
@@ -156,10 +160,13 @@ class ReportVisitController extends Controller
 
         $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
+        $company_id  = session('id_company');
+        $companyFilter = ($company_id !== null && $company_id !== '') ? ' AND dvd.company_id = ' . (int) $company_id : '';
 
         // Presence: 1 baris per salesman per hari (absen paling awal)
         $presence = DB::table('presence')
             ->selectRaw('creator, DATE(presence_date) as presence_day, MIN(start_date) as start_date')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereDate('presence_date', '>=', $tanggal)
             ->whereDate('presence_date', '<=', $tanggal_end)
             ->groupBy('creator', DB::raw('DATE(presence_date)'));
@@ -167,6 +174,7 @@ class ReportVisitController extends Controller
         // Daily visit: 1 baris per user per tanggal
         $dailyVisit = DB::table('daily_visit')
             ->selectRaw('users, date_visit, MIN(id) as id, MAX(total_visit) as total_visit')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->groupBy('users', 'date_visit');
 
@@ -235,6 +243,7 @@ class ReportVisitController extends Controller
             })
             ->whereDate('m.so_date', '>=', $tanggal)
             ->whereDate('m.so_date', '<=', $tanggal_end)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNull('m.deleted')
             ->groupBy('m.salesman', 'usr.name', 'k.nama_lengkap', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'dv.id');
 

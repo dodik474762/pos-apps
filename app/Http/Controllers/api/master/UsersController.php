@@ -99,7 +99,7 @@ class UsersController extends Controller
             ]);
             $token = JWTAuth::fromUser($user);
 
-            Users::whereNull('nik')->delete();
+            Users::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('nik')->delete();
 
             DB::commit();
             $result['is_valid'] = true;
@@ -118,7 +118,8 @@ class UsersController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = Users::find($data['id']);
+            $company_id = session('id_company');
+            $menu = Users::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -135,10 +136,13 @@ class UsersController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

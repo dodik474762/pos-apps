@@ -17,6 +17,7 @@ class BranchController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -25,6 +26,7 @@ class BranchController extends Controller
                 'm.*',
             ])
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -58,12 +60,16 @@ class BranchController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
             if ($data['id'] == '') {
-                $existName = Branch::where('name', $data['name'])
-                    ->orWhere('code', $data['code'])
+                $existName = Branch::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->where(function ($q) use ($data) {
+                        $q->where('name', $data['name'])
+                            ->orWhere('code', $data['code']);
+                    })
                     ->first();
                 if (!empty($existName)) {
                     DB::rollBack();
@@ -71,10 +77,11 @@ class BranchController extends Controller
                     return response()->json($result);
                 }
             }
-            $roles = $data['id'] == '' ? new Branch() : Branch::find($data['id']);
+            $roles = $data['id'] == '' ? new Branch() : Branch::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->code = $data['code'];
             $roles->name = $data['name'];
             $roles->location = $data['location'];
+            setCompanyId($roles, $company_id);
             $roles->save();
 
             DB::commit();
@@ -94,7 +101,8 @@ class BranchController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = Branch::find($data['id']);
+            $company_id = session('id_company');
+            $menu = Branch::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -111,10 +119,13 @@ class BranchController extends Controller
     public function getDetailData($id)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
-            ])->where('m.id', $id);
+            ])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);

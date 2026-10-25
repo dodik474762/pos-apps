@@ -93,7 +93,9 @@ class CustomerLimitTopController extends Controller
 
     public function getListCustomer()
     {
+        $company_id = session('id_company');
         $datadb = DB::table('customer as c')->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('c.company_id', $company_id))
             ->select(['c.id', 'c.code', 'c.nama_customer'])
             ->orderBy('c.nama_customer', 'asc')
             ->get();

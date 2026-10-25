@@ -17,6 +17,7 @@ class ReportPenjualanController extends Controller
     public function getData()
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -81,7 +82,8 @@ class ReportPenjualanController extends Controller
             ])
             ->whereNull('sr.deleted')
             ->where('sr.types', 'good')
-            ->where('sr.return_type', 'RETURN');
+            ->where('sr.return_type', 'RETURN')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sr.company_id', $company_id));
 
         // ============================================================
         // GABUNG BARIS FAKTUR: 1 baris per faktur + produk + satuan
@@ -92,6 +94,7 @@ class ReportPenjualanController extends Controller
             })
             ->whereNull('sid.deleted')
             ->whereNull('sid.flag_cancel')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sid.company_id', $company_id))
             ->groupBy('sid.invoice_id', 'sod.sales_order_id', 'sod.product_id', 'sod.unit')
             ->select([
                 'sid.invoice_id',
@@ -114,6 +117,7 @@ class ReportPenjualanController extends Controller
         // Info level satuan per produk (pengganti uom_count + uom_l1..l4)
         $uomFormat = DB::table('product_uom')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('product')
             ->select([
                 'product',
@@ -127,6 +131,7 @@ class ReportPenjualanController extends Controller
         // Nilai konversi satuan yang dipakai (pengganti uom_used), 1 baris per produk + satuan
         $uomUsed = DB::table('product_uom')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('product', 'unit_tujuan')
             ->select([
                 'product',
@@ -142,6 +147,7 @@ class ReportPenjualanController extends Controller
                     ->on('ppid_inner.product', 'sod_inner.product_id');
             })
             ->whereNull('sod_inner.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sod_inner.company_id', $company_id))
             ->groupBy('sod_inner.sales_order_id')
             ->select([
                 'sod_inner.sales_order_id',
@@ -150,6 +156,7 @@ class ReportPenjualanController extends Controller
 
         // Total diskon promo per SO
         $promoTotal = DB::table('sales_order_promo')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('sales_order_id')
             ->select([
                 'sales_order_id',
@@ -251,8 +258,9 @@ class ReportPenjualanController extends Controller
                 $j->on('g.sales_order_id', 'm.id');
             })
             ->join('product as p', 'p.id', 'g.product_id')
-            ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.id', 'g.invoice_id')->whereNull('sih.deleted');
+            ->join('sales_invoice_header as sih', function ($q) use ($company_id) {
+                return $q->on('sih.id', 'g.invoice_id')->whereNull('sih.deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('sih.company_id', $company_id));
             })
             // pengganti subquery qty_sold
             ->leftJoinSub($uomUsed, 'uomu', function ($j) {
@@ -276,13 +284,20 @@ class ReportPenjualanController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
             ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
-            ->leftJoin('daily_visit as dv', function ($q) {
+            ->leftJoin('daily_visit as dv', function ($q) use ($company_id) {
                 return $q->on('dv.date_visit', 'm.so_date')
                     ->on('dv.users', 'm.salesman')
-                    ->whereNull('dv.deleted');
+                    ->whereNull('dv.deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('dv.company_id', $company_id));
             })
-            ->leftJoin('sales_order_promo as sop', 'sop.sales_order_id', 'm.id')
-            ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sop.promo')
+            ->leftJoin('sales_order_promo as sop', function ($j) use ($company_id) {
+                return $j->on('sop.sales_order_id', 'm.id')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('sop.company_id', $company_id));
+            })
+            ->leftJoin('product_promo_item as ppi', function ($j) use ($company_id) {
+                return $j->on('ppi.id', 'sop.promo')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('ppi.company_id', $company_id));
+            })
             ->leftJoinSub($salesReturn, 'sr_data', function ($join) {
                 $join->whereRaw('(
                     FIND_IN_SET(sr_data.invoice_detail_id, g.sid_ids) > 0
@@ -290,6 +305,7 @@ class ReportPenjualanController extends Controller
                 )');
             })
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
             ->where('m.total_amount', '>', 0);
@@ -395,6 +411,7 @@ class ReportPenjualanController extends Controller
     public function getDataPenjualanPerProduct(Request $request)
     {
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data = $request->all();
         $filter_satuan = $_POST['filter_satuan'] ?? 'default';
         $data['data'] = [];
@@ -406,6 +423,7 @@ class ReportPenjualanController extends Controller
 
         // Detail SO yang punya promo item (distinct supaya join tidak menggandakan baris)
         $promoDetail = DB::table('sales_order_promo_item')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->select('sales_order_detail_id')
             ->distinct();
 
@@ -422,6 +440,7 @@ class ReportPenjualanController extends Controller
             ->whereNull('sid.deleted')
             ->whereNull('sid.flag_cancel')
             ->where('sid.qty', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sid.company_id', $company_id))
             ->groupBy('sid.invoice_id', 'sod.sales_order_id', 'sod.product_id', 'sod.unit')
             ->select([
                 'sid.invoice_id',
@@ -445,6 +464,7 @@ class ReportPenjualanController extends Controller
         // Total diskon baris faktur per faktur (pengganti SUM(inner_sid.discount))
         $invDiscount = DB::table('sales_invoice_detail')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('invoice_id')
             ->select([
                 'invoice_id',
@@ -454,6 +474,7 @@ class ReportPenjualanController extends Controller
         // Jumlah promo per SO + produk (pengganti subquery is_promo)
         $promoCount = DB::table('sales_order_promo as sp')
             ->join('product_promo_item_detail as ppid', 'ppid.product_promo_item', 'sp.promo')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sp.company_id', $company_id))
             ->groupBy('sp.sales_order_id', 'ppid.product')
             ->select([
                 'sp.sales_order_id',
@@ -475,6 +496,7 @@ class ReportPenjualanController extends Controller
             ->whereNull('inner_sid.deleted')
             ->whereNull('inner_sid.flag_cancel')
             ->where('inner_sid.qty', '>', 0)
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('inner_sid.company_id', $company_id))
             ->groupBy('inner_sid.invoice_id', 'inner_sod.product_id')
             ->select([
                 'inner_sid.invoice_id',
@@ -490,6 +512,7 @@ class ReportPenjualanController extends Controller
         // Nilai konversi satuan terbesar per produk (pengganti subquery MAX(level))
         $maxLevel = DB::table('product_uom')
             ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->groupBy('product')
             ->select([
                 'product',
@@ -502,6 +525,7 @@ class ReportPenjualanController extends Controller
                     ->on('mx.max_level', 'pu.level');
             })
             ->whereNull('pu.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('pu.company_id', $company_id))
             ->groupBy('pu.product')
             ->select([
                 'pu.product',
@@ -560,8 +584,9 @@ class ReportPenjualanController extends Controller
                 $j->on('g.sales_order_id', 'm.id');
             })
             ->join('product as p', 'p.id', 'g.product_id')
-            ->join('sales_invoice_header as sih', function ($q) {
-                return $q->on('sih.id', 'g.invoice_id')->whereNull('sih.deleted');
+            ->join('sales_invoice_header as sih', function ($q) use ($company_id) {
+                return $q->on('sih.id', 'g.invoice_id')->whereNull('sih.deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('sih.company_id', $company_id));
             })
             ->join('unit as u', 'u.id', 'g.unit')
             // pengganti subquery discount_amount
@@ -587,10 +612,11 @@ class ReportPenjualanController extends Controller
             ->leftJoin('region as kec', 'kec.id', 'c.kecamatan')
             ->leftJoin('region as kab', 'kab.id', 'c.kota')
             ->leftJoin('region as kel', 'kel.id', 'c.kelurahan')
-            ->leftJoin('daily_visit as dv', function ($q) {
+            ->leftJoin('daily_visit as dv', function ($q) use ($company_id) {
                 return $q->on('dv.date_visit', 'm.so_date')
                     ->on('dv.users', 'm.salesman')
-                    ->whereNull('dv.deleted');
+                    ->whereNull('dv.deleted')
+                    ->when($company_id !== null && $company_id !== '', fn ($qq) => $qq->where('dv.company_id', $company_id));
             })
             ->leftJoin('product_uom as pou', function ($q) {
                 $q->on('pou.product', 'g.product_id')
@@ -617,6 +643,7 @@ class ReportPenjualanController extends Controller
             ->leftJoin('unit as unit_terkecil', 'unit_terkecil.id', 'pou_terkecil.unit_tujuan')
             ->leftJoin('unit as unit_terbesar', 'unit_terbesar.id', 'pou.unit_tujuan')
             ->whereBetween('sih.invoice_date', [$date_start, $date_end])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
             ->where('m.total_amount', '>', 0)

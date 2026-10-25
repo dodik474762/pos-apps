@@ -481,20 +481,22 @@ class SalesPlanController extends Controller
         // die;
 
         $message = '';
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
-            $exist = DailyVisit::where('users', $salesman)->where('date_visit', $today->format('Y-m-d'))->first();
+            $exist = DailyVisit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('users', $salesman)->where('date_visit', $today->format('Y-m-d'))->first();
             $daily = empty($exist) ? new DailyVisit() : $exist;
             $daily->users = $salesman;
             $daily->date_visit = $today->format('Y-m-d');
             $daily->total_visit = count($datadb);
             $daily->cicle_type = count($datadb) > 0 ? $datadb[0]->visit_circle_code : '-';
             $daily->status = 'draft';
+            setCompanyId($daily, $company_id);
             $daily->save();
             $dailyId = $daily->id;
 
             if (!empty($datadb)) {
-                DailyVisitCustomer::where('daily_visit', $dailyId)->delete();
+                DailyVisitCustomer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('daily_visit', $dailyId)->delete();
                 foreach ($datadb as $key => $value) {
                     $dailyDtl = new DailyVisitCustomer();
                     $dailyDtl->daily_visit = $dailyId;
@@ -502,6 +504,7 @@ class SalesPlanController extends Controller
                     $dailyDtl->cicle_type = $value->visit_circle_code;
                     $dailyDtl->type_route = $value->pjp_status;
                     $dailyDtl->status = $value->category;
+                    setCompanyId($dailyDtl, $company_id);
                     $dailyDtl->save();
                 }
             }

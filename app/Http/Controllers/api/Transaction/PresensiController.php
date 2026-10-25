@@ -24,9 +24,11 @@ class PresensiController extends Controller
         $data = $request->all();
         $date = date('Y-m-d');
         $result['is_valid'] = true;
+        $company_id = Users::where('id', $data['users'])->value('company_id');
         $datadb = Presence::where('presence.creator', $data['users'])
             ->select(['presence.*', 'kry.nik'])
             ->join('karyawan as kry', 'kry.id', 'presence.karyawan')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('presence.company_id', $company_id))
             ->whereNull('presence.deleted')
             ->where('presence.presence_date', '=', $date)
             ->get()->toArray();
@@ -41,6 +43,7 @@ class PresensiController extends Controller
         // Contoh ambil satu field dari JSON
         $presensiDate = $data['presensi_date'] ?? null;
         $userId = $data['user_id'] ?? null;
+        $company_id = Users::where('id', $userId)->value('company_id');
         // 1. Parse ISO 8601 string langsung
         $periode = Carbon::parse($presensiDate)->setTimezone('Asia/Jakarta');
 
@@ -63,6 +66,7 @@ class PresensiController extends Controller
             }
 
             $checkSudahAbsen = Presence::where('creator', $userId)
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->where('presence_date', $periode_date)
                 ->whereNull('deleted')
                 ->first();
@@ -74,6 +78,7 @@ class PresensiController extends Controller
 
             if (empty($checkSudahAbsen)) {
                 $karyawan = Users::where('users.id', $userId)
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('users.company_id', $company_id))
                     ->select(['users.*', 'k.id as id_karyawan'])
                     ->join('karyawan as k', 'k.nik', 'users.nik')
                     ->first();
@@ -84,7 +89,7 @@ class PresensiController extends Controller
                 }
 
                 $absen = new Presence();
-                $absen->code = generateCodePresence();
+                $absen->code = generateCodePresence($company_id);
                 $absen->creator = $userId;
                 $absen->presence_date = $periode_date;
                 $absen->karyawan = $karyawan->id_karyawan;
@@ -94,6 +99,7 @@ class PresensiController extends Controller
                 $absen->longitude = $data['longitude'];
                 $absen->files = isset($fileName) ? $fileName : null;
                 $absen->path_files = isset($dbpathlamp) ? $dbpathlamp : null;
+                setCompanyId($absen, $company_id);
                 $absen->save();
             } else {
                 $date1 = Carbon::parse($checkSudahAbsen->start_date);
@@ -108,6 +114,7 @@ class PresensiController extends Controller
                 $absen->path_files_after = isset($dbpathlamp) ? $dbpathlamp : $absen->path_files_after;
                 $absen->latitude_after = $data['latitude'];
                 $absen->longitude_after = $data['longitude'];
+                setCompanyId($absen, $company_id);
                 $absen->save();
             }
 
@@ -142,6 +149,7 @@ class PresensiController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -149,6 +157,7 @@ class PresensiController extends Controller
             ])
             ->join('karyawan as k', 'k.id', 'm.karyawan')
             ->whereNull('m.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereBetween('m.presence_date', [$request['date_start'], $request['date_end']]);
         $akses = strtolower(session('akses'));
         $allowed = ['superadmin', 'admin pga', 'bod/boc', 'operational manager', 'supervisor sales', 'admin supervisor'];
@@ -263,7 +272,8 @@ class PresensiController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = Presence::find($data['id']);
+            $company_id = session('id_company');
+            $menu = Presence::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -290,6 +300,7 @@ class PresensiController extends Controller
         $result['is_valid'] = false;
         $post['presenceDate'] = $data['presence_date'];
         $post['users'] = session('user_id');
+        $company_id = session('id_company');
 
         $periode = date('Y-m-d');
         DB::beginTransaction();
@@ -328,6 +339,7 @@ class PresensiController extends Controller
             $dbpathlamp = '/' . $dir . '/';
 
             $checkSudahAbsen = Presence::where('creator', $post['users'])
+                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
                 ->where('presence_date', $periode)
                 ->whereNull('deleted')
                 ->first();
@@ -336,12 +348,13 @@ class PresensiController extends Controller
 
             if (empty($checkSudahAbsen)) {
                 $karyawan = Users::where('users.id', $post['users'])
+                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('users.company_id', $company_id))
                     ->select(['users.*', 'k.id as id_karyawan'])
                     ->join('karyawan as k', 'k.nik', 'users.nik')
                     ->first();
 
                 $absen = new Presence();
-                $absen->code = generateCodePresence();
+                $absen->code = generateCodePresence($company_id);
                 $absen->creator = $post['users'];
                 $absen->presence_date = $periode;
                 $absen->karyawan = $karyawan->id_karyawan;
@@ -351,6 +364,7 @@ class PresensiController extends Controller
                 $absen->longitude = $post['longitude'];
                 $absen->files = isset($fileName) ? $fileName : null;
                 $absen->path_files = isset($dbpathlamp) ? $dbpathlamp : null;
+                setCompanyId($absen, $company_id);
                 $absen->save();
             } else {
                 $date1 = Carbon::parse($checkSudahAbsen->start_date);
@@ -366,6 +380,7 @@ class PresensiController extends Controller
                 $absen->path_files_after = isset($dbpathlamp) ? $dbpathlamp : $absen->path_files_after;
                 $absen->latitude_after = $post['latitude'];
                 $absen->longitude_after = $post['longitude'];
+                setCompanyId($absen, $company_id);
                 $absen->save();
             }
             DB::commit();

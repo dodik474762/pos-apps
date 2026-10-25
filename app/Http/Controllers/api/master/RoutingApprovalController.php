@@ -20,6 +20,7 @@ class RoutingApprovalController extends Controller
 
     public function getData(){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -32,6 +33,7 @@ class RoutingApprovalController extends Controller
         ->join('menu as mm', 'mm.id', 'm.menu')
         ->leftJoin('dictionary as d', 'd.term_id', 'm.group')
         ->whereNull('m.deleted')
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
         ->orderBy('m.id', 'desc');
         if(isset($_POST)){
             $data['recordsTotal'] = $datadb->get()->count();
@@ -66,25 +68,27 @@ class RoutingApprovalController extends Controller
     public function submit(Request $request){
         $data = $request->all();
         $result['is_valid'] = false;
+        $company_id = session('id_company');
         DB::beginTransaction();
         try {
             //code...
             $company = CompanyModel::where('type', 'HO')->whereNull('deleted')->first();
 
             $aksesData = Roles::where('group', session('akses'))->first();
-            $roles = $data['id'] == '' ? new RoutingHeader() : RoutingHeader::find($data['id']);
+            $roles = $data['id'] == '' ? new RoutingHeader() : RoutingHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->user_group = $aksesData->id;
             $roles->company = $company->id;
             $roles->menu = $data['menu'];
             $roles->group = $data['group'];
             $roles->remarks = $data['remarks'];
+            setCompanyId($roles, $company_id);
             $roles->save();
             $headerId = $roles->id;
 
             foreach ($data['routing'] as $key => $value) {
                 if ($value['remove'] != '1') {
                     list($users, $usersName) = explode('//', $value['users']);
-                    $items = $value['id'] == '' ? new RoutingPermission() : RoutingPermission::find($value['id']);
+                    $items = $value['id'] == '' ? new RoutingPermission() : RoutingPermission::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
                     $items->routing_header = $headerId;
                     $items->menu = $data['menu'];
                     $items->group = $data['group'];
@@ -92,10 +96,11 @@ class RoutingApprovalController extends Controller
                     $items->state = $value['routing'];
                     $items->users = $users;
                     $items->is_active = 1;
+                    setCompanyId($items, $company_id);
                     $items->save();
                 } else {
                     if ($value['id'] != '') {
-                        RoutingPermission::where('id', $value['id'])->delete();
+                        RoutingPermission::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                     }
                 }
             }
@@ -104,15 +109,16 @@ class RoutingApprovalController extends Controller
                 if ($value['remove'] != '1') {
                     if($value['users'] != ''){
                         list($users, $usersName) = explode('//', $value['users']);
-                        $items = $value['id'] == '' ? new RoutingReminder() : RoutingReminder::find($value['id']);
+                        $items = $value['id'] == '' ? new RoutingReminder() : RoutingReminder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
                         $items->routing_header = $headerId;
                         $items->menu = $data['menu'];
                         $items->users = $users;
+                        setCompanyId($items, $company_id);
                         $items->save();
                     }
                 } else {
                     if ($value['id'] != '') {
-                        RoutingReminder::where('id', $value['id'])->delete();
+                        RoutingReminder::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                     }
                 }
             }
@@ -133,7 +139,8 @@ class RoutingApprovalController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $menu = RoutingHeader::find($data['id']);
+            $company_id = session('id_company');
+            $menu = RoutingHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -149,10 +156,13 @@ class RoutingApprovalController extends Controller
 
     public function getDetailData($id){
         DB::enableQueryLog();
+        $company_id = session('id_company');
         $datadb = DB::table($this->getTableName().' as m')
         ->select([
             'm.*',
-        ])->where('m.id', $id);
+        ])
+        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+        ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
