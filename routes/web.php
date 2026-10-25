@@ -65,6 +65,7 @@ use App\Http\Controllers\api\monitoring\ClosingPeriodController as ApiClosingPer
 use App\Http\Controllers\api\report\GeneralLedgerController as ReportGeneralLedgerController;
 use App\Http\Controllers\api\report\TrialBalanceController as ReportTrialBalanceController;
 use App\Http\Controllers\web\auth\LoginController;
+use App\Http\Controllers\web\LandingPageController;
 use App\Http\Controllers\web\ClosingPeriodController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\master\BranchController;
@@ -136,6 +137,10 @@ Route::get('/', [LoginController::class, 'index']);
 Route::post('/user/signIn', [LoginController::class, 'signIn']);
 Route::get('/user/signOut', [LoginController::class, 'signOut']);
 Route::post('api_mobile/auth/login', [LoginController::class, 'signInApps']);
+
+Route::get('/landing', [LandingPageController::class, 'index'])->name('landing');
+Route::get('/landing/kebijakan-privasi', [LandingPageController::class, 'privacy'])->name('landing.privacy');
+Route::get('/landing/syarat-layanan', [LandingPageController::class, 'terms'])->name('landing.terms');
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
 
