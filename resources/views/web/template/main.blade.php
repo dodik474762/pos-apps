@@ -105,6 +105,9 @@
             <div class="page-content">
                 <div class="container-fluid">
 
+                    @include('web.billing.impersonation')
+                    @include('web.billing.banner')
+
                     {!! $view_file !!}
 
                 </div>

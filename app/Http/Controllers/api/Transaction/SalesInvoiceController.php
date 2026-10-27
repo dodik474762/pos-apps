@@ -568,6 +568,17 @@ class SalesInvoiceController extends Controller
         // print_r($data);
         // die;
 
+        if (($data['id'] ?? '') === '' && config('billing.enforcement.quota', false)) {
+            try {
+                app(\App\Services\Billing\QuotaService::class)->assertCanAdd('invoices_per_month', $company_id ? (int) $company_id : null);
+            } catch (\App\Services\Billing\QuotaExceededException $e) {
+                $result['message'] = $e->getMessage();
+                $result['upgrade_url'] = route('billing.subscription.plans');
+
+                return response()->json($result);
+            }
+        }
+
         DB::beginTransaction();
         try {
 

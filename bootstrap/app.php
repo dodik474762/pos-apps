@@ -11,6 +11,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'billing.active' => \App\Http\Middleware\EnsureActiveSubscription::class,
+            'billing.feature' => \App\Http\Middleware\EnsureFeature::class,
+            'billing.superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleImpersonation::class,
+            \App\Http\Middleware\EnsureActiveSubscription::class,
+        ]);
+
         // Tambahkan rute API publik Anda yang dikecualikan di sini
         $middleware->validateCsrfTokens(except: [
             'api_mobile/master/product/getDataProductMobile',
@@ -38,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_mobile/transaksi/packing_list/confirmDeliver',
             'api_mobile/transaksi/packing_list_pr/getData',
             'api_mobile/transaksi/packing_list_pr/confirmDeliver',
+            'billing/webhook/*',
             // Tambahkan URI webhook atau callback eksternal lainnya di sini
         ]);
     })

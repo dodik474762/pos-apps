@@ -74,14 +74,26 @@ class UsersController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
-        $company_id = session('id_company');
+        list($nik, $name) = explode('//', $data['nik']);
+        $karyawan = Karyawan::where('nik', trim($nik))
+            // ->where('company', $company_id)
+            ->first();
+        $company_id = $karyawan->company;
+
+        if (($data['id'] ?? '') === '' && config('billing.enforcement.quota', false)) {
+            try {
+                app(\App\Services\Billing\QuotaService::class)->assertCanAdd('users', $company_id ? (int) $company_id : null);
+            } catch (\App\Services\Billing\QuotaExceededException $e) {
+                $result['message'] = $e->getMessage();
+                $result['upgrade_url'] = route('billing.subscription.plans');
+
+                return response()->json($result);
+            }
+        }
+
         DB::beginTransaction();
         try {
-            //code...
-            list($nik, $name) = explode('//', $data['nik']);
-            $karyawan = Karyawan::where('nik', trim($nik))
-                ->where('company', $company_id)
-                ->first();
+            //code...         
             $roles = $data['id'] == '' ? new Users() : Users::find($data['id']);
             $roles->user_group = $data['roles'];
             $roles->username = $data['username'];
@@ -99,7 +111,7 @@ class UsersController extends Controller
             ]);
             $token = JWTAuth::fromUser($user);
 
-            Users::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('nik')->delete();
+            Users::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('nik')->delete();
 
             DB::commit();
             $result['is_valid'] = true;
@@ -119,7 +131,7 @@ class UsersController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            $menu = Users::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = Users::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -141,7 +153,7 @@ class UsersController extends Controller
             ->select([
                 'm.*',
             ])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();

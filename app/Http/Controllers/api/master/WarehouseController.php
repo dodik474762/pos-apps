@@ -60,6 +60,19 @@ class WarehouseController extends Controller
     {
         $data = $request->all();
         $result['is_valid'] = false;
+
+        if (($data['id'] ?? '') === '' && config('billing.enforcement.quota', false)) {
+            try {
+                $companyId = session('id_company');
+                app(\App\Services\Billing\QuotaService::class)->assertCanAdd('warehouses', $companyId ? (int) $companyId : null);
+            } catch (\App\Services\Billing\QuotaExceededException $e) {
+                $result['message'] = $e->getMessage();
+                $result['upgrade_url'] = route('billing.subscription.plans');
+
+                return response()->json($result);
+            }
+        }
+
         DB::beginTransaction();
         try {
             //code...

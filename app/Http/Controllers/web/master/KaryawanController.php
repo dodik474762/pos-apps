@@ -83,7 +83,7 @@ class KaryawanController extends Controller
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['data_company'] = CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->where('id', session('id_company'))->get()->toArray();
+        $data['data_company'] = strtolower(session('akses')) == 'superadmin' ?  CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->get()->toArray() : CompanyModel::whereNull('deleted')->where('status', 'APPROVED')->where('id', session('id_company'))->get()->toArray();
         $data['groups'] = Dictionary::where('context', 'GROUP')->whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');

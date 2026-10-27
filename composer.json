@@ -40,6 +40,7 @@
             "app/Helper/RoutingPermission.php",
             "app/Helper/Logger.php",
             "app/Helper/ArrayGroup.php",
+            "app/Helper/Billing.php",
             "app/Helper/Uploader.php"
         ]
     },

@@ -387,6 +387,26 @@ class TemplateMenuController extends Controller
                 ],
             ],
             [
+                'key' => 'billing',
+                'label' => 'Langganan',
+                'icon' => 'ri-bank-card-line',
+                'children' => [
+                    ['menu' => 'billing/subscription'],
+                    ['menu' => 'billing/invoices'],
+                ],
+            ],
+            [
+                'key' => 'superadmin-billing',
+                'label' => 'Super Admin Billing',
+                'icon' => 'ri-shield-star-line',
+                'children' => [
+                    ['menu' => 'admin/billing/subscriptions'],
+                    ['menu' => 'admin/billing/plans'],
+                    ['menu' => 'admin/billing/invoices'],
+                    ['menu' => 'admin/billing/webhooks'],
+                ],
+            ],
+            [
                 'key' => 'settings',
                 'label' => 'Settings',
                 'icon' => 'ri-settings-3-line',

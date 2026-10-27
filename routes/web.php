@@ -131,6 +131,12 @@ use App\Http\Controllers\web\report\TrialBalanceController;
 use App\Http\Controllers\web\Transaction\ApSubledgerController;
 use App\Http\Controllers\web\Transaction\ClosingStockController;
 use App\Http\Controllers\web\Transaction\TerimaUangController;
+use App\Http\Controllers\web\billing\SubscriptionController as BillingSubscriptionController;
+use App\Http\Controllers\web\billing\admin\SubscriptionController as BillingAdminSubscriptionController;
+use App\Http\Controllers\web\billing\admin\PlanController as BillingAdminPlanController;
+use App\Http\Controllers\web\billing\admin\InvoiceController as BillingAdminInvoiceController;
+use App\Http\Controllers\web\billing\admin\WebhookController as BillingAdminWebhookController;
+use App\Http\Controllers\api\billing\WebhookController as BillingWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'index']);
@@ -882,3 +888,37 @@ Route::post('api/report/general-ledger/getAccountList', [ReportGeneralLedgerCont
 Route::post('api/report/general-ledger/getPeriodList', [ReportGeneralLedgerController::class, 'getPeriodList']);
 Route::post('api/report/trial-balance/getData', [ReportTrialBalanceController::class, 'getData']);
 Route::post('api/report/trial-balance/getPeriodList', [ReportTrialBalanceController::class, 'getPeriodList']);
+
+/* Billing & Subscription */
+Route::get('billing/subscription', [BillingSubscriptionController::class, 'index'])->name('billing.subscription.index');
+Route::get('billing/subscription/plans', [BillingSubscriptionController::class, 'plans'])->name('billing.subscription.plans');
+Route::post('billing/subscription/choose-plan', [BillingSubscriptionController::class, 'choosePlan'])->name('billing.subscription.choose');
+Route::post('billing/subscription/cancel', [BillingSubscriptionController::class, 'cancel'])->name('billing.subscription.cancel');
+Route::get('billing/invoices', [BillingSubscriptionController::class, 'invoices'])->name('billing.invoices.index');
+Route::get('billing/invoices/{id}', [BillingSubscriptionController::class, 'invoiceShow'])->name('billing.invoices.show');
+Route::post('billing/invoices/{id}/pay', [BillingSubscriptionController::class, 'invoicePay'])->name('billing.invoices.pay');
+
+Route::post('billing/webhook/{gateway}', [BillingWebhookController::class, 'handle'])->middleware('throttle:60,1')->name('billing.webhook');
+
+Route::prefix('admin/billing')->middleware('billing.superadmin')->group(function () {
+    Route::get('subscriptions', [BillingAdminSubscriptionController::class, 'index'])->name('admin.billing.subscriptions.index');
+    Route::get('subscriptions/{companyId}', [BillingAdminSubscriptionController::class, 'show'])->name('admin.billing.subscriptions.show');
+    Route::post('subscriptions/{companyId}/extend', [BillingAdminSubscriptionController::class, 'extend'])->name('admin.billing.subscriptions.extend');
+    Route::post('subscriptions/{companyId}/suspend', [BillingAdminSubscriptionController::class, 'suspend'])->name('admin.billing.subscriptions.suspend');
+    Route::post('subscriptions/{companyId}/activate', [BillingAdminSubscriptionController::class, 'activate'])->name('admin.billing.subscriptions.activate');
+    Route::post('subscriptions/{companyId}/change-plan', [BillingAdminSubscriptionController::class, 'changePlan'])->name('admin.billing.subscriptions.change-plan');
+    Route::post('subscriptions/{companyId}/impersonate', [BillingAdminSubscriptionController::class, 'impersonate'])->name('admin.billing.subscriptions.impersonate');
+    Route::post('impersonate/stop', [BillingAdminSubscriptionController::class, 'stopImpersonate'])->name('admin.billing.impersonate.stop');
+
+    Route::get('plans', [BillingAdminPlanController::class, 'index'])->name('admin.billing.plans.index');
+    Route::get('plans/add', [BillingAdminPlanController::class, 'add'])->name('admin.billing.plans.add');
+    Route::get('plans/{id}/edit', [BillingAdminPlanController::class, 'edit'])->name('admin.billing.plans.edit');
+    Route::post('plans/submit', [BillingAdminPlanController::class, 'submit'])->name('admin.billing.plans.submit');
+
+    Route::get('invoices', [BillingAdminInvoiceController::class, 'index'])->name('admin.billing.invoices.index');
+    Route::post('invoices/{id}/mark-paid', [BillingAdminInvoiceController::class, 'markPaid'])->name('admin.billing.invoices.mark-paid');
+
+    Route::get('webhooks', [BillingAdminWebhookController::class, 'index'])->name('admin.billing.webhooks.index');
+    Route::get('webhooks/{id}', [BillingAdminWebhookController::class, 'show'])->name('admin.billing.webhooks.show');
+    Route::post('webhooks/{id}/replay', [BillingAdminWebhookController::class, 'replay'])->name('admin.billing.webhooks.replay');
+});

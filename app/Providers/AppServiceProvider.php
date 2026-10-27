@@ -17,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Models\Master\CompanyModel::observe(\App\Observers\CompanySubscriptionObserver::class);
+
         Gate::define('viewPulse', function ($user = null) {
             // sesuaikan dengan data session login Anda
             return in_array(session('username'), ['administrator'])

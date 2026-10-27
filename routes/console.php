@@ -9,3 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('telescope:prune --hours=48')->daily();
+
+Schedule::command('billing:daily')
+    ->dailyAt('01:00')
+    ->timezone(config('billing.timezone', 'Asia/Jakarta'))
+    ->withoutOverlapping();
