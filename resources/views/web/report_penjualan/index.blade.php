@@ -153,6 +153,7 @@
                                                     <th>KABUPATEN/KOTA</th>
                                                     <th>KELURAHAN</th>
                                                     <th>ALAMAT</th>
+                                                    <th>PASAR</th>
                                                     <th>CHANNEL</th>
                                                     <th>KODE SALESMAN</th>
                                                     <th>NAMA SALESMAN</th>

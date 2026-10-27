@@ -355,6 +355,13 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "nama_pasar",
+                    title: "NAMA PASAR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
                     data: "channel_outlet",
                     title: "CHANNEL",
                     className: "text-end",
