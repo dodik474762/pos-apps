@@ -260,7 +260,7 @@
                 <br><br><br>
                 <strong>Disetujui Oleh</strong>
                 <br><br><br>
-                (AYU RIFZKITA)
+                ({{ $bod->nama_lengkap ?? '-' }})
                 <br />
                 BOD
             </td>

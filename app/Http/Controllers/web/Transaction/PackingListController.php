@@ -545,9 +545,18 @@ class PackingListController extends Controller
 
         $productSatuan = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', '1')->get()->toArray();
 
+        $bod = DB::table('users as u')
+            ->join('karyawan as k', 'k.nik', 'u.nik')
+            ->join('users_group as ug', 'ug.id', 'u.user_group')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('k.company', $company_id))
+            ->where('ug.group', 'BOD')
+            ->whereNull('u.deleted')
+            ->select(['k.nama_lengkap', 'k.nik'])
+            ->first();
+
         // Kalkulasi total, subtotal, dsb bisa disiapkan di sini
 
-        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem'))
+        $pdf = Pdf::loadView('web.packing_list.print.po-print', compact('data', 'company', 'qr', 'details', 'packingListDetail', 'grouped', 'groupedItem', 'bod'))
             ->setOption('isPhpEnabled', true)
             // ->setPaper([0, 0, 684, 792]);
             ->setPaper('a4', 'portrait');
