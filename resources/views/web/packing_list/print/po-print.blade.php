@@ -200,12 +200,22 @@
         </tbody>
 
         <tfoot>
+            @php
+                $totalOutstanding = 0;
+                foreach ($details as $d) {
+                    $totalOutstanding += ($d->total_amount ?? 0) - ($d->amount_paid ?? 0);
+                }
+            @endphp
             <tr>
-                <td colspan="10" class="text-right"><strong>Total DO</strong></td>
-                <td class="text-right" colspan="2">
+                <td colspan="5">&nbsp;</td>
+                <td class="text-right" colspan="3"><strong>Total Rp</strong></td>
+                <td class="text-right">
+                    <strong>{{ number_format($totalOutstanding, 0, ',', '.') }}</strong>
+                </td>
+                <td class="text-right" colspan="3"><strong>Total DO</strong></td>
+                <td class="text-right">
                     <strong>{{ number_format(count($details), 0, ',', '.') }} Customer</strong>
                 </td>
-                <td>&nbsp;</td>
             </tr>
         </tfoot>
     </table>
