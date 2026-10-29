@@ -251,7 +251,8 @@ class ReportPenjualanController extends Controller
                 'sr_data.return_unit_price',
                 'sr_data.return_date',
                 'sr_data.qty_return_formatted',
-                'ps.nama_pasar'
+                'ps.nama_pasar',
+                'p.model_number'
             ])
             ->distinct()
             ->join('customer as c', 'c.id', 'm.customer_id')
@@ -333,6 +334,7 @@ class ReportPenjualanController extends Controller
                         ->orWhere('kec.name', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('kab.name', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('kel.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.model_number', 'LIKE', '%' . $keyword . '%')
                         ->orWhere('ps.nama_pasar', 'LIKE', '%' . $keyword . '%');
                 });
             }

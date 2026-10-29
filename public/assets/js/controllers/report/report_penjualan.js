@@ -276,6 +276,13 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "model_number",
+                    title: "KODE PRODUK PRINCIPAL",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
                     data: "product_name",
                     title: "NAMA PRODUK",
                     render: function (data, type, row) {

@@ -143,6 +143,7 @@
                                                     <th>VENDOR</th>
                                                     <th>KODE PRODUK</th>
                                                     <th>NAMA PRODUK</th>
+                                                    <th>KODE PRODUK PRINCIPAL</th>
                                                     <th>KATEGORI</th>
                                                     <th>BRAND</th>
                                                     <th>SUB BRAND</th>
