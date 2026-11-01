@@ -26,6 +26,10 @@ class ReportPembayaranController extends Controller
         $date_start = $_POST['date_start'] ?? date('Y-m-01');
         $date_end = $_POST['date_end'] ?? date('Y-m-d');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -208,6 +212,7 @@ class ReportPembayaranController extends Controller
         }
         $data['data'] = $resultdb;
         $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
+        $data['session'] = $principal;
 
         $query = DB::getQueryLog();
         return json_encode($data);

@@ -124,7 +124,7 @@ class LoginController extends Controller
             Session::put('akses', $userdata->akses);
             Session::put('nik', $userdata->nik);
             Session::put('id_company', $userdata->company ?? '');
-            Session::put('vendor_id', $userdata->company ?? '');
+            Session::put('vendor_id', $userdata->vendor_id ?? '');
             Session::put('area_kerja', $userdata->nama_company ?? '');
             Session::put('id_karyawan', $userdata->id_karyawan ?? '0');
             Session::put('akses_menu', json_encode($result_akses));
