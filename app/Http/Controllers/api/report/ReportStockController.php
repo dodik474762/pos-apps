@@ -24,6 +24,7 @@ class ReportStockController extends Controller
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
         $company_id = session('id_company');
+        $principal = $_POST['principal'] ?? '';
         // Filter tenant untuk subquery raw SQL. company_id selalu integer dari
         // session, jadi aman di-casting ke int sebelum disisipkan ke string query.
         $companyFilter = ($company_id !== null && $company_id !== '')
@@ -189,6 +190,9 @@ class ReportStockController extends Controller
             // ->whereRaw('CAST(m.created_at as date) > ? ', ['2026-07-31'])
             ->where('m.id', '>', '18013')
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereIn('m.product', function ($sub) use ($principal) {
+                $sub->select('id')->from('product')->where('vendor', $principal);
+            }))
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -285,6 +289,7 @@ class ReportStockController extends Controller
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
         $company_id = session('id_company');
+        $principal = $_POST['principal'] ?? '';
 
         $datadb = ProductStockMove::from('product_stock_move as m')
             ->select([
@@ -359,6 +364,9 @@ class ReportStockController extends Controller
             })
             // ->whereDate('m.created_at', '<=', $tanggal)
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereIn('m.product', function ($sub) use ($principal) {
+                $sub->select('id')->from('product')->where('vendor', $principal);
+            }))
             ->groupBy(
                 'm.product',
                 'm.warehouse',
@@ -878,6 +886,7 @@ class ReportStockController extends Controller
         $tanggalMulai = '2026-07-31 23:59:59';
         $tanggalAkhir = $tanggal . ' 23:59:59';
         $company_id = session('id_company');
+        $principal = $_POST['principal'] ?? '';
         // Filter tenant untuk subquery raw SQL (harga & harga historis).
         // Tiap scope punya filter sendiri karena aliasnya berbeda.
         $pupCompanyFilter = ($company_id !== null && $company_id !== '')
@@ -898,6 +907,9 @@ class ReportStockController extends Controller
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereIn('m.product', function ($sub) use ($principal) {
+                $sub->select('id')->from('product')->where('vendor', $principal);
+            }))
             ->select(DB::raw('COUNT(DISTINCT m.product, m.warehouse) as aggregate'))
             ->value('aggregate') ?? 0;
 
@@ -911,7 +923,10 @@ class ReportStockController extends Controller
             ->where('m.created_at', '>', $tanggalMulai)
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereIn('m.product', function ($sub) use ($principal) {
+                $sub->select('id')->from('product')->where('vendor', $principal);
+            }));
 
         if (isset($_POST['search']['value']) && $_POST['search']['value'] !== '') {
             $keyword = $_POST['search']['value'];
@@ -1014,6 +1029,9 @@ class ReportStockController extends Controller
             ->where('m.created_at', '<=', $tanggalAkhir)
             ->where('m.id', '>', '18013')
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereIn('m.product', function ($sub) use ($principal) {
+                $sub->select('id')->from('product')->where('vendor', $principal);
+            }))
             // ->where('p.id', '1372')
             ->groupBy(
                 'm.product',

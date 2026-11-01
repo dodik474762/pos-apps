@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\web\report;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Vendor;
 use Illuminate\Http\Request;
 
 class ReportStockController extends Controller
@@ -45,6 +46,10 @@ class ReportStockController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->orderBy('nama_vendor')
+            ->get(['id', 'nama_vendor']);
         $view = view('web.report_stock.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();

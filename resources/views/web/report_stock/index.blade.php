@@ -47,6 +47,16 @@
                                             placeholder="Select date">
                                     </div>
                                 </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <select class="form-control select2" id="filter-principal">
+                                            <option value="">Semua Principal</option>
+                                            @foreach ($vendors as $vendor)
+                                                <option value="{{ $vendor->id }}">{{ $vendor->nama_vendor }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                                     <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <select name="select-option-report" id="select-option-report" class="form-control">
