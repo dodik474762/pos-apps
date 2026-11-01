@@ -358,6 +358,7 @@ class TemplateMenuController extends Controller
                     ['menu' => 'report/report_piutang'],
                     ['menu' => 'report/customer'],
                     ['menu' => 'report/delivery'],
+                    ['menu' => 'report/report_delivery'],
                     ['menu' => 'report/item-received'],
                     ['menu' => 'report/report_stock'],
                     ['menu' => 'report/report_visit'],
