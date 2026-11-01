@@ -83,7 +83,8 @@ class LoginController extends Controller
                 'kry.nama_lengkap',
                 'kry.group as group_karyawan',
                 'dic.keterangan as group_karyawan_name',
-                'kry.id as id_karyawan'
+                'kry.id as id_karyawan',
+                'kry.vendor as vendor_id'
             ])
             ->join('karyawan as kry', 'kry.nik', 'usr.nik')
             ->join('company as ut', 'ut.id', 'kry.company')
@@ -123,6 +124,7 @@ class LoginController extends Controller
             Session::put('akses', $userdata->akses);
             Session::put('nik', $userdata->nik);
             Session::put('id_company', $userdata->company ?? '');
+            Session::put('vendor_id', $userdata->company ?? '');
             Session::put('area_kerja', $userdata->nama_company ?? '');
             Session::put('id_karyawan', $userdata->id_karyawan ?? '0');
             Session::put('akses_menu', json_encode($result_akses));
@@ -196,8 +198,8 @@ class LoginController extends Controller
 
             /*open mobile session */
             $mobile_session = MobileSession::where('users', $userdata->id)
-            ->where('date_process', date('Y-m-d'))
-            ->first();
+                ->where('date_process', date('Y-m-d'))
+                ->first();
 
             if (empty($mobile_session)) {
                 $mobile_session = new MobileSession();
@@ -336,6 +338,7 @@ class LoginController extends Controller
         session('company', '');
         session('id_company', '');
         session('id_karyawan', '');
+        session('vendor_id', '');
         Session::flush();
         return redirect('/')->with('success', 'Berhasil Keluar');
     }
