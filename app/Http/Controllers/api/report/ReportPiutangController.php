@@ -26,6 +26,10 @@ class ReportPiutangController extends Controller
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end = $_POST['date_end'] ?? date('Y-m-d');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
