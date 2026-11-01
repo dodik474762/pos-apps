@@ -223,6 +223,7 @@ let ReportVisit = {
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val();
                     d.tanggal_end = $("#filter-tanggal-end").val();
+                    d.salesman = $("#filter-salesman").val();
                 },
             },
             deferRender: true,
@@ -1125,6 +1126,7 @@ let ReportVisit = {
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val();
                     d.tanggal_end = $("#filter-tanggal-end").val();
+                    d.salesman = $("#filter-salesman").val();
                 },
             },
             deferRender: true,

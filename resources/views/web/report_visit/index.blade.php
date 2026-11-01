@@ -51,6 +51,16 @@
                                             value="{{ date('Y-m-d') }}" placeholder="Select date">
                                     </div>
                                 </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <select class="form-control select2" id="filter-salesman">
+                                            <option value="">Semua Salesman</option>
+                                            @foreach ($salesmans as $salesman)
+                                                <option value="{{ $salesman->id }}">{{ $salesman->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"

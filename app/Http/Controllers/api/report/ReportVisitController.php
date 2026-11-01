@@ -22,6 +22,7 @@ class ReportVisitController extends Controller
         $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
         $company_id  = session('id_company');
+        $salesman    = $_POST['salesman'] ?? '';
         $companyFilter = ($company_id !== null && $company_id !== '') ? ' AND prev.company_id = ' . (int) $company_id : '';
 
         // Presence: 1 baris per salesman per hari
@@ -82,7 +83,8 @@ class ReportVisitController extends Controller
             ->whereDate('m.so_date', '>=', $tanggal)
             ->whereDate('m.so_date', '<=', $tanggal_end)
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when($salesman !== '', fn ($q) => $q->where('m.salesman', $salesman));
         // ->where('c.code', 'CUST09260056'); // hapus baris ini jika hanya untuk testing
 
         // Total (tanpa search)
@@ -161,6 +163,7 @@ class ReportVisitController extends Controller
         $tanggal     = $_POST['tanggal'] ?? date('Y-m-d');
         $tanggal_end = $_POST['tanggal_end'] ?? date('Y-m-d');
         $company_id  = session('id_company');
+        $salesman    = $_POST['salesman'] ?? '';
         $companyFilter = ($company_id !== null && $company_id !== '') ? ' AND dvd.company_id = ' . (int) $company_id : '';
 
         // Presence: 1 baris per salesman per hari (absen paling awal)
@@ -245,6 +248,7 @@ class ReportVisitController extends Controller
             ->whereDate('m.so_date', '<=', $tanggal_end)
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->whereNull('m.deleted')
+            ->when($salesman !== '', fn ($q) => $q->where('m.salesman', $salesman))
             ->groupBy('m.salesman', 'usr.name', 'k.nama_lengkap', 'm.so_date', 'pr.start_date', 'dv.total_visit', 'dv.id');
 
         // Total (tanpa search)

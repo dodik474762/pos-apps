@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\web\report;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Users;
 use Illuminate\Http\Request;
 
 class ReportVisitController extends Controller
@@ -43,6 +44,15 @@ class ReportVisitController extends Controller
         return "Report Summary Kunjungan";
     }
 
+    private function getSalesmans()
+    {
+        return Users::whereNull('deleted')
+            ->whereIn('user_group', [6, 4])
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     public function index(Request $request)
     {
         $data = $request->all();
@@ -50,6 +60,7 @@ class ReportVisitController extends Controller
         $data['title'] = $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['salesmans'] = $this->getSalesmans();
         $view = view('web.report_visit.index', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = $this->getTitle();
@@ -66,6 +77,7 @@ class ReportVisitController extends Controller
         $data['title'] = $this->getTitleSummary();
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
+        $data['salesmans'] = $this->getSalesmans();
         $view = view('web.report_visit.summary_visit', $data);
         $put['title_content'] = $this->getTitleSummary();
         $put['title_top'] = $this->getTitleSummary();
