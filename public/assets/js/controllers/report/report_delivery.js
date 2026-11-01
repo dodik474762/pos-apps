@@ -215,6 +215,17 @@ let ReportDelivery = {
                         return data ?? "-";
                     },
                 },
+                {
+                    data: "photo_path",
+                    title: "Eviden Kiriman",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        if (!data) {
+                            return "-";
+                        }
+                        return data;
+                    },
+                },
             ],
         });
 

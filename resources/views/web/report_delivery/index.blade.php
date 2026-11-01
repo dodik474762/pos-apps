@@ -121,6 +121,7 @@
                                                     <th>Driver</th>
                                                     <th>No Kendaraan</th>
                                                     <th>Ekspedisi</th>
+                                                    <th>Eviden Kiriman</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

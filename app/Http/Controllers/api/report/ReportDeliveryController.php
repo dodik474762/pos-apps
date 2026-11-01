@@ -37,6 +37,7 @@ class ReportDeliveryController extends Controller
                 'pl_do.confirm_date',
                 'pl_do.status as delivery_status',
                 'pl_do.receive_wh_date',
+                'pl_do.photo_path',
                 'doh.do_number',
                 'doh.do_date',
                 'c.code as customer_code',
