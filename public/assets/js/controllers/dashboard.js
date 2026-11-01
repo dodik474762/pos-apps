@@ -560,8 +560,11 @@ let Dashboard = {
             `;
             }
 
-            var myIconMarkerOutlet = L.icon({
-                iconUrl: url.base_url("assets/images/") + "marker_shop.png",
+            const totalRp = parseFloat(element.total_amount) || 0;
+            const myIconMarkerOutlet = L.icon({
+                iconUrl:
+                    url.base_url("assets/images/") +
+                    (totalRp > 0 ? "marker_shop.png" : "marker_shop_orange_warning.png"),
                 iconSize: [40, 40],
             });
 
