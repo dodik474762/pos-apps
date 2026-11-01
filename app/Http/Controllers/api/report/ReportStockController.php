@@ -25,6 +25,10 @@ class ReportStockController extends Controller
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
         $company_id = session('id_company');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
         // Filter tenant untuk subquery raw SQL. company_id selalu integer dari
         // session, jadi aman di-casting ke int sebelum disisipkan ke string query.
         $companyFilter = ($company_id !== null && $company_id !== '')
@@ -290,6 +294,10 @@ class ReportStockController extends Controller
         $tiga_bulan_lalu = date('Y-m-d', strtotime('-3 months', strtotime($tanggal)));
         $company_id = session('id_company');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
 
         $datadb = ProductStockMove::from('product_stock_move as m')
             ->select([
@@ -887,6 +895,10 @@ class ReportStockController extends Controller
         $tanggalAkhir = $tanggal . ' 23:59:59';
         $company_id = session('id_company');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
         // Filter tenant untuk subquery raw SQL (harga & harga historis).
         // Tiap scope punya filter sendiri karena aliasnya berbeda.
         $pupCompanyFilter = ($company_id !== null && $company_id !== '')
