@@ -49,15 +49,15 @@ class ReportPembayaranController extends Controller
         $data['title_parent'] = $this->getTitleParent();
         $data['akses'] = $this->akses_menu;
 
-        $data['customers'] = Cache::remember('report_pembayaran_customers', 600, function () {
-            return Customer::whereNull('customer.deleted')
-                ->select(['customer.*', 'top.nilai as top_value'])
-                ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
-                ->get();
-        });
+        $data['customers'] = Customer::whereNull('customer.deleted')
+            ->select(['customer.id', 'customer.nama_customer', 'top.nilai as top_value']) // sesuaikan nama kolom
+            ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
+            ->limit(100)
+            ->get(); // simpan array, bukan objek model
+
 
         $data['vendors'] = Vendor::whereNull('deleted')
-            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('company_id', session('id_company')))
             ->orderBy('nama_vendor')
             ->get(['id', 'nama_vendor']);
 
