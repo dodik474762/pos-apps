@@ -25,6 +25,7 @@ class ReportPiutangController extends Controller
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end = $_POST['date_end'] ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -84,6 +85,18 @@ class ReportPiutangController extends Controller
             // ->where('sih.invoice_number', 'SI06260132')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted');
+
+        if ($principal !== '') {
+            $datadb->whereExists(function ($q) use ($principal) {
+                $q->select(DB::raw(1))
+                    ->from('sales_invoice_detail as sid')
+                    ->join('product as pr2', 'pr2.id', '=', 'sid.product_id')
+                    ->whereColumn('sid.invoice_id', 'sih.id')
+                    ->where('pr2.vendor', $principal)
+                    ->whereNull('sid.deleted');
+            });
+        }
+
         if (isset($data['types']) && $data['types'] == 'per-penjual') {
             $datadb->where('m.total_amount', '>', 0);
         } else {
