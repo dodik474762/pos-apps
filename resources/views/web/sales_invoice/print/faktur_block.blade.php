@@ -175,10 +175,20 @@
                 <small>Tgl.</small>
             </div>
         </div>
+        @php
+            $useSecondBank = $data->items->isNotEmpty()
+                && $data->items->every(fn ($item) => (int) ($item->products->vendor ?? 0) === 23)
+                && !empty($company->akun_bank_number_second);
+        @endphp
         <div class="bank-info" style="margin-top:2mm;">
             PEMBAYARAN HANYA DIAKUI MELALUI :<br>
-            {{ $company->akun_bank }}: {{ $company->akun_bank_number }}<br>
-            Atasnama : {{ $company->akun_bank_name }}
+            @if ($useSecondBank)
+                {{ $company->akun_bank_second }}: {{ $company->akun_bank_number_second }}<br>
+                Atasnama : {{ $company->akun_bank_name_second }}
+            @else
+                {{ $company->akun_bank }}: {{ $company->akun_bank_number }}<br>
+                Atasnama : {{ $company->akun_bank_name }}
+            @endif
         </div>
     </div>
 
