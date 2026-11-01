@@ -222,7 +222,10 @@ let ReportPembayaran = {
                 },
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                     d.customer_id = $('#customer_id').val();
+                    d.principal = $("#filter-principal").val();
                 },
             },
             deferRender: true,

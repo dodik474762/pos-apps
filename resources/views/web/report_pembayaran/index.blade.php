@@ -54,6 +54,28 @@
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
+                                        <input type="date" class="form-control" id="filter-start-date"
+                                            value="{{ date('Y-m-01') }}" placeholder="Start date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <input type="date" class="form-control" id="filter-end-date"
+                                            value="{{ date('Y-m-d') }}" placeholder="End date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <select class="form-control select2" id="filter-principal">
+                                            <option value="">Semua Principal</option>
+                                            @foreach ($vendors as $vendor)
+                                                <option value="{{ $vendor->id }}">{{ $vendor->nama_vendor }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
                                         <select class="form-control select2 required" id="customer_id" error="Customer">
                                             <option value=""></option>
                                             @foreach ($customers as $customer)

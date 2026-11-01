@@ -23,8 +23,9 @@ class ReportPembayaranController extends Controller
         $data['recordsFiltered'] = 0;
 
         $tanggal = $_POST['tanggal'] ?? date('Y-m-d');
-        $date_start = $_POST['date_start'] ?? date('Y-m-d');
+        $date_start = $_POST['date_start'] ?? date('Y-m-01');
         $date_end = $_POST['date_end'] ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
 
         $datadb = SalesOrderHeader::from('sales_order_headers as m')
             ->select([
@@ -93,6 +94,23 @@ class ReportPembayaranController extends Controller
             // ->where('sih.invoice_number', 'SI08260494')
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted');
+
+        if ($principal !== '') {
+            $datadb->whereExists(function ($q) use ($principal) {
+                $q->select(DB::raw(1))
+                    ->from('sales_invoice_detail as sid')
+                    ->whereColumn('sid.invoice_id', 'sih.id')
+                    ->whereIn('sid.product_id', function ($sub) use ($principal) {
+                        $sub->select('id')->from('product')->where('vendor', $principal);
+                    })
+                    ->whereNull('sid.deleted');
+            });
+        }
+
+        if ($date_start !== '' && $date_end !== '') {
+            $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end]);
+        }
+
         if (isset($data['customer_id'])) {
             if ($data['customer_id'] != '') {
                 $datadb->where('sih.customer_id', $data['customer_id']);

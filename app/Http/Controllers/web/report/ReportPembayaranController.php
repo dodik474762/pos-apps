@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web\report;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\Customer;
+use App\Models\Master\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -54,6 +55,11 @@ class ReportPembayaranController extends Controller
                 ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
                 ->get();
         });
+
+        $data['vendors'] = Vendor::whereNull('deleted')
+            ->when(session('id_company') !== null && session('id_company') !== '', fn ($q) => $q->where('company_id', session('id_company')))
+            ->orderBy('nama_vendor')
+            ->get(['id', 'nama_vendor']);
 
         $view = view('web.report_pembayaran.index', $data);
         $put['title_content'] = $this->getTitle();
