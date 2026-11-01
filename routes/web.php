@@ -33,6 +33,7 @@ use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\api\report\ReportDeliveryController as ApiReportDeliveryController;
+use App\Http\Controllers\api\report\ReportPromoController as ApiReportPromoController;
 use App\Http\Controllers\api\report\ReportPembayaranController as ReportReportPembayaranController;
 use App\Http\Controllers\api\report\ReportPenjualanController as ReportReportPenjualanController;
 use App\Http\Controllers\api\report\ReportPiutangController as ReportReportPiutangController;
@@ -103,6 +104,7 @@ use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseContro
 use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\report\GeneralLedgerController;
 use App\Http\Controllers\web\report\ReportDeliveryController;
+use App\Http\Controllers\web\report\ReportPromoController;
 use App\Http\Controllers\web\report\ReportPembayaranController;
 use App\Http\Controllers\web\report\ReportPenjualanController;
 use App\Http\Controllers\web\report\ReportPiutangController;
@@ -411,6 +413,7 @@ Route::get('report/inventory-valuation', [InventoryValuationController::class, '
 
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_delivery', [ReportDeliveryController::class, 'index']);
+Route::get('report/report_promo', [ReportPromoController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
 Route::get('report/summary_visit', [ReportVisitController::class, 'summary']);
 Route::get('report/report_penjualan', [ReportPenjualanController::class, 'index']);
@@ -871,6 +874,8 @@ Route::post('api/report/report_stock/getDataStock', [ApiReportStockController::c
 Route::post('api/report/report_stock/getDataStockDetail', [ApiReportStockController::class, 'getDataStockDetail']);
 
 Route::post('api/report/report_delivery/getData', [ApiReportDeliveryController::class, 'getData']);
+
+Route::post('api/report/report_promo/getData', [ApiReportPromoController::class, 'getData']);
 
 Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
 Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitController::class, 'getDataSummary']);
