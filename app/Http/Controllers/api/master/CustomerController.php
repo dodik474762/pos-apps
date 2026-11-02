@@ -27,6 +27,8 @@ class CustomerController extends Controller
         $data['recordsFiltered'] = 0;
         $company = session('id_company');
         $akses = session('akses');
+        $isSuperAdmin = strtolower((string) $akses) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
 
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
@@ -40,7 +42,8 @@ class CustomerController extends Controller
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when(!$isSuperAdmin && $company !== null && $company !== '', fn ($q) => $q->where('m.company_id', $company));
 
         if (isset($data['customer_category'])) {
             $datadb->where('m.customer_category', $data['customer_category']);
@@ -242,6 +245,8 @@ class CustomerController extends Controller
         $data['recordsFiltered'] = 0;
         $company = session('id_company');
         $akses = session('akses');
+        $isSuperAdmin = strtolower((string) $akses) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
 
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
@@ -258,7 +263,8 @@ class CustomerController extends Controller
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
             ->leftJoin('customer_category as ccr', 'ccr.id', 'm.ref_category')
             ->whereNull('m.deleted')
-            ->where('m.platform', 'mobile');
+            ->where('m.platform', 'mobile')
+            ->when(!$isSuperAdmin && $company !== null && $company !== '', fn ($q) => $q->where('m.company_id', $company));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -319,8 +325,11 @@ class CustomerController extends Controller
             if ($data['id'] == '') {
                 $roles->code = generateCodeCustomer();
                 $roles->users = session('user_id');
-                if ($isSuperAdmin && !empty($data['company_id'])) {
-                    $roles->company_id = $data['company_id'];
+                $companyId = $isSuperAdmin && !empty($data['company_id'])
+                    ? $data['company_id']
+                    : session('id_company');
+                if ($companyId !== null && $companyId !== '') {
+                    $roles->company_id = $companyId;
                 }
             }
 
