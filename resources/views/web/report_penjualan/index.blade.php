@@ -63,6 +63,24 @@
                                     </div>
                                 </div>
                                 <div class="col-xxl-2 col-sm-6 col-md-3">
+                                    <label class="form-label mb-1">Principal</label>
+                                    <div>
+                                        @php $principalLocked = !empty($session_vendor_id); @endphp
+                                        <select class="form-control select2" id="filter-principal"
+                                            {{ $principalLocked ? 'disabled' : '' }}
+                                            title="{{ $principalLocked ? 'Principal terkunci sesuai akun Anda' : '' }}">
+                                            @if (!$principalLocked)
+                                                <option value="">Semua Principal</option>
+                                            @endif
+                                            @foreach ($vendors as $vendor)
+                                                <option value="{{ $vendor->id }}"
+                                                    {{ $principalLocked && $vendor->id == $session_vendor_id ? 'selected' : '' }}>
+                                                    {{ $vendor->nama_vendor }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-6 col-md-3">
                                     <label class="form-label mb-1">Tipe Report</label>
                                     <div>
                                         <select name="select-option-report" id="select-option-report"

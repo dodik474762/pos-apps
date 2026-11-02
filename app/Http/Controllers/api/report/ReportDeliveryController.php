@@ -21,6 +21,10 @@ class ReportDeliveryController extends Controller
         $start_date = $_POST['start_date'] ?? date('Y-m-01');
         $end_date = $_POST['end_date'] ?? date('Y-m-d');
         $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
         $company_id = session('id_company');
 
         $datadb = DB::table('packing_list as pl')

@@ -24,6 +24,11 @@ class ReportPenjualanController extends Controller
 
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end   = $_POST['date_end']   ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
 
         // ============================================================
         // RETUR (tidak berubah)
@@ -311,6 +316,7 @@ class ReportPenjualanController extends Controller
             ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->whereNull('m.deleted')
             ->whereNull('sih.deleted')
+            ->when($principal !== '', fn($q) => $q->where('p.vendor', $principal))
             ->where('m.total_amount', '>', 0);
 
         if (isset($_POST)) {
@@ -425,6 +431,11 @@ class ReportPenjualanController extends Controller
 
         $date_start = $_POST['date_start'] ?? date('Y-m-d');
         $date_end   = $_POST['date_end']   ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
 
         // Detail SO yang punya promo item (distinct supaya join tidak menggandakan baris)
         $promoDetail = DB::table('sales_order_promo_item')
@@ -651,6 +662,7 @@ class ReportPenjualanController extends Controller
             ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->whereNull('sih.deleted')
             ->whereNull('m.deleted')
+            ->when($principal !== '', fn($q) => $q->where('p.vendor', $principal))
             ->where('m.total_amount', '>', 0)
             ->orderBy('sih.invoice_number', 'asc')
             ->orderBy('m.salesman', 'asc')

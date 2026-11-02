@@ -236,6 +236,7 @@ let ReportPenjualan = {
                 data: function (d) {
                     d.date_start = $("#filter-start-date").val();
                     d.date_end = $("#filter-end-date").val();
+                    d.principal = $("#filter-principal").val();
                 },
             },
             deferRender: true,
@@ -1595,6 +1596,7 @@ let ReportPenjualan = {
                 data: function (d) {
                     d.date_start = $("#filter-start-date").val();
                     d.date_end = $("#filter-end-date").val();
+                    d.principal = $("#filter-principal").val();
                     d.types = "per-penjual";
                 },
             },
@@ -1619,6 +1621,7 @@ let ReportPenjualan = {
                             data: {
                                 date_start: $("#filter-start-date").val(),
                                 date_end: $("#filter-end-date").val(),
+                                principal: $("#filter-principal").val(),
                                 types: "per-penjual",
                                 start: 0,
                                 length: 99999, // ambil semua
@@ -2003,6 +2006,7 @@ let ReportPenjualan = {
                 data: function (d) {
                     d.date_start = $("#filter-start-date").val();
                     d.date_end = $("#filter-end-date").val();
+                    d.principal = $("#filter-principal").val();
                     d.filter_satuan = $("#filter-satuan").val() || "default";
                 },
             },
