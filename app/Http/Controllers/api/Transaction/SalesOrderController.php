@@ -557,6 +557,16 @@ class SalesOrderController extends Controller
                 $platform = $header->platform;
             }
 
+            if (isset($data['payment_term'])) {
+                if ($data['payment_term'] == 0) {
+                    DB::rollBack();
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Cust : ' . $customers_check->nama_customer  . ' sudah tidak punya payment TERM',
+                    ]);
+                }
+            }
+
             $header->so_date      = $data['so_date'];
             $header->customer_id  = $data['customer_id'];
             $header->payment_term = $data['payment_term'] ?? null;
@@ -1407,6 +1417,13 @@ class SalesOrderController extends Controller
             // DB::rollBack();
             // $result['message'] = 'TOP tidak ditemukan untuk customer ' . $customers->nama_customer . ' karna TOP : ' . $customers->payment_terms;
             // return response()->json($result);
+        }
+
+        if ($payment_term == 0) {
+            return response()->json([
+                'is_valid' => false,
+                'message' => 'Cust : ' . $customers->nama_customer  . ' sudah tidak punya payment TERM',
+            ]);
         }
 
         $result['is_valid'] = false;
