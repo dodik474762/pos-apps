@@ -200,6 +200,48 @@
         padding-right: 12px;
     }
 
+    /* Welcome khusus role partnership */
+    .dash .dash-welcome {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .dash .dash-welcome::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        top: -80px;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(64, 81, 137, 0.12) 0%, rgba(64, 81, 137, 0) 70%);
+        pointer-events: none;
+    }
+
+    .dash .dash-welcome-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        margin-bottom: 18px;
+    }
+
+    .dash .dash-welcome-title {
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .dash .dash-welcome-sub {
+        font-size: 14px;
+        color: var(--dash-muted);
+        max-width: 520px;
+    }
+
     @media (max-width: 575.98px) {
         .dash .dash-filter .dash-field {
             min-width: 100%;
@@ -208,11 +250,32 @@
         .dash #map {
             min-height: 380px;
         }
+
+        .dash .dash-welcome-title {
+            font-size: 22px;
+        }
     }
 </style>
 
 <div class="row dash">
     <div class="col">
+        @if (strtolower((string) $akses) === 'partnership')
+            <div class="card dash-welcome">
+                <div class="card-body p-4 p-lg-5">
+                    <span class="dash-welcome-icon bg-primary-subtle text-primary">
+                        <i class="ri-hand-heart-line"></i>
+                    </span>
+                    <h3 class="dash-welcome-title">Selamat Datang, {{ $username }}</h3>
+                    <p class="dash-welcome-sub mt-2 mb-3">
+                        Senang melihat Anda kembali. Semoga hari Anda berjalan lancar.
+                    </p>
+                    <span class="dash-date">
+                        <i class="ri-calendar-line"></i>
+                        {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }}
+                    </span>
+                </div>
+            </div>
+        @else
         <input type="hidden" id="year" value="{{ $year }}">
 
         <div class="h-100">
@@ -364,5 +427,6 @@
             </div>
 
         </div> <!-- end .h-100-->
+        @endif
     </div> <!-- end col -->
 </div>

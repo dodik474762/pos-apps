@@ -617,8 +617,8 @@ let Dashboard = {
 
 $(function () {
     Dashboard.setSelect2();
-    Dashboard.getDataSo();
-    Dashboard.getDataInvoiceOutstanding();
-    Dashboard.getGrafikPenjualan();
-    Dashboard.mapVisitInit();
+    if ($("table#table-data-so").length) Dashboard.getDataSo();
+    if ($("table#table-data-invoice").length) Dashboard.getDataInvoiceOutstanding();
+    if ($("div#penjualan_chart").length) Dashboard.getGrafikPenjualan();
+    if ($("div#map").length) Dashboard.mapVisitInit();
 });
