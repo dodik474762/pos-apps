@@ -156,7 +156,13 @@ let ReportStockCustomer = {
                         if (!data) {
                             return "-";
                         }
-                        return data;
+                        if (/^https?:\/\//i.test(data)) {
+                            return data;
+                        }
+                        return (
+                            "https://pos.b3smart.my.id/" +
+                            String(data).replace(/^\/+/, "")
+                        );
                     },
                 },
             ],
