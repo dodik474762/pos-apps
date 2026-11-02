@@ -4305,6 +4305,9 @@ class SalesOrderController extends Controller
     {
         $data = $request->all();
         DB::enableQueryLog();
+        $companyId = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
 
         $data = [
             'data' => [],
@@ -4355,7 +4358,8 @@ class SalesOrderController extends Controller
                     ->where('pup.channel', 'RETAIL UMUM');
             })
             // ->where('m.id', 573)
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when(!$isSuperAdmin && $companyId !== null && $companyId !== '', fn ($q) => $q->where('m.company_id', $companyId));
 
         // if (isset($data['customer'])) {
         //     if ($data['customer'] != '') {

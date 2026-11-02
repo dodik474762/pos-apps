@@ -90,7 +90,9 @@ class SalesOrderController extends Controller
             ->whereNull('deleted')
             ->orderBy('tax_name')
             ->get(['id', 'tax_name', 'rate']);
-        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
         $data['data_branch'] = Branch::whereNull('deleted')
@@ -146,7 +148,9 @@ class SalesOrderController extends Controller
         // echo '<pre>';
         // print_r($data['data_item']);die;
 
-        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
+        $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
