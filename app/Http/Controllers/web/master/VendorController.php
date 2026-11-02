@@ -57,8 +57,14 @@ class VendorController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getListVendor(){
-        $datadb = DB::table('vendor')->whereNull('deleted')->get();
+    public function getListVendor($filterCompany = false){
+        $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
+        $datadb = DB::table('vendor')
+            ->whereNull('deleted')
+            ->when($filterCompany && !$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         return $datadb;
     }
 
@@ -89,7 +95,7 @@ class VendorController extends Controller
         $data['categorys'] = $this->getCategory();
         $data['product_type'] = $this->getProductType();
         $data['list_channel'] = $this->listChannel();
-        $data['vendors'] = $this->getListVendor();
+        $data['vendors'] = $this->getListVendor(true);
         $view = view('web.vendor.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
