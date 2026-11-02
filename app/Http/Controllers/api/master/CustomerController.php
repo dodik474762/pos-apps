@@ -314,9 +314,14 @@ class CustomerController extends Controller
         try {
             //code...
             $roles = $data['id'] == '' ? new Customer() : Customer::find($data['id']);
+            $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+                || strtolower((string) session('username')) === 'administrator';
             if ($data['id'] == '') {
                 $roles->code = generateCodeCustomer();
                 $roles->users = session('user_id');
+                if ($isSuperAdmin && !empty($data['company_id'])) {
+                    $roles->company_id = $data['company_id'];
+                }
             }
 
             $dir = 'berkas/document/outlet/';

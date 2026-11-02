@@ -119,6 +119,9 @@ let Customer = {
         const items_price = Customer.getPostItemPrice();
 
         formData.append("id", $("input#id").val());
+        if ($("#company_id").length > 0) {
+            formData.append("company_id", $("#company_id").val());
+        }
         formData.append("nama_customer", $("#nama_customer").val());
         formData.append("pic", $("#pic").val());
         formData.append("phone", $("#phone").val());

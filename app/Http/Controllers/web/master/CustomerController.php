@@ -147,6 +147,11 @@ class CustomerController extends Controller
         $data['data_category'] = CustomerCategory::whereNull('deleted')->get()->toArray();
         $data['akses'] = session('akses');
         $data['company'] = session('id_company');
+        $data['is_super_admin'] = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
+        $data['companies'] = $data['is_super_admin']
+            ? CompanyModel::whereNull('deleted')->orderBy('nama_company')->get(['id', 'nama_company'])
+            : collect();
         $data['stock_customer'] = [];
         $data['data_province'] = Region::whereNull('parent')->whereNull('deleted')->get()->toArray();
         $data['data_price_list'] = $this->getListPriceList();

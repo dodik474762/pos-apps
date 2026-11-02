@@ -30,6 +30,19 @@
                 <form onsubmit="Customer.submit(this, event)">
                     <div class="row">
                         <div class="col-lg-6">
+                            @if (!empty($is_super_admin))
+                                <div class="mb-3">
+                                    <label class="form-label">Company</label>
+                                    <select class="form-control select2 required" id="company_id" error="Company">
+                                        <option value=""></option>
+                                        @foreach ($companies as $company)
+                                            <option value="{{ $company->id }}"
+                                                {{ (isset($data->company_id) ? $data->company_id : session('id_company')) == $company->id ? 'selected' : '' }}>
+                                                {{ $company->nama_company }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
                             <div class="mb-3">
                                 <label class="form-label">Kategori</label>
                                 <select class="form-control select2 required" error="Kategori" id="customer_category">
