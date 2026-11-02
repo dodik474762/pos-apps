@@ -77,11 +77,14 @@ class SalesOrderController extends Controller
         $data['code'] = generateNoPO();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
         $data['customers'] = isset($data['salesman']) ? $this->getCustomer($data['salesman']) : Customer::whereNull('customer.deleted')
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('customer.company_id', $company_id))
             ->select(['customer.*', 'top.nilai as top_value'])
             ->leftJoin('term_of_payment as top', 'top.id', '=', 'customer.payment_terms')
             ->get();
-        $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)
             ->where('company_id', $company_id)
             ->whereNull('deleted')
@@ -90,8 +93,12 @@ class SalesOrderController extends Controller
         $data['salesmen'] = User::whereNull('deleted')->whereIn('user_group', [6, 4])->get(['id', 'name']);
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['data_item'] = [];
-        $data['data_branch'] = Branch::whereNull('deleted')->get();
-        $data['data_wh'] = Warehouse::whereNull('deleted')->get();
+        $data['data_branch'] = Branch::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
+        $data['data_wh'] = Warehouse::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -143,8 +150,12 @@ class SalesOrderController extends Controller
         $data['currencies'] = Currency::whereNull('deleted')->get();
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['data_branch'] = Branch::whereNull('deleted')->get();
-        $data['data_wh'] = Warehouse::whereNull('deleted')->get();
+        $data['data_branch'] = Branch::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
+        $data['data_wh'] = Warehouse::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();
         $put['title_top'] = 'Form ' . $this->getTitle();
@@ -212,6 +223,9 @@ class SalesOrderController extends Controller
     {
         $periodYear = intval(date('Y'));  // misal dari form input
         $periodMonth = intval(date('m'));   // misal dari form input
+        $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
 
         $salesPlan = new SalesPlanController();
         $dataPlan = $salesPlan->getDailyVisits($salesmanId);
@@ -225,6 +239,7 @@ class SalesOrderController extends Controller
             ->join('sales_plan_header as h', 'h.id', '=', 'd.header_id')
             ->join('customer as c', 'c.id', '=', 'd.customer_id')
             ->leftJoin('term_of_payment as top', 'top.id', '=', 'c.payment_terms')
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('c.company_id', $company_id))
             ->where('h.salesman', $salesmanId)
             ->whereIn('d.id', $planDtlId)
             // ->where('h.period_year', $periodYear)
