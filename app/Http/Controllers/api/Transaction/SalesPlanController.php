@@ -484,7 +484,7 @@ class SalesPlanController extends Controller
         $company_id = session('id_company');
         DB::beginTransaction();
         try {
-            $exist = DailyVisit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('users', $salesman)->where('date_visit', $today->format('Y-m-d'))->first();
+            $exist = DailyVisit::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('users', $salesman)->where('date_visit', $today->format('Y-m-d'))->first();
             $daily = empty($exist) ? new DailyVisit() : $exist;
             $daily->users = $salesman;
             $daily->date_visit = $today->format('Y-m-d');
@@ -496,7 +496,7 @@ class SalesPlanController extends Controller
             $dailyId = $daily->id;
 
             if (!empty($datadb)) {
-                DailyVisitCustomer::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('daily_visit', $dailyId)->delete();
+                DailyVisitCustomer::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('daily_visit', $dailyId)->delete();
                 foreach ($datadb as $key => $value) {
                     $dailyDtl = new DailyVisitCustomer();
                     $dailyDtl->daily_visit = $dailyId;
@@ -559,7 +559,10 @@ class SalesPlanController extends Controller
             ->groupBy('sih.customer_id');
 
         $datadb = DB::table('sales_plan_detail_route as spd')
-            ->join('sales_plan_header as sph', 'sph.id', '=', 'spd.header_id')
+            ->join('sales_plan_header as sph', function ($q) {
+                return $q->on('sph.id', '=', 'spd.header_id')
+                    ->whereNull('sph.deleted');
+            })
             ->join('customer as c', 'c.id', '=', 'spd.customer_id')
             ->leftJoin('term_of_payment as top', 'c.payment_terms', '=', 'top.id')
             ->join('customer_category as cc', 'cc.id', '=', 'c.customer_category')
