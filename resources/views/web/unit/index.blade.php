@@ -1,4 +1,3 @@
-
 @if (isset($akses->product_unit))
     @if ($akses->product_unit->view == 1)
         <input type="hidden" id="update" value="{{ $akses->product_unit->update }}">
@@ -34,7 +33,8 @@
                                 @if ($akses->product_unit->insert == 1)
                                     <div class="d-flex gap-1 flex-wrap">
                                         <a type="button" class="btn btn-success add-btn" data-bs-toggle="modal"
-                                            id="create-btn" href="javascript:void(0);" onclick="Unit.add(this, event)"><i
+                                            id="create-btn" href="javascript:void(0);"
+                                            onclick="Unit.add(this, event)"><i
                                                 class="ri-add-line align-bottom me-1"></i> Create New</a>
                                     </div>
                                 @endif
