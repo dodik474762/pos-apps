@@ -49,10 +49,17 @@
                                 </div>
                                 <div class="col-xxl-2 col-sm-4">
                                     <div>
-                                        <select class="form-control select2" id="filter-principal">
-                                            <option value="">Semua Principal</option>
+                                        @php $principalLocked = !empty($session_vendor_id); @endphp
+                                        <select class="form-control select2" id="filter-principal"
+                                            {{ $principalLocked ? 'disabled' : '' }}
+                                            title="{{ $principalLocked ? 'Principal terkunci sesuai akun Anda' : '' }}">
+                                            @if (!$principalLocked)
+                                                <option value="">Semua Principal</option>
+                                            @endif
                                             @foreach ($vendors as $vendor)
-                                                <option value="{{ $vendor->id }}">{{ $vendor->nama_vendor }}</option>
+                                                <option value="{{ $vendor->id }}"
+                                                    {{ $principalLocked && $vendor->id == $session_vendor_id ? 'selected' : '' }}>
+                                                    {{ $vendor->nama_vendor }}</option>
                                             @endforeach
                                         </select>
                                     </div>

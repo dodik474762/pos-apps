@@ -56,8 +56,10 @@ class ReportPembayaranController extends Controller
             ->get(); // simpan array, bukan objek model
 
 
+        $data['session_vendor_id'] = session('vendor_id');
         $data['vendors'] = Vendor::whereNull('deleted')
             ->when(session('id_company') !== null && session('id_company') !== '', fn($q) => $q->where('company_id', session('id_company')))
+            ->when(!empty($data['session_vendor_id']), fn($q) => $q->where('id', $data['session_vendor_id']))
             ->orderBy('nama_vendor')
             ->get(['id', 'nama_vendor']);
 
