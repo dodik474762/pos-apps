@@ -142,8 +142,8 @@
                             <div class="mb-3">
                                 <label>Max Retur</label>
                                 <div>
-                                    <input tabindex="10" type="number" id="max_retur" class="form-control required"
-                                        error="Max Retur" placeholder="Max Retur"
+                                    <input tabindex="10" type="number" id="max_retur"
+                                        class="form-control required" error="Max Retur" placeholder="Max Retur"
                                         value="{{ isset($data->max_retur) ? $data->max_retur : '9999999999999' }}">
                                 </div>
                             </div>
@@ -333,7 +333,7 @@
                                         class="form-control required" error="Max Print Faktur "
                                         {{ strtolower($akses) != 'superadmin' ? 'readonly' : '' }}
                                         placeholder="Max Print Faktur"
-                                        value="{{ isset($data->max_print_invoice) ? $data->max_print_invoice : '' }}">
+                                        value="{{ isset($data->max_print_invoice) ? $data->max_print_invoice : '1' }}">
                                 </div>
                             </div>
                         </div>
