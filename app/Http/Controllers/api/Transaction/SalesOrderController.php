@@ -557,15 +557,15 @@ class SalesOrderController extends Controller
                 $platform = $header->platform;
             }
 
-            if (isset($data['payment_term'])) {
-                if ($data['payment_term'] == 0) {
-                    DB::rollBack();
-                    return response()->json([
-                        'is_valid' => false,
-                        'message' => 'Cust : ' . $customers_check->nama_customer  . ' sudah tidak punya payment TERM',
-                    ]);
-                }
-            }
+            // if (isset($data['payment_term'])) {
+            //     if ($data['payment_term'] == 0) {
+            //         DB::rollBack();
+            //         return response()->json([
+            //             'is_valid' => false,
+            //             'message' => 'Cust : ' . $customers_check->nama_customer  . ' sudah tidak punya payment TERM',
+            //         ]);
+            //     }
+            // }
 
             $header->so_date      = $data['so_date'];
             $header->customer_id  = $data['customer_id'];
@@ -1410,8 +1410,10 @@ class SalesOrderController extends Controller
         $customersId = $customers->id;
         $top         = TermOfPayment::where('id', $customers->payment_terms)->first();
         $payment_term = 0;
+        $existPayment = false;
         if (!empty($top)) {
             $payment_term = $top->nilai;
+            $existPayment = true;
         } else {
             $payment_term = 3;
             // DB::rollBack();
@@ -1419,7 +1421,7 @@ class SalesOrderController extends Controller
             // return response()->json($result);
         }
 
-        if ($payment_term == 0) {
+        if ($existPayment) {
             return response()->json([
                 'is_valid' => false,
                 'message' => 'Cust : ' . $customers->nama_customer  . ' sudah tidak punya payment TERM',
@@ -4359,7 +4361,7 @@ class SalesOrderController extends Controller
             })
             // ->where('m.id', 573)
             ->whereNull('m.deleted')
-            ->when(!$isSuperAdmin && $companyId !== null && $companyId !== '', fn ($q) => $q->where('m.company_id', $companyId));
+            ->when(!$isSuperAdmin && $companyId !== null && $companyId !== '', fn($q) => $q->where('m.company_id', $companyId));
 
         // if (isset($data['customer'])) {
         //     if ($data['customer'] != '') {
