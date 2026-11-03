@@ -1421,7 +1421,7 @@ class SalesOrderController extends Controller
             // return response()->json($result);
         }
 
-        if ($existPayment) {
+        if (!$existPayment) {
             return response()->json([
                 'is_valid' => false,
                 'message' => 'Cust : ' . $customers->nama_customer  . ' sudah tidak punya payment TERM',
