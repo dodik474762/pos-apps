@@ -33,6 +33,7 @@ use App\Http\Controllers\api\master\VendorController as MasterVendorController;
 use App\Http\Controllers\api\master\WarehouseController;
 use App\Http\Controllers\api\master\WorkingHourController as MasterWorkingHourController;
 use App\Http\Controllers\api\report\ReportDeliveryController as ApiReportDeliveryController;
+use App\Http\Controllers\api\report\ReportPenerimaanUangController as ApiReportPenerimaanUangController;
 use App\Http\Controllers\api\report\ReportSalesOrderController as ApiReportSalesOrderController;
 use App\Http\Controllers\api\report\ReportPromoController as ApiReportPromoController;
 use App\Http\Controllers\api\report\ReportStockCustomerController as ApiReportStockCustomerController;
@@ -106,6 +107,7 @@ use App\Http\Controllers\web\master\WarehouseController as MasterWarehouseContro
 use App\Http\Controllers\web\master\WorkingHourController;
 use App\Http\Controllers\web\report\GeneralLedgerController;
 use App\Http\Controllers\web\report\ReportDeliveryController;
+use App\Http\Controllers\web\report\ReportPenerimaanUangController;
 use App\Http\Controllers\web\report\ReportSalesOrderController;
 use App\Http\Controllers\web\report\ReportPromoController;
 use App\Http\Controllers\web\report\ReportStockCustomerController;
@@ -418,6 +420,7 @@ Route::get('report/inventory-valuation', [InventoryValuationController::class, '
 Route::get('report/report_stock', [ReportStockController::class, 'index']);
 Route::get('report/report_delivery', [ReportDeliveryController::class, 'index']);
 Route::get('report/report_sales_order', [ReportSalesOrderController::class, 'index']);
+Route::get('report/report_penerimaan_uang', [ReportPenerimaanUangController::class, 'index']);
 Route::get('report/report_promo', [ReportPromoController::class, 'index']);
 Route::get('report/report_stock_customer', [ReportStockCustomerController::class, 'index']);
 Route::get('report/report_visit', [ReportVisitController::class, 'index']);
@@ -883,6 +886,8 @@ Route::post('api/report/report_delivery/getData', [ApiReportDeliveryController::
 
 Route::post('api/report/report_sales_order/getData', [ApiReportSalesOrderController::class, 'getData']);
 
+Route::post('api/report/report_penerimaan_uang/getData', [ApiReportPenerimaanUangController::class, 'getData']);
+
 Route::post('api/report/report_promo/getData', [ApiReportPromoController::class, 'getData']);
 
 Route::post('api/report/report_stock_customer/getData', [ApiReportStockCustomerController::class, 'getData']);
@@ -897,6 +902,7 @@ Route::post('api/report/report_pembayaran/getData', [ReportReportPembayaranContr
 
 Route::get('report/delivery', [ReportDeliveryController::class, 'index']);
 Route::get('report/sales_order', [ReportSalesOrderController::class, 'index']);
+Route::get('report/penerimaan_uang', [ReportPenerimaanUangController::class, 'index']);
 Route::get('report/item-received', [PackingListController::class, 'reportItemReceived']);
 Route::get('report/sales-return', [SalesReturnController::class, 'report']);
 /*API */

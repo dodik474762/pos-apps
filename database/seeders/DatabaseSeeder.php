@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             BillingPlanSeeder::class,
             BillingMenuSeeder::class,
+            ReportPenerimaanUangMenuSeeder::class,
         ]);
     }
 }
