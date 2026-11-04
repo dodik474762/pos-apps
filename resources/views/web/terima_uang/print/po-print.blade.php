@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <title>Terima Uang - {{ $salesman->nik }}</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 20px 18px;
+        }
+
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
@@ -40,12 +45,6 @@
             text-align: center;
         }
 
-        .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
         .header-table td {
             border: none;
             vertical-align: middle;
@@ -55,15 +54,29 @@
             width: 90px;
         }
 
-        /* 🔹 Ukuran font kecil untuk tabel detail barang */
+        /* Tabel detail: fixed layout supaya pas lebar kertas portrait */
+        .table-detail {
+            table-layout: fixed;
+            width: 100%;
+        }
+
         .table-detail th,
         .table-detail td {
-            font-size: 10px;
-            padding: 3px;
+            font-size: 7.5px;
+            padding: 2px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            vertical-align: middle;
         }
 
         .table-detail th {
             background: #f8f8f8;
+            text-align: center;
+        }
+
+        /* Kolom tanggal & nomor: tidak boleh pecah baris */
+        .nowrap {
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -79,18 +92,13 @@
                 <h3 style="margin:0; padding:0;">{{ $company->nama_company }}</h3>
                 <small>{!! $company->alamat !!}</small>
             </td>
-            <td style="text-align:right;">
+            <td style="text-align:right; width: 150px;">
                 <h4 style="margin:0; padding:0;">PENERIMAAN UANG TAGIHAN</h4>
-                <br>
-                {{-- QR Code (otomatis di-generate) --}}
-                <div style="margin-top:5px;">
-                    {{-- <img src="data:image/png;base64,{{ $qr }}" alt="" width="70" height="70"> --}}
-                </div>
             </td>
         </tr>
     </table>
 
-    {{-- INFORMASI PO --}}
+    {{-- INFORMASI SALESMAN --}}
     <table class="no-border" style="width:100%;margin-top:-5px;line-height: 0.5;">
         <tr>
             <td><strong>NIK Salesman:</strong> {{ $salesman->nik }}</td>
@@ -105,18 +113,19 @@
     <table class="table-detail">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Tanggal Rute</th>
-                <th>Invoice Number</th>
-                <th>Tanggal Invoice</th>
-                <th>DO Number</th>
-                <th>Tanggal DO</th>
-                <th>Customer</th>
-                <th>Warehouse</th>
-                <th>Tanggal Jatuh Tempo</th>
-                <th>Status</th>
-                <th>Outstanding</th>
-                <th>Nilai Terima</th>
+                <th style="width:3%;">No</th>
+                <th style="width:7%;">Tanggal Rute</th>
+                <th style="width:9%;">Invoice Number</th>
+                <th style="width:7%;">Tanggal Invoice</th>
+                <th style="width:9%;">DO Number</th>
+                <th style="width:7%;">Tanggal DO</th>
+                <th style="width:15%;">Customer</th>
+                <th style="width:8%;">Warehouse</th>
+                <th style="width:7%;">Tanggal Jatuh Tempo</th>
+                <th style="width:6%;">Status</th>
+                <th style="width:7%;">Outstanding</th>
+                <th style="width:7%;">Tanggal Terima</th>
+                <th style="width:8%;">Nilai Terima</th>
             </tr>
         </thead>
         <tbody>
@@ -127,25 +136,25 @@
             @foreach ($invoices as $item)
                 @php
                     $item = (object) $item;
-                    //$out = $item->total_amount - $item->amount_paid;
                     $out = $item->total_amount;
                     $do_number = $item->do_number == '' ? $item->dohs_number : $item->do_number;
                     $do_date = $item->do_date == '' ? $item->dohs_date : $item->do_date;
                     $total_bayar = $item->total_terbayar_rph == '' ? $item->total_terbayar : $item->total_terbayar_rph;
                 @endphp
                 <tr>
-                    <td>{{ $no++ }}</td>
-                    <td>{{ $tanggal_rute }}</td>
-                    <td>{{ $item->invoice_number }}</td>
-                    <td>{{ $item->invoice_date }}</td>
-                    <td>{{ $do_date }}</td>
-                    <td>{{ $do_number }}</td>
+                    <td class="text-center">{{ $no++ }}</td>
+                    <td class="nowrap">{{ $tanggal_rute }}</td>
+                    <td class="nowrap">{{ $item->invoice_number }}</td>
+                    <td class="nowrap">{{ $item->invoice_date }}</td>
+                    <td class="nowrap">{{ $do_number }}</td>
+                    <td class="nowrap">{{ $do_date }}</td>
                     <td>{{ $item->customer_code }} - {{ $item->nama_customer }}</td>
                     <td>{{ $item->warehouse_name }}</td>
-                    <td>{{ $item->due_date }}</td>
+                    <td class="nowrap">{{ $item->due_date }}</td>
                     <td>{{ $item->status }}</td>
-                    <td class="text-right">{{ number_format($out, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($total_bayar, 0, ',', '.') }}</td>
+                    <td class="text-right nowrap">{{ number_format($out, 0, ',', '.') }}</td>
+                    <td class="nowrap">{{ $item->receive_date ?? '-' }}</td>
+                    <td class="text-right nowrap">{{ number_format($total_bayar, 0, ',', '.') }}</td>
                 </tr>
                 @php
                     $total_terima += $total_bayar;
@@ -154,19 +163,14 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="11" class="text-right"><strong>Total Terima</strong></td>
-                <td class="text-right"><strong>{{ number_format($total_terima, 0, ',', '.') }}</strong></td>
+                <td colspan="12" class="text-right"><strong>Total Terima</strong></td>
+                <td class="text-right nowrap"><strong>{{ number_format($total_terima, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>
     </table>
-    <table class="no-border" style="width:100%;">
-        <tr>
-            <td></td>
-        </tr>
-    </table>
 
     <br><br>
-    <table class="no-border" style="width:100%;">
+    <table class="no-border" style="width:100%; page-break-inside: avoid;">
         <tr>
             <td class="text-center">
                 <br><br><br>

@@ -277,6 +277,21 @@ class TerimaUangController extends Controller
             ->whereIn('invoice_id', $ids)
             ->values()
             ->toArray();
+        $receiveDates = DB::table('receive_payment_detail as rpd')
+            ->join('receive_payment_header as rph', function ($q) {
+                return $q->on('rph.id', 'rpd.receive_id')->whereNull('rph.deleted');
+            })
+            ->whereNull('rpd.deleted')
+            ->where('rpd.amount_paid', '>', 0)
+            ->whereIn('rpd.invoice_id', $ids)
+            ->select('rpd.invoice_id', DB::raw('MAX(rph.receive_date) as receive_date'))
+            ->groupBy('rpd.invoice_id')
+            ->pluck('receive_date', 'rpd.invoice_id');
+        $invoices = collect($invoices)->map(function ($item) use ($receiveDates) {
+            $item = (object) $item;
+            $item->receive_date = $receiveDates[$item->invoice_id] ?? null;
+            return $item;
+        })->all();
         $data['salesman'] = collect($invoices)->pluck('salesman_id')->unique()->first();
         $salesman = User::where('id', $data['salesman'])->first();
         $salesman_name = ! empty($salesman) ? $salesman->name : '-';
