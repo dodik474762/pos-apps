@@ -78,6 +78,12 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-3" data-bs-toggle="tab" id="sales-return-detail-tab"
+                                        href="#sales-return-detail" role="tab" aria-selected="false">
+                                        <i class="ri-file-list-3-line me-1 align-bottom"></i> Sales Return Detail
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -97,6 +103,54 @@
                                                     <th>Status</th>
                                                     <th>Platform</th>
                                                     <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="sales-return-detail">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-xxl-2 col-sm-4">
+                                            <input type="date" class="form-control" id="detail-start-date"
+                                                value="{{ date('Y-m-01') }}">
+                                        </div>
+                                        <div class="col-xxl-2 col-sm-4">
+                                            <input type="date" class="form-control" id="detail-end-date"
+                                                value="{{ date('Y-m-d') }}">
+                                        </div>
+                                        <div class="col-xxl-1 col-sm-4">
+                                            <button type="button" class="btn btn-primary w-100"
+                                                onclick="SalesReturn.getDataDetail();">
+                                                <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-detail">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Tanggal Return</th>
+                                                    <th>No Return</th>
+                                                    <th>Kode Customer</th>
+                                                    <th>Nama Customer</th>
+                                                    <th>Kode Barang</th>
+                                                    <th>Nama Barang</th>
+                                                    <th>Quantity</th>
+                                                    <th>Harga</th>
+                                                    <th>Nominal</th>
+                                                    <th>Tipe Return</th>
+                                                    <th>Ref No Invoice</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

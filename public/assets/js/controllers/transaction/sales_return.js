@@ -386,6 +386,113 @@ let SalesReturn = {
             }));
     },
 
+    getDataDetail: async () => {
+        let tableData = $("table#table-data-detail");
+
+        let data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            order: [[1, "desc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(SalesReturn.moduleApi()) + `getDataReport`,
+                type: "POST",
+                data: {
+                    start_date: $("#detail-start-date").val(),
+                    end_date: $("#detail-end-date").val(),
+                },
+                headers: {
+                    "X-CSRF-TOKEN": SalesReturn.csrf_token(),
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "Sales Return Detail",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "return_date",
+                },
+                {
+                    data: "return_number",
+                },
+                {
+                    data: "customer_code",
+                },
+                {
+                    data: "nama_customer",
+                },
+                {
+                    data: "product_code",
+                },
+                {
+                    data: "product_name",
+                },
+                {
+                    data: "qty_return",
+                },
+                {
+                    data: "unit_price",
+                    className: "text-end",
+                    render: function (data) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "total_price",
+                    className: "text-end",
+                    render: function (data) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "return_type",
+                },
+                {
+                    data: "invoice_number",
+                },
+            ],
+        });
+
+        data.buttons().container().addClass("mb-2");
+        $(".dataTables_length select").addClass(
+            "form-select form-select-sm",
+        );
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1358,5 +1465,6 @@ $(function () {
     SalesReturn.setSelect2();
     SalesReturn.getData();
     SalesReturn.getDataReport();
+    SalesReturn.getDataDetail();
     SalesReturn.editReload();
 });
