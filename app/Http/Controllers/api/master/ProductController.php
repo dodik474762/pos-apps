@@ -44,7 +44,7 @@ class ProductController extends Controller
         $company_id = session('id_company');
         $stock = DB::table('product_stock')
             ->select('product', DB::raw('SUM(qty) as stock'))
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->groupBy('product');
 
         $datadb = DB::table($this->getTableName() . ' as m')
@@ -65,7 +65,7 @@ class ProductController extends Controller
             })
             ->leftJoin('unit as u', 'u.id', '=', 'm.unit')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -131,7 +131,7 @@ class ProductController extends Controller
                     ->where('puc.is_active', '1');
             })
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -180,15 +180,16 @@ class ProductController extends Controller
                 $karyawan = DB::table('karyawan')->where('nik', $users->nik)->first();
                 $karyawanId = $karyawan->id;
                 $productIds = DB::table('karyawan_has_product')
-                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->where('karyawan', $karyawanId)
+                    ->whereNotNull('product')
                     ->pluck('product')
                     ->toArray();
             }
 
             $stock = DB::table('product_stock')
                 ->select('product', DB::raw('SUM(qty) as stock'))
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->groupBy('product');
 
             $datadb = DB::table($this->getTableName() . ' as m')
@@ -226,7 +227,7 @@ class ProductController extends Controller
                 ->whereNull('m.deleted')
                 // ->where('m.code', 'PQ02')
                 // ->where('ps.qty', '>', 0)
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
                 ->orderBy('m.id', 'desc')
                 ->orderBy('pup.id', 'asc');
 
@@ -235,7 +236,8 @@ class ProductController extends Controller
             }
             $data = $datadb->get()->toArray();
             // echo '<pre>';
-            // print_r($query);die;
+            // print_r($productIds);
+            // die;
             $result['is_valid'] = empty($data) ? false : true;
             $result['data'] = $data;
             return response()->json($result);
@@ -253,9 +255,9 @@ class ProductController extends Controller
         $result['is_valid'] = true;
         $company_id = session('id_company');
 
-        $totalRows = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
+        $totalRows = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
         $datadb = Product::whereNull('product.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('product.company_id', $company_id))
             ->where('product.id', '>', $data['last_id'])
             ->limit($data['length'])
             ->orderBy('product.id', 'asc');
@@ -297,9 +299,9 @@ class ProductController extends Controller
         $result['is_valid'] = true;
         $company_id = session('id_company');
 
-        $totalRows = ProductCatalog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
+        $totalRows = ProductCatalog::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->count();
         $datadb = ProductCatalog::whereNull('product_catalog.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_catalog.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_catalog.company_id', $company_id))
             ->where('product_catalog.id', '>', $data['last_id'])
             ->limit($data['length'])
             ->orderBy('product_catalog.id', 'asc');
@@ -420,7 +422,7 @@ class ProductController extends Controller
         $company_id = session('id_company');
 
         $vendors = DB::table('vendor')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get()->toArray();
         $vendorGrouped = collect($vendors)->groupBy('nama_vendor')->toArray();
         // echo '<pre>';
@@ -595,7 +597,7 @@ class ProductController extends Controller
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -711,7 +713,7 @@ class ProductController extends Controller
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -801,7 +803,7 @@ class ProductController extends Controller
                             $productCost->save();
                         }
 
-                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -862,7 +864,7 @@ class ProductController extends Controller
                             setCompanyId($productCost, $company_id);
                             $productCost->save();
                         }
-                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($productId);
+                        $productUpdate = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($productId);
                         $productUpdate->vendor = $vendorId;
                         $productUpdate->save();
                     }
@@ -909,14 +911,14 @@ class ProductController extends Controller
 
             foreach ($items as $key => $value) {
                 $product_code = $value['kode_produk'];
-                $product = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', $product_code)->first();
+                $product = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('code', $product_code)->first();
                 $konversi_in_pcs = str_replace(',', '', trim($value['perhitungan_fisik']));
 
                 $konversi_in_pcs = $konversi_in_pcs == '' ?  0 : $konversi_in_pcs;
-                ProductStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ProductStock::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->where('product', $product->id)->delete();
 
-                $product_uom_small = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                $product_uom_small = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->whereNull('deleted')
                     ->where('product', $product->id)
                     ->where('state', 'small')
@@ -1000,7 +1002,7 @@ class ProductController extends Controller
                 $roles->creator = session('user_id');
                 setCompanyId($roles, $company_id);
             } else {
-                $roles = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                $roles = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
                 if (empty($roles)) {
                     DB::rollBack();
                     $result['message'] = 'Data Product tidak ditemukan';
@@ -1077,7 +1079,7 @@ class ProductController extends Controller
                     }
 
                     $product_uom = isset($data['level_id'][$i])
-                        ? ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['level_id'][$i])
+                        ? ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['level_id'][$i])
                         : new ProductUom();
 
                     setCompanyId($product_uom, $company_id);
@@ -1129,7 +1131,7 @@ class ProductController extends Controller
 
             // Update unit terkecil di product
             if ($unit_dasar_id != 0) {
-                $update       = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                $update       = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
                 if (! empty($update)) {
                     $update->unit = $unit_dasar_id;
                     $update->save();
@@ -1142,7 +1144,7 @@ class ProductController extends Controller
             if (isset($data['uom_id']) && !empty($data['uom_id'])) {
                 for ($i = 0; $i < count($data['uom_id']); $i++) {
                     $product_uom_price = isset($data['price_uom'][$i])
-                        ? ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['price_uom'][$i])
+                        ? ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['price_uom'][$i])
                         : new ProductUomPrice();
 
                     if ($product_uom_price->type == 'RETAIL') {
@@ -1285,7 +1287,7 @@ class ProductController extends Controller
             if (isset($data['uom_disc_id']) && !empty($data['uom_disc_id'])) {
                 for ($i = 0; $i < count($data['uom_disc_id']); $i++) {
                     $product_disc_strata                   = isset($data['disc_strata_id'][$i])
-                        ? ProductDisc::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['disc_strata_id'][$i])
+                        ? ProductDisc::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['disc_strata_id'][$i])
                         : new ProductDisc();
                     setCompanyId($product_disc_strata, $company_id);
                     $product_disc_strata->product          = $data['id'];
@@ -1320,7 +1322,7 @@ class ProductController extends Controller
                     list($unit, $unit_name)                     = explode('//', $data['product_free_unit'][$i]);
 
                     $product_disc_free              = isset($data['disc_free_id'][$i])
-                        ? ProductFreeGood::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['disc_free_id'][$i])
+                        ? ProductFreeGood::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['disc_free_id'][$i])
                         : new ProductFreeGood();
                     setCompanyId($product_disc_free, $company_id);
                     $product_disc_free->product     = $data['id'];
@@ -1380,7 +1382,7 @@ class ProductController extends Controller
             // }
 
             $company_id = session('id_company');
-            $menu = Product::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = Product::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($menu)) {
                 DB::rollBack();
                 $result['message'] = 'Data Product tidak ditemukan';
@@ -1408,13 +1410,13 @@ class ProductController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($product_uom)) {
                 DB::rollBack();
                 $result['message'] = 'Data Product UOM tidak ditemukan';
                 return response()->json($result);
             }
-            $product_uom_price = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            $product_uom_price = ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->where('unit', $product_uom->unit_dasar)
                 ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
             if (!empty($product_uom_price)) {
@@ -1423,7 +1425,7 @@ class ProductController extends Controller
                 return response()->json($result);
             }
 
-            ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id'])->delete();
+            ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id'])->delete();
             DB::commit();
             $result['is_valid'] = true;
         } catch (\Throwable $th) {
@@ -1446,7 +1448,7 @@ class ProductController extends Controller
             //code...
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
             $company_id = session('id_company');
-            ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
+            ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
             // ->orWhere('unit', $product_uom->unit_tujuan)->get()->toArray();
             // if(!empty($product_uom_price)){
@@ -1475,7 +1477,7 @@ class ProductController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            ProductDisc::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
+            ProductDisc::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
             // $product_uom = ProductUom::find($data['id']);
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
@@ -1506,7 +1508,7 @@ class ProductController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            ProductFreeGood::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
+            ProductFreeGood::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
             //harus ada pengecekan ke sales order jika sudah ada maka harga tdak bisa dihapu
             // $product_uom = ProductUom::find($data['id']);
             // $product_uom_price = ProductUomPrice::where('unit', $product_uom->unit_dasar)
@@ -1536,7 +1538,7 @@ class ProductController extends Controller
             ->select([
                 'm.*',
             ])->where('m.id', $id)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
@@ -1552,7 +1554,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         return view('web.product.product-item-level', $data);
     }
 
@@ -1584,7 +1586,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_uom.company_id', $company_id))
             ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
@@ -1617,7 +1619,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_uom.company_id', $company_id))
             ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
@@ -1640,7 +1642,7 @@ class ProductController extends Controller
         }
         $data['data_satuan'] = $result_satuan;
         $company_id = session('id_company');
-        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         return view('web.product.product-disc-strata', $data);
     }
@@ -1649,7 +1651,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
+        $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_uom.company_id', $company_id))
             ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
             ->join('unit as u', 'u.id', 'product_uom.unit_dasar')
@@ -1672,7 +1674,7 @@ class ProductController extends Controller
         }
         $data['data_satuan'] = $result_satuan;
         $company_id = session('id_company');
-        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         return view('web.product.product-disc-free', $data);
     }
 
@@ -1698,7 +1700,7 @@ class ProductController extends Controller
             DB::commit();
 
             $company_id = session('id_company');
-            $update = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $update = ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($update)) {
                 DB::rollBack();
                 $result['message'] = 'Data Product UOM Price tidak ditemukan';
@@ -1740,7 +1742,7 @@ class ProductController extends Controller
         $result['is_valid'] = false;
 
         $company_id = session('id_company');
-        $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+        $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->where('product', $data['id'])
             ->orderBy('level')
@@ -1757,7 +1759,7 @@ class ProductController extends Controller
                 // Carton : (300.000 / 12) * 12 = 300.000 ✅
                 // Pcs    : (300.000 / 12) * 1  = 25.000  ✅
 
-                $uomPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                $uomPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->where('product', $data['id'])
                     ->whereNull('deleted')
                     ->where('unit', $uom->unit_tujuan)
