@@ -189,10 +189,10 @@
                             Posted
                         </button>
                         &nbsp;
-                        <button type="submit" onclick="SalesInvoice.submit(this, event)"
+                        {{-- <button type="submit" onclick="SalesInvoice.submit(this, event)"
                             class="btn btn-success waves-effect waves-light me-1">
                             Submit
-                        </button>
+                        </button> --}}
                     @endif
                     @if ($data->status != 'PAID' && $data->status != 'PARTIAL-PAID' && $data->status != 'CANCELED')
                         <button type="submit" onclick="SalesInvoice.submit(this, event)"
