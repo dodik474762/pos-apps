@@ -217,4 +217,185 @@ class ReportPembayaranController extends Controller
         $query = DB::getQueryLog();
         return json_encode($data);
     }
+
+    public function getDataPerProduct(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+
+        $date_start = $_POST['date_start'] ?? date('Y-m-01');
+        $date_end = $_POST['date_end'] ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
+
+        $invoiceTotal = DB::table('sales_invoice_detail')
+            ->select('invoice_id', DB::raw('SUM(subtotal) as invoice_subtotal'))
+            ->whereNull('deleted')
+            ->whereNull('flag_cancel')
+            ->groupBy('invoice_id');
+
+        $datadb = SalesOrderHeader::from('sales_order_headers as m')
+            ->select([
+                'spd.id',
+                'sph.payment_date',
+                'sph.payment_code',
+                'sph.payment_method',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'v.nama_vendor as principal',
+                'p.code as product_code',
+                'p.name as product_name',
+                'p.category as category_product',
+                'sid.qty',
+                'u.name as unit_name',
+                'sid.price',
+                'sid.discount',
+                'sid.subtotal',
+                DB::raw('ROUND(CASE WHEN IFNULL(it.invoice_subtotal, 0) > 0 THEN (spd.allocated_amount * sid.subtotal / it.invoice_subtotal) ELSE 0 END, 2) as product_payment_amount'),
+                'spd.allocated_amount',
+                'spd.outstanding_amount',
+            ])
+            ->join('customer as c', 'c.id', 'm.customer_id')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'm.id')->whereNull('sih.deleted');
+            })
+            ->join('sales_invoice_detail as sid', function ($q) {
+                return $q->on('sid.invoice_id', 'sih.id')
+                    ->whereNull('sid.deleted')
+                    ->whereNull('sid.flag_cancel');
+            })
+            ->join('product as p', 'p.id', 'sid.product_id')
+            ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+            ->leftJoin('sales_order_details as sod', function ($q) {
+                return $q->on('sod.id', 'sid.so_detail_id')->whereNull('sod.deleted');
+            })
+            ->leftJoin('unit as u', 'u.id', 'sod.unit')
+            ->join('sales_payment_detail as spd', function ($q) {
+                return $q->on('spd.invoice_id', 'sih.id')->whereNull('spd.deleted');
+            })
+            ->join('sales_payment_header as sph', function ($q) {
+                return $q->on('sph.id', 'spd.payment_id')->whereNull('sph.deleted');
+            })
+            ->leftJoinSub($invoiceTotal, 'it', function ($q) {
+                return $q->on('it.invoice_id', 'sih.id');
+            })
+            ->whereNull('m.deleted')
+            ->whereNull('sih.deleted');
+
+        if ($principal !== '') {
+            $datadb->where('p.vendor', $principal);
+        }
+
+        if ($date_start !== '' && $date_end !== '') {
+            $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end]);
+        }
+
+        if (isset($data['customer_id']) && $data['customer_id'] != '') {
+            $datadb->where('sih.customer_id', $data['customer_id']);
+        }
+
+        if (isset($_POST)) {
+            $data['recordsTotal'] = $datadb->get()->count();
+
+            if (isset($_POST['search']['value'])) {
+                $keyword = $_POST['search']['value'];
+                $datadb->where(function ($query) use ($keyword) {
+                    $query->where('sph.payment_code', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('sph.payment_date', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.code', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.name', 'LIKE', '%' . $keyword . '%')
+                        ->orWhere('p.category', 'LIKE', '%' . $keyword . '%');
+                });
+            }
+
+            if (isset($_POST['order'][0]['column'])) {
+                switch ($_POST['order'][0]['column']) {
+                    case 1:
+                        $datadb->orderBy('sph.payment_date', $_POST['order'][0]['dir']);
+                        break;
+                    case 2:
+                        $datadb->orderBy('sph.payment_code', $_POST['order'][0]['dir']);
+                        break;
+                    case 3:
+                        $datadb->orderBy('c.code', $_POST['order'][0]['dir']);
+                        break;
+                    case 4:
+                        $datadb->orderBy('c.nama_customer', $_POST['order'][0]['dir']);
+                        break;
+                    case 5:
+                        $datadb->orderBy('sih.invoice_number', $_POST['order'][0]['dir']);
+                        break;
+                    case 6:
+                        $datadb->orderBy('sih.invoice_date', $_POST['order'][0]['dir']);
+                        break;
+                    case 7:
+                        $datadb->orderBy('v.nama_vendor', $_POST['order'][0]['dir']);
+                        break;
+                    case 8:
+                        $datadb->orderBy('p.code', $_POST['order'][0]['dir']);
+                        break;
+                    case 9:
+                        $datadb->orderBy('p.name', $_POST['order'][0]['dir']);
+                        break;
+                    case 10:
+                        $datadb->orderBy('p.category', $_POST['order'][0]['dir']);
+                        break;
+                    case 11:
+                        $datadb->orderBy('sid.qty', $_POST['order'][0]['dir']);
+                        break;
+                    case 12:
+                        $datadb->orderBy('u.name', $_POST['order'][0]['dir']);
+                        break;
+                    case 13:
+                        $datadb->orderBy('sid.price', $_POST['order'][0]['dir']);
+                        break;
+                    case 14:
+                        $datadb->orderBy('sid.discount', $_POST['order'][0]['dir']);
+                        break;
+                    case 15:
+                        $datadb->orderBy('sid.subtotal', $_POST['order'][0]['dir']);
+                        break;
+                    case 16:
+                        $datadb->orderBy('product_payment_amount', $_POST['order'][0]['dir']);
+                        break;
+                    default:
+                        $datadb->orderBy('sph.payment_date', 'desc');
+                        break;
+                }
+            }
+
+            $data['recordsFiltered'] = $datadb->get()->count();
+
+            if (isset($_POST['length'])) {
+                $datadb->limit($_POST['length']);
+            }
+            if (isset($_POST['start'])) {
+                $datadb->offset($_POST['start']);
+            }
+        }
+
+        $resultdb = [];
+        $datadb = $datadb->get()->toArray();
+
+        foreach ($datadb as $value) {
+            $resultdb[] = $value;
+        }
+        $data['data'] = $resultdb;
+        $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
+        $data['session'] = $principal;
+
+        $query = DB::getQueryLog();
+        return json_encode($data);
+    }
 }

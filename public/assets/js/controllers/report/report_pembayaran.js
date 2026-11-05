@@ -326,6 +326,208 @@ let ReportPembayaran = {
             ));
     },
 
+    filter: () => {
+        ReportPembayaran.getData();
+
+        if ($.fn.DataTable.isDataTable("table#table-data-per-produk")) {
+            $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    },
+
+    getDataPerProduct: async () => {
+        let tableData = $("table#table-data-per-produk");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[1, "desc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPembayaran.moduleApi()) +
+                    `getDataPerProduct`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPembayaran.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
+                    d.customer_id = $("#customer_id").val();
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPembayaranPerProduk",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    title: "No",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "payment_date",
+                    title: "TANGGAL BAYAR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "payment_code",
+                    title: "PAYMENT NO",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "CUST CODE",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "nama_customer",
+                    title: "CUST NAME",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "INVOICE NO",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "INVOICE DATE",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "principal",
+                    title: "PRINCIPAL",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "KODE PRODUK",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "NAMA PRODUK",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "category_product",
+                    title: "KATEGORI",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "qty",
+                    title: "QTY",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "unit_name",
+                    title: "SATUAN",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "price",
+                    title: "HARGA",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "discount",
+                    title: "DISCOUNT",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "subtotal",
+                    title: "SUBTOTAL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_payment_amount",
+                    title: "NILAI BAYAR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1348,4 +1550,12 @@ function newexportaction(e, dt, button, config) {
 $(function () {
     ReportPembayaran.setSelect2();
     ReportPembayaran.getData();
+
+    $('a[href="#detail-per-produk"]').on("shown.bs.tab", function () {
+        if (!$.fn.DataTable.isDataTable("table#table-data-per-produk")) {
+            ReportPembayaran.getDataPerProduct();
+        } else {
+            $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    });
 });

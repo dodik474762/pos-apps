@@ -100,7 +100,7 @@
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"
-                                            onclick="ReportPembayaran.getData();"> <i
+                                            onclick="ReportPembayaran.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
                                         </button>
@@ -118,6 +118,12 @@
                                     <a class="nav-link active All py-3" data-bs-toggle="tab" id="All"
                                         href="#list-data" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-detail-per-produk"
+                                        href="#detail-per-produk" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Detail Pembayaran Per Produk
                                     </a>
                                 </li>
                             </ul>
@@ -163,6 +169,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="tab-pane" id="detail-per-produk">
+                                    @include('web.report_pembayaran.detail_per_produk')
                                 </div>
                             </div>
                         </div>
