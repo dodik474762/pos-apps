@@ -388,6 +388,293 @@ let ReportPiutang = {
             ));
     },
 
+    filter: () => {
+        ReportPiutang.getData();
+
+        if ($.fn.DataTable.isDataTable("table#table-data-per-produk")) {
+            $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    },
+
+    getDataPerProduct: async () => {
+        let tableData = $("table#table-data-per-produk");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[2, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPiutang.moduleApi()) +
+                    `getDataPerProduct`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPiutang.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPiutangPerProduk",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    title: "No",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NO FAKTUR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "TANGGAL FAKTUR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "KODE CUSTOMER",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "nama_customer",
+                    title: "NAMA CUSTOMER",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "payment_terms",
+                    title: "PAYMENT TERM",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kecamatan",
+                    title: "KECAMATAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kabupaten",
+                    title: "KABUPATEN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "channel_outlet",
+                    title: "CHANNEL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "salesman_nik",
+                    title: "KODE SALESMAN",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "NAMA SALESMAN",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "due_date",
+                    title: "JATUH TEMPO",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "umur_faktur",
+                    title: "UMUR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "principal",
+                    title: "PRINCIPAL",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "KODE PRODUK",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "NAMA PRODUK",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "category_product",
+                    title: "KATEGORI",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "qty",
+                    title: "QTY",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "unit_name",
+                    title: "SATUAN",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "price",
+                    title: "HARGA",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "discount",
+                    title: "DISCOUNT",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "subtotal",
+                    title: "SUBTOTAL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_total_amount",
+                    title: "TOTAL PIUTANG",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_amount_paid",
+                    title: "TOTAL DIBAYAR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "product_outstanding_amount",
+                    title: "SISA HUTANG",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "overdue",
+                    title: "OVERDUE",
+                    render: function (data, type, row) {
+                        let label =
+                            data > 0
+                                ? `<span class="badge bg-danger">${data} Hari</span>`
+                                : `<span class="badge bg-success">0</span>`;
+                        return label;
+                    },
+                },
+                {
+                    data: "cluster_overdue",
+                    title: "CLUSTER OVERDUE",
+                    render: function (data, type, row) {
+                        let colorMap = {
+                            "Belum Jatuh Tempo": "bg-success",
+                            "0-3 Hari": "bg-warning text-dark",
+                            "4-6 Hari": "bg-warning text-dark",
+                            "7-14 Hari": "bg-orange",
+                            "15-20 Hari": "bg-danger",
+                            "21 Hari ke Atas": "bg-dark",
+                        };
+                        let cls = colorMap[data] ?? "bg-secondary";
+                        return `<span class="badge ${cls}">${data ?? "-"}</span>`;
+                    },
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1410,4 +1697,12 @@ function newexportaction(e, dt, button, config) {
 $(function () {
     ReportPiutang.setSelect2();
     ReportPiutang.getData();
+
+    $('a[href="#detail-per-produk"]').on("shown.bs.tab", function () {
+        if (!$.fn.DataTable.isDataTable("table#table-data-per-produk")) {
+            ReportPiutang.getDataPerProduct();
+        } else {
+            $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    });
 });
