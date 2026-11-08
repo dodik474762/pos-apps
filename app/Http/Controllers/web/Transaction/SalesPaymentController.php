@@ -90,6 +90,7 @@ class SalesPaymentController extends Controller
             ->select([
                 'packing_list_no',
                 'driver_name',
+                'packing_date',
                 DB::raw("'delivery' as pl_type")
             ])
             ->where(function ($q) {
@@ -108,6 +109,7 @@ class SalesPaymentController extends Controller
             ->select([
                 'packing_list_salesman.packing_list_no',
                 'usr.name as driver_name',
+                'packing_list_salesman.packing_date',
                 DB::raw("'sales' as pl_type")
             ])
             ->join('users as usr', 'usr.id', 'packing_list_salesman.salesman')

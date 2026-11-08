@@ -63,7 +63,8 @@
                                             <option value="{{ $item['packing_list_no'] }}"
                                                 {{ $packing_list == $item['packing_list_no'] ? 'selected' : '' }}>
                                                 {{ $item['packing_list_no'] }} -
-                                                {{ $item['driver_name'] }} - {{ $item['pl_type'] }}
+                                                {{ $item['driver_name'] }} - {{ $item['pl_type'] }} -
+                                                {{ $item['packing_date'] ?? '' }}
                                             </option>
                                         @endforeach
                                     </select>

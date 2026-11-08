@@ -1458,7 +1458,7 @@ class SalesOrderController extends Controller
             if ($customers) {
                 if ($customers->latitude  == '') $customers->latitude  = $data['latitude'];
                 if ($customers->longitude == '') $customers->longitude = $data['longitude'];
-                if ($customers->customer_category == '2') $customers->customer_category = '1';
+                if ($customers->customer_category != '1') $customers->customer_category = '1';
                 $customers->save();
             }
 
