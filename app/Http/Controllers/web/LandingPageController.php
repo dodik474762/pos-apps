@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 
 class LandingPageController extends Controller
 {
-    private const WHATSAPP_NUMBER = '6281234567890';
-    private const CONTACT_EMAIL = 'hello@dms.id';
+    private const WHATSAPP_NUMBER = '6285748233712';
+    private const CONTACT_EMAIL = 'solutionsdapps@gmail.com';
 
     public function index()
     {

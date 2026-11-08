@@ -10,13 +10,13 @@
             </a>
             <p>Membantu distributor Indonesia mengelola order, stok, salesman, piutang, dan pengiriman dari satu dashboard.</p>
             <div class="footer-contact">
-                <a href="https://wa.me/{{ $whatsappNumber ?? '6281234567890' }}" target="_blank" rel="noopener">
+                <a href="https://wa.me/{{ $whatsappNumber ?? '6285748233712' }}" target="_blank" rel="noopener">
                     <svg class="icon" aria-hidden="true"><use href="#i-whatsapp"></use></svg>
                     WhatsApp
                 </a>
-                <a href="mailto:{{ $contactEmail ?? 'hello@dms.id' }}">
+                <a href="mailto:{{ $contactEmail ?? 'solutionsdapps@gmail.com' }}">
                     <svg class="icon" aria-hidden="true"><use href="#i-mail"></use></svg>
-                    {{ $contactEmail ?? 'hello@dms.id' }}
+                    {{ $contactEmail ?? 'solutionsdapps@gmail.com' }}
                 </a>
             </div>
         </div>
