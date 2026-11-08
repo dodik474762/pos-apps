@@ -168,8 +168,9 @@
                                                     <th>Customer</th>
                                                     <th>Grand Total</th>
                                                     <th>Currency</th>
-                                                    <th>Dibuat Oleh</th>
-                                                    <th>Status</th>
+<th>Dibuat Oleh</th>
+<th>Salesman</th>
+<th>Status</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

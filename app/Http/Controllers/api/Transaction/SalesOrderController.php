@@ -55,6 +55,7 @@ class SalesOrderController extends Controller
             ->select([
                 'm.*',
                 'u.name as created_by_name',
+                'sl.name as salesman_name',
                 'cc.nama_customer',
                 'c.code as currency_code',
                 'cc.code as customer_code',
@@ -63,6 +64,7 @@ class SalesOrderController extends Controller
                 DB::raw('ROUND((m.total_amount - COALESCE(m.discount_amount,0)), 2) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
+            ->leftJoin('users as sl', 'sl.id', 'm.salesman')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('currency as c', 'c.id', 'm.currency')
             ->leftJoin('branch as b', 'b.id', 'm.branch')

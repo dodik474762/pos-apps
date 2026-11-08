@@ -253,6 +253,13 @@ let SalesOrder = {
                     data: "created_by_name",
                 },
                 {
+                    data: "salesman_name",
+                    title: "Salesman",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
                     data: "status",
                 },
                 {
