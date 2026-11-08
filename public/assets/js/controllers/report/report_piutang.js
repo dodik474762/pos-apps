@@ -223,6 +223,7 @@ let ReportPiutang = {
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val(); // ambil dari input tanggal
                     d.principal = $("#filter-principal").val();
+                    d.filter_status = $("#filter-status").val() || "outstanding";
                 },
             },
             deferRender: true,

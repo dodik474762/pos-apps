@@ -69,6 +69,14 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <select class="form-control" id="filter-status">
+                                            <option value="outstanding">Outstanding</option>
+                                            <option value="all">All</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"

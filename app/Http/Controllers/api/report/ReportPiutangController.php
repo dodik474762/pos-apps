@@ -104,7 +104,10 @@ class ReportPiutangController extends Controller
         if (isset($data['types']) && $data['types'] == 'per-penjual') {
             $datadb->where('m.total_amount', '>', 0);
         } else {
-            $datadb->having('outstanding_amount', '>', 0);
+            $filter_status = $_POST['filter_status'] ?? 'outstanding';
+            if ($filter_status !== 'all') {
+                $datadb->having('outstanding_amount', '>', 0);
+            }
         }
 
         if (isset($data['types'])) {
