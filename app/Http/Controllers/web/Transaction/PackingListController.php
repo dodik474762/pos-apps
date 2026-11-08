@@ -200,6 +200,7 @@ class PackingListController extends Controller
         $data = $request->all();
         $data['list_kendaraan'] = $this->getKendaraan();
 
+        $data['view_mode'] = isset($data['view']) && $data['view'] == 1;
         $data['data'] = $api->getDetailData($data['id'])->original;
         $company_id = session('id_company');
         $data['taxes'] = Tax::where('is_active', 1)

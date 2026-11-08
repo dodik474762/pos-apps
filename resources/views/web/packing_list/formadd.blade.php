@@ -11,7 +11,7 @@
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">
-                {{ isset($data) ? 'Edit Packing List' : 'Create Packing List' }}
+                {{ !empty($view_mode) ? 'Detail Packing List' : (isset($data) ? 'Edit Packing List' : 'Create Packing List') }}
             </h4>
 
             <div class="page-title-right">
@@ -45,7 +45,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Packing Date</label>
                                 <input type="date" id="packing_date" class="form-control required"
-                                    value="{{ $data->packing_date ?? date('Y-m-d') }}">
+                                    value="{{ $data->packing_date ?? date('Y-m-d') }}"
+                                    {{ !empty($view_mode) ? 'disabled' : '' }}>
                             </div>
 
                             <!-- <div class="mb-3">
@@ -57,7 +58,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Vehicle No</label>
                                 <select name="vehicle_no" id="vehicle_no" class="form-control required select2"
-                                    error="Vehicle Harus Diisi">
+                                    error="Vehicle Harus Diisi"
+                                    {{ !empty($view_mode) ? 'disabled' : '' }}>
                                     <option value="">Pilih Kendaraan</option>
                                     @foreach ($list_kendaraan as $item)
                                         <option value="{{ $item->nopol }}"
@@ -71,7 +73,8 @@
                             <div class="mb-3">
                                 <label class="form-label">Driver Name</label>
                                 <select name="driver" id="driver" class="form-control required select2"
-                                    error="Driver Harus Diisi">
+                                    error="Driver Harus Diisi"
+                                    {{ !empty($view_mode) ? 'disabled' : '' }}>
                                     <option value="">Pilih Driver</option>
                                     @foreach ($list_users as $driver)
                                         <option value="{{ $driver->id }}"
@@ -90,12 +93,13 @@
                             <div class="mb-3">
                                 <label class="form-label">Expedition Name</label>
                                 <input type="text" id="expedition_name" class="form-control"
-                                    value="{{ $data->expedition_name ?? '' }}">
+                                    value="{{ $data->expedition_name ?? '' }}"
+                                    {{ !empty($view_mode) ? 'disabled' : '' }}>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Remarks</label>
-                                <textarea id="remarks" class="form-control">{{ $data->remarks ?? '' }}</textarea>
+                                <textarea id="remarks" class="form-control" {{ !empty($view_mode) ? 'disabled' : '' }}>{{ $data->remarks ?? '' }}</textarea>
                             </div>
 
                         </div>
@@ -107,8 +111,10 @@
                     {{-- ==================== DO LIST =========================== --}}
                     <div class="d-flex justify-content-between">
                         <h5>Delivery Orders</h5>
+                        @if(empty($view_mode))
                         <button type="button" class="btn btn-primary btn-sm" onclick="PackingList.showModalDO()">Tambah
                             Faktur</button>
+                        @endif
                     </div>
 
                     <div class="table-responsive mt-2">
@@ -165,10 +171,12 @@
                                             <td id="do_customer" data_id="{{ $row->customer_id }}">
                                                 {{ $row->customer_code }} - {{ $row->nama_customer }}</td>
                                             <td class="text-center">
+                                                @if(empty($view_mode))
                                                 <button type="button" class="btn btn-danger btn-sm"
                                                     onclick="PackingList.removeRow(this)">
                                                     <i class="bx bx-trash-alt"></i>
                                                 </button>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -208,10 +216,11 @@
                                                     <td id="product_id" data_id="{{ $prod->product->id }}">
                                                         {{ $prod->product->code }} - {{ $prod->product->name }}</td>
                                                     <td id="product_qty">{{ $prod->qty_do }}</td>
-                                                    <td>
-                                                        <input type="number" step="0.01" class="form-control"
-                                                            id="qty_pack" value="{{ $prod->qty_packed }}">
-                                                    </td>
+<td>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        id="qty_pack" value="{{ $prod->qty_packed }}"
+                                                        {{ !empty($view_mode) ? 'disabled' : '' }}>
+                                                </td>
                                                     <td>{{ $prod->deliveryDetail->units->name ?? '-' }}</td>
                                                     <td>
                                                         <input disabled type="text" class="form-control"
@@ -256,13 +265,15 @@
         </div>
 
         <div class="text-end mt-3">
+            @if(empty($view_mode))
             <button type="submit" onclick="PackingList.submit(this, event)"
                 class="btn btn-success waves-effect waves-light me-1">
                 Submit
             </button>
+            @endif
 
-            <button type="reset" onclick="PackingList.back(this, event)" class="btn btn-secondary waves-effect">
-                Cancel
+            <button type="button" onclick="PackingList.back(this, event)" class="btn btn-secondary waves-effect">
+                {{ !empty($view_mode) ? 'Back' : 'Cancel' }}
             </button>
         </div>
 

@@ -355,6 +355,10 @@ let PackingList = {
                             PackingList.module(),
                         )}cetak?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        html += `<a href='${url.base_url(
+                            PackingList.module(),
+                        )}ubah?id=${data}&view=1' data_id="${row.id
+                            }" class="btn btn-primary editable-submit btn-sm waves-effect waves-light" title="Lihat Detail"><i class="ri-eye-line"></i></a>&nbsp;`;
                         if (updateAction == 1) {
                             html += `<a href='${url.base_url(
                                 PackingList.module(),
