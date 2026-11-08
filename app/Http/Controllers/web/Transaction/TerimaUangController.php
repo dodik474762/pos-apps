@@ -203,6 +203,7 @@ class TerimaUangController extends Controller
                 'soh.so_number',
                 'spd.allocated_amount as total_terbayar',
                 'rpd.amount_paid as total_terbayar_rph',
+                'rpd.payment_type as payment_type',
                 'top.remarks as top_customer',
                 'rph.status as status_received'
             ])
@@ -287,9 +288,23 @@ class TerimaUangController extends Controller
             ->select('rpd.invoice_id', DB::raw('MAX(rph.receive_date) as receive_date'))
             ->groupBy('rpd.invoice_id')
             ->pluck('receive_date', 'rpd.invoice_id');
-        $invoices = collect($invoices)->map(function ($item) use ($receiveDates) {
+
+        $paymentTypeRows = DB::table('receive_payment_detail as rpd')
+            ->whereNull('rpd.deleted')
+            ->whereIn('rpd.invoice_id', $ids)
+            ->orderBy('rpd.id', 'desc')
+            ->get(['rpd.invoice_id', 'rpd.payment_type']);
+        $paymentTypes = [];
+        foreach ($paymentTypeRows as $paymentTypeRow) {
+            if (!isset($paymentTypes[$paymentTypeRow->invoice_id])) {
+                $paymentTypes[$paymentTypeRow->invoice_id] = $paymentTypeRow->payment_type;
+            }
+        }
+
+        $invoices = collect($invoices)->map(function ($item) use ($receiveDates, $paymentTypes) {
             $item = (object) $item;
             $item->receive_date = $receiveDates[$item->invoice_id] ?? null;
+            $item->payment_type = $paymentTypes[$item->invoice_id] ?? null;
             return $item;
         })->all();
         $data['salesman'] = collect($invoices)->pluck('salesman_id')->unique()->first();

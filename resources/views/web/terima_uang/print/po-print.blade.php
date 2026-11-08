@@ -125,6 +125,7 @@
                 <th style="width:6%;">Status</th>
                 <th style="width:7%;">Outstanding</th>
                 <th style="width:7%;">Tanggal Terima</th>
+                <th style="width:7%;">Tipe Bayar</th>
                 <th style="width:8%;">Nilai Terima</th>
             </tr>
         </thead>
@@ -154,6 +155,7 @@
                     <td>{{ $item->status }}</td>
                     <td class="text-right nowrap">{{ number_format($out, 0, ',', '.') }}</td>
                     <td class="nowrap">{{ $item->receive_date ?? '-' }}</td>
+                    <td class="nowrap">{{ $item->payment_type ?? '-' }}</td>
                     <td class="text-right nowrap">{{ number_format($total_bayar, 0, ',', '.') }}</td>
                 </tr>
                 @php
@@ -163,7 +165,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="12" class="text-right"><strong>Total Terima</strong></td>
+                <td colspan="13" class="text-right"><strong>Total Terima</strong></td>
                 <td class="text-right nowrap"><strong>{{ number_format($total_terima, 0, ',', '.') }}</strong></td>
             </tr>
         </tfoot>

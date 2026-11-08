@@ -47,6 +47,7 @@ let TerimaUang = {
                 result.push({
                     invoice_id: $row.attr("invoice_id") || null,
                     amount_paid: $row.find("#amount_paid").val() || "",
+                    payment_type: $row.find("#payment_type").val() || "CASH",
                 });
             }
         });

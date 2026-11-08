@@ -144,7 +144,8 @@
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
-                                                    <th>Koresi Terima Uang</th>
+                                                    <th>Payment Type</th>
+<th>Koresi Terima Uang</th>
                                                     <th style="width: 40px;">
                                                         <input type="checkbox" id="check-all"
                                                             onchange="TerimaUang.checkAll(this)">
@@ -183,12 +184,18 @@
                                                         <td>{{ $item->status }}</td>
                                                         <td>{{ number_format($item->total_amount, 0, ',', '.') }}
                                                         </td>
-                                                        <td value="{{ $total_bayar }}">
-                                                            @if ($item->status_received == '' || $item->status_received == 'PENDING')
-                                                                <input type="text" value="{{ $total_bayar }}"
-                                                                    id="amount_paid">
-                                                            @endif
-                                                        </td>
+<td>
+    <select id="payment_type" class="form-control">
+        <option value="CASH">CASH</option>
+        <option value="TRANSFER">TRANSFER</option>
+    </select>
+</td>
+<td value="{{ $total_bayar }}">
+    @if ($item->status_received == '' || $item->status_received == 'PENDING')
+        <input type="text" value="{{ $total_bayar }}"
+            id="amount_paid">
+    @endif
+</td>
                                                         <td>
                                                             <input type="checkbox" data_id="{{ $item->invoice_id }}"
                                                                 class="check-item" value="{{ $item->invoice_id }}">
@@ -224,7 +231,8 @@
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
-                                                    <th>Koresi Terima Uang</th>
+                                                    <th>Payment Type</th>
+<th>Koresi Terima Uang</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
@@ -261,9 +269,10 @@
                                                             <td>{{ $item->status }}</td>
                                                             <td>{{ number_format($item->total_amount, 0, ',', '.') }}
                                                             </td>
-                                                            <td value="{{ $total_bayar }}">
-                                                                {{ number_format($total_bayar, 0, ',', '.') }}
-                                                            </td>
+<td>{{ $item->payment_type ?? '' }}</td>
+<td value="{{ $total_bayar }}">
+    {{ number_format($total_bayar, 0, ',', '.') }}
+</td>
                                                         </tr>
                                                     @endif
                                                 @endforeach
@@ -296,7 +305,8 @@
                                                     <th>Tanggal Jatuh Tempo</th>
                                                     <th>Status</th>
                                                     <th>Tagihan (IDR)</th>
-                                                    <th>Koresi Terima Uang</th>
+                                                    <th>Payment Type</th>
+<th>Koresi Terima Uang</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
@@ -333,9 +343,10 @@
                                                             <td>{{ $item->status }}</td>
                                                             <td>{{ number_format($item->total_amount, 0, ',', '.') }}
                                                             </td>
-                                                            <td value="{{ $total_bayar }}">
-                                                                {{ number_format($total_bayar, 0, ',', '.') }}
-                                                            </td>
+<td>{{ $item->payment_type ?? '' }}</td>
+<td value="{{ $total_bayar }}">
+    {{ number_format($total_bayar, 0, ',', '.') }}
+</td>
                                                         </tr>
                                                     @endif
                                                 @endforeach

@@ -103,6 +103,7 @@ class TerimaUangController extends Controller
                 $detail->receive_id = $hdrId;
                 $detail->invoice_id = $value['invoice_id'];
                 $detail->amount_paid = $value['amount_paid'];
+                $detail->payment_type = $value['payment_type'] ?? 'CASH';
                 $detail->line_no = $line++;
                 if ($company_id !== null && $company_id !== '') {
                     $detail->company_id = $company_id;
