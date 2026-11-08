@@ -895,6 +895,7 @@ Route::post('api/report/report_stock_customer/getData', [ApiReportStockCustomerC
 Route::post('api/report/report_visit/getData', [ReportReportVisitController::class, 'getData']);
 Route::post('api/report/report_visit/getDataSummary', [ReportReportVisitController::class, 'getDataSummary']);
 Route::post('api/report/report_penjualan/getData', [ReportReportPenjualanController::class, 'getData']);
+Route::post('api/report/report_penjualan/getDataDetailDiskon', [ReportReportPenjualanController::class, 'getDataDetailDiskon']);
 Route::post('api/report/report_penjualan/getDataPenjualanPerProduct', [ReportReportPenjualanController::class, 'getDataPenjualanPerProduct']);
 Route::post('api/report/report_piutang/getData', [ReportReportPiutangController::class, 'getData']);
 Route::post('api/report/report_piutang/getDataPerProduct', [ReportReportPiutangController::class, 'getDataPerProduct']);

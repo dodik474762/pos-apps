@@ -88,6 +88,7 @@
                                             <option value="PENJUALAN">PENJUALAN</option>
                                             <option value="PENJUALAN PER PENJUAL">PENJUALAN PER PENJUAL</option>
                                             <option value="PENJUALAN PER BARANG">PENJUALAN PER BARANG</option>
+                                            <option value="PENJUALAN DETAIL DISKON">PENJUALAN DETAIL DISKON</option>
                                         </select>
                                     </div>
                                 </div>
@@ -135,6 +136,12 @@
                                     <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-per-barang"
                                         href="#report-per-barang" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Per Barang
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-report-detail-diskon"
+                                        href="#report-detail-diskon" role="tab" aria-selected="true">
+                                        <i class="ri-store-2-fill me-1 align-bottom"></i> Report Penjualan Detail Diskon
                                     </a>
                                 </li>
                             </ul>
@@ -219,6 +226,10 @@
 
                                 <div class="tab-pane" id="report-per-barang">
                                     @include('web.report_penjualan.report_per_barang')
+                                </div>
+
+                                <div class="tab-pane" id="report-detail-diskon">
+                                    @include('web.report_penjualan.report_detail_diskon')
                                 </div>
                             </div>
                         </div>

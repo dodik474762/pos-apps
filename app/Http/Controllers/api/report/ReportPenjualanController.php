@@ -419,6 +419,116 @@ class ReportPenjualanController extends Controller
         return json_encode($data);
     }
 
+    public function getDataDetailDiskon()
+    {
+        $response = $this->getData();
+        $result = json_decode($response, true);
+
+        if (!is_array($result)) {
+            return $response;
+        }
+
+        $company_id = session('id_company');
+        $rows = $result['data'] ?? [];
+        $salesOrderIds = collect($rows)->pluck('id')->filter()->unique()->values()->all();
+
+        $discountBySo = [];
+        if (!empty($salesOrderIds)) {
+            $promoRows = DB::table('sales_order_promo as sop')
+                ->leftJoin('product_promo_item as ppi', function ($j) use ($company_id) {
+                    $j->on('ppi.id', '=', 'sop.promo')
+                        ->whereNull('ppi.deleted');
+                    if ($company_id !== null && $company_id !== '') {
+                        $j->where('ppi.company_id', $company_id);
+                    }
+                })
+                ->whereIn('sop.sales_order_id', $salesOrderIds)
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sop.company_id', $company_id))
+                ->select([
+                    'sop.sales_order_id',
+                    'sop.discount_amount',
+                    'ppi.kategori_disc',
+                    'ppi.beban',
+                    'ppi.additional_disc',
+                    'ppi.additional_disc_type',
+                ])
+                ->get();
+
+            foreach ($promoRows as $promo) {
+                $soId = $promo->sales_order_id;
+                if (!isset($discountBySo[$soId])) {
+                    $discountBySo[$soId] = [
+                        'line_discount_1' => 0,
+                        'line_discount_2' => 0,
+                        'line_discount_3' => 0,
+                        'line_discount_4' => 0,
+                        'line_discount_5' => 0,
+                    ];
+                }
+
+                $amount          = (float) ($promo->discount_amount ?? 0);
+                $beban           = strtoupper(trim((string) $promo->beban));
+                $kategori        = strtoupper(trim((string) $promo->kategori_disc));
+                $additionalDisc  = (float) ($promo->additional_disc ?? 0);
+                $additionalType  = trim((string) $promo->additional_disc_type);
+
+                $line = 0;
+                if ($beban === 'PRINCIPAL') {
+                    if ($kategori === 'DISC PROMO') {
+                        $line = 1;
+                    } elseif (in_array($kategori, ['DISC SYARAT STRATA', 'DISC SYARAT', 'DISC STRATA'], true)) {
+                        $line = 2;
+                    } elseif ($kategori === 'DISC CHANNEL') {
+                        $line = 3;
+                    } elseif ($additionalDisc > 0) {
+                        $line = 3;
+                    } else {
+                        $line = 1;
+                    }
+                } else {
+                    if ($additionalDisc > 0 && $additionalType !== '') {
+                        $line = 4;
+                    } else {
+                        $line = 5;
+                    }
+                }
+
+                $discountBySo[$soId]['line_discount_' . $line] += $amount;
+            }
+        }
+
+        foreach ($rows as $index => $row) {
+            $soId = $row['id'] ?? null;
+            $discount = $discountBySo[$soId] ?? [
+                'line_discount_1' => 0,
+                'line_discount_2' => 0,
+                'line_discount_3' => 0,
+                'line_discount_4' => 0,
+                'line_discount_5' => 0,
+            ];
+
+            $isProrateRow = (float) ($row['prorate_discount'] ?? 0) != 0 && empty($row['is_return']);
+            $line1 = $isProrateRow ? (float) $discount['line_discount_1'] : 0;
+            $line2 = $isProrateRow ? (float) $discount['line_discount_2'] : 0;
+            $line3 = $isProrateRow ? (float) $discount['line_discount_3'] : 0;
+            $line4 = $isProrateRow ? (float) $discount['line_discount_4'] : 0;
+            $line5 = $isProrateRow ? (float) $discount['line_discount_5'] : 0;
+
+            $productDiscount = (float) ($row['discount_per_product'] ?? 0);
+            $line3 += $productDiscount;
+
+            $rows[$index]['line_discount_1'] = $line1;
+            $rows[$index]['line_discount_2'] = $line2;
+            $rows[$index]['line_discount_3'] = $line3;
+            $rows[$index]['line_discount_4'] = $line4;
+            $rows[$index]['line_discount_5'] = $line5;
+            $rows[$index]['total_discount_detail'] = $line1 + $line2 + $line3 + $line4 + $line5;
+        }
+
+        $result['data'] = $rows;
+        return json_encode($result);
+    }
+
     public function getDataPenjualanPerProduct(Request $request)
     {
         DB::enableQueryLog();

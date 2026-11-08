@@ -610,6 +610,404 @@ let ReportPenjualan = {
             ));
     },
 
+    getDataDetailDiskon: async () => {
+        let tableData = $("table#table-data-detail-diskon");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[0, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPenjualan.moduleApi()) +
+                    `getDataDetailDiskon`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPenjualan.csrf_token(),
+                },
+                data: function (d) {
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPenjualanDetailDiskon",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "principal",
+                    title: "PRINCIPAL",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "nama_vendor",
+                    title: "VENDOR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "KODE PRODUK",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "model_number",
+                    title: "KODE PRODUK PRINCIPAL",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "NAMA PRODUK",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "category",
+                    title: "KATEGORI",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "brand",
+                    title: "BRAND",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "sub_brand",
+                    title: "SUB BRAND",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "PACKAGING",
+                    render: function (data, type, row) {
+                        return "";
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "KODE CUSTOMER",
+                },
+                {
+                    data: "nama_customer",
+                    title: "NAMA CUSTOMER",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kecamatan",
+                    title: "KECAMATAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kabupaten",
+                    title: "KABUPATEN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kelurahan",
+                    title: "KELURAHAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "alamat",
+                    title: "ALAMAT",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "nama_pasar",
+                    title: "NAMA PASAR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "channel_outlet",
+                    title: "CHANNEL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "salesman_nik",
+                    title: "KODE SALESMAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "NAMA SALESMAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "cicle_type",
+                    title: "CYCLE KUNJUNGAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "day_name",
+                    title: "DAY KUNJUNGAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "day",
+                    title: "TANGGAL",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "month",
+                    title: "BULAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "year",
+                    title: "TAHUN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NOMOR INVOICE",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "qty_sold",
+                    title: "QTYSOLD",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "qty_sold",
+                    title: "KARTON",
+                    render: function (data, type, row) {
+                        if (!data) return 0;
+                        let parts = data.split(".");
+                        let total = parts.length;
+                        if (total === 4) return parts[0];
+                        if (total === 3) return parts[0];
+                        if (total === 2) return parts[0];
+                        return 0;
+                    },
+                },
+                {
+                    data: "qty_sold",
+                    title: "RENTENG",
+                    render: function (data, type, row) {
+                        if (!data) return 0;
+                        let parts = data.split(".");
+                        if (parts.length === 4) return parts[1];
+                        return 0;
+                    },
+                },
+                {
+                    data: "qty_sold",
+                    title: "PACK",
+                    render: function (data, type, row) {
+                        if (!data) return 0;
+                        let parts = data.split(".");
+                        let total = parts.length;
+                        if (total === 4) return parts[2];
+                        if (total === 3) return parts[1];
+                        return 0;
+                    },
+                },
+                {
+                    data: "qty_sold",
+                    title: "PCS",
+                    render: function (data, type, row) {
+                        if (!data) return 0;
+                        let parts = data.split(".");
+                        let total = parts.length;
+                        if (total === 4) return parts[3];
+                        if (total === 3) return parts[2];
+                        if (total === 2) return parts[1];
+                        return parts[0];
+                    },
+                },
+                {
+                    data: "so_date",
+                    title: "TIPE TRANS",
+                    render: function (data, type, row) {
+                        return row.is_return ? "retur" : "sales";
+                    },
+                },
+                {
+                    data: "gross_amount",
+                    title: "GROSSAMOUNT",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "line_discount_1",
+                    title: "LINE DISCOUNT 1",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "line_discount_2",
+                    title: "LINE DISCOUNT 2",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "line_discount_3",
+                    title: "LINE DISCOUNT 3",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "line_discount_4",
+                    title: "LINE DISCOUNT 4",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "line_discount_5",
+                    title: "LINE DISCOUNT 5",
+                    render: function (data, type, row) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "total_discount_detail",
+                    title: "TOTAL DISCOUNT",
+                    render: function (data, type, row) {
+                        let total = parseFloat(data ?? 0);
+                        return isNaN(total) ? 0 : total;
+                    },
+                },
+                {
+                    data: "gross_amount",
+                    title: "NET AMOUNT",
+                    render: function (data, type, row) {
+                        let gross = parseFloat(row.gross_amount ?? 0);
+                        let total = parseFloat(row.total_discount_detail ?? 0);
+                        gross = isNaN(gross) ? 0 : gross;
+                        total = isNaN(total) ? 0 : total;
+                        return gross - total;
+                    },
+                },
+                {
+                    data: "so_date",
+                    title: "NO FAKTUR PAJAK",
+                    render: function (data, type, row) {
+                        return "";
+                    },
+                },
+                {
+                    data: "so_date",
+                    title: "TGL FAKTUR PAJAK",
+                    render: function (data, type, row) {
+                        return "";
+                    },
+                },
+                {
+                    data: "so_date",
+                    title: "COGS",
+                    render: function (data, type, row) {
+                        return "";
+                    },
+                },
+            ],
+        });
+
+        $("#btn-filter").on("click", function () {
+            data.ajax.reload();
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
+    },
+
     delete: (elm, e) => {
         e.preventDefault();
         let params = {};
@@ -1951,6 +2349,9 @@ let ReportPenjualan = {
         if (type == "PENJUALAN PER BARANG") {
             ReportPenjualan.getDataPerProduct();
         }
+        if (type == "PENJUALAN DETAIL DISKON") {
+            ReportPenjualan.getDataDetailDiskon();
+        }
     },
 
     getDataPerProduct: async () => {
@@ -2334,4 +2735,5 @@ $(function () {
     ReportPenjualan.getData();
     ReportPenjualan.getDataPerPenjual();
     ReportPenjualan.getDataPerProduct();
+    ReportPenjualan.getDataDetailDiskon();
 });
