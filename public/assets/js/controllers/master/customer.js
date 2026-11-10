@@ -494,6 +494,33 @@ let Customer = {
                     data: "sub_channel_outlet",
                 },
                 {
+                    data: "pasar_name",
+                },
+                {
+                    data: "kecamatan",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kota",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "provinsi",
+                },
+                {
+                    data: "provinsi_name",
+                },
+                {
+                    data: "created_at",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         const akses_session = $("#akses_session").val();
@@ -624,6 +651,33 @@ let Customer = {
                 },
                 {
                     data: "sub_channel_outlet",
+                },
+                {
+                    data: "pasar_name",
+                },
+                {
+                    data: "kecamatan",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kota",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "provinsi",
+                },
+                {
+                    data: "provinsi_name",
+                },
+                {
+                    data: "created_at",
+                },
+                {
+                    data: "created_by_name",
                 },
                 {
                     data: "id",
@@ -758,6 +812,33 @@ let Customer = {
                     data: "sub_channel_outlet",
                 },
                 {
+                    data: "pasar_name",
+                },
+                {
+                    data: "kecamatan",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kota",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "provinsi",
+                },
+                {
+                    data: "provinsi_name",
+                },
+                {
+                    data: "created_at",
+                },
+                {
+                    data: "created_by_name",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         const akses_session = $("#akses_session").val();
@@ -888,6 +969,33 @@ let Customer = {
                 },
                 {
                     data: "sub_channel_outlet",
+                },
+                {
+                    data: "pasar_name",
+                },
+                {
+                    data: "kecamatan",
+                },
+                {
+                    data: "kecamatan_name",
+                },
+                {
+                    data: "kota",
+                },
+                {
+                    data: "city_name",
+                },
+                {
+                    data: "provinsi",
+                },
+                {
+                    data: "provinsi_name",
+                },
+                {
+                    data: "created_at",
+                },
+                {
+                    data: "created_by_name",
                 },
                 {
                     data: "id",

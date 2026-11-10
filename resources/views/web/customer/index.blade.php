@@ -119,6 +119,15 @@
                                                     <th>No. HP</th>
                                                     <th>Channel Outlet</th>
                                                     <th>Sub Channel Outlet</th>
+                                                    <th>Nama Pasar</th>
+                                                    <th>Id Kecamatan</th>
+                                                    <th>Nama Kecamatan</th>
+                                                    <th>Id Kota</th>
+                                                    <th>Nama Kota</th>
+                                                    <th>Id Provinsi</th>
+                                                    <th>Nama Provinsi</th>
+                                                    <th>Tanggal Dibuat</th>
+                                                    <th>Dibuat Oleh</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
@@ -187,6 +196,15 @@
                                                     <th>No. HP</th>
                                                     <th>Channel Outlet</th>
                                                     <th>Sub Channel Outlet</th>
+                                                    <th>Nama Pasar</th>
+                                                    <th>Id Kecamatan</th>
+                                                    <th>Nama Kecamatan</th>
+                                                    <th>Id Kota</th>
+                                                    <th>Nama Kota</th>
+                                                    <th>Id Provinsi</th>
+                                                    <th>Nama Provinsi</th>
+                                                    <th>Tanggal Dibuat</th>
+                                                    <th>Dibuat Oleh</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
@@ -219,6 +237,15 @@
                                                     <th>No. HP</th>
                                                     <th>Channel Outlet</th>
                                                     <th>Sub Channel Outlet</th>
+                                                    <th>Nama Pasar</th>
+                                                    <th>Id Kecamatan</th>
+                                                    <th>Nama Kecamatan</th>
+                                                    <th>Id Kota</th>
+                                                    <th>Nama Kota</th>
+                                                    <th>Id Provinsi</th>
+                                                    <th>Nama Provinsi</th>
+                                                    <th>Tanggal Dibuat</th>
+                                                    <th>Dibuat Oleh</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
@@ -251,6 +278,15 @@
                                                     <th>No. HP</th>
                                                     <th>Channel Outlet</th>
                                                     <th>Sub Channel Outlet</th>
+                                                    <th>Nama Pasar</th>
+                                                    <th>Id Kecamatan</th>
+                                                    <th>Nama Kecamatan</th>
+                                                    <th>Id Kota</th>
+                                                    <th>Nama Kota</th>
+                                                    <th>Id Provinsi</th>
+                                                    <th>Nama Provinsi</th>
+                                                    <th>Tanggal Dibuat</th>
+                                                    <th>Dibuat Oleh</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>

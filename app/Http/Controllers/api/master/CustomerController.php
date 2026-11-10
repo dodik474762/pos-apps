@@ -37,11 +37,19 @@ class CustomerController extends Controller
                 'r.name as city_name',
                 'k.name as kecamatan_name',
                 'kl.name as kelurahan_name',
+                'rp.name as provinsi_name',
+                'p.nama_pasar as pasar_name',
+                'u.name as created_by_name',
             ])
             ->join('customer_category as cc', 'cc.id', 'm.customer_category')
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->leftJoin('region as rp', 'rp.id', '=', 'm.provinsi')
+            ->leftJoin('pasar as p', function ($q) {
+                $q->on('p.id', '=', 'm.pasar')->whereNull('p.deleted');
+            })
+            ->leftJoin('users as u', 'u.id', '=', 'm.users')
             ->whereNull('m.deleted')
             ->when(!$isSuperAdmin && $company !== null && $company !== '', fn ($q) => $q->where('m.company_id', $company));
 
@@ -654,10 +662,18 @@ class CustomerController extends Controller
                 'r.name as city_name',
                 'k.name as kecamatan_name',
                 'kl.name as kelurahan_name',
+                'rp.name as provinsi_name',
+                'p.nama_pasar as pasar_name',
+                'u.name as created_by_name',
             ])
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
+            ->leftJoin('region as rp', 'rp.id', '=', 'm.provinsi')
+            ->leftJoin('pasar as p', function ($q) {
+                $q->on('p.id', '=', 'm.pasar')->whereNull('p.deleted');
+            })
+            ->leftJoin('users as u', 'u.id', '=', 'm.users')
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
