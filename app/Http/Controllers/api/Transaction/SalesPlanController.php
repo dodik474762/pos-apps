@@ -878,4 +878,159 @@ class SalesPlanController extends Controller
 
         return response()->json($result);
     }
+
+    public function submit_import_existing(Request $request)
+    {
+        $headerId = $request->get('id');
+
+        $validator = Validator::make($request->all(), [
+            'id' => ['required'],
+            'file' => [
+                'required',
+                'file',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['csv', 'xlsx', 'xls'])) {
+                        $fail('File harus berformat CSV, XLSX, atau XLS.');
+                    }
+                }
+            ]
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'File tidak valid',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $headerQuery = SalesPlanHeader::whereNull('deleted');
+        if (session('id_company') !== null && session('id_company') !== '') {
+            $headerQuery->where('company_id', session('id_company'));
+        }
+        $header = $headerQuery->find($headerId);
+
+        $result = ['is_valid' => false, 'message' => 'Error'];
+
+        if (empty($header)) {
+            $result['message'] = 'Sales Plan tidak ditemukan';
+            return response()->json($result);
+        }
+
+        $import = new SalesPlanImport();
+        Excel::import($import, $request->file('file'));
+
+        $rows = collect($import->rows)
+            ->map(fn($row) => $row->toArray())
+            ->filter(fn($row) => !empty($row['customer_code'] ?? null))
+            ->values()
+            ->toArray();
+
+        if (empty($rows)) {
+            $result['message'] = 'Data import kosong';
+            return response()->json($result);
+        }
+
+        $company_id = $header->company_id;
+        $headerUser = DB::table('users')->where('id', $header->salesman)->first();
+
+        $idCircleKunjungan = collect($rows)->pluck('id_circle_kunjungan')->filter()->unique()->values()->toArray();
+        $idCustomer = collect($rows)->pluck('customer_code')->filter()->unique()->values()->toArray();
+
+        $masterCircle = DB::table('dictionary')
+            ->whereIn('term_id', $idCircleKunjungan)
+            ->get()
+            ->keyBy('term_id')
+            ->toArray();
+
+        $masterCustomer = DB::table('customer')
+            ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+            ->whereIn('code', $idCustomer)
+            ->get()
+            ->keyBy('code')
+            ->toArray();
+
+        $patternByCircleId = [
+            12 => 'WEEKLY',
+            13 => 'BIWEEKLY_ODD',
+            14 => 'BIWEEKLY_EVEN',
+            15 => 'THREE_WEEK_CYCLE',
+            16 => 'MONTHLY',
+        ];
+
+        DB::beginTransaction();
+        try {
+            SalesPlanDetailRoute::where('header_id', $header->id)->delete();
+
+            $totalInserted = 0;
+            $totalSkipped = 0;
+
+            foreach ($rows as $item) {
+                $salesmanCode = trim((string) ($item['kode_sales'] ?? $item['salesman'] ?? ''));
+                if ($salesmanCode !== '' && !empty($headerUser)) {
+                    $username = strtolower((string) ($headerUser->username ?? ''));
+                    $name = strtolower((string) ($headerUser->name ?? ''));
+                    $code = strtolower($salesmanCode);
+                    if ($code !== $username && $code !== $name) {
+                        $totalSkipped++;
+                        continue;
+                    }
+                }
+
+                $customer = $masterCustomer[$item['customer_code']] ?? null;
+                $circle = $masterCircle[$item['id_circle_kunjungan']] ?? null;
+
+                if (empty($customer) || empty($circle)) {
+                    $totalSkipped++;
+                    continue;
+                }
+
+                $itemVisit = $circle->id;
+                if ($itemVisit == '13') {
+                    $itemVisit = '14';
+                } elseif ($itemVisit == '14') {
+                    $itemVisit = '13';
+                }
+
+                $outletStatus = strtoupper((string) ($item['status_outlet'] ?? $item['kategori_outlet'] ?? 'REGULER'));
+                if ($outletStatus !== 'KANDIDAT') {
+                    $outletStatus = 'REGULER';
+                }
+
+                $detail = new SalesPlanDetailRoute();
+                $detail->header_id = $header->id;
+                $detail->customer_id = $customer->id;
+                $detail->visit_circle = $itemVisit;
+                $detail->visit_pattern = $patternByCircleId[(int) $itemVisit] ?? 'WEEKLY';
+                $detail->outlet_status = $outletStatus;
+                $detail->visit_mon = (isset($item['visit_mon']) && $item['visit_mon'] == '1') || (isset($item['senin']) && $item['senin'] == 'Y') ? 1 : 0;
+                $detail->visit_tue = (isset($item['visit_tue']) && $item['visit_tue'] == '1') || (isset($item['selasa']) && $item['selasa'] == 'Y') ? 1 : 0;
+                $detail->visit_wed = (isset($item['visit_wed']) && $item['visit_wed'] == '1') || (isset($item['rabu']) && $item['rabu'] == 'Y') ? 1 : 0;
+                $detail->visit_thu = (isset($item['visit_thu']) && $item['visit_thu'] == '1') || (isset($item['kamis']) && $item['kamis'] == 'Y') ? 1 : 0;
+                $detail->visit_fri = (isset($item['visit_fri']) && $item['visit_fri'] == '1') || (isset($item['jumat']) && $item['jumat'] == 'Y') ? 1 : 0;
+                $detail->visit_sat = (isset($item['visit_sat']) && $item['visit_sat'] == '1') || (isset($item['sabtu']) && $item['sabtu'] == 'Y') ? 1 : 0;
+                $detail->visit_sun = (isset($item['visit_sun']) && $item['visit_sun'] == '1') || (isset($item['minggu']) && $item['minggu'] == 'Y') ? 1 : 0;
+                $detail->note = 'IMPORT' . date('Ymd');
+                $detail->pjp_status = strtoupper((string) ($item['status_pjp'] ?? 'PERMANEN')) === 'EXTRA CALL' ? 'EXTRA CALL' : 'PERMANEN';
+                if ($detail->pjp_status == 'EXTRA CALL') {
+                    $detail->date_extra_call = date('Y-m-d');
+                }
+                $detail->company_id = $company_id;
+
+                $detail->save();
+                $totalInserted++;
+            }
+
+            DB::commit();
+            $result['is_valid'] = true;
+            $result['message'] = 'Success ' . $totalInserted . ' Imported (replace)'
+                . ($totalSkipped > 0 ? ', ' . $totalSkipped . ' Skipped' : '');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = 'Error ' . $th->getMessage();
+        }
+
+        return response()->json($result);
+    }
 }

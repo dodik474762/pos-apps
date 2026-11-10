@@ -247,8 +247,16 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn btn-sm btn-primary mt-2" onclick="SalesPlan.addRow()">+ Add
-                            Detail</button>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="SalesPlan.addRow()">+ Add
+                                Detail</button>
+                            @if (!empty($id))
+                                <button type="button" class="btn btn-sm btn-success" onclick="SalesPlan.importDetail()">
+                                    <i class="ri-upload-2-line align-bottom me-1"></i> Import XLS
+                                </button>
+                                <input type="file" id="import-file" accept=".xls,.xlsx,.csv" class="d-none">
+                            @endif
+                        </div>
                     </div>
 
                     <hr>

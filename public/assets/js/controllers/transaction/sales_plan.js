@@ -134,6 +134,15 @@ let SalesPlan = {
         }
     },
 
+    importDetail: () => {
+        const id = $("#id").val();
+        if (!id) {
+            message.sweetError("Informasi", "Simpan data terlebih dahulu sebelum import");
+            return;
+        }
+        $("#import-file").trigger("click");
+    },
+
     submit: (elm, e) => {
         e.preventDefault();
         let form = $(elm).closest("div.row");
@@ -1147,4 +1156,56 @@ $(function () {
     SalesPlan.setSelect2();
     SalesPlan.getData();
     SalesPlan.setTableItems();
+
+    $("#import-file").on("change", function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        const id = $("#id").val();
+        if (!id) {
+            message.sweetError("Informasi", "Simpan data terlebih dahulu sebelum import");
+            $(this).val("");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("id", id);
+        formData.append("file", file);
+        formData.append("_token", SalesPlan.csrf_token());
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: formData,
+            processData: false,
+            contentType: false,
+            url: url.base_url(SalesPlan.moduleApi()) + "submit_import_existing",
+            headers: {
+                "X-CSRF-TOKEN": SalesPlan.csrf_token(),
+            },
+            beforeSend: () => {
+                message.loadingProses("Proses Import Data...");
+            },
+            error: function (xhr) {
+                message.closeLoading();
+                const resp = xhr.responseJSON || {};
+                message.sweetError("Informasi", resp.message || "Gagal");
+            },
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.href =
+                            url.base_url(SalesPlan.module()) + "ubah?id=" + id;
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+            complete: function () {
+                $("#import-file").val("");
+            },
+        });
+    });
 });
