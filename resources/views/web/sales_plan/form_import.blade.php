@@ -31,6 +31,20 @@
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
+                                <label for="">Download Template</label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{{ url('transaksi/sales_plan/download_template?type=kandidat') }}"
+                                        class="btn btn-outline-success btn-sm">
+                                        <i class="ri-download-2-line align-bottom me-1"></i> Template PJP Kandidat
+                                    </a>
+                                    <a href="{{ url('transaksi/sales_plan/download_template?type=register') }}"
+                                        class="btn btn-outline-success btn-sm">
+                                        <i class="ri-download-2-line align-bottom me-1"></i> Template PJP Register Outlet
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="">File Excel Import</label>
                                 <div class="input-group">
                                     <input id="file" name="file" type="file" readonly class="form-control"

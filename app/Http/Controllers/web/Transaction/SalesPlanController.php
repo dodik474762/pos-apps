@@ -14,6 +14,10 @@ use App\Models\Transaction\SalesPlanHeader;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SalesPlanController extends Controller
@@ -179,6 +183,134 @@ class SalesPlanController extends Controller
         $put['view_file'] = $view;
         $put['header_data'] = $this->getHeaderCss();
         return view('web.template.main', $put);
+    }
+
+    public function downloadTemplate(Request $request)
+    {
+        $type = strtolower((string) $request->get('type', 'kandidat'));
+        $sourceFile = $type === 'register'
+            ? base_path('dokumen/REV_PJP REGISTER OUTLET_UBAH RUTE_26 MARET.xlsx')
+            : base_path('dokumen/REV_PJP KANDIDAT_UBAH RUTE_26 MARET.xlsx');
+
+        if (!file_exists($sourceFile)) {
+            abort(404, 'File template tidak ditemukan');
+        }
+
+        $reader = IOFactory::createReaderForFile($sourceFile);
+        $reader->setReadDataOnly(true);
+        $sourceSheet = $reader->load($sourceFile)->getActiveSheet();
+        $header = $sourceSheet->rangeToArray('A1:' . $sourceSheet->getHighestColumn() . '1')[0];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('PJP');
+        $sheet->fromArray($header, null, 'A1');
+
+        foreach (range('A', $sourceSheet->getHighestColumn()) as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        $fileName = $type === 'register'
+            ? 'Template_Import_PJP_Register_Outlet.xlsx'
+            : 'Template_Import_PJP_Kandidat.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $header = SalesPlanHeader::whereNull('deleted')->findOrFail($request->get('id'));
+        $salesman = User::find($header->salesman);
+
+        $details = DB::table('sales_plan_detail_route as d')
+            ->join('customer as c', 'c.id', '=', 'd.customer_id')
+            ->leftJoin('dictionary as v', 'v.id', '=', 'd.visit_circle')
+            ->where('d.header_id', $header->id)
+            ->orderBy('d.id')
+            ->get([
+                'd.*',
+                'c.code as customer_code',
+                'c.nama_customer',
+                'v.term_id as circle_term_id',
+                'v.keterangan as circle_name',
+            ]);
+
+        $visitCircles = DB::table('dictionary')
+            ->where('context', 'VISIT_TYPE')
+            ->get()
+            ->keyBy('id');
+
+        $sourceFile = base_path('dokumen/REV_PJP KANDIDAT_UBAH RUTE_26 MARET.xlsx');
+        if (!file_exists($sourceFile)) {
+            abort(404, 'File template tidak ditemukan');
+        }
+
+        $reader = IOFactory::createReaderForFile($sourceFile);
+        $reader->setReadDataOnly(true);
+        $sourceSheet = $reader->load($sourceFile)->getActiveSheet();
+        $templateHeader = $sourceSheet->rangeToArray('A1:' . $sourceSheet->getHighestColumn() . '1')[0];
+
+        $rows = [$templateHeader];
+
+        foreach ($details as $index => $detail) {
+            $dbCircle = (int) $detail->visit_circle;
+            $exportCircle = $dbCircle;
+            if ($dbCircle === 13) {
+                $exportCircle = 14;
+            } elseif ($dbCircle === 14) {
+                $exportCircle = 13;
+            }
+
+            $circle = $visitCircles[$exportCircle] ?? null;
+            $outletStatus = strtoupper((string) ($detail->outlet_status ?? 'REGULER'));
+            if ($outletStatus !== 'KANDIDAT') {
+                $outletStatus = 'REGULER';
+            }
+
+            $rows[] = [
+                $index + 1,
+                $salesman->username ?? '',
+                $salesman->name ?? '',
+                $detail->customer_code,
+                $detail->nama_customer,
+                $outletStatus === 'KANDIDAT' ? 2 : 1,
+                $outletStatus,
+                $circle->term_id ?? $detail->circle_term_id,
+                $circle->keterangan ?? $detail->circle_name,
+                'P1',
+                $detail->pjp_status,
+                (int) $detail->visit_mon === 1 ? 'Y' : 'N',
+                (int) $detail->visit_tue === 1 ? 'Y' : 'N',
+                (int) $detail->visit_wed === 1 ? 'Y' : 'N',
+                (int) $detail->visit_thu === 1 ? 'Y' : 'N',
+                (int) $detail->visit_fri === 1 ? 'Y' : 'N',
+                (int) $detail->visit_sat === 1 ? 'Y' : 'N',
+                (int) $detail->visit_sun === 1 ? 'Y' : 'N',
+            ];
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('PJP');
+        $sheet->fromArray($rows, null, 'A1');
+
+        foreach (range('A', $sourceSheet->getHighestColumn()) as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        $fileName = 'SalesPlan_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $header->plan_code) . '_Import.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function exportPo(Request $request)

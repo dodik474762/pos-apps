@@ -696,9 +696,9 @@ class SalesPlanController extends Controller
 
     public function submit_import(Request $request)
     {
-        $data = $request->all();
         $userId = session('user_id');
-        // validasi file
+        $company_id = session('id_company');
+
         $validator = Validator::make($request->all(), [
             'file' => [
                 'required',
@@ -712,7 +712,6 @@ class SalesPlanController extends Controller
             ]
         ]);
 
-
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'File tidak valid',
@@ -720,36 +719,27 @@ class SalesPlanController extends Controller
             ], 422);
         }
 
-        // ambil file
-        $file = $request->file('file');
-
-        // nama file
-        // $filename = time() . '_' . $file->getClientOriginalName();
-
-        // // simpan ke storage/app/import
-        // $path = $file->storeAs('import', $filename);
-
-
         $import = new SalesPlanImport();
+        Excel::import($import, $request->file('file'));
 
-        Excel::import($import, $file);
-
-        // ambil data excel (BELUM masuk DB)
-        $rows = $import->rows;
-        $rows = collect($rows)->toArray();
-
-        $idCircleKunjungan = collect($rows)
-            ->pluck('id_circle_kunjungan')
-            // ->pluck('visit_type')
-            ->unique()
+        $rows = collect($import->rows)
+            ->map(fn($row) => $row->toArray())
+            ->filter(fn($row) => !empty($row['customer_code'] ?? null))
             ->values()
             ->toArray();
 
-        $idCustomer = collect($rows)
-            ->pluck('customer_code')
-            ->unique()
-            ->values()
-            ->toArray();
+        $result = ['is_valid' => false, 'message' => 'Error'];
+
+        if (empty($rows)) {
+            $result['message'] = 'Data import kosong';
+            return response()->json($result);
+        }
+
+        $periodYear = date('Y');
+        $periodMonth = date('m');
+
+        $idCircleKunjungan = collect($rows)->pluck('id_circle_kunjungan')->filter()->unique()->values()->toArray();
+        $idCustomer = collect($rows)->pluck('customer_code')->filter()->unique()->values()->toArray();
 
         $masterCircle = DB::table('dictionary')
             ->whereIn('term_id', $idCircleKunjungan)
@@ -758,100 +748,129 @@ class SalesPlanController extends Controller
             ->toArray();
 
         $masterCustomer = DB::table('customer')
+            ->whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereIn('code', $idCustomer)
             ->get()
             ->keyBy('code')
             ->toArray();
-        // echo '<pre>';
-        // print_r($masterCircle);
-        // die;
 
-        $salesman = !empty($rows) ? $rows[0]['kode_sales'] : '';
-
-
-        $result['is_valid'] = false;
-        $result['message'] = 'Error';
-
-        $users = DB::table('users')->where('username', $salesman)->first();
-        if (empty($users)) {
-            $result['message'] = 'User Tidak Ditemukan ' . $salesman;
-            return response()->json($result);
-        }
-
-        // echo '<pre>';
-        // print_r($rows);
-        // print_r($users);
-        // die;
+        $patternByCircleId = [
+            12 => 'WEEKLY',
+            13 => 'BIWEEKLY_ODD',
+            14 => 'BIWEEKLY_EVEN',
+            15 => 'THREE_WEEK_CYCLE',
+            16 => 'MONTHLY',
+        ];
 
         DB::beginTransaction();
         try {
-            $productRowsImport = 0;
-            $data['salesman'] = $users->id;
-
-            // === HEADER ===
-            $header = new SalesPlanHeader();
-
-            $header->plan_code = generateNoRoutePlan(); // misal helper
-            $header->created_by = $userId;
-            $header->status = 'DRAFT';
-
-            $header->salesman = $data['salesman'];
-            $header->period_year = date('Y');
-            $header->period_month = date('m');
-            $header->save();
-
-            $hdrId = $header->id;
-
-            // $hdrId = 36;
-
-            // Item baru atau update
-            foreach ($rows as $key => $item) {
-                // $item['status_pjp'] = 'PERMANEN';
-                $detail = new SalesPlanDetailRoute();
-                $cust_id = isset($masterCustomer[$item['customer_code']]->id) ? $masterCustomer[$item['customer_code']]->id : 0;
-                $item['visit_type'] = isset($masterCircle[$item['id_circle_kunjungan']]->id) ? $masterCircle[$item['id_circle_kunjungan']]->id : 0;
-
-                // $item['visit_type'] = isset($masterCircle[$item['visit_type']]->id) ? $masterCircle[$item['visit_type']]->id : 0;
-                $itemVisit = $item['visit_type'];
-                if ($item['visit_type'] == '13') {
-                    $itemVisit = '14';
+            $grouped = [];
+            foreach ($rows as $item) {
+                $salesmanCode = trim((string) ($item['kode_sales'] ?? $item['salesman'] ?? ''));
+                if ($salesmanCode === '') {
+                    continue;
                 }
-                if ($item['visit_type'] == '14') {
-                    $itemVisit = '13';
-                }
-
-                // echo '<pre>';
-                // print_r($masterCircle);
-                // die;
-
-                $detail->header_id = $hdrId;
-                $detail->customer_id = $cust_id;
-                $detail->visit_circle = $itemVisit;
-                $detail->outlet_status = isset($item['status_outlet']) ? $item['status_outlet'] : "REGULER";
-                $detail->visit_mon = (isset($item['visit_mon']) && $item['visit_mon'] == '1') || (isset($item['senin']) && $item['senin'] == 'Y') ? 1 : 0;
-                $detail->visit_tue = (isset($item['visit_tue']) && $item['visit_tue'] == '1') || (isset($item['selasa']) && $item['selasa'] == 'Y') ? 1 : 0;
-                $detail->visit_wed = (isset($item['visit_wed']) && $item['visit_wed'] == '1') || (isset($item['rabu']) && $item['rabu'] == 'Y') ? 1 : 0;
-                $detail->visit_thu = (isset($item['visit_thu']) && $item['visit_thu'] == '1') || (isset($item['kamis']) && $item['kamis'] == 'Y') ? 1 : 0;
-                $detail->visit_fri = (isset($item['visit_fri']) && $item['visit_fri'] == '1') || (isset($item['jumat']) && $item['jumat'] == 'Y') ? 1 : 0;
-                $detail->visit_sat = (isset($item['visit_sat']) && $item['visit_sat'] == '1') || (isset($item['sabtu']) && $item['sabtu'] == 'Y') ? 1 : 0;
-                $detail->visit_sun = (isset($item['visit_sun']) && $item['visit_sun'] == '1') || (isset($item['minggu']) && $item['minggu'] == 'Y') ? 1 : 0;
-                $detail->note = 'IMPORT' . date('Ymd');
-                $detail->pjp_status = $item['status_pjp'] ?? 'PERMANEN';
-                if ($item['status_pjp'] == 'EXTRA CALL') {
-                    $detail->date_extra_call = date('Y-m-d');
-                }
-
-                // echo '<pre>';
-                // print_r($detail);
-                // die;
-                $detail->save();
-                $productRowsImport += 1;
+                $grouped[$salesmanCode][] = $item;
             }
 
+            if (empty($grouped)) {
+                throw new \Exception('Kode sales tidak ditemukan pada file');
+            }
+
+            $totalInserted = 0;
+            $totalSkipped = 0;
+
+            foreach ($grouped as $salesmanCode => $items) {
+                $users = DB::table('users')
+                    ->whereNull('deleted')
+                    ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+                    ->where(function ($q) use ($salesmanCode) {
+                        $q->where('username', $salesmanCode)
+                            ->orWhere('name', $salesmanCode);
+                    })
+                    ->first();
+
+                if (empty($users)) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'User Tidak Ditemukan ' . $salesmanCode,
+                    ]);
+                }
+
+                $header = SalesPlanHeader::whereNull('deleted')
+                    ->where('company_id', $company_id)
+                    ->where('salesman', $users->id)
+                    ->where('period_year', $periodYear)
+                    ->where('period_month', $periodMonth)
+                    ->first();
+
+                if (empty($header)) {
+                    $header = new SalesPlanHeader();
+                    $header->plan_code = generateNoRoutePlan();
+                    $header->created_by = $userId;
+                    $header->status = 'DRAFT';
+                    $header->salesman = $users->id;
+                    $header->period_year = $periodYear;
+                    $header->period_month = $periodMonth;
+                    $header->company_id = $company_id;
+                    $header->save();
+                }
+
+                SalesPlanDetailRoute::where('header_id', $header->id)->delete();
+
+                foreach ($items as $item) {
+                    $customer = $masterCustomer[$item['customer_code']] ?? null;
+                    $circle = $masterCircle[$item['id_circle_kunjungan']] ?? null;
+
+                    if (empty($customer) || empty($circle)) {
+                        $totalSkipped++;
+                        continue;
+                    }
+
+                    $itemVisit = $circle->id;
+                    if ($itemVisit == '13') {
+                        $itemVisit = '14';
+                    } elseif ($itemVisit == '14') {
+                        $itemVisit = '13';
+                    }
+
+                    $outletStatus = strtoupper((string) ($item['status_outlet'] ?? $item['kategori_outlet'] ?? 'REGULER'));
+                    if ($outletStatus !== 'KANDIDAT') {
+                        $outletStatus = 'REGULER';
+                    }
+
+                    $detail = new SalesPlanDetailRoute();
+                    $detail->header_id = $header->id;
+                    $detail->customer_id = $customer->id;
+                    $detail->visit_circle = $itemVisit;
+                    $detail->visit_pattern = $patternByCircleId[(int) $itemVisit] ?? 'WEEKLY';
+                    $detail->outlet_status = $outletStatus;
+                    $detail->visit_mon = (isset($item['visit_mon']) && $item['visit_mon'] == '1') || (isset($item['senin']) && $item['senin'] == 'Y') ? 1 : 0;
+                    $detail->visit_tue = (isset($item['visit_tue']) && $item['visit_tue'] == '1') || (isset($item['selasa']) && $item['selasa'] == 'Y') ? 1 : 0;
+                    $detail->visit_wed = (isset($item['visit_wed']) && $item['visit_wed'] == '1') || (isset($item['rabu']) && $item['rabu'] == 'Y') ? 1 : 0;
+                    $detail->visit_thu = (isset($item['visit_thu']) && $item['visit_thu'] == '1') || (isset($item['kamis']) && $item['kamis'] == 'Y') ? 1 : 0;
+                    $detail->visit_fri = (isset($item['visit_fri']) && $item['visit_fri'] == '1') || (isset($item['jumat']) && $item['jumat'] == 'Y') ? 1 : 0;
+                    $detail->visit_sat = (isset($item['visit_sat']) && $item['visit_sat'] == '1') || (isset($item['sabtu']) && $item['sabtu'] == 'Y') ? 1 : 0;
+                    $detail->visit_sun = (isset($item['visit_sun']) && $item['visit_sun'] == '1') || (isset($item['minggu']) && $item['minggu'] == 'Y') ? 1 : 0;
+                    $detail->note = 'IMPORT' . date('Ymd');
+                    $detail->pjp_status = strtoupper((string) ($item['status_pjp'] ?? 'PERMANEN')) === 'EXTRA CALL' ? 'EXTRA CALL' : 'PERMANEN';
+                    if ($detail->pjp_status == 'EXTRA CALL') {
+                        $detail->date_extra_call = date('Y-m-d');
+                    }
+                    $detail->company_id = $company_id;
+
+                    $detail->save();
+                    $totalInserted++;
+                }
+            }
 
             DB::commit();
             $result['is_valid'] = true;
-            $result['message'] = 'Success ' . $productRowsImport . ' Imported';
+            $result['message'] = 'Success ' . $totalInserted . ' Imported (replace)'
+                . ($totalSkipped > 0 ? ', ' . $totalSkipped . ' Skipped' : '');
         } catch (\Throwable $th) {
             DB::rollBack();
             $result['message'] = 'Error ' . $th->getMessage();

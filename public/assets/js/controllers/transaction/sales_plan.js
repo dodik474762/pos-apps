@@ -1084,39 +1084,18 @@ let SalesPlan = {
             dom: '<"row mb-2"<"col-sm-6"B><"col-sm-6"f>>rtip',
             buttons: [
                 {
-                    extend: "excelHtml5",
-                    text: '<i class="bx bx-file me-1"></i> Excel',
+                    text: '<i class="bx bx-file me-1"></i> Export',
                     className: "btn btn-success btn-sm",
-                    title: "Sales Plan Details",
-                    exportOptions: {
-                        columns: ':not(:last-child)', // skip kolom Action
-                        format: {
-                            body: function (data, row, column, node) {
-                                // ambil dari data-search jika ada (kolom customer)
-                                const $td = $(node);
-                                // 1. Checkbox (Visit Day) -> 1/0
-                                const $checkbox = $td.find('input[type="checkbox"]');
-                                if ($checkbox.length) {
-                                    return $checkbox.is(':checked') ? '1' : '0';
-                                }
-
-                                // 2. Select (Type / Kategori) -> ambil text opsi terpilih
-                                const $select = $td.find('select');
-                                if ($select.length) {
-                                    return $select.find('option:selected').text().trim();
-                                }
-
-                                // 3. Input text/readonly (Note, Customer, dll)
-                                const $input = $td.find('input');
-                                if ($input.length) {
-                                    return $input.val();
-                                }
-
-                                // 4. Fallback terakhir: data-search attribute atau data asli
-                                return $td.attr("data-search") || data;
-                            }
+                    action: function () {
+                        const id = $("#id").val();
+                        if (!id) {
+                            message.sweetError("Informasi", "Simpan data terlebih dahulu sebelum export");
+                            return;
                         }
-                    }
+
+                        window.location.href =
+                            url.base_url(SalesPlan.module()) + "export?id=" + id;
+                    },
                 },
                 {
                     extend: "print",
