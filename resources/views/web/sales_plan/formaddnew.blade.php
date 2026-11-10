@@ -33,43 +33,26 @@
                                     value="{{ isset($data->plan_code) ? $data->plan_code : 'AUTO' }}">
                             </div>
 
-                            <div class="mb-3 d-none">
-                                <label class="form-label">Period Year</label>
-                                <select id="period_year" class="form-control required" error="Period Year">
-                                    @php
-                                        $currentYear = date('Y');
-                                        $startYear = $currentYear - 1;
-                                        $endYear = $currentYear + 5;
-                                    @endphp
-                                    @for ($y = $startYear; $y <= $endYear; $y++)
-                                        <option value="{{ $y }}"
-                                            {{ isset($data->period_year) && $data->period_year == $y ? 'selected' : ($y == $currentYear ? 'selected' : '') }}>
-                                            {{ $y }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-
-                            <div class="mb-3 d-none">
-                                <label class="form-label">Period Month</label>
-                                <select class="form-control required" id="period_month" error="Period Month">
-                                    @for ($m = 1; $m <= 12; $m++)
-                                        <option value="{{ $m }}"
-                                            {{ isset($data->period_month) && $data->period_month == $m ? 'selected' : '' }}>
-                                            {{ DateTime::createFromFormat('!m', $m)->format('F') }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
+                            <input type="hidden" id="period_year" class="required" error="Period Year"
+                                value="{{ isset($data->period_year) ? $data->period_year : ($period_year ?? date('Y')) }}">
+                            <input type="hidden" id="period_month" class="required" error="Period Month"
+                                value="{{ isset($data->period_month) ? $data->period_month : ($period_month ?? date('m')) }}">
 
                             <div class="mb-3">
                                 <label class="form-label">Salesman</label>
                                 <select class="form-control select2 required" id="salesman" error="Salesman">
                                     <option value=""></option>
                                     @foreach ($salesmen as $s)
+                                        @php
+                                            $isUsed =
+                                                isset($used_salesmen) &&
+                                                in_array((int) $s->id, $used_salesmen) &&
+                                                (!isset($data->salesman) || $data->salesman != $s->id);
+                                        @endphp
                                         <option value="{{ $s->id }}"
-                                            {{ isset($data->salesman) && $data->salesman == $s->id ? 'selected' : '' }}>
-                                            {{ $s->name }}
+                                            {{ isset($data->salesman) && $data->salesman == $s->id ? 'selected' : '' }}
+                                            {{ $isUsed ? 'disabled' : '' }}>
+                                            {{ $s->name }}{{ $isUsed ? ' (Sudah ada Sales Plan)' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -89,10 +72,15 @@
                     <!-- Detail Items -->
                     <ul class="nav nav-tabs" id="itemTab" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tab-barang" data-bs-toggle="tab"
-                                data-bs-target="#tab-pane-barang" type="button" role="tab"
-                                aria-controls="tab-pane-barang" aria-selected="true">
-                                Plan Details
+                            <button class="nav-link active" id="tab-permanen" type="button" role="tab"
+                                aria-selected="true" onclick="SalesPlan.setPlanType('PERMANEN', this)">
+                                Plan Details - PERMANEN
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-extra-call" type="button" role="tab"
+                                aria-selected="false" onclick="SalesPlan.setPlanType('EXTRA CALL', this)">
+                                Plan Details - EXTRA CALL
                             </button>
                         </li>
                     </ul>

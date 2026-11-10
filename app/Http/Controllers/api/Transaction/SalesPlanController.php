@@ -185,6 +185,37 @@ class SalesPlanController extends Controller
             }
 
             $company_id = session('id_company');
+
+            $salesmanId = $data['salesman'] ?? null;
+            $periodYear = $data['period_year'] ?? null;
+            $periodMonth = $data['period_month'] ?? null;
+
+            if (empty($salesmanId) || empty($periodYear) || empty($periodMonth)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Salesman, Period Year dan Period Month wajib diisi',
+                ]);
+            }
+
+            $existingPlan = SalesPlanHeader::whereNull('deleted')
+                ->where('company_id', $company_id)
+                ->where('salesman', $salesmanId)
+                ->where('period_year', $periodYear)
+                ->where('period_month', $periodMonth)
+                ->when(!empty($data['id']), fn($q) => $q->where('id', '<>', $data['id']))
+                ->first();
+
+            if ($existingPlan) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Salesman ini sudah memiliki Sales Plan pada periode tersebut',
+                ]);
+            }
+
             $header->salesman = $data['salesman'];
             $header->period_year = $data['period_year'];
             $header->period_month = $data['period_month'] ?? null;
@@ -410,6 +441,8 @@ class SalesPlanController extends Controller
         $data['recordsFiltered'] = 0;
         $company = session('id_company');
         $akses = session('akses');
+        $isSuperAdmin = strtolower((string) $akses) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
 
         $datadb = DB::table('customer as m')
             ->select([
@@ -423,7 +456,8 @@ class SalesPlanController extends Controller
             ->leftJoin('region as r', 'r.id', '=', 'm.kota')
             ->leftJoin('region as k', 'k.id', '=', 'm.kecamatan')
             ->leftJoin('region as kl', 'kl.id', '=', 'm.kelurahan')
-            ->whereNull('m.deleted');
+            ->whereNull('m.deleted')
+            ->when(!$isSuperAdmin && $company !== null && $company !== '', fn($q) => $q->where('m.company_id', $company));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();

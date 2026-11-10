@@ -79,9 +79,18 @@ class SalesPlanController extends Controller
         $data['plan_code'] = generatePlanCode(); // Fungsi generate plan_code, bisa dibuat di model/helper
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
+        $data['period_year'] = (int) date('Y');
+        $data['period_month'] = (int) date('m');
 
         // Dropdown
         $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
+        $data['used_salesmen'] = SalesPlanHeader::whereNull('deleted')
+            ->where('company_id', session('id_company'))
+            ->where('period_year', $data['period_year'])
+            ->where('period_month', $data['period_month'])
+            ->pluck('salesman')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
 
         $data['data_item'] = []; // Data detail kosong
         $data['visit_types'] = $this->getListVisitType();
@@ -103,6 +112,16 @@ class SalesPlanController extends Controller
         $data = $request->all();
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['salesmen'] = User::whereNull('deleted')->get(['id', 'name']);
+        $data['period_year'] = $data['data']->period_year;
+        $data['period_month'] = $data['data']->period_month;
+        $data['used_salesmen'] = SalesPlanHeader::whereNull('deleted')
+            ->where('company_id', session('id_company'))
+            ->where('period_year', $data['period_year'])
+            ->where('period_month', $data['period_month'])
+            ->where('id', '<>', $data['id'])
+            ->pluck('salesman')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
         $data['sales_plan_details'] = SalesPlanDetailRoute::where('sales_plan_detail_route.header_id', $data['id'])
             ->select([
                 'sales_plan_detail_route.*',

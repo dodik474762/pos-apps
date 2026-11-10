@@ -734,6 +734,17 @@ let SalesPlan = {
     //     $("table#table-items").find("tbody").append(row);
     // },
 
+    setPlanType: (type, elm) => {
+        window._activePlanType = type;
+
+        $("#itemTab .nav-link").removeClass("active");
+        $(elm).addClass("active");
+
+        if ($.fn.DataTable.isDataTable("#table-items")) {
+            $("#table-items").DataTable().draw(false);
+        }
+    },
+
     addRow: () => {
         const dt = $("#table-items").DataTable();
 
@@ -745,6 +756,7 @@ let SalesPlan = {
         $newRow.find("input").val("");
         $newRow.find("input[type='checkbox']").prop("checked", false);
         $newRow.find("input#customer_id").attr("data_id", "");
+        $newRow.find("#type").val(window._activePlanType || "PERMANEN");
         $newRow.removeAttr("data_id");
         $newRow.attr("data_id", "");
 
@@ -1031,6 +1043,8 @@ let SalesPlan = {
     setTableItems: () => {
         if ($.fn.DataTable.isDataTable("#table-items")) return;
 
+        window._activePlanType = window._activePlanType || "PERMANEN";
+
         if (!window._tableItemsSearchSet) {
             window._tableItemsSearchSet = true;
             $.fn.dataTable.ext.search.push(function (settings) {
@@ -1042,6 +1056,22 @@ let SalesPlan = {
                 const $row = $(settings.nTable).find("tbody tr.input:not(.d-none)");
                 // handled via data-search attribute on td
                 return true;
+            });
+        }
+
+        if (!window._tableItemsPlanTypeFilterSet) {
+            window._tableItemsPlanTypeFilterSet = true;
+            $.fn.dataTable.ext.search.push(function (settings, searchData, index) {
+                if (settings.nTable.id !== "table-items") return true;
+                if (!window._activePlanType) return true;
+
+                const rowData = settings.aoData[index];
+                if (!rowData || !rowData.nTr) return true;
+
+                const type = $(rowData.nTr).find("select#type").val();
+                if (!type) return true;
+
+                return type === window._activePlanType;
             });
         }
 
@@ -1124,6 +1154,12 @@ let SalesPlan = {
             drawCallback: function () {
                 $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
             },
+        });
+
+        $("#table-items").on("change", "select#type", function () {
+            if ($.fn.DataTable.isDataTable("#table-items")) {
+                $("#table-items").DataTable().draw(false);
+            }
         });
     },
 };
