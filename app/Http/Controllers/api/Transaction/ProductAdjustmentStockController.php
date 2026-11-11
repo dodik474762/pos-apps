@@ -35,7 +35,7 @@ class ProductAdjustmentStockController extends Controller
             // ->leftJoin('unit as u', 'u.id', 'm.unit')
             ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -89,7 +89,7 @@ class ProductAdjustmentStockController extends Controller
                 $roles->code = generateNoAdjStock($company_id);
                 setCompanyId($roles, $company_id);
             } else {
-                $roles = ProductAdjustmentStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                $roles = ProductAdjustmentStock::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
                 if (empty($roles)) {
                     DB::rollBack();
                     $result['message'] = 'Data Adjustment Stock tidak ditemukan';
@@ -108,7 +108,7 @@ class ProductAdjustmentStockController extends Controller
                         $items = new ProductAdjustmentStockDtl();
                         setCompanyId($items, $company_id);
                     } else {
-                        $items = ProductAdjustmentStockDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value['id']);
+                        $items = ProductAdjustmentStockDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($value['id']);
                         if (empty($items)) {
                             DB::rollBack();
                             $result['message'] = 'Detail Adjustment Stock tidak ditemukan';
@@ -121,7 +121,7 @@ class ProductAdjustmentStockController extends Controller
                     $items->qty = $value['qty'];
                     $items->qty_current = $value['qty_current'];
                     $items->qty_adjust = $value['qty_adjustment'];
-                    $items->price = $value['price'];
+                    $items->price = $value['price'] ?? 0;
                     $items->warehouse = $data['warehouse_id'];
                     $items->save();
 
@@ -145,7 +145,7 @@ class ProductAdjustmentStockController extends Controller
                     // recalculateFrom('0', date('Y-m-d'), date('Y-m-d'), $data['warehouse_id'], null, $product_id);
                 } else {
                     if ($value['id'] != '') {
-                        ProductAdjustmentStockDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
+                        ProductAdjustmentStockDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $value['id'])->delete();
                     }
                 }
             }
@@ -168,7 +168,7 @@ class ProductAdjustmentStockController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            $menu = ProductAdjustmentStock::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = ProductAdjustmentStock::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($menu)) {
                 DB::rollBack();
                 $result['message'] = 'Data Adjustment Stock tidak ditemukan';
@@ -195,7 +195,7 @@ class ProductAdjustmentStockController extends Controller
             ->select([
                 'm.*',
             ])->where('m.id', $id)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
@@ -211,7 +211,7 @@ class ProductAdjustmentStockController extends Controller
     {
         $company_id = session('id_company');
         $datadb = DB::table('vendor')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get();
         return $datadb;
     }
@@ -239,7 +239,7 @@ class ProductAdjustmentStockController extends Controller
 
         $stock = DB::table('product_stock')
             ->select('product', DB::raw('SUM(qty) as stock'))
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->groupBy('product');
 
         // --- Base Query ---
@@ -291,7 +291,7 @@ class ProductAdjustmentStockController extends Controller
             })
             // ->where('m.id', '2')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
 
         // if (isset($data['customer'])) {
         //     if ($data['customer'] != '') {
