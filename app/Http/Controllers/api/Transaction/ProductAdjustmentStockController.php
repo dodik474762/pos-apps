@@ -121,7 +121,9 @@ class ProductAdjustmentStockController extends Controller
                     $items->qty = $value['qty'];
                     $items->qty_current = $value['qty_current'];
                     $items->qty_adjust = $value['qty_adjustment'];
-                    $items->price = $value['price'] ?? 0;
+                    // $items->price = $value['price'] ?? 0;
+                    $price = $value['price'] ?? 0;
+                    $items->price = is_numeric($price) ? $price : 0;
                     $items->warehouse = $data['warehouse_id'];
                     $items->save();
 
