@@ -259,6 +259,7 @@ class TemplateMenuController extends Controller
                 'label' => 'Sales',
                 'icon' => 'ri-shopping-bag-3-line',
                 'children' => [
+                    ['menu' => 'dashboard/return'],
                     ['menu' => 'transaksi/sales_plan'],
                     ['menu' => 'transaksi/sales_order'],
                     ['menu' => 'transaksi/delivery_order'],

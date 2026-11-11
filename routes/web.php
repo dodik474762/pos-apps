@@ -73,6 +73,7 @@ use App\Http\Controllers\web\auth\LoginController;
 use App\Http\Controllers\web\LandingPageController;
 use App\Http\Controllers\web\ClosingPeriodController;
 use App\Http\Controllers\web\DashboardController;
+use App\Http\Controllers\web\DashboardReturnController;
 use App\Http\Controllers\web\master\BranchController;
 use App\Http\Controllers\web\master\CityController;
 use App\Http\Controllers\web\master\CoaController;
@@ -161,6 +162,7 @@ Route::get('/landing/kebijakan-privasi', [LandingPageController::class, 'privacy
 Route::get('/landing/syarat-layanan', [LandingPageController::class, 'terms'])->name('landing.terms');
 
 Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::get('dashboard/return', [DashboardReturnController::class, 'index'])->name('dashboard-return');
 
 Route::get('monitoring/closing-period', [ClosingPeriodController::class, 'index'])->name('closing-period');
 
@@ -439,6 +441,10 @@ Route::get('report/customer', [CustomerController::class, 'report']);
 Route::post('api/dashboard/getGrafikPenjualan', [DashboardController::class, 'getGrafikPenjualan']);
 Route::post('api/dashboard/getInvoiceOutstanding', [DashboardController::class, 'getInvoiceOutstanding']);
 Route::post('api/dashboard/getMapVisit', [DashboardController::class, 'getMapVisit']);
+Route::post('api/dashboard/return/getData', [DashboardReturnController::class, 'getData']);
+Route::post('api/dashboard/return/getDetail', [DashboardReturnController::class, 'getDetail']);
+Route::post('api/dashboard/return/getGrafik', [DashboardReturnController::class, 'getGrafik']);
+Route::post('api/dashboard/return/confirmReceived', [DashboardReturnController::class, 'confirmReceived']);
 
 Route::post('api/monitoring/closing-period/getData', [ApiClosingPeriodController::class, 'getData']);
 

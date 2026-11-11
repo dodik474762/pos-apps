@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             BillingPlanSeeder::class,
             BillingMenuSeeder::class,
             ReportPenerimaanUangMenuSeeder::class,
+            DashboardReturnMenuSeeder::class,
         ]);
     }
 }

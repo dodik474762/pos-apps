@@ -292,6 +292,10 @@
                             </span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
+                            <a href="{{ url('dashboard/return') }}" class="btn btn-soft-danger btn-sm"
+                                style="height:40px;display:inline-flex;align-items:center;gap:6px;">
+                                <i class="ri-arrow-go-back-line"></i> Dashboard Retur
+                            </a>
                             <form action="" method="GET" class="m-0">
                                 <select name="year" class="form-select form-select-sm" style="width:110px;"
                                     onchange="this.form.submit()">
