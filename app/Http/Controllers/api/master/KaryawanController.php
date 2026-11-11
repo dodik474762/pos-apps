@@ -38,7 +38,7 @@ class KaryawanController extends Controller
             ->join('company as u', 'u.id', 'm.company')
             ->leftJoin('dictionary as d', 'd.term_id', 'm.group')
             ->whereNull('m.deleted')
-            ->when($company !== null && $company !== '', fn ($q) => $q->where('m.company_id', $company));
+            ->when($company !== null && $company !== '', fn($q) => $q->where('m.company_id', $company));
 
         if (strtolower($akses) != 'superadmin') {
             $datadb->where('u.id', $company);
@@ -90,8 +90,9 @@ class KaryawanController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $roles = $data['id'] == '' ? new Karyawan() : Karyawan::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $roles = $data['id'] == '' ? new Karyawan() : Karyawan::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->company = $data['company'];
+            $roles->company_id = $data['company_id'];
             $roles->nik = $data['nik'];
             $roles->nama_lengkap = $data['nama'];
             $roles->jabatan = $data['jabatan'];
@@ -108,7 +109,7 @@ class KaryawanController extends Controller
             $roles->save();
             $kryId = $roles->id;
 
-            KaryawanGroup::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('karyawan', $roles->id)->delete();
+            KaryawanGroup::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('karyawan', $roles->id)->delete();
             foreach ($data['items'] as $key => $value) {
                 if ($value['remove'] == '0') {
                     $karyawanGroup = new KaryawanGroup();
@@ -138,7 +139,7 @@ class KaryawanController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            $menu = Karyawan::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = Karyawan::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             $menu->deleted = date('Y-m-d H:i:s');
             $menu->save();
 
@@ -162,7 +163,7 @@ class KaryawanController extends Controller
         DB::beginTransaction();
         try {
             //code...
-            $kry = KaryawanHasProduct::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('karyawan', $data['id'])->where('product', $data['product'])->first();
+            $kry = KaryawanHasProduct::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('karyawan', $data['id'])->where('product', $data['product'])->first();
             $kryUpdate = empty($kry) ? new KaryawanHasProduct() : $kry;
             $kryUpdate->karyawan = $data['id'];
             $kryUpdate->product = $data['product'];
@@ -172,7 +173,7 @@ class KaryawanController extends Controller
             $kryUpdateId = $kryUpdate->id;
 
             $product_uom = ProductUom::whereNull('deleted')
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->where('product', $data['product'])
                 ->orderBy('level')
                 ->get();
@@ -184,7 +185,7 @@ class KaryawanController extends Controller
                 // Carton : (300.000 / 12) * 12 = 300.000 ✅
                 // Pcs    : (300.000 / 12) * 1  = 25.000  ✅
 
-                $uomPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                $uomPrice = ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->where('product', $data['product'])
                     ->whereNull('deleted')
                     ->where('unit', $uom->unit_tujuan)
@@ -249,9 +250,9 @@ class KaryawanController extends Controller
         try {
             //code...
             $company_id = session('id_company');
-            KaryawanHasProduct::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
+            KaryawanHasProduct::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $data['id'])->delete();
 
-            ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('karyawan_has_product', $data['id'])->delete();
+            ProductUomPrice::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('karyawan_has_product', $data['id'])->delete();
 
             DB::commit();
             $result['is_valid'] = true;
@@ -271,7 +272,7 @@ class KaryawanController extends Controller
             ->select([
                 'm.*',
             ])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
