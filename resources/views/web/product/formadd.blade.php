@@ -198,12 +198,25 @@
                             </div>
 
                             @if (count($product_uoms) > 0)
+                                @php
+                                    $largestUnitId = optional($product_uoms->sortBy('level')->last())->unit_tujuan;
+                                    $latestRetailLargePrice = collect($product_prices)
+                                        ->where('unit', $largestUnitId)
+                                        ->where('channel', 'RETAIL UMUM')
+                                        ->where('sub_channel', 'RT-RETAIL UMUM')
+                                        ->whereNull('deleted')
+                                        ->filter(function ($price) {
+                                            return empty($price->date_start) || $price->date_start <= now()->toDateString();
+                                        })
+                                        ->sortBy('id')
+                                        ->last();
+                                @endphp
                                 <div class="mb-3">
                                     <label>Harga Jual Retail Satuan Besar</label>
                                     <div>
                                         <input type="text" id="harga_satuan_besar" name="harga_satuan_besar"
                                             class="form-control required" error="Harga" placeholder="Harga"
-                                            value="{{ $product_prices->isNotEmpty() ? $product_prices->last()->price : '' }}">
+                                            value="{{ $latestRetailLargePrice ? $latestRetailLargePrice->price : '' }}">
                                         <div style="margin-top: 5px;">
                                             <button class="btn btn-primary"
                                                 onclick="Product.updateHargaRetail(this, event)">Update Harga
