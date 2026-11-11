@@ -26,6 +26,17 @@
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
+                                <label class="form-label">Perusahaan</label>
+                                <select {{ strtolower($akses) != 'superadmin' ? 'disabled' : '' }}
+                                    class="form-control select2 required" error="Perusahaan" id="company_id">
+                                    @foreach ($data_company as $item)
+                                        <option value="{{ $item['id'] }}"
+                                            {{ isset($data->company_id) ? ($data->company_id == $item['id'] ? 'selected' : '') : '' }}>
+                                            {{ $item['nama_company'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label>Kode</label>
                                 <div>
                                     <input type="text" id="code" class="form-control required" error="Kode"

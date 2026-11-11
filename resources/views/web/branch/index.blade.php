@@ -86,6 +86,7 @@
                                                     <th class="sort" data-sort="akses">Code</th>
                                                     <th class="sort" data-sort="akses">Nama</th>
                                                     <th class="sort" data-sort="akses">Lokasi</th>
+                                                    <th class="sort" data-sort="company">Company</th>
                                                     <th class="sort" data-sort="action">Action</th>
                                                 </tr>
                                             </thead>

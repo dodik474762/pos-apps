@@ -132,6 +132,9 @@ let Unit = {
                     data: "name",
                 },
                 {
+                    data: "nama_company",
+                },
+                {
                     data: "id",
                     render: function (data, type, row) {
                         var html = `<ul class="list-inline hstack gap-2 mb-0">`;

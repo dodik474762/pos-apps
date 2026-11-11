@@ -348,7 +348,7 @@ let Users = {
                     data: "id",
                     render: function (data, type, row) {
                         var html = "";
-                        html += `<a href='' nama_lengkap="${row.nama_lengkap}" onclick="Users.pilihData(this, event)" data_id="${row.nik}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
+                        html += `<a href='' nama_lengkap="${row.nama_lengkap}" onclick="Users.pilihData(this, event)" data_id="${row.nik}" data_company="${row.company_id || row.company || ''}" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-edit"></i></a>&nbsp;`;
                         return html;
                     },
                 },
@@ -360,9 +360,39 @@ let Users = {
         e.preventDefault();
         let nama_lengkap = $(elm).attr("nama_lengkap");
         let nik = $(elm).attr("data_id");
-        console.log("DATA ", nama_lengkap, nik);
+        let company_id = $(elm).attr("data_company");
         $("#nik").val(nik + "//" + nama_lengkap);
+        Users.getBranchByCompany(company_id);
         $("button.btn-close").trigger("click");
+    },
+
+    getBranchByCompany: (company_id) => {
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                company_id: company_id,
+            },
+            headers: {
+                "X-CSRF-TOKEN": Users.csrf_token(),
+            },
+            url: url.base_url(Users.moduleApi()) + "getBranchByCompany",
+            beforeSend: () => {
+                message.loadingProses("Proses Pengambilan Data");
+            },
+            error: function () {
+                message.closeLoading();
+                message.sweetError("Informasi", "Gagal");
+            },
+            success: function (resp) {
+                message.closeLoading();
+                let options = "";
+                $.each(resp, function (index, item) {
+                    options += `<option value="${item.id}">${item.name}</option>`;
+                });
+                $("#branch").html(options).val("").trigger("change");
+            },
+        });
     },
 };
 

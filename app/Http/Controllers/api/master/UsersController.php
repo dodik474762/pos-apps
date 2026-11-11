@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Branch;
 use App\Models\Master\Karyawan;
 use App\Models\Master\Users;
 use App\Models\User;
@@ -21,6 +22,7 @@ class UsersController extends Controller
     public function getData()
     {
         $company_id = session('id_company');
+        $akses = session('akses');
         DB::enableQueryLog();
         $data['data'] = [];
         $data['recordsTotal'] = 0;
@@ -36,9 +38,12 @@ class UsersController extends Controller
             ->join('users_group as ug', 'ug.id', 'm.user_group')
             ->join('karyawan as p', 'p.nik', 'm.nik')
             ->leftJoin('branch as b', 'b.id', 'm.branch')
-            ->where('p.company', $company_id)
-            ->where('m.company_id', $company_id)
             ->whereNull('m.deleted');
+
+        if (strtolower($akses) != 'superadmin') {
+            $datadb->where('p.company', $company_id);
+            $datadb->where('m.company_id', $company_id);
+        }
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
@@ -170,5 +175,19 @@ class UsersController extends Controller
     {
         $data = $request->all();
         return view('web.users.modal.datakaryawan', $data);
+    }
+
+    public function getBranchByCompany(Request $request)
+    {
+        $company_id = $request->get('company_id');
+        if (strtolower(session('akses')) != 'superadmin') {
+            $company_id = session('id_company');
+        }
+        $data = Branch::whereNull('deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json($data);
     }
 }

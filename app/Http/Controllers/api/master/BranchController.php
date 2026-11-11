@@ -18,22 +18,29 @@ class BranchController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $akses = session('akses');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
+                'c.nama_company',
             ])
+            ->leftJoin('company as c', 'c.id', 'm.company_id')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
+
+        if (strtolower($akses) != 'superadmin') {
+            $datadb->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id));
+        }
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
                     $query->where('m.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('c.nama_company', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
@@ -61,6 +68,9 @@ class BranchController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
         $company_id = session('id_company');
+        if (strtolower(session('akses')) == 'superadmin' && !empty($data['company_id'])) {
+            $company_id = $data['company_id'];
+        }
         DB::beginTransaction();
         try {
             //code...
@@ -120,11 +130,12 @@ class BranchController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $akses = session('akses');
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
             ])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when(strtolower($akses) != 'superadmin' && $company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();

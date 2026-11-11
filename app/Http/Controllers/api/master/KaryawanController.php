@@ -37,10 +37,10 @@ class KaryawanController extends Controller
             ])
             ->join('company as u', 'u.id', 'm.company')
             ->leftJoin('dictionary as d', 'd.term_id', 'm.group')
-            ->whereNull('m.deleted')
-            ->when($company !== null && $company !== '', fn($q) => $q->where('m.company_id', $company));
+            ->whereNull('m.deleted');
 
         if (strtolower($akses) != 'superadmin') {
+            $datadb->where('m.company_id', $company);
             $datadb->where('u.id', $company);
         }
 

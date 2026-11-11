@@ -18,22 +18,29 @@ class UnitController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $akses = session('akses');
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
+                'c.nama_company',
             ])
+            ->leftJoin('company as c', 'c.id', 'm.company_id')
             ->whereNull('m.deleted')
-            ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');
+
+        if (strtolower($akses) != 'superadmin') {
+            $datadb->where('m.company_id', $company_id);
+        }
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
             if (isset($_POST['search']['value'])) {
                 $keyword = $_POST['search']['value'];
                 $datadb->where(function ($query) use ($keyword) {
                     $query->where('m.name', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('c.nama_company', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {

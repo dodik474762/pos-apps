@@ -559,6 +559,7 @@ Route::post('api/master/users/submit', [MasterUsersController::class, 'submit'])
 Route::post('api/master/users/delete', [MasterUsersController::class, 'delete']);
 Route::post('api/master/users/confirmDelete', [MasterUsersController::class, 'confirmDelete']);
 Route::post('api/master/users/showDataKaryawan', [MasterUsersController::class, 'showDataKaryawan']);
+Route::post('api/master/users/getBranchByCompany', [MasterUsersController::class, 'getBranchByCompany']);
 
 Route::post('api/master/karyawan/getData', [MasterKaryawanController::class, 'getData']);
 Route::post('api/master/karyawan/submit', [MasterKaryawanController::class, 'submit']);

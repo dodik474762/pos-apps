@@ -32,6 +32,7 @@ let Branch = {
     getPostInput: () => {
         let data = {
             id: $("input#id").val(),
+            company_id: $("#company_id").val(),
             name: $("#name").val(),
             code: $("#code").val(),
             location: $("#location").val(),
@@ -138,6 +139,9 @@ let Branch = {
                 },
                 {
                     data: "location",
+                },
+                {
+                    data: "nama_company",
                 },
                 {
                     data: "id",
