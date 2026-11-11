@@ -2312,11 +2312,20 @@ class SalesOrderController extends Controller
 
     private function calculateFreeGoods($promo, $totalQty, $product_id)
     {
-        $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
-        $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+        // $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
+        // $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
 
-        // $kelipatan = $promo->kelipatan ?: 1;
-        $multiplier = $promo->kelipatan == 0 ? 1 : floor($totalQty / $minQtyPromoSmallest);
+        // // $kelipatan = $promo->kelipatan ?: 1;
+        // $multiplier = $promo->kelipatan == 0 ? 1 : floor($totalQty / $minQtyPromoSmallest);
+
+        $qtyBaseUnit = getSmallestUnitV2($product_id, $promo->unit, $promo->min_qty);
+        $minQtyPromoSmallest = !empty($qtyBaseUnit)
+            ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty
+            : $promo->min_qty; // fallback, bukan 0
+
+        $multiplier = ($promo->kelipatan == 0 || $minQtyPromoSmallest <= 0)
+            ? 1
+            : floor($totalQty / $minQtyPromoSmallest);
 
         return $promo->promoFree->map(function ($free) use ($multiplier) {
             return [
@@ -3763,9 +3772,16 @@ class SalesOrderController extends Controller
                 }
 
                 if ($promo->discount_type === 'nominal') {
+                    // $qtyBaseUnit          = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
+                    // $minQtyPromoSmallest  = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                    // $multiplier           = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                     $qtyBaseUnit          = getSmallestUnitV2($v['product_id'], $promo->unit, $promo->min_qty);
-                    $minQtyPromoSmallest  = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
-                    $multiplier           = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+                    $minQtyPromoSmallest  = !empty($qtyBaseUnit)
+                        ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty
+                        : $promo->min_qty; // fallback
+                    $multiplier           = ($promo->kelipatan == 0 || $minQtyPromoSmallest <= 0)
+                        ? 1
+                        : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                     $discountAmount       = $promo->discount_value * $multiplier;
 
                     if ($promo->potong_per_qty == 1) {
@@ -4037,9 +4053,16 @@ class SalesOrderController extends Controller
             }
 
             if ($promo->discount_type === 'nominal') {
+                // $qtyBaseUnit         = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
+                // $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
+                // $multiplier          = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                 $qtyBaseUnit         = getSmallestUnitV2($itemsValue[0]['product_id'], $promo->unit, $promo->min_qty);
-                $minQtyPromoSmallest = !empty($qtyBaseUnit) ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty : 0;
-                $multiplier          = $promo->kelipatan == 0 ? 1 : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
+                $minQtyPromoSmallest = !empty($qtyBaseUnit)
+                    ? $qtyBaseUnit->nilai_konversi_terkecil * $promo->min_qty
+                    : $promo->min_qty; // fallback
+                $multiplier          = ($promo->kelipatan == 0 || $minQtyPromoSmallest <= 0)
+                    ? 1
+                    : floor($qtySmallestAllProduct / $minQtyPromoSmallest);
                 $discAmountHeader    = $promo->discount_value * $multiplier;
 
                 if ($promo->potong_per_qty == 1) {
