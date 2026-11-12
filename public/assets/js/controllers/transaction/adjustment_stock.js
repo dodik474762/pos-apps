@@ -218,6 +218,9 @@ let AdjustmentStock = {
         },
         {
           data: "wh_name",
+          render: function (data, type, row) {
+            return row.nama_company ? `${data} (${row.nama_company})` : data;
+          },
         },
         {
           data: "remarks",

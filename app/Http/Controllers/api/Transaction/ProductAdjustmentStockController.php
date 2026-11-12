@@ -19,6 +19,7 @@ class ProductAdjustmentStockController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -30,12 +31,14 @@ class ProductAdjustmentStockController extends Controller
                 // 'p.code as product_code',
                 // 'u.name as unit_name',
                 'w.name as wh_name',
+                'c.nama_company',
             ])
             // ->join('product as p', 'p.id', 'm.product')
             // ->leftJoin('unit as u', 'u.id', 'm.unit')
             ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
+            ->leftJoin('company as c', 'c.id', 'w.company_id')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -74,6 +77,12 @@ class ProductAdjustmentStockController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
+        if (!empty($data['warehouse_id'])) {
+            $warehouseCompanyId = DB::table('warehouse')->where('id', $data['warehouse_id'])->value('company_id');
+            if (!empty($warehouseCompanyId)) {
+                $company_id = $warehouseCompanyId;
+            }
+        }
 
         // echo '<pre>';
         // print_r($data);
@@ -231,6 +240,7 @@ class ProductAdjustmentStockController extends Controller
         $data = $request->all();
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
 
         $data = [
             'data' => [],
@@ -241,7 +251,7 @@ class ProductAdjustmentStockController extends Controller
 
         $stock = DB::table('product_stock')
             ->select('product', DB::raw('SUM(qty) as stock'))
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->groupBy('product');
 
         // --- Base Query ---
@@ -293,7 +303,7 @@ class ProductAdjustmentStockController extends Controller
             })
             // ->where('m.id', '2')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
 
         // if (isset($data['customer'])) {
         //     if ($data['customer'] != '') {

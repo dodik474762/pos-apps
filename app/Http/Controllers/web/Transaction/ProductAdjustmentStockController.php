@@ -65,10 +65,11 @@ class ProductAdjustmentStockController extends Controller
     public function add()
     {
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
         $data['data'] = [];
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['akses_session'] = strtolower(session('akses'));
         $view = view('web.adjustment_stock.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -84,8 +85,9 @@ class ProductAdjustmentStockController extends Controller
         $api = new TransactionProductAdjustmentStockController();
         $data = $request->all();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
         $data['data'] = $api->getDetailData($data['id'])->original;
-        $data['warehouses'] = Warehouse::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $data['warehouses'] = Warehouse::when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['akses_session'] = strtolower(session('akses'));
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
