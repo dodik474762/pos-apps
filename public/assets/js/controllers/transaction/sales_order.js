@@ -219,6 +219,9 @@ let SalesOrder = {
                     data: "warehouse_name",
                 },
                 {
+                    data: "nama_company",
+                },
+                {
                     data: "so_date",
                 },
                 {

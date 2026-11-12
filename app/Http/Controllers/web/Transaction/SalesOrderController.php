@@ -99,7 +99,7 @@ class SalesOrderController extends Controller
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->get();
         $data['data_wh'] = Warehouse::whereNull('deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->get();
         $view = view('web.sales_order.formadd', $data);
         $put['title_content'] = $this->getTitle();

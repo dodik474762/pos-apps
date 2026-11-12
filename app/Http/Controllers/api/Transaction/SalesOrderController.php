@@ -48,6 +48,7 @@ class SalesOrderController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -61,6 +62,7 @@ class SalesOrderController extends Controller
                 'cc.code as customer_code',
                 'b.name as branch_name',
                 'w.name as warehouse_name',
+                'co.nama_company',
                 DB::raw('ROUND((m.total_amount - COALESCE(m.discount_amount,0)), 2) as net_total')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
@@ -69,12 +71,13 @@ class SalesOrderController extends Controller
             ->join('currency as c', 'c.id', 'm.currency')
             ->leftJoin('branch as b', 'b.id', 'm.branch')
             ->leftJoin('warehouse as w', 'w.id', 'm.warehouse')
+            ->leftJoin('company as co', 'co.id', 'm.company_id')
             ->leftJoin('sales_invoice_header as sih', function ($q) {
                 return $q->on('sih.sales_order', 'm.id')
                     ->whereNull('sih.deleted');
             })
             ->whereNull('m.deleted')
-            ->where('m.company_id', $company_id)
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
@@ -473,6 +476,12 @@ class SalesOrderController extends Controller
             }
 
             $company_id = session('id_company');
+            if (!empty($data['warehouse'])) {
+                $warehouseCompanyId = DB::table('warehouse')->where('id', $data['warehouse'])->value('company_id');
+                if (!empty($warehouseCompanyId)) {
+                    $company_id = $warehouseCompanyId;
+                }
+            }
             $customersId = $data['customer_id'];
             $customers_check   = Customer::where('id', trim($data['customer_id']))->first();
             if ($customers_check->deleted != '') {
@@ -707,7 +716,7 @@ class SalesOrderController extends Controller
                 /*cek stock */
                 $stock = DB::table('product_stock')
                     ->where('product', $item['product_id'])
-                    ->where('warehouse', 1)
+                    ->where('warehouse', $data['warehouse'] ?? 1)
                     ->first();
                 if (empty($stock)) {
                     $productsDb = Product::find($item['product_id']);
@@ -1375,6 +1384,11 @@ class SalesOrderController extends Controller
         $usersdb       = Users::where('id', $users_id)->first();
         $branchId      = $usersdb->branch;
         $company_id = $usersdb->company_id;
+        $warehouseId = DB::table('warehouse')
+            ->where('code', 'A01')
+            ->where('company_id', $company_id)
+            ->whereNull('deleted')
+            ->value('id') ?? 1;
 
         // ===== LOG AWAL SYNC =====
         Log::info('=== SALES ORDER SYNC START ===', [
@@ -1554,7 +1568,7 @@ class SalesOrderController extends Controller
             $header->owner_path      = $dbpathlampOwner   == '' ? null : $dbpathlampOwner   . $fileOwnerName;
             $header->latitude        = $data['latitude'];
             $header->longitude       = $data['longitude'];
-            $header->warehouse       = 1;
+            $header->warehouse       = $warehouseId;
             $header->check_in_time   = $check_in_time;
             $header->check_out_time  = $check_out_time;
             $header->branch          = $branchId;
@@ -1645,7 +1659,7 @@ class SalesOrderController extends Controller
                 /*cek stock */
                 $stock = DB::table('product_stock')
                     ->where('product', $item['product_id'])
-                    ->where('warehouse', 1)
+                    ->where('warehouse', $warehouseId)
                     ->first();
                 if (empty($stock)) {
                     $productsDb = Product::find($item['product_id']);
