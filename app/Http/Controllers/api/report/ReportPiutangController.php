@@ -116,10 +116,10 @@ class ReportPiutangController extends Controller
                     ->whereNotNull('usr.name')
                     ->orderBy('usr.name', 'asc');
             } else {
-                $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
+                $datadb->whereDate('sih.invoice_date', '=', $tanggal);
             }
         } else {
-            $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
+            $datadb->whereDate('sih.invoice_date', '=', $tanggal);
         }
 
         if (isset($_POST)) {
@@ -296,7 +296,7 @@ class ReportPiutangController extends Controller
             $datadb->where('p.vendor', $principal);
         }
 
-        $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
+        $datadb->whereDate('sih.invoice_date', '=', $tanggal);
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
