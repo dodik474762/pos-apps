@@ -122,6 +122,8 @@
                                                     <th>Nama Pasar</th>
                                                     <th>Id Kecamatan</th>
                                                     <th>Nama Kecamatan</th>
+                                                    <th>Id Kelurahan</th>
+                                                    <th>Nama Kelurahan</th>
                                                     <th>Id Kota</th>
                                                     <th>Nama Kota</th>
                                                     <th>Id Provinsi</th>
@@ -199,6 +201,8 @@
                                                     <th>Nama Pasar</th>
                                                     <th>Id Kecamatan</th>
                                                     <th>Nama Kecamatan</th>
+                                                    <th>Id Kelurahan</th>
+                                                    <th>Nama Kelurahan</th>
                                                     <th>Id Kota</th>
                                                     <th>Nama Kota</th>
                                                     <th>Id Provinsi</th>
@@ -240,6 +244,8 @@
                                                     <th>Nama Pasar</th>
                                                     <th>Id Kecamatan</th>
                                                     <th>Nama Kecamatan</th>
+                                                    <th>Id Kelurahan</th>
+                                                    <th>Nama Kelurahan</th>
                                                     <th>Id Kota</th>
                                                     <th>Nama Kota</th>
                                                     <th>Id Provinsi</th>
@@ -281,6 +287,8 @@
                                                     <th>Nama Pasar</th>
                                                     <th>Id Kecamatan</th>
                                                     <th>Nama Kecamatan</th>
+                                                    <th>Id Kelurahan</th>
+                                                    <th>Nama Kelurahan</th>
                                                     <th>Id Kota</th>
                                                     <th>Nama Kota</th>
                                                     <th>Id Provinsi</th>

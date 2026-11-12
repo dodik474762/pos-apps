@@ -503,6 +503,12 @@ let Customer = {
                     data: "kecamatan_name",
                 },
                 {
+                    data: "kelurahan",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
                     data: "kota",
                 },
                 {
@@ -660,6 +666,12 @@ let Customer = {
                 },
                 {
                     data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan",
+                },
+                {
+                    data: "kelurahan_name",
                 },
                 {
                     data: "kota",
@@ -821,6 +833,12 @@ let Customer = {
                     data: "kecamatan_name",
                 },
                 {
+                    data: "kelurahan",
+                },
+                {
+                    data: "kelurahan_name",
+                },
+                {
                     data: "kota",
                 },
                 {
@@ -978,6 +996,12 @@ let Customer = {
                 },
                 {
                     data: "kecamatan_name",
+                },
+                {
+                    data: "kelurahan",
+                },
+                {
+                    data: "kelurahan_name",
                 },
                 {
                     data: "kota",
