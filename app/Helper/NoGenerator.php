@@ -1782,7 +1782,7 @@ function checkCustomerCreditLimit($customer = 0, $exclude_id = '', $company_id =
 }
 
 // ====== HELPER: CREATE AUTO SALES RETURN ======
-function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $customerId)
+function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $customerId, $reason = 'Auto return dari delivery confirm', $postGl = true, $platform = null)
 {
     $company_id = Users::where('id', $userId)->value('company_id');
 
@@ -1792,7 +1792,7 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $depositAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'deposit pelanggan')->with('account')->first();
     $piutangAcc = AccountMapping::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('module', 'SALES_RETURN')->where('account_type', 'piutang usaha')->with('account')->first();
 
-    if (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc || !$piutangAcc) {
+    if ($postGl && (!$penjualanAcc || !$ppnKeluaranAcc || !$discAcc || !$depositAcc || !$piutangAcc)) {
         throw new \Exception('Konfigurasi akun untuk Sales Return belum lengkap.');
     }
 
@@ -1806,7 +1806,8 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $header->refund_amount     = 0;
     $header->deposit_amount    = 0;
     $header->total_return_value = 0;
-    $header->reason            = 'Auto return dari delivery confirm';
+    $header->reason            = $reason;
+    $header->platform          = $platform;
     $header->types            = 'good';
     $header->invoice_id        = $invoiceId;
     $header->company_id        = $company_id;
@@ -1878,19 +1879,22 @@ function createAutoReturn($invoiceId, $items, $returnType = 'REFUND', $userId, $
     $header->refund_amount      = $returnType == 'REFUND' ? $net_total : 0;
     $header->save();
 
-    // Posting GL
-    $currency   = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
-    $currencyId = $currency->id;
+    // Posting GL. Untuk auto return koreksi admin, GL tidak diposting lagi karena
+    // invoice koreksi sudah diposting ulang dengan nilai final.
+    if ($postGl) {
+        $currency   = Currency::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('code', 'IDR')->first();
+        $currencyId = $currency->id;
 
-    postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId, '', $company_id);
-    // postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
-    postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId, '', $company_id);
+        postingGL($reference, $penjualanAcc->account_id, $penjualanAcc->account->account_name, $penjualanAcc->cd, $totalAmount, $currencyId, '', $company_id);
+        // postingGL($reference, $ppnKeluaranAcc->account_id, $ppnKeluaranAcc->account->account_name, $ppnKeluaranAcc->cd, $tax_total, $currencyId);
+        postingGL($reference, $discAcc->account_id, $discAcc->account->account_name, $discAcc->cd, $disc_total, $currencyId, '', $company_id);
 
-    if ($returnType == 'REFUND') {
-        postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $net_total, $currencyId, '', $company_id);
-    }
-    if ($returnType == 'DEPOSIT') {
-        postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId, '', $company_id);
+        if ($returnType == 'REFUND') {
+            postingGL($reference, $piutangAcc->account_id, $piutangAcc->account->account_name, $piutangAcc->cd, $net_total, $currencyId, '', $company_id);
+        }
+        if ($returnType == 'DEPOSIT') {
+            postingGL($reference, $depositAcc->account_id, $depositAcc->account->account_name, $depositAcc->cd, $net_total, $currencyId, '', $company_id);
+        }
     }
 
     return $hdrId;

@@ -185,6 +185,32 @@ class DashboardReturnController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
 
+        // PRD: dokumen referensi Invoice/DO/PL. DO diresolusi dari do_id invoice
+        // atau DO terakhir milik sales order (relasi yang dipakai daftar invoice).
+        $deliveryOrderSub = DB::table('delivery_order_header as doh')
+            ->whereNull('doh.deleted')
+            ->select('doh.id', 'doh.so_id', 'doh.do_number', 'doh.do_date')
+            ->whereRaw('doh.id = (
+            SELECT MAX(d2.id)
+            FROM delivery_order_header AS d2
+            WHERE d2.so_id = doh.so_id
+              AND d2.deleted IS NULL
+        )');
+
+        $packingListSub = DB::table('packing_list_do as pld')
+            ->join('packing_list as pl', function ($q) {
+                $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted');
+            })
+            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no', 'pl.packing_date')
+            ->whereRaw('pl.id = (
+            SELECT MAX(pl2.id)
+            FROM packing_list_do AS pld2
+            INNER JOIN packing_list AS pl2 ON pl2.id = pld2.packing_list_id
+            WHERE pld2.delivery_order_id = pld.delivery_order_id
+              AND pl2.deleted IS NULL
+        )');
+
         $detailAgg = DB::table('sales_return_detail as srd')
             ->leftJoin('users as receiver', 'receiver.id', '=', 'srd.received_by')
             ->selectRaw('srd.return_id, COALESCE(SUM(srd.qty_return), 0) as total_qty')
@@ -202,6 +228,12 @@ class DashboardReturnController extends Controller
 
         $datadb = DB::table('sales_return as sr')
             ->leftJoin('sales_invoice_header as sih', 'sih.id', '=', 'sr.invoice_id')
+            ->leftJoinSub($deliveryOrderSub, 'do', function ($join) {
+                $join->on('do.so_id', '=', 'sih.sales_order')->orOn('do.id', '=', 'sih.do_id');
+            })
+            ->leftJoinSub($packingListSub, 'pl', function ($join) {
+                $join->on('pl.delivery_order_id', '=', 'do.id');
+            })
             ->leftJoin('customer as c', 'c.id', '=', 'sr.customer_id')
             ->leftJoin('users as u', 'u.id', '=', 'sr.created_by')
             ->leftJoinSub($detailAgg, 'srd', function ($join) {
@@ -223,11 +255,20 @@ class DashboardReturnController extends Controller
                 'c.code as customer_code',
                 'c.nama_customer',
                 'u.name as created_by_name',
+                DB::raw("CASE
+                    WHEN sr.return_type = 'CORRECTION' THEN 'admin_correction'
+                    WHEN sr.reason LIKE 'Auto return dari delivery confirm%' THEN 'driver'
+                    ELSE 'manual'
+                END as return_source"),
                 DB::raw('COALESCE(srd.total_qty, 0) as total_qty'),
                 DB::raw('srd.received_date as received_date'),
                 DB::raw('srd.received_by_name as received_by_name'),
                 DB::raw('COALESCE(sid.canceled_item_count, 0) as canceled_item_count'),
                 DB::raw('COALESCE(sid.canceled_qty, 0) as canceled_qty'),
+                'do.do_number',
+                'do.do_date',
+                'pl.packing_list_no',
+                'pl.packing_date',
             ]);
 
         $data['recordsTotal'] = (clone $datadb)->count();
@@ -241,6 +282,11 @@ class DashboardReturnController extends Controller
                 $query->orWhere('sr.return_type', 'LIKE', '%' . $keyword . '%');
                 $query->orWhere('sr.reason', 'LIKE', '%' . $keyword . '%');
                 $query->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%');
+                $query->orWhere('sih.invoice_date', 'LIKE', '%' . $keyword . '%');
+                $query->orWhere('do.do_number', 'LIKE', '%' . $keyword . '%');
+                $query->orWhere('do.do_date', 'LIKE', '%' . $keyword . '%');
+                $query->orWhere('pl.packing_list_no', 'LIKE', '%' . $keyword . '%');
+                $query->orWhere('pl.packing_date', 'LIKE', '%' . $keyword . '%');
                 $query->orWhere('c.code', 'LIKE', '%' . $keyword . '%');
                 $query->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%');
                 $query->orWhere('u.name', 'LIKE', '%' . $keyword . '%');
@@ -258,17 +304,44 @@ class DashboardReturnController extends Controller
             case 2:
                 $datadb->orderBy('sr.return_date', $orderDir);
                 break;
+            case 4:
+                $datadb->orderBy('sih.invoice_date', $orderDir);
+                break;
             case 5:
-                $datadb->orderBy('srd.total_qty', $orderDir);
+                $datadb->orderBy('do.do_number', $orderDir);
+                break;
+            case 6:
+                $datadb->orderBy('do.do_date', $orderDir);
                 break;
             case 7:
-                $datadb->orderBy('sr.status', $orderDir);
+                $datadb->orderBy('pl.packing_list_no', $orderDir);
+                break;
+            case 8:
+                $datadb->orderBy('pl.packing_date', $orderDir);
                 break;
             case 9:
-                $datadb->orderBy('srd.received_date', $orderDir);
+                $datadb->orderBy('c.nama_customer', $orderDir);
                 break;
             case 10:
+                $datadb->orderBy('srd.total_qty', $orderDir);
+                break;
+            case 11:
+                $datadb->orderBy('sr.return_type', $orderDir);
+                break;
+            case 12:
+                $datadb->orderBy('sr.status', $orderDir);
+                break;
+            case 13:
+                $datadb->orderBy('sid.canceled_item_count', $orderDir);
+                break;
+            case 14:
+                $datadb->orderBy('srd.received_date', $orderDir);
+                break;
+            case 15:
                 $datadb->orderBy('srd.received_by_name', $orderDir);
+                break;
+            case 16:
+                $datadb->orderBy('u.name', $orderDir);
                 break;
             default:
                 $datadb->orderBy('sr.return_date', 'desc')->orderBy('sr.id', 'desc');
@@ -305,6 +378,8 @@ class DashboardReturnController extends Controller
                 'sih.invoice_date',
                 'sih.total_amount as invoice_total',
                 'sih.status as invoice_status',
+                'sih.do_id as invoice_do_id',
+                'sih.sales_order as invoice_sales_order',
                 'c.code as customer_code',
                 'c.nama_customer',
                 'u.name as created_by_name',
@@ -315,6 +390,51 @@ class DashboardReturnController extends Controller
             $result['message'] = 'Data sales return tidak ditemukan.';
 
             return response()->json($result);
+        }
+
+        // Penanda sumber retur: koreksi admin (FIX), driver, atau manual.
+        $header->return_source = $header->return_type === 'CORRECTION'
+            ? 'admin_correction'
+            : (stripos((string) $header->reason, 'Auto return dari delivery confirm') === 0 ? 'driver' : 'manual');
+
+        // PRD: lengkapi detail dengan referensi DO dan PL dari invoice asal.
+        $header->do_number = null;
+        $header->do_date = null;
+        $header->packing_list_no = null;
+        $header->packing_date = null;
+        if (! empty($header->invoice_sales_order) || ! empty($header->invoice_do_id)) {
+            $documents = DB::table('delivery_order_header as doh')
+                ->whereNull('doh.deleted')
+                ->where(function ($q) use ($header) {
+                    if (! empty($header->invoice_sales_order)) {
+                        $q->where('doh.so_id', $header->invoice_sales_order);
+                    }
+                    if (! empty($header->invoice_do_id)) {
+                        $q->orWhere('doh.id', $header->invoice_do_id);
+                    }
+                })
+                ->orderByDesc('doh.id')
+                ->select(['doh.id', 'doh.do_number', 'doh.do_date'])
+                ->first();
+
+            if (! empty($documents)) {
+                $header->do_number = $documents->do_number;
+                $header->do_date = $documents->do_date;
+
+                $packingList = DB::table('packing_list_do as pld')
+                    ->join('packing_list as pl', function ($q) {
+                        $q->on('pl.id', 'pld.packing_list_id')->whereNull('pl.deleted');
+                    })
+                    ->where('pld.delivery_order_id', $documents->id)
+                    ->orderByDesc('pl.id')
+                    ->select(['pl.packing_list_no', 'pl.packing_date'])
+                    ->first();
+
+                if (! empty($packingList)) {
+                    $header->packing_list_no = $packingList->packing_list_no;
+                    $header->packing_date = $packingList->packing_date;
+                }
+            }
         }
 
         $returnDetails = DB::table('sales_return_detail as srd')

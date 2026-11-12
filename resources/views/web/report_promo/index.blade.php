@@ -59,6 +59,12 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> All {{ $title }}
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="History"
+                                        href="#history-promo" role="tab" aria-selected="false">
+                                        <i class="ri-history-line me-1 align-bottom"></i> History Promo
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -94,6 +100,34 @@
                                                     <th>Kategori Disc</th>
                                                     <th>Syarat Count</th>
                                                     <th>Free Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="list">
+                                            </tbody>
+                                        </table>
+                                        <div class="noresult" style="display: none">
+                                            <div class="text-center">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:75px;height:75px"></lord-icon>
+                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="history-promo">
+                                    <div class="table-responsive table-card mb-1">
+                                        <table class="table table-nowrap align-middle" id="table-data-history">
+                                            <thead class="text-muted table-light">
+                                                <tr class="text-uppercase">
+                                                    <th>No</th>
+                                                    <th>Nama Promo</th>
+                                                    <th>Tanggal Mulai Berlaku</th>
+                                                    <th>Tanggal Akhir Berlaku</th>
+                                                    <th>Status</th>
+                                                    <th>Jumlah Item</th>
+                                                    <th>Dibuat Pada</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">

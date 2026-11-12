@@ -100,7 +100,7 @@ let DashboardReturn = {
                     filename: "Daftar Sales Return",
                     action: newexportaction,
                     exportOptions: {
-                        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
                     },
                 },
             ],
@@ -122,6 +122,36 @@ let DashboardReturn = {
                 },
                 {
                     data: "invoice_number",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "do_number",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "do_date",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "packing_list_no",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "packing_date",
                     render: function (data) {
                         return DashboardReturn.escape(data || "-");
                     },
@@ -178,6 +208,18 @@ let DashboardReturn = {
                     data: "created_by_name",
                     render: function (data) {
                         return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "return_source",
+                    render: function (data) {
+                        const source = {
+                            admin_correction: { label: "Koreksi Admin (FIX)", color: "warning" },
+                            driver: { label: "Driver (Delivery Confirm)", color: "info" },
+                            manual: { label: "Manual", color: "secondary" },
+                        }[data] || { label: "Manual", color: "secondary" };
+
+                        return `<span class="badge bg-${source.color}-subtle text-${source.color}">${source.label}</span>`;
                     },
                 },
                 {
@@ -415,13 +457,23 @@ let DashboardReturn = {
 
     renderDetail: (resp) => {
         const header = resp.header || {};
+        const sourceLabel = {
+            admin_correction: "Koreksi Admin (FIX)",
+            driver: "Driver (Delivery Confirm)",
+            manual: "Manual",
+        }[header.return_source] || "-";
         const fields = [
             ["No. Retur", header.return_number],
             ["Tanggal Retur", header.return_date],
             ["No. Invoice", header.invoice_number || "-"],
             ["Tanggal Invoice", header.invoice_date || "-"],
+            ["No. DO", header.do_number || "-"],
+            ["Tanggal DO", header.do_date || "-"],
+            ["No. PL", header.packing_list_no || "-"],
+            ["Tanggal PL", header.packing_date || "-"],
             ["Customer", (header.customer_code ? header.customer_code + " - " : "") + (header.nama_customer || "-")],
             ["Tipe Retur", header.return_type || "-"],
+            ["Sumber Retur", sourceLabel],
             ["Status", header.status || "-"],
             ["Platform", header.platform || "-"],
             ["Dibuat Oleh", header.created_by_name || "-"],

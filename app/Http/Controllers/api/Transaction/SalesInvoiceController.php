@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\Billing\AuditLog;
 use App\Models\Master\AccountMapping;
 use App\Models\Master\Coa;
 use App\Models\Master\ProductUom;
@@ -10,6 +11,7 @@ use App\Models\Master\Tax;
 use App\Services\Accounting\ArSubledgerService;
 use App\Services\Accounting\JournalValidationException;
 use App\Services\Accounting\SalesInvoiceJournalService;
+use App\Services\Billing\AuditLogger;
 use Illuminate\Http\Request;
 use App\Models\Transaction\DeliveryOrderDtl;
 use App\Models\Transaction\DeliveryOrderHeader;
@@ -36,6 +38,22 @@ class SalesInvoiceController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        // PRD: tampilkan Tanggal DO dan Tanggal PL. Satu DO bisa punya beberapa PL,
+        // ambil PL terakhir per DO agar daftar invoice tidak duplikat.
+        $packingListSub = DB::table('packing_list_do as pld')
+            ->join('packing_list as pl', function ($q) {
+                $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted');
+            })
+            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no', 'pl.packing_date')
+            ->whereRaw('pl.id = (
+            SELECT MAX(pl2.id)
+            FROM packing_list_do AS pld2
+            INNER JOIN packing_list AS pl2 ON pl2.id = pld2.packing_list_id
+            WHERE pld2.delivery_order_id = pld.delivery_order_id
+              AND pl2.deleted IS NULL
+        )');
+
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
@@ -44,6 +62,8 @@ class SalesInvoiceController extends Controller
                 'cc.code as customer_code',
                 'do.do_number',
                 'do.do_date',
+                'pl.packing_list_no',
+                'pl.packing_date',
                 'w.name as warehouse_name',
                 'top.remarks as payment_terms',
                 DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining'),
@@ -51,6 +71,9 @@ class SalesInvoiceController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->join('delivery_order_header as do', 'do.id', 'm.do_id')
+            ->leftJoinSub($packingListSub, 'pl', function ($q) {
+                $q->on('pl.delivery_order_id', 'do.id');
+            })
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
@@ -203,7 +226,7 @@ class SalesInvoiceController extends Controller
                     ->whereNull('pl.deleted')
                     ->where('pl.packing_date', '>', '2026-06-29');
             })
-            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no')
+            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no', 'pl.packing_date')
             ->whereRaw('pl.id = (
             SELECT MAX(pl2.id)
             FROM packing_list_do AS pld2
@@ -224,7 +247,9 @@ class SalesInvoiceController extends Controller
                 'w.name as warehouse_name',
                 'top.remarks as payment_terms',
                 'pl.packing_list_no',
+                'pl.packing_date',
                 'do.do_number',
+                'do.do_date',
                 DB::raw('m.total_amount - COALESCE(m.amount_paid,0) as amount_remaining')
             ])
             ->join('users as u', 'u.id', 'm.created_by')
@@ -564,6 +589,24 @@ class SalesInvoiceController extends Controller
         $userId = session('user_id');
         $company_id = session('id_company');
         $result = ['is_valid' => false];
+
+        // PRD (Kontrol Koreksi): ambil kondisi invoice sebelum perubahan bila invoice
+        // sudah memiliki DO/PL, sekaligus batasi aksi koreksi ke role berwenang.
+        $correctionOriginal = null;
+        $correctionBefore = null;
+        if (! empty($data['id'])) {
+            $correctionOriginal = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            if (! empty($correctionOriginal) && ! empty($this->getInvoiceDeliveryDocuments($correctionOriginal))) {
+                if (! $this->canCorrectInvoice()) {
+                    return response()->json([
+                        'is_valid' => false,
+                        'message' => 'Anda tidak memiliki hak akses untuk melakukan koreksi Sales Invoice.',
+                    ]);
+                }
+                $correctionBefore = $this->getInvoiceCorrectionSnapshot($correctionOriginal->id);
+            }
+        }
+
         // echo '<pre>';
         // print_r($data);
         // die;
@@ -723,12 +766,27 @@ class SalesInvoiceController extends Controller
             $batalItem = false;
             $soIdBatal = [];
             $qtyChangedItems = []; // so_detail_id => new_qty
+            $adminReturnItems = []; // selisih qty/item untuk auto Sales Return (FIX)
             foreach ($data['items'] as $item) {
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
                         $exist = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['id']);
                         if ($exist) {
+                            // Opsi 2: item yang dihapus setelah DO/PL dibuatkan retur otomatis
+                            // agar stok yang sudah keluar gudang kembali tercatat.
+                            if (! empty($correctionBefore)) {
+                                $returnableQty = max(0, (float) $exist->qty - (float) ($exist->return_qty ?? 0));
+                                if ($returnableQty > 0) {
+                                    $adminReturnItems[] = [
+                                        'product' => $exist->product_id,
+                                        'invoice_detail_id' => $exist->id,
+                                        'qty_return' => $returnableQty,
+                                        'warehouse_id' => $header->warehouse_id,
+                                    ];
+                                }
+                            }
+
                             $exist->deleted = now();
                             $exist->deleted_by = $userId;
                             $exist->save();
@@ -761,6 +819,7 @@ class SalesInvoiceController extends Controller
                 // Item baru atau update
                 $isNew = empty($item['id']);
                 $oldQty = 0;
+                $oldReturnQty = 0;
 
                 $detail = $isNew
                     ? new SalesInvoiceDtl()
@@ -768,6 +827,20 @@ class SalesInvoiceController extends Controller
 
                 if (!$isNew && $detail) {
                     $oldQty = $detail->qty; // simpan qty lama sebelum di-overwrite
+                    $oldReturnQty = $detail->return_qty ?? 0;
+
+                    // Opsi 2: hanya selisih pengurangan (barang yang sudah keluar) yang diretur.
+                    if (! empty($correctionBefore)) {
+                        $returnableQty = max(0, ((float) $oldQty - (float) $oldReturnQty) - (float) $item['qty']);
+                        if ($returnableQty > 0) {
+                            $adminReturnItems[] = [
+                                'product' => $detail->product_id,
+                                'invoice_detail_id' => $detail->id,
+                                'qty_return' => $returnableQty,
+                                'warehouse_id' => $header->warehouse_id,
+                            ];
+                        }
+                    }
                 }
 
                 $detail->invoice_id = $hdrId;
@@ -1052,6 +1125,34 @@ class SalesInvoiceController extends Controller
                 }
             }
 
+            // PRD (Kontrol Koreksi - opsi 2): selisih qty/item setelah DO/PL dibuatkan
+            // Sales Return otomatis bertanda FIX agar stok yang sudah keluar kembali tercatat.
+            // GL tidak diposting ulang karena invoice koreksi sudah diposting dengan nilai final.
+            if (! empty($correctionOriginal) && ! empty($adminReturnItems)) {
+                createAutoReturn(
+                    $correctionOriginal->id,
+                    $adminReturnItems,
+                    'CORRECTION',
+                    $userId,
+                    $correctionOriginal->customer_id,
+                    'Auto return koreksi qty invoice oleh admin (FIX)',
+                    false
+                );
+            }
+
+            // PRD (Kontrol Koreksi): catat audit trail sebelum & sesudah koreksi.
+            // Item/kuantitas yang berubah sudah diproses lewat SO koreksi + invoice baru
+            // oleh alur di atas, sehingga perubahan stok tidak dilakukan diam-diam.
+            if (! empty($correctionBefore)) {
+                $this->recordInvoiceCorrection(
+                    $correctionOriginal,
+                    $correctionBefore,
+                    $reference,
+                    $company_id,
+                    $data,
+                    ! empty($batalItem) || ! empty($qtyChangedItems)
+                );
+            }
 
             DB::commit();
             $result['is_valid'] = true;
@@ -1653,5 +1754,213 @@ class SalesInvoiceController extends Controller
 
         $result['data'] = $datadb;
         return response()->json($result);
+    }
+
+    /**
+     * PRD (Kontrol Koreksi): riwayat koreksi invoice setelah DO/PL.
+     */
+    public function getCorrectionHistory(Request $request)
+    {
+        $data = $request->all();
+        $company_id = session('id_company');
+
+        $view = data_get(json_decode((string) session('akses_menu')), 'sales_invoice.view');
+        if ((int) $view !== 1) {
+            return response()->json([
+                'is_valid' => false,
+                'message' => 'Anda tidak memiliki hak akses untuk melihat riwayat koreksi.',
+                'data' => [],
+            ]);
+        }
+
+        $logs = AuditLog::where('action', 'sales_invoice.correction')
+            ->where(function ($q) use ($data) {
+                $q->where('subject_id', $data['id'] ?? 0);
+                if (! empty($data['invoice_number'])) {
+                    $q->orWhere('after->invoice_number', $data['invoice_number']);
+                }
+            })
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'is_valid' => true,
+            'data' => $logs,
+        ]);
+    }
+
+    /**
+     * Hanya role berwenang / pemegang hak update menu Sales Invoice yang boleh
+     * melakukan koreksi invoice yang sudah memiliki DO.
+     */
+    private function canCorrectInvoice(): bool
+    {
+        $role = strtolower((string) session('akses'));
+        if (in_array($role, ['superadmin', 'bod'], true)) {
+            return true;
+        }
+
+        $update = data_get(json_decode((string) session('akses_menu')), 'sales_invoice.update');
+
+        return $update !== null && (int) $update === 1;
+    }
+
+    /**
+     * Snapshot header + item invoice beserta DO/PL referensinya.
+     */
+    private function getInvoiceCorrectionSnapshot($invoiceId): array
+    {
+        $invoice = DB::table('sales_invoice_header as sih')
+            ->where('sih.id', $invoiceId)
+            ->select([
+                'sih.id',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'sih.do_id',
+                'sih.sales_order',
+                'sih.customer_id',
+                'sih.warehouse_id',
+                'sih.subtotal',
+                'sih.discount_amount',
+                'sih.tax_amount',
+                'sih.total_amount',
+                'sih.status',
+            ])
+            ->first();
+
+        if (empty($invoice)) {
+            return [];
+        }
+
+        $documents = $this->getInvoiceDeliveryDocuments($invoice);
+
+        $packingList = empty($documents) ? null : DB::table('packing_list_do as pld')
+            ->join('packing_list as pl', function ($q) {
+                $q->on('pl.id', 'pld.packing_list_id')->whereNull('pl.deleted');
+            })
+            ->where('pld.delivery_order_id', $documents->do_id)
+            ->orderByDesc('pl.id')
+            ->select(['pl.id', 'pl.packing_list_no', 'pl.packing_date'])
+            ->first();
+
+        $items = DB::table('sales_invoice_detail as sid')
+            ->where('sid.invoice_id', $invoiceId)
+            ->whereNull('sid.deleted')
+            ->orderBy('sid.line_no')
+            ->get([
+                'sid.id',
+                'sid.product_id',
+                'sid.so_detail_id',
+                'sid.qty',
+                'sid.price',
+                'sid.discount',
+                'sid.subtotal',
+                'sid.tax',
+                'sid.tax_amount',
+                'sid.tax_rate',
+                'sid.type_tax',
+            ])
+            ->map(fn ($row) => (array) $row)
+            ->all();
+
+        $header = (array) $invoice;
+        $header['do_id'] = $documents->do_id ?? null;
+        $header['do_number'] = $documents->do_number ?? null;
+        $header['do_date'] = $documents->do_date ?? null;
+        $header['packing_list_id'] = $packingList->id ?? null;
+        $header['packing_list_no'] = $packingList->packing_list_no ?? null;
+        $header['packing_list_date'] = $packingList->packing_date ?? null;
+
+        return ['header' => $header, 'items' => $items];
+    }
+
+    /**
+     * Resolusi DO invoice: kolom do_id bila ada, atau DO terakhir dari sales_order
+     * (relasi yang dipakai daftar Sales Invoice).
+     */
+    private function getInvoiceDeliveryDocuments($invoice)
+    {
+        if (empty($invoice->sales_order) && empty($invoice->do_id)) {
+            return null;
+        }
+
+        return DB::table('delivery_order_header as doh')
+            ->whereNull('doh.deleted')
+            ->where(function ($q) use ($invoice) {
+                if (! empty($invoice->sales_order)) {
+                    $q->where('doh.so_id', $invoice->sales_order);
+                }
+                if (! empty($invoice->do_id)) {
+                    $q->orWhere('doh.id', $invoice->do_id);
+                }
+            })
+            ->orderByDesc('doh.id')
+            ->select(['doh.id as do_id', 'doh.do_number', 'doh.do_date'])
+            ->first();
+    }
+
+    /**
+     * Snapshot invoice aktif berdasarkan nomor invoice. Pada alur koreksi nomor invoice
+     * dipertahankan, sedangkan invoice lama di-soft delete.
+     */
+    private function getInvoiceCorrectionSnapshotByNumber($invoiceNumber): array
+    {
+        $invoiceId = DB::table('sales_invoice_header')
+            ->where('invoice_number', $invoiceNumber)
+            ->whereNull('deleted')
+            ->orderByDesc('id')
+            ->value('id');
+
+        return empty($invoiceId) ? [] : $this->getInvoiceCorrectionSnapshot($invoiceId);
+    }
+
+    /**
+     * Simpan audit trail koreksi (nilai sebelum/sesudah, item, alasan, pelaksana, waktu).
+     * Data lama tidak dihapus, hanya ditambahkan sebagai riwayat.
+     */
+    private function recordInvoiceCorrection($original, array $before, $invoiceNumber, $companyId, array $data, bool $quantityChanged): void
+    {
+        $after = $this->getInvoiceCorrectionSnapshotByNumber($invoiceNumber);
+        if (empty($after)) {
+            return;
+        }
+
+        $beforeCompare = $before;
+        $afterCompare = $after;
+        unset($beforeCompare['header']['id'], $afterCompare['header']['id']);
+        if (json_encode($beforeCompare) === json_encode($afterCompare)) {
+            return;
+        }
+
+        $reason = trim((string) ($data['correction_reason'] ?? ''));
+        if ($reason === '') {
+            $reason = 'Koreksi Sales Invoice setelah DO/PL';
+        }
+
+        $scope = $quantityChanged ? 'quantity' : 'value';
+        $before['change_scope'] = $scope;
+        $before['reference_invoice_id'] = $original->id;
+        $after['change_scope'] = $scope;
+        $after['reference_invoice_id'] = $original->id;
+        $after['source_documents'] = [
+            'do_number' => $before['header']['do_number'] ?? null,
+            'do_date' => $before['header']['do_date'] ?? null,
+            'packing_list_no' => $before['header']['packing_list_no'] ?? null,
+            'packing_list_date' => $before['header']['packing_list_date'] ?? null,
+        ];
+        $after['stock_note'] = $quantityChanged
+            ? 'Perubahan kuantitas/item diproses melalui SO koreksi, invoice baru, dan Sales Return otomatis bertanda FIX untuk pengembalian stok.'
+            : 'Koreksi hanya mengubah nilai invoice; dokumen DO/PL dan pergerakan stok tidak diubah.';
+
+        (new AuditLogger())->log(
+            'sales_invoice.correction',
+            $companyId !== null && $companyId !== '' ? (int) $companyId : null,
+            'SalesInvoiceHeader',
+            $original->id,
+            $reason,
+            $before,
+            $after
+        );
     }
 }

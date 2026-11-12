@@ -253,6 +253,11 @@
                                 <th>No. Retur</th>
                                 <th>Tanggal Retur</th>
                                 <th>No. Invoice</th>
+                                <th>Tanggal Invoice</th>
+                                <th>No. DO</th>
+                                <th>Tanggal DO</th>
+                                <th>No. PL</th>
+                                <th>Tanggal PL</th>
                                 <th>Customer</th>
                                 <th class="text-end">Qty Retur</th>
                                 <th>Tipe</th>
@@ -261,6 +266,7 @@
                                 <th>Diterima Gudang</th>
                                 <th>PIC Gudang</th>
                                 <th>Dibuat Oleh</th>
+                                <th>Sumber Retur</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>

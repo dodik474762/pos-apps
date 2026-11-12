@@ -95,6 +95,11 @@
                                                     <th>No</th>
                                                     <th>No. Retur</th>
                                                     <th>No. Referensi</th>
+                                                    <th>Tanggal Invoice</th>
+                                                    <th>No. DO</th>
+                                                    <th>Tanggal DO</th>
+                                                    <th>No. PL</th>
+                                                    <th>Tanggal PL</th>
                                                     <th>Customer</th>
                                                     <th>Tanggal Retur</th>
                                                     <th>Tipe Retur </th>

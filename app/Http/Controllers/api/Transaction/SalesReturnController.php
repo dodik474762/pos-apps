@@ -32,16 +32,55 @@ class SalesReturnController extends Controller
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
+        // Dokumen referensi: satu DO bisa memiliki lebih dari satu PL, ambil PL terakhir
+        // per DO supaya daftar Sales Return tidak menjadi duplikat.
+        // DO invoice dapat tersimpan langsung di sales_invoice_header.do_id maupun
+        // melalui sales_order. Ambil DO terakhir per SO agar tidak duplikat.
+        $deliveryOrderSub = DB::table('delivery_order_header as doh')
+            ->whereNull('doh.deleted')
+            ->select('doh.id', 'doh.so_id', 'doh.do_number', 'doh.do_date')
+            ->whereRaw('doh.id = (
+            SELECT MAX(d2.id)
+            FROM delivery_order_header AS d2
+            WHERE d2.so_id = doh.so_id
+              AND d2.deleted IS NULL
+        )');
+
+        $packingListSub = DB::table('packing_list_do as pld')
+            ->join('packing_list as pl', function ($q) {
+                $q->on('pl.id', 'pld.packing_list_id')
+                    ->whereNull('pl.deleted');
+            })
+            ->select('pld.delivery_order_id', 'pl.id', 'pl.packing_list_no', 'pl.packing_date')
+            ->whereRaw('pl.id = (
+            SELECT MAX(pl2.id)
+            FROM packing_list_do AS pld2
+            INNER JOIN packing_list AS pl2 ON pl2.id = pld2.packing_list_id
+            WHERE pld2.delivery_order_id = pld.delivery_order_id
+              AND pl2.deleted IS NULL
+        )');
+
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
                 'u.name as created_by_name',
                 'cc.nama_customer',
                 'i.invoice_number',
+                'i.invoice_date',
+                'do.do_number',
+                'do.do_date',
+                'pl.packing_list_no',
+                'pl.packing_date',
             ])
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->leftJoinSub($deliveryOrderSub, 'do', function ($q) {
+                $q->on('do.so_id', 'i.sales_order')->orOn('do.id', 'i.do_id');
+            })
+            ->leftJoinSub($packingListSub, 'pl', function ($q) {
+                $q->on('pl.delivery_order_id', 'do.id');
+            })
             ->whereNull('m.deleted')
             ->where('m.company_id', $company_id)
             ->orderBy('m.id', 'desc');

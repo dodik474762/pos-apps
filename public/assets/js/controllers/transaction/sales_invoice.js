@@ -98,6 +98,7 @@ let SalesInvoice = {
             is_packing: $("#is_packing").is(':checked') ? 1 : 0,
             tax_base: parseFloat($("#tax option:selected").attr("rate")) || 0,
             total_amount: parseFloat($("#grand-total").text()) || 0,
+            correction_reason: $("#correction_reason").length ? $("#correction_reason").val() : "",
 
             items: SalesInvoice.getPostItem(),
         };
@@ -306,7 +307,13 @@ let SalesInvoice = {
                     data: "do_number",
                 },
                 {
+                    data: "do_date",
+                },
+                {
                     data: "packing_list_no",
+                },
+                {
+                    data: "packing_date",
                 },
                 {
                     data: "so_number",
@@ -403,6 +410,7 @@ let SalesInvoice = {
                             SalesInvoice.module()
                         )}cetak?id=${data}' data_id="${row.id
                             }" class="btn btn-info editable-submit btn-sm waves-effect waves-light"><i class="bx bx-printer"></i></a>&nbsp;`;
+                        html += `<button type="button" data_id="${row.id}" data_number="${row.invoice_number || ''}" onclick="SalesInvoice.showCorrectionHistory(this, event)" class="btn btn-secondary btn-sm waves-effect waves-light" title="Riwayat Koreksi"><i class="bx bx-history"></i></button>&nbsp;`;
                         html += `<a href='${url.base_url(
                             SalesInvoice.module()
                         )}detail?id=${data}' data_id="${row.id
@@ -902,6 +910,9 @@ let SalesInvoice = {
                 },
                 {
                     data: "do_date",
+                },
+                {
+                    data: "packing_date",
                 },
                 {
                     data: "customer_code",
@@ -1999,6 +2010,53 @@ let SalesInvoice = {
     filterData: () => {
         $("#table-data").DataTable().ajax.reload();
         $("#table-data-do").DataTable().ajax.reload();
+    },
+
+    showCorrectionHistory: (elm, e) => {
+        e.preventDefault();
+        const id = $(elm).attr("data_id");
+        const invoiceNumber = $(elm).attr("data_number") || "";
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: { id: id, invoice_number: invoiceNumber },
+            url: url.base_url(SalesInvoice.moduleApi()) + "getCorrectionHistory",
+            headers: {
+                "X-CSRF-TOKEN": SalesInvoice.csrf_token(),
+            },
+            success: function (resp) {
+                const body = $("#correction-history-body");
+                if (!resp.is_valid) {
+                    body.html(`<div class="alert alert-danger mb-0">${resp.message}</div>`);
+                } else if (!resp.data || resp.data.length === 0) {
+                    body.html('<div class="alert alert-info mb-0">Belum ada riwayat koreksi untuk invoice ini.</div>');
+                } else {
+                    let html = '<div class="table-responsive"><table class="table table-sm table-bordered align-middle"><thead class="table-light"><tr><th>Waktu</th><th>Pelaksana</th><th>Alasan</th><th>Dampak</th><th>Sebelum</th><th>Sesudah</th></tr></thead><tbody>';
+                    resp.data.forEach((row) => {
+                        const before = row.before || {};
+                        const after = row.after || {};
+                        const beforeHeader = before.header || {};
+                        const afterHeader = after.header || {};
+                        const scope = after.change_scope === "quantity" ? "Kuantitas / Item" : "Nilai Invoice";
+                        html += `<tr>
+                            <td>${row.created_at ? new Date(row.created_at).toLocaleString("id-ID") : "-"}</td>
+                            <td>${row.actor_name || "-"}</td>
+                            <td>${row.reason || "-"}</td>
+                            <td>${scope}</td>
+                            <td><div>Total: ${beforeHeader.total_amount ?? "-"}</div><div>Item: ${(before.items || []).length}</div><div>DO: ${beforeHeader.do_number ?? "-"}</div><div>PL: ${beforeHeader.packing_list_no ?? "-"}</div></td>
+                            <td><div>Total: ${afterHeader.total_amount ?? "-"}</div><div>Item: ${(after.items || []).length}</div><div>Invoice: ${afterHeader.invoice_number ?? "-"}</div><div>${after.stock_note || ""}</div></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                    body.html(html);
+                }
+                new bootstrap.Modal(document.getElementById("modal-correction-history")).show();
+            },
+            error: function () {
+                message.sweetError("Informasi", "Gagal memuat riwayat koreksi");
+            },
+        });
     },
 
     search: (elm, state = '') => {

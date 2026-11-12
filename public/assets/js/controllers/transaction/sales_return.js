@@ -193,6 +193,39 @@ let SalesReturn = {
                 },
                 {
                     data: "invoice_number",
+                    render: function (data) {
+                        return data || "-";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    render: function (data) {
+                        return data || "-";
+                    },
+                },
+                {
+                    data: "do_number",
+                    render: function (data) {
+                        return data || "-";
+                    },
+                },
+                {
+                    data: "do_date",
+                    render: function (data) {
+                        return data || "-";
+                    },
+                },
+                {
+                    data: "packing_list_no",
+                    render: function (data) {
+                        return data || "-";
+                    },
+                },
+                {
+                    data: "packing_date",
+                    render: function (data) {
+                        return data || "-";
+                    },
                 },
                 {
                     data: "nama_customer",

@@ -21,6 +21,7 @@ let ReportPromo = {
 
     filter: () => {
         ReportPromo.getData();
+        ReportPromo.getDataHistory();
     },
 
     getData: async () => {
@@ -183,6 +184,109 @@ let ReportPromo = {
 
         $(".dataTables_length select").addClass("form-select form-select-sm");
     },
+
+    getDataHistory: async () => {
+        let tableData = $("table#table-data-history");
+
+        tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            order: [[2, "desc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: false,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(ReportPromo.moduleApi()) + `getDataHistory`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPromo.csrf_token(),
+                },
+                data: function (d) {
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "HistoryPromo",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "promo_name",
+                    title: "Nama Promo",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "date_start",
+                    title: "Tanggal Mulai Berlaku",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "date_end",
+                    title: "Tanggal Akhir Berlaku",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "status_aktif",
+                    title: "Status",
+                    render: function (data) {
+                        return data ? "Aktif" : "Tidak Aktif";
+                    },
+                },
+                {
+                    data: "item_count",
+                    title: "Jumlah Item",
+                    className: "text-end",
+                    render: function (data) {
+                        return data ?? 0;
+                    },
+                },
+                {
+                    data: "created_at",
+                    title: "Dibuat Pada",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+            ],
+        });
+
+        $(".dataTables_length select").addClass("form-select form-select-sm");
+    },
 };
 
 function newexportaction(e, dt, button, config) {
@@ -265,4 +369,5 @@ function newexportaction(e, dt, button, config) {
 $(function () {
     ReportPromo.setSelect2();
     ReportPromo.getData();
+    ReportPromo.getDataHistory();
 });

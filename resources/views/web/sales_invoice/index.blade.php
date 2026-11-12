@@ -183,7 +183,9 @@
                                                     <th>Invoice Number</th>
                                                     <th>Tanggal Invoice</th>
                                                     <th>DO Number</th>
+                                                    <th>Tanggal DO</th>
                                                     <th>PL Delivery No.</th>
+                                                    <th>Tanggal PL</th>
                                                     <th>SO Number</th>
                                                     <th>Tanggal SO</th>
                                                     <th>Customer Code</th>
@@ -226,6 +228,7 @@
                                                     <th>Tanggal Invoice</th>
                                                     <th>DO Number</th>
                                                     <th>Tanggal DO</th>
+                                                    <th>Tanggal PL</th>
                                                     <th>Customer Code</th>
                                                     <th>Customer</th>
                                                     <th>Warehouse</th>
@@ -343,6 +346,19 @@
 
             </div>
             <!--end col-->
+        </div>
+
+        <div class="modal fade" id="modal-correction-history" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Riwayat Koreksi Invoice</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="correction-history-body"></div>
+                </div>
+            </div>
         </div>
     @else
         @include('web.alert.message')

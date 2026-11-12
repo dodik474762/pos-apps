@@ -65,6 +65,14 @@
                                 </div>
                             </div>
 
+                            @if (!empty($data->id))
+                                <div class="mb-3">
+                                    <label class="form-label">Alasan Koreksi</label>
+                                    <textarea id="correction_reason" class="form-control" rows="2"
+                                              placeholder="Diisi bila invoice yang sudah memiliki DO/PL dikoreksi"></textarea>
+                                </div>
+                            @endif
+
                         </div>
 
                         <!-- RIGHT -->

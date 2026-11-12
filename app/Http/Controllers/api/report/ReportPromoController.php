@@ -131,4 +131,90 @@ class ReportPromoController extends Controller
 
         return json_encode($data);
     }
+
+    /**
+     * PRD (History Promo): daftar promo yang pernah dibuat beserta periode berlakunya,
+     * termasuk promo yang sudah tidak aktif / sudah berakhir.
+     */
+    public function getDataHistory()
+    {
+        $data = [];
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+
+        $principal = $_POST['principal'] ?? '';
+        $company_id = session('id_company');
+
+        $datadb = DB::table('product_promo_item as ppi')
+            ->select([
+                DB::raw('MIN(ppi.id) as id'),
+                'ppi.promo_name',
+                DB::raw('MIN(ppi.date_start) as date_start'),
+                DB::raw('MAX(ppi.date_end) as date_end'),
+                DB::raw('MAX(ppi.status_aktif) as status_aktif'),
+                DB::raw('COUNT(DISTINCT ppi.id) as item_count'),
+                DB::raw('MIN(ppi.created_at) as created_at'),
+            ])
+            ->whereNull('ppi.deleted')
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('ppi.company_id', $company_id))
+            ->when($principal !== '', fn ($q) => $q->whereExists(function ($sub) use ($principal) {
+                $sub->select(DB::raw(1))
+                    ->from('product_promo_item_detail as ppid')
+                    ->join('product as p', 'p.id', 'ppid.product')
+                    ->whereColumn('ppid.product_promo_item', 'ppi.id')
+                    ->where('p.vendor', $principal);
+            }))
+            ->groupBy('ppi.promo_name', 'ppi.date_start', 'ppi.date_end');
+
+        $data['recordsTotal'] = (clone $datadb)->get()->count();
+
+        if (!empty($_POST['search']['value'])) {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('ppi.promo_name', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('ppi.date_start', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('ppi.date_end', 'LIKE', '%' . $keyword . '%');
+            });
+        }
+
+        $data['recordsFiltered'] = (clone $datadb)->get()->count();
+
+        $dir = strtolower($_POST['order'][0]['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+        $col = $_POST['order'][0]['column'] ?? null;
+
+        switch ((string) $col) {
+            case '0':
+                $datadb->orderByRaw('MIN(ppi.id) ' . $dir);
+                break;
+            case '1':
+                $datadb->orderBy('ppi.promo_name', $dir);
+                break;
+            case '2':
+                $datadb->orderBy('date_start', $dir);
+                break;
+            case '3':
+                $datadb->orderBy('date_end', $dir);
+                break;
+            case '4':
+                $datadb->orderByRaw('MAX(ppi.status_aktif) ' . $dir);
+                break;
+            case '5':
+                $datadb->orderByRaw('COUNT(DISTINCT ppi.id) ' . $dir);
+                break;
+            default:
+                $datadb->orderBy('date_start', 'desc')->orderBy('ppi.promo_name', 'asc');
+                break;
+        }
+
+        if (isset($_POST['length']) && (int) $_POST['length'] > 0) {
+            $datadb->limit((int) $_POST['length']);
+            $datadb->offset((int) ($_POST['start'] ?? 0));
+        }
+
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = $_POST['draw'] ?? 0;
+
+        return json_encode($data);
+    }
 }
