@@ -42,9 +42,11 @@ class ProductController extends Controller
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
         $company_id = session('id_company');
+        $akses = session('akses');
+        $isSuperAdmin = strtolower((string) $akses) == 'superadmin';
         $stock = DB::table('product_stock')
             ->select('product', DB::raw('SUM(qty) as stock'))
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->groupBy('product');
 
         $datadb = DB::table($this->getTableName() . ' as m')
@@ -54,6 +56,7 @@ class ProductController extends Controller
                 'u.name as unit_name',
                 'v.nama_vendor',
                 'prin.nama_vendor as nama_principal',
+                'c.nama_company',
                 DB::raw('COALESCE(ps.stock,0) as stock')
             ])
             ->join('product_type as pt', 'pt.id', '=', 'm.product_type')
@@ -64,8 +67,9 @@ class ProductController extends Controller
                 $join->on('ps.product', '=', 'm.id');
             })
             ->leftJoin('unit as u', 'u.id', '=', 'm.unit')
+            ->leftJoin('company as c', 'c.id', '=', 'm.company_id')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -82,6 +86,7 @@ class ProductController extends Controller
                     $query->orWhere('prin.nama_vendor', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('m.sub_brand', 'LIKE', '%' . $keyword . '%');
                     $query->orWhere('pt.type', 'LIKE', '%' . $keyword . '%');
+                    $query->orWhere('c.nama_company', 'LIKE', '%' . $keyword . '%');
                 });
             }
             if (isset($_POST['order'][0]['column'])) {
