@@ -1604,7 +1604,7 @@ class ProductController extends Controller
     public function addItemPrice(Request $request)
     {
         $data = $request->all();
-        $company_id = session('id_company');
+        $company_id = $this->resolveCompanyId($data['id'] ?? null);
         $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('product_uom.company_id', $company_id))
             ->where('product', $data['id'])
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
