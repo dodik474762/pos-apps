@@ -27,6 +27,23 @@ class ProductController extends Controller
         $this->akses_menu = json_decode(session('akses_menu'));
     }
 
+    public function isSuperAdmin()
+    {
+        return strtolower((string) session('akses')) == 'superadmin';
+    }
+
+    public function resolveCompanyId($productId = null)
+    {
+        $company_id = session('id_company');
+        if ($this->isSuperAdmin() && !empty($productId)) {
+            $productCompanyId = DB::table('product')->where('id', $productId)->value('company_id');
+            if (!empty($productCompanyId)) {
+                return $productCompanyId;
+            }
+        }
+        return $company_id;
+    }
+
     public function getHeaderCss()
     {
         return array(
@@ -71,9 +88,9 @@ class ProductController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getStock($product = 0)
+    public function getStock($product = 0, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $datadb = DB::table('product_stock as ps')
             ->select(['ps.*', 'u.name as unit_name', 'w.name as warehouse_name'])
             ->join('unit as u', 'u.id', 'ps.unit')
@@ -92,9 +109,9 @@ class ProductController extends Controller
         return $result;
     }
 
-    public function getCostProduct($product = 0)
+    public function getCostProduct($product = 0, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $datadb = DB::table('product_uom_cost as ps')
             ->select(['ps.*', 'u.name as unit_name', 'v.nama_vendor'])
             ->join('unit as u', 'u.id', 'ps.unit_id')
@@ -105,9 +122,9 @@ class ProductController extends Controller
         return $datadb;
     }
 
-    public function getListVendor()
+    public function getListVendor($company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $datadb = DB::table('vendor')
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')->get();
@@ -145,9 +162,9 @@ class ProductController extends Controller
         return view('web.template.main', $put);
     }
 
-    public function getProductLog($product)
+    public function getProductLog($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $data = ProductLog::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_log.company_id', $company_id))
             ->where('product_log.product', $product)
             ->select([
@@ -159,9 +176,9 @@ class ProductController extends Controller
         return $data;
     }
 
-    public function getListProductUom($product)
+    public function getListProductUom($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $data = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('product', $product)
             ->orderBy('level')
@@ -170,9 +187,9 @@ class ProductController extends Controller
         return $data;
     }
 
-    public function getListProductUomPrice($product)
+    public function getListProductUomPrice($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $data = ProductUomPrice::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('product', $product)
             ->orderBy('id')
@@ -181,9 +198,9 @@ class ProductController extends Controller
         return $data;
     }
 
-    public function getListProductDiscStrata($product)
+    public function getListProductDiscStrata($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $data = ProductDisc::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('product', $product)
             ->orderBy('id')
@@ -192,9 +209,9 @@ class ProductController extends Controller
         return $data;
     }
 
-    public function getListProductDiscFree($product)
+    public function getListProductDiscFree($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $data = ProductFreeGood::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
             ->where('product', $product)
             ->orderBy('id')
@@ -210,9 +227,9 @@ class ProductController extends Controller
         return $datadb;
     }
 
-    public function getListSatuanUom($product)
+    public function getListSatuanUom($product, $company_id = null)
     {
-        $company_id = session('id_company');
+        $company_id = $company_id ?? session('id_company');
         $product_uoms = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('product_uom.company_id', $company_id))
             ->where('product', $product)
             ->select(['u.name as unit_dasar_name', 'ut.name as unit_tujuan_name', 'product_uom.*'])
@@ -260,7 +277,7 @@ class ProductController extends Controller
         $api = new MasterProductController();
         $data = $request->all();
 
-        $company_id = session('id_company');
+        $company_id = $this->resolveCompanyId($data['id']);
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
@@ -272,23 +289,23 @@ class ProductController extends Controller
         // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['tax_type'] = ['include'];
         $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
-        $data['vendors'] = $this->getListVendor();
-        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
+        $data['vendors'] = $this->getListVendor($company_id);
+        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id'], $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['product_logs'] = $this->getProductLog($data['id']);
-        $data['product_uoms'] = $this->getListProductUom($data['id']);
+        $data['product_logs'] = $this->getProductLog($data['id'], $company_id);
+        $data['product_uoms'] = $this->getListProductUom($data['id'], $company_id);
         $data['tipe_price'] = $this->getListPriceList();
-        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
+        $data['product_prices'] = $this->getListProductUomPrice($data['id'], $company_id);
         $data['prices_retails'] = collect($data['product_prices'])->where('channel', 'RETAIL UMUM');
         $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
-        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
-        $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
-        $data['product_stocks'] = $this->getStock($data['id']);
-        $data['product_costs'] = $this->getCostProduct($data['id']);
+        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id'], $company_id);
+        $data['product_disc_free'] = $this->getListProductDiscFree($data['id'], $company_id);
+        $data['product_stocks'] = $this->getStock($data['id'], $company_id);
+        $data['product_costs'] = $this->getCostProduct($data['id'], $company_id);
         $data['akses'] = session('akses');
         $view = view('web.product.formadd', $data);
         $put['title_content'] = $this->getTitle();
@@ -304,7 +321,7 @@ class ProductController extends Controller
         $api = new MasterProductController();
         $data = $request->all();
 
-        $company_id = session('id_company');
+        $company_id = $this->resolveCompanyId($data['id']);
         $data['data'] = $api->getDetailData($data['id'])->original;
         $data['product_type'] = ProductType::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
         $data['product_unit'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get()->toArray();
@@ -316,23 +333,23 @@ class ProductController extends Controller
         // $data['tax_type'] = ['include', 'exclude', 'non-taxable'];
         $data['tax_type'] = ['include'];
         $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
-        $data['vendors'] = $this->getListVendor();
-        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id']);
+        $data['vendors'] = $this->getListVendor($company_id);
+        $data['data_satuan_uom'] = $this->getListSatuanUom($data['id'], $company_id);
         $data['title'] = 'Form ' . $this->getTitle();
         $data['title_parent'] = $this->getTitleParent();
-        $data['product_logs'] = $this->getProductLog($data['id']);
-        $data['product_uoms'] = $this->getListProductUom($data['id']);
+        $data['product_logs'] = $this->getProductLog($data['id'], $company_id);
+        $data['product_uoms'] = $this->getListProductUom($data['id'], $company_id);
         $data['tipe_price'] = $this->getListPriceList();
-        $data['product_prices'] = $this->getListProductUomPrice($data['id']);
+        $data['product_prices'] = $this->getListProductUomPrice($data['id'], $company_id);
         $data['prices_retails'] = collect($data['product_prices'])->where('channel', 'RETAIL UMUM');
         $data['data_customer_category'] = CustomerCategory::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
         $data['data_disc_tipe'] = ['percent', 'nominal'];
         $data['channels'] = $this->getChannel();
         $data['sub_channels'] = $this->getSubChannel();
-        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id']);
-        $data['product_disc_free'] = $this->getListProductDiscFree($data['id']);
-        $data['product_stocks'] = $this->getStock($data['id']);
-        $data['product_costs'] = $this->getCostProduct($data['id']);
+        $data['product_disc_strata'] = $this->getListProductDiscStrata($data['id'], $company_id);
+        $data['product_disc_free'] = $this->getListProductDiscFree($data['id'], $company_id);
+        $data['product_stocks'] = $this->getStock($data['id'], $company_id);
+        $data['product_costs'] = $this->getCostProduct($data['id'], $company_id);
         $data['akses'] = session('akses');
         $data['view_detail'] = 'detail';
         $view = view('web.product.formdetail', $data);

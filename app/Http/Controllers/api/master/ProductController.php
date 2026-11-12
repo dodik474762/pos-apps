@@ -35,6 +35,18 @@ class ProductController extends Controller
         return "product";
     }
 
+    public function resolveCompanyId($productId = null)
+    {
+        $company_id = session('id_company');
+        if (strtolower((string) session('akses')) == 'superadmin' && !empty($productId)) {
+            $productCompanyId = DB::table('product')->where('id', $productId)->value('company_id');
+            if (!empty($productCompanyId)) {
+                return $productCompanyId;
+            }
+        }
+        return $company_id;
+    }
+
     public function getData()
     {
         DB::enableQueryLog();
@@ -976,7 +988,7 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $user = session()->all();
-        $company_id = session('id_company');
+        $company_id = $this->resolveCompanyId($data['id'] ?? null);
 
         $result['is_valid'] = false;
         DB::beginTransaction();
@@ -1065,18 +1077,17 @@ class ProductController extends Controller
                 $totalLevel      = count($data['unit_dasar']);
                 $hargaUnitTerbesar = isset($data['harga_satuan_besar']) ? (float) $data['harga_satuan_besar'] : 0;
 
-                // Hitung multiplierTerbesar = perkalian semua nilai_konversi dari level terbesar ke terkecil
+                // Hitung multiplier dari setiap level menuju level terbesar
                 // Contoh: CARTON(6) × PACK(2) × RENCENG(12) = 144
-                $multiplierTerbesar = 1;
-                for ($i = 0; $i < $totalLevel; $i++) {
-                    if (($i + 1) > 1) { // skip level 1 (unit terkecil)
-                        $multiplierTerbesar *= (float) $data['nilai_konversi'][$i];
+                // Level terbesar = 1, level di bawahnya dibagi konversi secara berurutan
+                $multiplierPerLevel = [];
+                $runningMultiplier = 1;
+                for ($i = $totalLevel - 1; $i >= 0; $i--) {
+                    $multiplierPerLevel[$i] = $runningMultiplier;
+                    if ($i > 0 && (float) $data['nilai_konversi'][$i] > 0) {
+                        $runningMultiplier *= (float) $data['nilai_konversi'][$i];
                     }
                 }
-
-                // runningMultiplier dimulai dari multiplierTerbesar
-                // lalu dibagi nilai_konversi setiap turun level
-                $runningMultiplier = $multiplierTerbesar;
 
                 for ($i = 0; $i < $totalLevel; $i++) {
                     if ($i == 0) {
@@ -1103,14 +1114,13 @@ class ProductController extends Controller
                         $product_uom->state = 'large';
                     }
 
-                    // Hitung harga per unit ini berdasarkan runningMultiplier
-                    // harga_per_unit = harga_unit_terbesar / (multiplierTerbesar / runningMultiplier)
-                    // Contoh CARTON(multiplier=144): 144000 / (144/144) = 144000
-                    // Contoh PACK(multiplier=24):    144000 / (144/24)  = 24000
-                    // Contoh RENCENG(multiplier=12): 144000 / (144/12)  = 12000
-                    // Contoh PCS(multiplier=1):      144000 / (144/1)   = 1000
-                    $hargaPerUnit = ($multiplierTerbesar > 0 && $hargaUnitTerbesar > 0)
-                        ? $hargaUnitTerbesar / ($multiplierTerbesar / $runningMultiplier)
+                    // Hitung harga per unit ini dari level terbesar turun ke terkecil
+                    // Contoh CARTON:  144000 / 1   = 144000
+                    // Contoh PACK:    144000 / 6   = 24000
+                    // Contoh RENCENG: 144000 / 12  = 12000
+                    // Contoh PCS:     144000 / 144 = 1000
+                    $hargaPerUnit = ($hargaUnitTerbesar > 0)
+                        ? $hargaUnitTerbesar / (!empty($multiplierPerLevel[$i]) ? $multiplierPerLevel[$i] : 1)
                         : 0;
 
                     // $product_uom->harga_per_unit = $hargaPerUnit;
@@ -1123,11 +1133,6 @@ class ProductController extends Controller
                             'unit_tujuan' => $data['unit_tujuan'][$i],
                             'unit_dasar'  => $data['unit_dasar'][$i],
                         ];
-                    }
-
-                    // Turunkan runningMultiplier untuk level berikutnya
-                    if (($i + 1) < $totalLevel && (float) $data['nilai_konversi'][$i + 1] > 0) {
-                        $runningMultiplier /= (float) $data['nilai_konversi'][$i + 1];
                     }
                 }
             }
@@ -1281,6 +1286,8 @@ class ProductController extends Controller
                         $product_uom_price->min_qty     = 1;
                         $product_uom_price->max_qty     = 99999;
                         $product_uom_price->type        = 'RETAIL';
+                        $product_uom_price->channel     = 'RETAIL UMUM';
+                        $product_uom_price->sub_channel = 'RT-RETAIL UMUM';
                         $product_uom_price->save();
                     }
                 }
@@ -1539,11 +1546,12 @@ class ProductController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
                 'm.*',
             ])->where('m.id', $id)
-            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id));
         $data = $datadb->first();
         $query = DB::getQueryLog();
         return response()->json($data);
@@ -1559,7 +1567,13 @@ class ProductController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $data['data_satuan'] = Unit::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->whereNull('deleted')->get();
+        $isSuperAdmin = strtolower((string) session('akses')) == 'superadmin';
+        $data['data_satuan'] = DB::table('unit as u')
+            ->select(['u.*', 'c.nama_company'])
+            ->leftJoin('company as c', 'c.id', 'u.company_id')
+            ->when(!$isSuperAdmin && $company_id !== null && $company_id !== '', fn($q) => $q->where('u.company_id', $company_id))
+            ->whereNull('u.deleted')
+            ->get();
         return view('web.product.product-item-level', $data);
     }
 
@@ -1746,7 +1760,7 @@ class ProductController extends Controller
         $data = $request->all();
         $result['is_valid'] = false;
 
-        $company_id = session('id_company');
+        $company_id = $this->resolveCompanyId($data['id'] ?? null);
         $product_uom = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereNull('deleted')
             ->where('product', $data['id'])
@@ -1769,13 +1783,19 @@ class ProductController extends Controller
                     ->whereNull('deleted')
                     ->where('unit', $uom->unit_tujuan)
                     ->where('date_start', '<=', date('Y-m-d'))
-                    ->where('channel', 'RETAIL UMUM')
-                    ->where('sub_channel', 'RT-RETAIL UMUM')
+                    ->where(function ($q) {
+                        $q->where(function ($q2) {
+                            $q2->where('channel', 'RETAIL UMUM')
+                                ->where('sub_channel', 'RT-RETAIL UMUM');
+                        })->orWhereNull('channel');
+                    })
                     ->orderBy('date_start', 'desc')
                     ->first();
 
                 if ($uomPrice) {
                     $uomPrice->price = $harga_satuan;
+                    $uomPrice->channel = 'RETAIL UMUM';
+                    $uomPrice->sub_channel = 'RT-RETAIL UMUM';
                     $uomPrice->save();
                 } else {
                     $uomPrice = new ProductUomPrice();
