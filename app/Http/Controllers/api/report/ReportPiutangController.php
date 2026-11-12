@@ -101,10 +101,11 @@ class ReportPiutangController extends Controller
             });
         }
 
+        $filter_status = $_POST['filter_status'] ?? 'outstanding';
+
         if (isset($data['types']) && $data['types'] == 'per-penjual') {
             $datadb->where('m.total_amount', '>', 0);
         } else {
-            $filter_status = $_POST['filter_status'] ?? 'outstanding';
             if ($filter_status !== 'all') {
                 $datadb->having('outstanding_amount', '>', 0);
             }
@@ -116,10 +117,14 @@ class ReportPiutangController extends Controller
                     ->whereNotNull('usr.name')
                     ->orderBy('usr.name', 'asc');
             } else {
-                $datadb->whereDate('sih.invoice_date', '=', $tanggal);
+                if ($filter_status !== 'outstanding') {
+                    $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
+                }
             }
         } else {
-            $datadb->whereDate('sih.invoice_date', '=', $tanggal);
+            if ($filter_status !== 'outstanding') {
+                $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
+            }
         }
 
         if (isset($_POST)) {
