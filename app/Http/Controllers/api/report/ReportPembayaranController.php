@@ -112,7 +112,7 @@ class ReportPembayaranController extends Controller
         }
 
         if ($date_start !== '' && $date_end !== '') {
-            $datadb->whereBetween('sih.invoice_date', [$date_start, $date_end]);
+            $datadb->whereBetween('sph.payment_date', [$date_start, $date_end]);
         }
 
         if (isset($data['customer_id'])) {
