@@ -93,7 +93,8 @@
                                 <select id="bank_account_id" class="form-control select2">
                                     <option value="">-- Pilih Akun Bank / Cash --</option>
                                     @foreach ($journalBankCashAccounts as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}</option>
+                                        <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted">
@@ -232,7 +233,7 @@
                 @endphp
                 @if (isset($data->id))
                     @if ($data->status == 'PENDING')
-                        @if (strtolower($akses) == 'superadmin')
+                        @if (strtolower($akses) == 'superadmin' || strtolower($akses) == 'bod')
                             <button type="button" onclick="SalesPayment.posted(this, event)"
                                 class="btn btn-primary waves-effect waves-light me-1"
                                 title="Konfirmasi pembayaran dan buat jurnal Dr Bank/Cash / Cr AR">
