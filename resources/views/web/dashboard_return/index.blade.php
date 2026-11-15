@@ -265,6 +265,8 @@
                                 <th class="text-center">Item Batal</th>
                                 <th>Diterima Gudang</th>
                                 <th>PIC Gudang</th>
+                                <th>Tanggal Reject</th>
+                                <th>Ditolak Oleh</th>
                                 <th>Dibuat Oleh</th>
                                 <th>Sumber Retur</th>
                                 <th class="text-center">Aksi</th>

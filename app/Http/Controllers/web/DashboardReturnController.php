@@ -213,9 +213,12 @@ class DashboardReturnController extends Controller
 
         $detailAgg = DB::table('sales_return_detail as srd')
             ->leftJoin('users as receiver', 'receiver.id', '=', 'srd.received_by')
+            ->leftJoin('users as rejecter', 'rejecter.id', '=', 'srd.reject_by')
             ->selectRaw('srd.return_id, COALESCE(SUM(srd.qty_return), 0) as total_qty')
             ->selectRaw('MAX(srd.received_date) as received_date')
+            ->selectRaw('MAX(srd.reject_date) as reject_date')
             ->selectRaw("GROUP_CONCAT(DISTINCT receiver.name ORDER BY receiver.name SEPARATOR ', ') as received_by_name")
+            ->selectRaw("GROUP_CONCAT(DISTINCT rejecter.name ORDER BY rejecter.name SEPARATOR ', ') as reject_by_name")
             ->whereNull('srd.deleted')
             ->groupBy('srd.return_id');
 
@@ -263,6 +266,8 @@ class DashboardReturnController extends Controller
                 DB::raw('COALESCE(srd.total_qty, 0) as total_qty'),
                 DB::raw('srd.received_date as received_date'),
                 DB::raw('srd.received_by_name as received_by_name'),
+                DB::raw('srd.reject_date as reject_date'),
+                DB::raw('srd.reject_by_name as reject_by_name'),
                 DB::raw('COALESCE(sid.canceled_item_count, 0) as canceled_item_count'),
                 DB::raw('COALESCE(sid.canceled_qty, 0) as canceled_qty'),
                 'do.do_number',
@@ -341,6 +346,12 @@ class DashboardReturnController extends Controller
                 $datadb->orderBy('srd.received_by_name', $orderDir);
                 break;
             case 16:
+                $datadb->orderBy('srd.reject_date', $orderDir);
+                break;
+            case 17:
+                $datadb->orderBy('srd.reject_by_name', $orderDir);
+                break;
+            case 18:
                 $datadb->orderBy('u.name', $orderDir);
                 break;
             default:
@@ -441,6 +452,7 @@ class DashboardReturnController extends Controller
             ->leftJoin('sales_invoice_detail as sid', 'sid.id', '=', 'srd.invoice_detail_id')
             ->leftJoin('product as p', 'p.id', '=', 'srd.product_id')
             ->leftJoin('unit as uom', 'uom.id', '=', 'p.unit')
+            ->leftJoin('users as rejecter', 'rejecter.id', '=', 'srd.reject_by')
             ->where('srd.return_id', $id)
             ->whereNull('srd.deleted')
             ->select([
@@ -452,6 +464,7 @@ class DashboardReturnController extends Controller
                 'sid.price as invoice_price',
                 'sid.return_qty as invoice_return_qty',
                 'sid.flag_cancel',
+                'rejecter.name as reject_by_name',
             ])
             ->orderBy('srd.id')
             ->get();

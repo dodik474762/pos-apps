@@ -100,7 +100,7 @@ let DashboardReturn = {
                     filename: "Daftar Sales Return",
                     action: newexportaction,
                     exportOptions: {
-                        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+                        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
                     },
                 },
             ],
@@ -200,6 +200,18 @@ let DashboardReturn = {
                 },
                 {
                     data: "received_by_name",
+                    render: function (data) {
+                        return DashboardReturn.escape(data || "-");
+                    },
+                },
+                {
+                    data: "reject_date",
+                    render: function (data) {
+                        return DashboardReturn.escape((data || "").toString().slice(0, 10) || "-");
+                    },
+                },
+                {
+                    data: "reject_by_name",
                     render: function (data) {
                         return DashboardReturn.escape(data || "-");
                     },
@@ -530,6 +542,11 @@ let DashboardReturn = {
             driver: "Driver (Delivery Confirm)",
             manual: "Manual",
         }[header.return_source] || "-";
+        const rejectedItem = (resp.return_details || []).find(function (item) {
+            return item.reject_date;
+        });
+        const rejectDate = rejectedItem ? String(rejectedItem.reject_date).slice(0, 10) : "-";
+        const rejectBy = rejectedItem && rejectedItem.reject_by_name ? rejectedItem.reject_by_name : "-";
         const fields = [
             ["No. Retur", header.return_number],
             ["Tanggal Retur", header.return_date],
@@ -545,6 +562,8 @@ let DashboardReturn = {
             ["Status", header.status || "-"],
             ["Platform", header.platform || "-"],
             ["Dibuat Oleh", header.created_by_name || "-"],
+            ["Tanggal Reject", rejectDate],
+            ["Ditolak Oleh", rejectBy],
             ["Alasan", header.reason || "-"],
         ];
 
