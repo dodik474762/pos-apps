@@ -2319,6 +2319,7 @@ function recalculateFrom(
     $sales     = mapSales($itemCode, $fromDate, $toDate, $wh_code, $company_id);
     $adjust    = mapAdjustments($itemCode, $fromDate, $toDate, $wh_code, $company_id);
     $returns   = mapReturnsIn($itemCode, $fromDate, $toDate, $wh_code, $company_id);
+    $rejectReturns = mapRejectReturns($itemCode, $fromDate, $toDate, $wh_code, $company_id);
     $cancelDo  = mapCancelDo($itemCode, $fromDate, $toDate, $wh_code, $company_id);
 
     $transactions = collect()
@@ -2326,6 +2327,7 @@ function recalculateFrom(
         ->merge($sales)
         ->merge($adjust)
         ->merge($returns)
+        ->merge($rejectReturns)
         ->merge($cancelDo)
         ->sortBy([
             ['trans_date', 'asc'],
@@ -2838,6 +2840,42 @@ function mapReturnsIn(string $itemCode, string $fromDate, ?string $toDate, $wh_c
             'reference_type' => SalesReturnHdr::class,
             'reference_id' => $p->id,
             'note' => $p->return_number,
+        ]);
+}
+
+function mapRejectReturns(string $itemCode, string $fromDate, ?string $toDate, $wh_code = '1', $company_id = null)
+{
+    return DB::table('product_stock_move as psm')
+        ->join('product as p', 'p.id', '=', 'psm.product')
+        ->leftJoin('sales_return as sr', 'sr.id', '=', 'psm.reference_id')
+        ->where('p.code', $itemCode)
+        ->where('psm.move_type', 'reject_return')
+        ->whereDate('psm.created_at', '>=', $fromDate)
+        ->when($toDate, fn($q) => $q->whereDate('psm.created_at', '<=', $toDate))
+        ->when($wh_code !== null && $wh_code !== '', fn($q) => $q->where('psm.warehouse', $wh_code))
+        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('psm.company_id', $company_id))
+        ->select([
+            'psm.reference_id',
+            'p.code as item_code',
+            'psm.created_at',
+            'sr.return_number',
+            DB::raw('SUM(psm.qty_out) as qty_out'),
+        ])
+        ->groupBy('psm.reference_id', 'p.code', 'psm.created_at', 'sr.return_number')
+        ->orderBy('psm.created_at')
+        ->get()
+        ->map(fn($p) => [
+            'trans_date'       => $p->created_at,
+            'created_at'       => $p->created_at,
+            'qty_in'           => 0,
+            'qty_out'          => $p->qty_out,
+            'qty_adjust'       => 0,
+            'qty_transfer_out' => 0,
+            'qty_transfer_in'  => 0,
+            'qty_return_in'    => 0,
+            'reference_type'   => SalesReturnHdr::class,
+            'reference_id'     => $p->reference_id,
+            'note'             => 'Reject Return : ' . ($p->return_number ?? ''),
         ]);
 }
 
