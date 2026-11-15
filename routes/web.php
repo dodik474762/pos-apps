@@ -445,6 +445,7 @@ Route::post('api/dashboard/return/getData', [DashboardReturnController::class, '
 Route::post('api/dashboard/return/getDetail', [DashboardReturnController::class, 'getDetail']);
 Route::post('api/dashboard/return/getGrafik', [DashboardReturnController::class, 'getGrafik']);
 Route::post('api/dashboard/return/confirmReceived', [DashboardReturnController::class, 'confirmReceived']);
+Route::post('api/dashboard/return/confirmReject', [DashboardReturnController::class, 'confirmReject']);
 
 Route::post('api/monitoring/closing-period/getData', [ApiClosingPeriodController::class, 'getData']);
 

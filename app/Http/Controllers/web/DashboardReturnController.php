@@ -89,7 +89,7 @@ class DashboardReturnController extends Controller
             ->whereNull('sr.deleted')
             ->where('sr.types', self::TYPE_GOOD)
             ->whereBetween('sr.return_date', [$startDate, $endDate])
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('sr.company_id', $this->company_id));
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('sr.company_id', $this->company_id));
     }
 
     public function getSummary($startDate = '', $endDate = '')
@@ -110,7 +110,7 @@ class DashboardReturnController extends Controller
             ->whereNull('sr.deleted')
             ->where('sr.types', self::TYPE_GOOD)
             ->whereBetween('sr.return_date', [$startDate, $endDate])
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('sr.company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('sr.company_id', $this->company_id))
             ->selectRaw('COALESCE(SUM(srd.qty_return), 0) as total_qty')
             ->selectRaw('COUNT(DISTINCT srd.product_id) as total_product')
             ->first();
@@ -245,7 +245,7 @@ class DashboardReturnController extends Controller
             ->whereNull('sr.deleted')
             ->where('sr.types', self::TYPE_GOOD)
             ->whereBetween('sr.return_date', [$startDate, $endDate])
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('sr.company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('sr.company_id', $this->company_id))
             ->select([
                 'sr.*',
                 'sih.invoice_number',
@@ -371,7 +371,7 @@ class DashboardReturnController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'sr.created_by')
             ->where('sr.id', $id)
             ->whereNull('sr.deleted')
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('sr.company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('sr.company_id', $this->company_id))
             ->select([
                 'sr.*',
                 'sih.invoice_number',
@@ -495,7 +495,7 @@ class DashboardReturnController extends Controller
             ->where('id', $id)
             ->whereNull('deleted')
             ->where('types', self::TYPE_GOOD)
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
             ->first();
 
         if (empty($header)) {
@@ -507,7 +507,7 @@ class DashboardReturnController extends Controller
         $detailCount = DB::table('sales_return_detail')
             ->where('return_id', $id)
             ->whereNull('deleted')
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
             ->count();
 
         if ($detailCount === 0) {
@@ -520,7 +520,7 @@ class DashboardReturnController extends Controller
         DB::table('sales_return_detail')
             ->where('return_id', $id)
             ->whereNull('deleted')
-            ->when($this->company_id !== null && $this->company_id !== '', fn ($q) => $q->where('company_id', $this->company_id))
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
             ->update([
                 'received_date' => $now,
                 'received_by' => $userId,
@@ -529,6 +529,131 @@ class DashboardReturnController extends Controller
 
         $result['is_valid'] = true;
         $result['message'] = 'Barang retur berhasil diterima.';
+
+        return response()->json($result);
+    }
+
+    public function confirmReject(Request $request)
+    {
+        $id = (int) $request->input('id');
+        $userId = (int) session('user_id');
+        $result['is_valid'] = false;
+
+        if (empty($id) || empty($userId)) {
+            $result['message'] = 'Data user atau retur tidak valid.';
+
+            return response()->json($result);
+        }
+
+        $header = DB::table('sales_return')
+            ->where('id', $id)
+            ->whereNull('deleted')
+            ->where('types', self::TYPE_GOOD)
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
+            ->first();
+
+        if (empty($header)) {
+            $result['message'] = 'Data sales return tidak ditemukan.';
+
+            return response()->json($result);
+        }
+
+        $detailCount = DB::table('sales_return_detail')
+            ->where('return_id', $id)
+            ->whereNull('deleted')
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
+            ->count();
+
+        if ($detailCount === 0) {
+            $result['message'] = 'Detail sales return tidak ditemukan.';
+
+            return response()->json($result);
+        }
+
+        $details = DB::table('sales_return_detail')
+            ->where('return_id', $id)
+            ->whereNull('deleted')
+            ->whereNull('reject_date')
+            ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
+            ->orderBy('id')
+            ->get();
+
+        if ($details->isEmpty()) {
+            $result['message'] = 'Barang retur sudah ditolak.';
+
+            return response()->json($result);
+        }
+
+        $invoiceHeader = DB::table('sales_invoice_header')
+            ->where('id', $header->invoice_id)
+            ->first();
+
+        if (empty($invoiceHeader) || empty($invoiceHeader->warehouse_id)) {
+            $result['message'] = 'Data invoice retur tidak ditemukan.';
+
+            return response()->json($result);
+        }
+
+        $now = now();
+
+        DB::beginTransaction();
+        try {
+            foreach ($details as $detail) {
+                $invoiceDetail = DB::table('sales_invoice_detail')
+                    ->where('id', $detail->invoice_detail_id)
+                    ->first();
+
+                $soDetail = empty($invoiceDetail)
+                    ? null
+                    : DB::table('sales_order_details')->where('id', $invoiceDetail->so_detail_id)->first();
+
+                if (empty($invoiceDetail) || empty($soDetail)) {
+                    continue;
+                }
+
+                $qtyBaseUnit = getSmallestUnit($detail->product_id, $soDetail->unit, $detail->qty_return, $this->company_id);
+                $productUomLevel1 = DB::table('product_uom')
+                    ->when($this->company_id !== null && $this->company_id !== '', fn($q) => $q->where('company_id', $this->company_id))
+                    ->whereNull('deleted')
+                    ->where('product', $detail->product_id)
+                    ->where('level', '1')
+                    ->first();
+
+                $value = [
+                    'product' => $detail->product_id,
+                    'price' => $detail->unit_price,
+                ];
+
+                stockUpdate(
+                    $id,
+                    $invoiceHeader->warehouse_id,
+                    $detail->product_id,
+                    $productUomLevel1->unit_tujuan ?? null,
+                    $qtyBaseUnit['qty_in_base_unit'],
+                    $value,
+                    'min',
+                    'reject_return'
+                );
+            }
+
+            DB::table('sales_return_detail')
+                ->whereIn('id', $details->pluck('id'))
+                ->update([
+                    'reject_date' => $now,
+                    'reject_by' => $userId,
+                    'updated_at' => $now,
+                ]);
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $result['message'] = 'Gagal memproses reject.';
+
+            return response()->json($result);
+        }
+
+        $result['is_valid'] = true;
+        $result['message'] = 'Barang retur berhasil ditolak.';
 
         return response()->json($result);
     }

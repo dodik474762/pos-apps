@@ -330,9 +330,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success me-auto" id="btn-received-return"
+                <button type="button" class="btn btn-success me-2" id="btn-received-return"
                     onclick="DashboardReturn.confirmReceived()">
                     <i class="ri-checkbox-circle-line align-bottom me-1"></i> Received
+                </button>
+                <button type="button" class="btn btn-danger me-auto" id="btn-reject-return"
+                    onclick="DashboardReturn.confirmReject()">
+                    <i class="ri-close-circle-line align-bottom me-1"></i> Reject
                 </button>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
             </div>

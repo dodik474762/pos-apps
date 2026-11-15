@@ -455,6 +455,74 @@ let DashboardReturn = {
         });
     },
 
+    confirmReject: () => {
+        const id = DashboardReturn.currentDetailId;
+        if (!id) {
+            DashboardReturn.sweetError("Informasi", "Data retur tidak ditemukan.");
+            return;
+        }
+
+        Swal.fire({
+            title: "Konfirmasi Reject",
+            text: "Tolak barang retur ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Reject",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#f06548",
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            const button = $("#btn-reject-return");
+            const originalText = button.html();
+            button.prop("disabled", true).html(
+                '<span class="spinner-border spinner-border-sm align-middle me-1"></span> Memproses...'
+            );
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: {
+                    id: id,
+                },
+                url: url.base_url(DashboardReturn.moduleApi()) + "confirmReject",
+                headers: {
+                    "X-CSRF-TOKEN": DashboardReturn.csrf_token(),
+                },
+                error: function () {
+                    button.prop("disabled", false).html(originalText);
+                    DashboardReturn.sweetError("Informasi", "Gagal memproses reject.");
+                },
+                success: function (resp) {
+                    button.prop("disabled", false).html(originalText);
+
+                    if (!resp.is_valid) {
+                        DashboardReturn.sweetError("Informasi", resp.message || "Gagal memproses reject.");
+                        return;
+                    }
+
+                    const modalElement = document.getElementById("return-detail-modal");
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+
+                    $("table#table-data-return").DataTable().ajax.reload(null, false);
+
+                    const successMessage = resp.message || "Barang retur berhasil ditolak.";
+                    if (window.message && typeof window.message.sweetSuccess === "function") {
+                        window.message.sweetSuccess("Informasi", successMessage);
+                    } else if (typeof Swal !== "undefined") {
+                        Swal.fire({
+                            title: "Informasi",
+                            text: successMessage,
+                            icon: "success",
+                            confirmButtonColor: "#5664d2",
+                        });
+                    }
+                },
+            });
+        });
+    },
+
     renderDetail: (resp) => {
         const header = resp.header || {};
         const sourceLabel = {
