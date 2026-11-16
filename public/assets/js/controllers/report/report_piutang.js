@@ -438,6 +438,7 @@ let ReportPiutang = {
                 data: function (d) {
                     d.tanggal = $("#filter-tanggal").val();
                     d.principal = $("#filter-principal").val();
+                    d.filter_status = $("#filter-status").val() || "outstanding";
                 },
             },
             deferRender: true,

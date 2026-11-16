@@ -117,14 +117,10 @@ class ReportPiutangController extends Controller
                     ->whereNotNull('usr.name')
                     ->orderBy('usr.name', 'asc');
             } else {
-                if ($filter_status !== 'outstanding') {
-                    $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
-                }
-            }
-        } else {
-            if ($filter_status !== 'outstanding') {
                 $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
             }
+        } else {
+            $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
         }
 
         if (isset($_POST)) {
@@ -294,14 +290,19 @@ class ReportPiutangController extends Controller
                 return $q->on('it.invoice_id', 'sih.id');
             })
             ->whereNull('m.deleted')
-            ->whereNull('sih.deleted')
-            ->whereRaw('(sih.total_amount - sih.amount_paid) > 0');
+            ->whereNull('sih.deleted');
 
         if ($principal !== '') {
             $datadb->where('p.vendor', $principal);
         }
 
-        $datadb->whereDate('sih.invoice_date', '=', $tanggal);
+        $filter_status = $_POST['filter_status'] ?? 'outstanding';
+
+        if ($filter_status !== 'all') {
+            $datadb->whereRaw('(sih.total_amount - sih.amount_paid) > 0');
+        }
+
+        $datadb->whereDate('sih.invoice_date', '<=', $tanggal);
 
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
