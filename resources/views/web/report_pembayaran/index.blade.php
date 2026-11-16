@@ -126,6 +126,12 @@
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Detail Pembayaran Per Produk
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-per-invoice"
+                                        href="#per-invoice" role="tab" aria-selected="true">
+                                        <i class="ri-file-list-3-line me-1 align-bottom"></i> Report Pembayaran per Invoice
+                                    </a>
+                                </li>
                             </ul>
 
                             <div class="tab-content">
@@ -172,6 +178,9 @@
                                 </div>
                                 <div class="tab-pane" id="detail-per-produk">
                                     @include('web.report_pembayaran.detail_per_produk')
+                                </div>
+                                <div class="tab-pane" id="per-invoice">
+                                    @include('web.report_pembayaran.per_invoice')
                                 </div>
                             </div>
                         </div>

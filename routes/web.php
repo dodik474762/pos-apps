@@ -917,6 +917,7 @@ Route::post('api/report/report_piutang/closing', [ReportReportPiutangController:
 
 Route::post('api/report/report_pembayaran/getData', [ReportReportPembayaranController::class, 'getData']);
 Route::post('api/report/report_pembayaran/getDataPerProduct', [ReportReportPembayaranController::class, 'getDataPerProduct']);
+Route::post('api/report/report_pembayaran/getDataPerInvoice', [ReportReportPembayaranController::class, 'getDataPerInvoice']);
 
 Route::get('report/delivery', [ReportDeliveryController::class, 'index']);
 Route::get('report/sales_order', [ReportSalesOrderController::class, 'index']);

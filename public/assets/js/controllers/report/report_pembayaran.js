@@ -332,6 +332,171 @@ let ReportPembayaran = {
         if ($.fn.DataTable.isDataTable("table#table-data-per-produk")) {
             $("table#table-data-per-produk").DataTable().ajax.reload();
         }
+
+        if ($.fn.DataTable.isDataTable("table#table-data-per-invoice")) {
+            $("table#table-data-per-invoice").DataTable().ajax.reload();
+        }
+    },
+
+    getDataPerInvoice: async () => {
+        let tableData = $("table#table-data-per-invoice");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 3,
+            },
+            order: [[1, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url:
+                    url.base_url(ReportPembayaran.moduleApi()) +
+                    `getDataPerInvoice`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPembayaran.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
+                    d.customer_id = $("#customer_id").val();
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPembayaranPerInvoice",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    title: "No",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NO INVOICE",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "TANGGAL INVOICE",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_invoice",
+                    title: "TOTAL INVOICE",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "payment_code",
+                    title: "NO BAYAR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "payment_date",
+                    title: "TANGGAL BAYAR",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "total_bayar",
+                    title: "TOTAL BAYAR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "terima_uang_kasir",
+                    title: "TERIMA UANG KASIR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "receive_date",
+                    title: "TANGGAL TERIMA UANG",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "sisa_piutang_ar",
+                    title: "SISA PIUTANG VS AR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "sisa_piutang_kasir",
+                    title: "SISA PIUTANG VS KASIR",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
     },
 
     getDataPerProduct: async () => {
@@ -1556,6 +1721,14 @@ $(function () {
             ReportPembayaran.getDataPerProduct();
         } else {
             $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    });
+
+    $('a[href="#per-invoice"]').on("shown.bs.tab", function () {
+        if (!$.fn.DataTable.isDataTable("table#table-data-per-invoice")) {
+            ReportPembayaran.getDataPerInvoice();
+        } else {
+            $("table#table-data-per-invoice").DataTable().ajax.reload();
         }
     });
 });

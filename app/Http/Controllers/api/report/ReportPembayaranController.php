@@ -398,4 +398,153 @@ class ReportPembayaranController extends Controller
         $query = DB::getQueryLog();
         return json_encode($data);
     }
+
+    public function getDataPerInvoice(Request $request)
+    {
+        DB::enableQueryLog();
+        $data = $request->all();
+        $data['data'] = [];
+        $data['recordsTotal'] = 0;
+        $data['recordsFiltered'] = 0;
+
+        $date_start = $_POST['date_start'] ?? date('Y-m-01');
+        $date_end = $_POST['date_end'] ?? date('Y-m-d');
+        $principal = $_POST['principal'] ?? '';
+        $session_vendor_id = session('vendor_id');
+        if (!empty($session_vendor_id)) {
+            $principal = $session_vendor_id;
+        }
+        $company_id = session('id_company');
+
+        $receiveSub = DB::table('receive_payment_detail as rpd')
+            ->join('receive_payment_header as rph', function ($q) {
+                return $q->on('rph.id', 'rpd.receive_id')->whereNull('rph.deleted');
+            })
+            ->whereNull('rpd.deleted')
+            ->select([
+                'rpd.invoice_id',
+                'rpd.amount_paid',
+                DB::raw('MAX(rph.receive_date) as receive_date'),
+            ])
+            ->groupBy('rpd.invoice_id', 'rpd.amount_paid');
+
+        $datadb = DB::table('sales_payment_detail as spd')
+            ->select([
+                'spd.id',
+                'sih.invoice_number',
+                'sih.invoice_date',
+                'spd.outstanding_amount as total_invoice',
+                'sph.payment_code',
+                'sph.payment_date',
+                'spd.allocated_amount as total_bayar',
+                'rp.receive_date',
+                'rp.amount_paid as terima_uang_kasir',
+                DB::raw('(spd.outstanding_amount - spd.allocated_amount) as sisa_piutang_ar'),
+                DB::raw('(spd.outstanding_amount - IFNULL(rp.amount_paid, 0)) as sisa_piutang_kasir'),
+            ])
+            ->join('sales_payment_header as sph', function ($q) {
+                return $q->on('sph.id', 'spd.payment_id')->whereNull('sph.deleted');
+            })
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'spd.invoice_id')->whereNull('sih.deleted');
+            })
+            ->leftJoinSub($receiveSub, 'rp', function ($q) {
+                return $q->on('rp.invoice_id', 'spd.invoice_id')
+                    ->on('rp.amount_paid', 'spd.allocated_amount');
+            })
+            ->whereNull('spd.deleted');
+
+        if ($company_id !== null && $company_id !== '') {
+            $datadb->where('spd.company_id', $company_id);
+        }
+
+        if ($principal !== '') {
+            $datadb->whereExists(function ($q) use ($principal) {
+                $q->select(DB::raw(1))
+                    ->from('sales_invoice_detail as sid')
+                    ->whereColumn('sid.invoice_id', 'sih.id')
+                    ->whereIn('sid.product_id', function ($sub) use ($principal) {
+                        $sub->select('id')->from('product')->where('vendor', $principal);
+                    })
+                    ->whereNull('sid.deleted');
+            });
+        }
+
+        if ($date_start !== '' && $date_end !== '') {
+            $datadb->whereBetween('sph.payment_date', [$date_start, $date_end]);
+        }
+
+        if (isset($data['customer_id']) && $data['customer_id'] != '') {
+            $datadb->where('sih.customer_id', $data['customer_id']);
+        }
+
+        $data['recordsTotal'] = (clone $datadb)->get()->count();
+
+        if (isset($_POST['search']['value']) && $_POST['search']['value'] !== '') {
+            $keyword = $_POST['search']['value'];
+            $datadb->where(function ($query) use ($keyword) {
+                $query->where('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('sih.invoice_date', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('sph.payment_code', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('sph.payment_date', 'LIKE', '%' . $keyword . '%');
+            });
+        }
+
+        if (isset($_POST['order'][0]['column'])) {
+            $dir = $_POST['order'][0]['dir'] === 'desc' ? 'desc' : 'asc';
+            switch ($_POST['order'][0]['column']) {
+                case 0:
+                    $datadb->orderBy('sih.invoice_number', $dir);
+                    break;
+                case 1:
+                    $datadb->orderBy('sih.invoice_date', $dir);
+                    break;
+                case 2:
+                    $datadb->orderBy('total_invoice', $dir);
+                    break;
+                case 3:
+                    $datadb->orderBy('sph.payment_code', $dir);
+                    break;
+                case 4:
+                    $datadb->orderBy('sph.payment_date', $dir);
+                    break;
+                case 5:
+                    $datadb->orderBy('total_bayar', $dir);
+                    break;
+                case 6:
+                    $datadb->orderBy('terima_uang_kasir', $dir);
+                    break;
+                case 7:
+                    $datadb->orderBy('rp.receive_date', $dir);
+                    break;
+                case 8:
+                    $datadb->orderBy('sisa_piutang_ar', $dir);
+                    break;
+                case 9:
+                    $datadb->orderBy('sisa_piutang_kasir', $dir);
+                    break;
+                default:
+                    $datadb->orderBy('sph.payment_date', 'desc');
+                    break;
+            }
+        } else {
+            $datadb->orderBy('sph.payment_date', 'desc');
+        }
+
+        $data['recordsFiltered'] = (clone $datadb)->get()->count();
+
+        if (isset($_POST['length'])) {
+            $datadb->limit((int) $_POST['length']);
+        }
+        if (isset($_POST['start'])) {
+            $datadb->offset((int) $_POST['start']);
+        }
+
+        $data['data'] = $datadb->get()->toArray();
+        $data['draw'] = isset($_POST['draw']) ? $_POST['draw'] : '';
+        $data['session'] = $principal;
+
+        $query = DB::getQueryLog();
+        return json_encode($data);
+    }
 }
