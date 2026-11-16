@@ -134,8 +134,12 @@ class SalesReturnController extends Controller
                 'cc.nama_customer',
                 'cc.code as customer_code',
                 'i.invoice_number',
+                'i.invoice_date',
                 'p.code as product_code',
                 'p.name as product_name',
+                'uom.name as unit_name',
+                'v.nama_vendor as principal_name',
+                DB::raw('IFNULL(sales_k.nama_lengkap, sales_usr.name) as salesman_name'),
                 'srd.qty_return',
                 'srd.unit_price',
                 DB::raw('srd.qty_return * srd.unit_price as total_price')
@@ -144,10 +148,15 @@ class SalesReturnController extends Controller
             ->join('users as u', 'u.id', 'm.created_by')
             ->join('customer as cc', 'cc.id', 'm.customer_id')
             ->leftJoin('sales_invoice_header as i', 'i.id', 'm.invoice_id')
+            ->leftJoin('sales_order_headers as so', 'so.id', 'i.sales_order')
+            ->leftJoin('users as sales_usr', 'sales_usr.id', 'so.salesman')
+            ->leftJoin('karyawan as sales_k', 'sales_k.nik', 'sales_usr.nik')
             ->join('sales_return_detail as srd', function ($q) {
                 return $q->on('srd.return_id', 'm.id')->whereNull('srd.deleted');
             })
             ->join('product as p', 'p.id', 'srd.product_id')
+            ->leftJoin('vendor as v', 'v.id', 'p.vendor')
+            ->leftJoin('unit as uom', 'uom.id', 'p.unit')
             ->where(function ($q) use ($start_date, $end_date) {
                 return $q->whereBetween('m.return_date', [$start_date, $end_date]);
             })

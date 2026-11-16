@@ -491,6 +491,9 @@ let SalesReturn = {
                     data: "product_name",
                 },
                 {
+                    data: "unit_name",
+                },
+                {
                     data: "qty_return",
                 },
                 {
@@ -516,6 +519,15 @@ let SalesReturn = {
                 },
                 {
                     data: "invoice_number",
+                },
+                {
+                    data: "invoice_date",
+                },
+                {
+                    data: "salesman_name",
+                },
+                {
+                    data: "principal_name",
                 },
             ],
         });

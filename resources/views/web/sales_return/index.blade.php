@@ -151,11 +151,15 @@
                                                     <th>Nama Customer</th>
                                                     <th>Kode Barang</th>
                                                     <th>Nama Barang</th>
+                                                    <th>Satuan</th>
                                                     <th>Quantity</th>
                                                     <th>Harga</th>
                                                     <th>Nominal</th>
                                                     <th>Tipe Return</th>
                                                     <th>Ref No Invoice</th>
+                                                    <th>Tanggal Invoice</th>
+                                                    <th>Nama Sales</th>
+                                                    <th>Nama Principal</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list">
