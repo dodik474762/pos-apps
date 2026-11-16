@@ -902,6 +902,7 @@ Route::post('api/report/report_penerimaan_uang/getData', [ApiReportPenerimaanUan
 
 Route::post('api/report/report_promo/getData', [ApiReportPromoController::class, 'getData']);
 Route::post('api/report/report_promo/getDataHistory', [ApiReportPromoController::class, 'getDataHistory']);
+Route::post('api/report/report_promo/getDataInvoice', [ApiReportPromoController::class, 'getDataInvoice']);
 
 Route::post('api/report/report_stock_customer/getData', [ApiReportStockCustomerController::class, 'getData']);
 

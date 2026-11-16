@@ -22,6 +22,7 @@ let ReportPromo = {
     filter: () => {
         ReportPromo.getData();
         ReportPromo.getDataHistory();
+        ReportPromo.getDataInvoice();
     },
 
     getData: async () => {
@@ -287,6 +288,170 @@ let ReportPromo = {
 
         $(".dataTables_length select").addClass("form-select form-select-sm");
     },
+
+    getDataInvoice: async () => {
+        let tableData = $("table#table-data-invoice");
+
+        tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            order: [[2, "desc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: false,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(ReportPromo.moduleApi()) + `getDataInvoice`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPromo.csrf_token(),
+                },
+                data: function (d) {
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "ReportPromoInvoice",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "No Invoice",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "Tanggal Invoice",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "customer_name",
+                    title: "Customer",
+                    render: function (data, type, row) {
+                        return data ?? row.customer_code ?? "-";
+                    },
+                },
+                {
+                    data: "so_number",
+                    title: "No Sales Order",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "so_date",
+                    title: "Tanggal Sales Order",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "Salesman",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "promo_name",
+                    title: "Promo",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "product_code",
+                    title: "Product Code",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "product_name",
+                    title: "Product Name",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "qty",
+                    title: "Qty",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        let qty = parseFloat(data || 0);
+                        let unit = row.unit_name ? " " + row.unit_name : "";
+                        return (
+                            new Intl.NumberFormat("id-ID").format(qty) + unit
+                        );
+                    },
+                },
+                {
+                    data: "discount_amount",
+                    title: "Discount Amount",
+                    className: "text-end",
+                    render: function (data) {
+                        return new Intl.NumberFormat("id-ID").format(
+                            parseFloat(data || 0),
+                        );
+                    },
+                },
+                {
+                    data: "discount_percent",
+                    title: "Discount Percent",
+                    className: "text-end",
+                    render: function (data) {
+                        return (
+                            new Intl.NumberFormat("id-ID", {
+                                maximumFractionDigits: 2,
+                            }).format(parseFloat(data || 0)) + "%"
+                        );
+                    },
+                },
+                {
+                    data: "principal",
+                    title: "Principal",
+                    render: function (data) {
+                        return data ?? "-";
+                    },
+                },
+            ],
+        });
+
+        $(".dataTables_length select").addClass("form-select form-select-sm");
+    },
 };
 
 function newexportaction(e, dt, button, config) {
@@ -370,4 +535,5 @@ $(function () {
     ReportPromo.setSelect2();
     ReportPromo.getData();
     ReportPromo.getDataHistory();
+    ReportPromo.getDataInvoice();
 });
