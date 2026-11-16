@@ -395,6 +395,245 @@ let ReportPiutang = {
         if ($.fn.DataTable.isDataTable("table#table-data-per-produk")) {
             $("table#table-data-per-produk").DataTable().ajax.reload();
         }
+
+        if ($.fn.DataTable.isDataTable("table#table-history-piutang")) {
+            $("table#table-history-piutang").DataTable().ajax.reload();
+        }
+    },
+
+    closing: (elm, e) => {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                tanggal: $("#filter-tanggal").val(),
+            },
+            headers: {
+                "X-CSRF-TOKEN": ReportPiutang.csrf_token(),
+            },
+            url: url.base_url(ReportPiutang.moduleApi()) + "closing",
+            beforeSend: () => {
+                message.loadingProses("Proses Closing Piutang...");
+            },
+            error: function (err) {
+                message.closeLoading();
+                message.sweetError(
+                    "Informasi",
+                    "Gagal Melakukan Closing Piutang - " + err.statusText,
+                );
+            },
+            success: function (resp) {
+                message.closeLoading();
+                if (resp.is_valid) {
+                    message.sweetSuccess();
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    message.sweetError("Informasi", resp.message);
+                }
+            },
+        });
+    },
+
+    getHistory: async () => {
+        let tableData = $("table#table-history-piutang");
+
+        var data = tableData.DataTable({
+            processing: true,
+            serverSide: true,
+            ordering: true,
+            autoWidth: false,
+            destroy: true,
+            fixedHeader: true,
+            fixedColumns: {
+                leftColumns: 4,
+            },
+            order: [[2, "asc"]],
+            aLengthMenu: [
+                [25, 50, 100],
+                [25, 50, 100],
+            ],
+            lengthChange: !1,
+            language: {
+                paginate: {
+                    previous: "<i class='mdi mdi-chevron-left'>",
+                    next: "<i class='mdi mdi-chevron-right'>",
+                },
+            },
+            drawCallback: function () {
+                $(".dataTables_paginate > .pagination").addClass(
+                    "pagination-rounded",
+                );
+            },
+            ajax: {
+                url: url.base_url(ReportPiutang.moduleApi()) + `getHistory`,
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": ReportPiutang.csrf_token(),
+                },
+                data: function (d) {
+                    d.tanggal = $("#filter-tanggal").val();
+                    d.principal = $("#filter-principal").val();
+                },
+            },
+            deferRender: true,
+            dom: "Bftrip",
+            buttons: [
+                {
+                    extend: "excel",
+                    filename: "HistoryPiutang",
+                    action: newexportaction,
+                },
+            ],
+            columns: [
+                {
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                },
+                {
+                    data: "invoice_number",
+                    title: "NO FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "TANGGAL FAKTUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "customer_code",
+                    title: "KODE CUSTOMER",
+                },
+                {
+                    data: "nama_customer",
+                    title: "NAMA CUSTOMER",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "payment_terms",
+                    title: "PAYMENT TERM",
+                },
+                {
+                    data: "kecamatan",
+                    title: "KECAMATAN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "kabupaten",
+                    title: "KABUPATEN",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "channel_outlet",
+                    title: "CHANNEL",
+                    className: "text-end",
+                    render: function (data, type, row) {
+                        return data ?? "";
+                    },
+                },
+                {
+                    data: "salesman_nik",
+                    title: "KODE SALESMAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "salesman_name",
+                    title: "NAMA SALESMAN",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "due_date",
+                    title: "JATUH TEMPO",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "umur_faktur",
+                    title: "UMUR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "total_amount",
+                    title: "TOTAL PIUTANG",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "amount_paid",
+                    title: "TOTAL DIBAYAR",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "outstanding_amount",
+                    title: "SISA HUTANG",
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                },
+                {
+                    data: "overdue",
+                    title: "OVERDUE",
+                    render: function (data, type, row) {
+                        let label =
+                            data > 0
+                                ? `<span class="badge bg-danger">${data} Hari</span>`
+                                : `<span class="badge bg-success">0</span>`;
+                        return label;
+                    },
+                },
+                {
+                    data: "cluster_overdue",
+                    title: "CLUSTER OVERDUE",
+                    render: function (data, type, row) {
+                        let colorMap = {
+                            "Belum Jatuh Tempo": "bg-success",
+                            "0-3 Hari": "bg-warning text-dark",
+                            "4-6 Hari": "bg-warning text-dark",
+                            "7-14 Hari": "bg-orange",
+                            "15-20 Hari": "bg-danger",
+                            "21 Hari ke Atas": "bg-dark",
+                        };
+                        let cls = colorMap[data] ?? "bg-secondary";
+                        return `<span class="badge ${cls}">${data ?? "-"}</span>`;
+                    },
+                },
+            ],
+        });
+
+        (data
+            .buttons()
+            .container()
+            .appendTo("#datatable-buttons_wrapper .col-md-6:eq(0)"),
+            $(".dataTables_length select").addClass(
+                "form-select form-select-sm",
+            ));
     },
 
     getDataPerProduct: async () => {
@@ -1705,6 +1944,14 @@ $(function () {
             ReportPiutang.getDataPerProduct();
         } else {
             $("table#table-data-per-produk").DataTable().ajax.reload();
+        }
+    });
+
+    $('a[href="#history-piutang"]').on("shown.bs.tab", function () {
+        if (!$.fn.DataTable.isDataTable("table#table-history-piutang")) {
+            ReportPiutang.getHistory();
+        } else {
+            $("table#table-history-piutang").DataTable().ajax.reload();
         }
     });
 });

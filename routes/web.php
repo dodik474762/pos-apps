@@ -912,6 +912,8 @@ Route::post('api/report/report_penjualan/getDataDetailDiskon', [ReportReportPenj
 Route::post('api/report/report_penjualan/getDataPenjualanPerProduct', [ReportReportPenjualanController::class, 'getDataPenjualanPerProduct']);
 Route::post('api/report/report_piutang/getData', [ReportReportPiutangController::class, 'getData']);
 Route::post('api/report/report_piutang/getDataPerProduct', [ReportReportPiutangController::class, 'getDataPerProduct']);
+Route::post('api/report/report_piutang/getHistory', [ReportReportPiutangController::class, 'getHistory']);
+Route::post('api/report/report_piutang/closing', [ReportReportPiutangController::class, 'closing']);
 
 Route::post('api/report/report_pembayaran/getData', [ReportReportPembayaranController::class, 'getData']);
 Route::post('api/report/report_pembayaran/getDataPerProduct', [ReportReportPembayaranController::class, 'getDataPerProduct']);

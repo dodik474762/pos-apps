@@ -74,6 +74,7 @@
                                         <select class="form-control" id="filter-status">
                                             <option value="outstanding">Outstanding</option>
                                             <option value="all">All</option>
+                                            <option value="history">History</option>
                                         </select>
                                     </div>
                                 </div>
@@ -83,6 +84,15 @@
                                             onclick="ReportPiutang.filter();"> <i
                                                 class="ri-equalizer-fill me-1 align-bottom"></i>
                                             Filters
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <button type="button" class="btn btn-success w-100"
+                                            onclick="ReportPiutang.closing(this, event);"> <i
+                                                class="ri-lock-fill me-1 align-bottom"></i>
+                                            Closing Piutang
                                         </button>
                                     </div>
                                 </div>
@@ -104,6 +114,12 @@
                                     <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-detail-per-produk"
                                         href="#detail-per-produk" role="tab" aria-selected="true">
                                         <i class="ri-store-2-fill me-1 align-bottom"></i> Detail Piutang Per Produk
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link All py-3" data-bs-toggle="tab" id="nav-history-piutang"
+                                        href="#history-piutang" role="tab" aria-selected="true">
+                                        <i class="ri-history-line me-1 align-bottom"></i> History Piutang
                                     </a>
                                 </li>
                             </ul>
@@ -160,6 +176,9 @@
                                 </div>
                                 <div class="tab-pane" id="detail-per-produk">
                                     @include('web.report_piutang.detail_per_produk')
+                                </div>
+                                <div class="tab-pane" id="history-piutang">
+                                    @include('web.report_piutang.history_piutang')
                                 </div>
                             </div>
                         </div>
