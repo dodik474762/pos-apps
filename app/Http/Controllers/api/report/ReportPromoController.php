@@ -230,6 +230,8 @@ class ReportPromoController extends Controller
         $data['recordsFiltered'] = 0;
 
         $principal = $_POST['principal'] ?? '';
+        $date_start = $_POST['date_start'] ?? '';
+        $date_end = $_POST['date_end'] ?? '';
         $company_id = session('id_company');
 
         $datadb = DB::table('sales_order_promo_item as sopi')
@@ -257,6 +259,8 @@ class ReportPromoController extends Controller
             ->leftJoin('product_promo_item as ppi', 'ppi.id', 'sopi.promo')
             ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sopi.company_id', $company_id))
             ->when($principal !== '', fn ($q) => $q->where('p.vendor', $principal))
+            ->when($date_start !== '', fn ($q) => $q->whereDate('sih.invoice_date', '>=', $date_start))
+            ->when($date_end !== '', fn ($q) => $q->whereDate('sih.invoice_date', '<=', $date_end))
             ->select([
                 'sopi.id',
                 'sih.invoice_number',

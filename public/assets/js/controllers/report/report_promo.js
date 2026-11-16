@@ -324,6 +324,8 @@ let ReportPromo = {
                 },
                 data: function (d) {
                     d.principal = $("#filter-principal").val();
+                    d.date_start = $("#filter-start-date").val();
+                    d.date_end = $("#filter-end-date").val();
                 },
             },
             deferRender: true,

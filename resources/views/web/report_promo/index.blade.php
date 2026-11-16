@@ -28,7 +28,17 @@
                     <div class="card-body border border-dashed border-end-0 border-start-0">
                         <form class="">
                             <div class="row g-3">
-                                <div class="col-xxl-12 col-sm-12">
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <input type="date" class="form-control" id="filter-start-date" placeholder="Start Date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
+                                    <div>
+                                        <input type="date" class="form-control" id="filter-end-date" placeholder="End Date">
+                                    </div>
+                                </div>
+                                <div class="col-xxl-2 col-sm-4">
                                     <div>
                                         <select class="form-control select2" id="filter-principal">
                                             <option value="">Semua Principal</option>
@@ -38,7 +48,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-xxl-12 col-sm-12">
+                                <div class="col-xxl-1 col-sm-4">
                                     <div>
                                         <button type="button" class="btn btn-primary w-100"
                                             onclick="ReportPromo.filter();"> <i
