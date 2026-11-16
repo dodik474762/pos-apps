@@ -92,7 +92,7 @@ class KaryawanController extends Controller
             //code...
             $roles = $data['id'] == '' ? new Karyawan() : Karyawan::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             $roles->company = $data['company'];
-            $roles->company_id = $data['company_id'];
+            $roles->company_id = $data['id'] == '' ? $data['company'] : $roles->company_id;
             $roles->nik = $data['nik'];
             $roles->nama_lengkap = $data['nama'];
             $roles->jabatan = $data['jabatan'];
