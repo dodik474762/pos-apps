@@ -987,11 +987,11 @@ class SalesPlanController extends Controller
                 }
 
                 $itemVisit = $circle->id;
-                if ($itemVisit == '13') {
-                    $itemVisit = '14';
-                } elseif ($itemVisit == '14') {
-                    $itemVisit = '13';
-                }
+                // if ($itemVisit == '13') {
+                //     $itemVisit = '14';
+                // } elseif ($itemVisit == '14') {
+                //     $itemVisit = '13';
+                // }
 
                 $outletStatus = strtoupper((string) ($item['status_outlet'] ?? $item['kategori_outlet'] ?? 'REGULER'));
                 if ($outletStatus !== 'KANDIDAT') {
