@@ -175,17 +175,6 @@ class SalesPlanController extends Controller
                 ]);
             }
 
-            // === HEADER ===
-            $header = empty($data['id'])
-                ? new SalesPlanHeader
-                : SalesPlanHeader::find($data['id']);
-
-            if (empty($data['id'])) {
-                $header->plan_code = generateNoRoutePlan(); // misal helper
-                $header->created_by = $userId;
-                $header->status = 'DRAFT';
-            }
-
             $salesmanId = $data['salesman'] ?? null;
             $periodYear = $data['period_year'] ?? null;
             $periodMonth = $data['period_month'] ?? null;
@@ -200,6 +189,17 @@ class SalesPlanController extends Controller
             }
 
             $company_id = DB::table('users')->where('id', $salesmanId)->value('company_id');
+
+            // === HEADER ===
+            $header = empty($data['id'])
+                ? new SalesPlanHeader
+                : SalesPlanHeader::find($data['id']);
+
+            if (empty($data['id'])) {
+                $header->plan_code = generateNoRoutePlan($company_id); // misal helper
+                $header->created_by = $userId;
+                $header->status = 'DRAFT';
+            }
 
             $existingPlan = SalesPlanHeader::whereNull('deleted')
                 ->where('company_id', $company_id)
@@ -811,7 +811,7 @@ class SalesPlanController extends Controller
 
                 if (empty($header)) {
                     $header = new SalesPlanHeader();
-                    $header->plan_code = generateNoRoutePlan();
+                    $header->plan_code = generateNoRoutePlan($users->company_id);
                     $header->created_by = $userId;
                     $header->status = 'DRAFT';
                     $header->salesman = $users->id;

@@ -534,10 +534,12 @@ function generateNoReturOther($company_id = null)
     return $no;
 }
 
-function generateNoRoutePlan()
+function generateNoRoutePlan($company_id = null)
 {
     $no = 'RP' . strtoupper(date('m')) . date('y');
-    $company_id = session('id_company');
+    if ($company_id === null || $company_id === '') {
+        $company_id = session('id_company');
+    }
     $data = DB::table('sales_plan_header')->where('plan_code', 'LIKE', '%' . $no . '%')
         ->where('company_id', $company_id)
         ->orderBy('plan_code', 'desc')->get()->toArray();
