@@ -184,8 +184,6 @@ class SalesPlanController extends Controller
                 $header->status = 'DRAFT';
             }
 
-            $company_id = session('id_company');
-
             $salesmanId = $data['salesman'] ?? null;
             $periodYear = $data['period_year'] ?? null;
             $periodMonth = $data['period_month'] ?? null;
@@ -198,6 +196,8 @@ class SalesPlanController extends Controller
                     'message' => 'Salesman, Period Year dan Period Month wajib diisi',
                 ]);
             }
+
+            $company_id = DB::table('users')->where('id', $salesmanId)->value('company_id');
 
             $existingPlan = SalesPlanHeader::whereNull('deleted')
                 ->where('company_id', $company_id)
@@ -905,9 +905,9 @@ class SalesPlanController extends Controller
         }
 
         $headerQuery = SalesPlanHeader::whereNull('deleted');
-        if (session('id_company') !== null && session('id_company') !== '') {
-            $headerQuery->where('company_id', session('id_company'));
-        }
+        // if (session('id_company') !== null && session('id_company') !== '') {
+        //     $headerQuery->where('company_id', session('id_company'));
+        // }
         $header = $headerQuery->find($headerId);
 
         $result = ['is_valid' => false, 'message' => 'Error'];
@@ -931,8 +931,8 @@ class SalesPlanController extends Controller
             return response()->json($result);
         }
 
-        $company_id = $header->company_id;
         $headerUser = DB::table('users')->where('id', $header->salesman)->first();
+        $company_id = $headerUser->company_id ?? $header->company_id;
 
         $idCircleKunjungan = collect($rows)->pluck('id_circle_kunjungan')->filter()->unique()->values()->toArray();
         $idCustomer = collect($rows)->pluck('customer_code')->filter()->unique()->values()->toArray();
