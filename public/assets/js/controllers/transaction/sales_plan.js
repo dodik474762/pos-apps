@@ -773,6 +773,46 @@ let SalesPlan = {
         dt.row.add($newRow[0]).draw(false);
     },
 
+    swapF2: () => {
+        let rows;
+
+        if ($.fn.DataTable.isDataTable("#table-items")) {
+            // Ambil semua row termasuk yang ada di halaman lain
+            rows = $("#table-items").DataTable().rows({ search: 'none' }).nodes().toArray();
+        } else {
+            rows = $("table#table-items tbody tr.input").toArray();
+        }
+
+        let swapped = 0;
+
+        rows.forEach((elm) => {
+            const $row = $(elm);
+            if (!$row.hasClass("input")) return;
+            if ($row.hasClass("remove")) return;
+
+            const $visitType = $row.find("select#visit_type");
+            const value = $visitType.val();
+
+            if (value == "13") {
+                $visitType.val("14");
+                swapped++;
+            } else if (value == "14") {
+                $visitType.val("13");
+                swapped++;
+            }
+        });
+
+        if ($.fn.DataTable.isDataTable("#table-items")) {
+            $("#table-items").DataTable().draw(false);
+        }
+
+        if (swapped > 0) {
+            message.sweetSuccess("Informasi", swapped + " baris berhasil ditukar");
+        } else {
+            message.sweetError("Informasi", "Tidak ada baris F2-1 / F2-2");
+        }
+    },
+
     getDataUomConversion: () => {
         const table_uom = $("table#table-data-uom").find("tbody").find("tr");
         const UOM_CONVERSION = [];

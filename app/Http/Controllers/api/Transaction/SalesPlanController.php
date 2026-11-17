@@ -28,6 +28,8 @@ class SalesPlanController extends Controller
     {
         DB::enableQueryLog();
         $company_id = session('id_company');
+        $isSuperAdmin = strtolower((string) session('akses')) === 'superadmin'
+            || strtolower((string) session('username')) === 'administrator';
         $data['data'] = [];
         $data['recordsTotal'] = 0;
         $data['recordsFiltered'] = 0;
@@ -42,7 +44,7 @@ class SalesPlanController extends Controller
             ->join('users as us', 'us.id', 'm.salesman')
             ->leftJoin('karyawan as k', 'k.nik', 'us.nik')
             ->whereNull('m.deleted')
-            ->where('m.company_id', $company_id)
+            ->when(!$isSuperAdmin, fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
