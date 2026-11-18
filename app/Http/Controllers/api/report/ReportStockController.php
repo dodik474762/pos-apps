@@ -37,6 +37,68 @@ class ReportStockController extends Controller
                 . ' AND pu_pod.company_id = ' . (int) $company_id
             : '';
 
+        $sales3m = DB::table('sales_invoice_detail as sid')
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+            })
+            ->join('sales_order_details as sod', function ($q) {
+                return $q->on('sod.id', 'sid.so_detail_id')->whereNull('sod.deleted');
+            })
+            ->join('product_uom as uom_sale', function ($q) {
+                return $q->on('uom_sale.product', 'sod.product_id')
+                    ->on('uom_sale.unit_tujuan', 'sod.unit')
+                    ->whereNull('uom_sale.deleted');
+            })
+            ->whereNull('sid.deleted')
+            ->whereNull('sid.flag_cancel')
+            ->where('sid.qty', '>', 0)
+            ->whereBetween('sih.invoice_date', [$tiga_bulan_lalu, $tanggal])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
+            ->groupBy('sih.warehouse_id', 'sod.product_id')
+            ->select([
+                'sih.warehouse_id as warehouse',
+                'sod.product_id as product',
+                DB::raw('SUM(sid.qty * uom_sale.nilai_konversi_terkecil) as qty'),
+            ]);
+
+        $returns3m = DB::table('sales_return_detail as srd')
+            ->join('sales_return as sr', function ($q) {
+                return $q->on('sr.id', 'srd.return_id')->whereNull('sr.deleted');
+            })
+            ->join('sales_invoice_detail as sid', function ($q) {
+                return $q->on('sid.id', 'srd.invoice_detail_id')->whereNull('sid.deleted');
+            })
+            ->join('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.id', 'sid.invoice_id')->whereNull('sih.deleted');
+            })
+            ->join('sales_order_details as sod', function ($q) {
+                return $q->on('sod.id', 'sid.so_detail_id')->whereNull('sod.deleted');
+            })
+            ->join('product_uom as uom_return', function ($q) {
+                return $q->on('uom_return.product', 'sod.product_id')
+                    ->on('uom_return.unit_tujuan', 'sod.unit')
+                    ->whereNull('uom_return.deleted');
+            })
+            ->whereNull('srd.deleted')
+            ->where('sr.status', '<>', 'CANCELLED')
+            ->whereBetween('sr.return_date', [$tiga_bulan_lalu, $tanggal])
+            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sr.company_id', $company_id))
+            ->groupBy('sih.warehouse_id', 'srd.product_id')
+            ->select([
+                'sih.warehouse_id as warehouse',
+                'srd.product_id as product',
+                DB::raw('-SUM(srd.qty_return * uom_return.nilai_konversi_terkecil) as qty'),
+            ]);
+
+        $sales3m = DB::query()
+            ->fromSub($sales3m->unionAll($returns3m), 'u')
+            ->groupBy('u.warehouse', 'u.product')
+            ->select([
+                'u.warehouse',
+                'u.product',
+                DB::raw('SUM(u.qty) as qty'),
+            ]);
+
         $datadb = DB::table('product_stock_move as m')
             ->select([
                 'm.product',
@@ -87,7 +149,7 @@ class ReportStockController extends Controller
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
             as keluar_3bln'),
 
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                DB::raw('COALESCE(MAX(s3m.qty), 0)
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
             as stok_3bln'),
 
@@ -133,7 +195,7 @@ class ReportStockController extends Controller
             , 2) as stock_and_intransit'),
 
                 // avg_omset = stok_3bln (satuan large) / 25 hari kerja
-                DB::raw('SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                DB::raw('COALESCE(MAX(s3m.qty), 0)
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
                 / 25
             as avg_omset'),
@@ -143,7 +205,7 @@ class ReportStockController extends Controller
                 SUM(CASE WHEN DATE(m.created_at) <= "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
             ) / NULLIF(
-                SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                COALESCE(MAX(s3m.qty), 0)
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
                 / 25
             , 0)
@@ -169,7 +231,7 @@ class ReportStockController extends Controller
                     AND po.po_date <= "' . $tanggal . '"
                 )
             ) / NULLIF(
-                SUM(CASE WHEN DATE(m.created_at) BETWEEN "' . $tiga_bulan_lalu . '" AND "' . $tanggal . '" THEN m.qty_in - m.qty_out ELSE 0 END)
+                COALESCE(MAX(s3m.qty), 0)
                 / NULLIF(pu_large.nilai_konversi_terkecil, 0)
                 / 25
             , 0)
@@ -185,6 +247,10 @@ class ReportStockController extends Controller
                     ->whereNull('pu_large.deleted');
             })
             ->join('unit as u_large', 'u_large.id', 'pu_large.unit_tujuan')
+            ->leftJoinSub($sales3m, 's3m', function ($q) {
+                return $q->on('s3m.product', 'm.product')
+                    ->on('s3m.warehouse', 'm.warehouse');
+            })
             // ->whereDate('m.created_at', '<=', $tanggal)
             ->where(function ($q) use ($tanggal) {
                 return $q
