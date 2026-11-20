@@ -836,6 +836,7 @@ Route::post('api/transaksi/packing_list/getDataReport', [TransactionPackingListC
 Route::post('api/transaksi/packing_list/getDataReportReceived', [TransactionPackingListController::class, 'getDataReportReceived']);
 Route::post('api/transaksi/packing_list/submit', [TransactionPackingListController::class, 'submit']);
 Route::post('api/transaksi/packing_list/delete', [TransactionPackingListController::class, 'delete']);
+Route::post('api/transaksi/packing_list/deleteDo', [TransactionPackingListController::class, 'deleteDo']);
 Route::post('api/transaksi/packing_list/confirmDelete', [TransactionPackingListController::class, 'confirmDelete']);
 Route::post('api/transaksi/packing_list/showModalDO', [TransactionPackingListController::class, 'showModalDO']);
 Route::post('api/transaksi/packing_list/receive', [TransactionPackingListController::class, 'receive']);

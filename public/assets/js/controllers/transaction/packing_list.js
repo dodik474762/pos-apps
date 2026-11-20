@@ -1562,15 +1562,55 @@ let PackingList = {
     },
 
     removeRow: (elm) => {
-        const data_id = $(elm).closest("tr").attr("data_id");
-        const do_id = $(elm).closest("tr").find("td#do_number").attr("data_id");
+        const row = $(elm).closest("tr");
+        const data_id = row.attr("data_id");
+        const do_id = row.find("td#do_number").attr("data_id");
         if (data_id == "") {
-            $(elm).closest("tr").remove();
-        } else {
-            $(elm).closest("tr").addClass("remove");
-            $(elm).closest("tr").addClass("d-none");
+            row.remove();
+            $("tr.do_detail_" + do_id).remove();
+            return;
         }
 
+        if (row.attr("data-unconfirmed") === "1") {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: { id: data_id },
+                url: url.base_url(PackingList.moduleApi()) + "deleteDo",
+                headers: {
+                    "X-CSRF-TOKEN": PackingList.csrf_token(),
+                },
+                beforeSend: () => {
+                    message.loadingProses("Proses Hapus Data...");
+                },
+                error: function () {
+                    message.closeLoading();
+                    message.sweetError("Informasi", "Gagal");
+                },
+                success: function (resp) {
+                    message.closeLoading();
+                    if (resp.is_valid) {
+                        row.remove();
+                        const hasOtherDo = $("#table-do tbody tr").filter(function () {
+                            return (
+                                !$(this).hasClass("remove") &&
+                                $(this).find("td#do_number").attr("data_id") == do_id
+                            );
+                        }).length;
+                        if (hasOtherDo == 0) {
+                            $("tr.do_detail_" + do_id).remove();
+                        }
+                        message.sweetSuccess("Informasi", "Data Berhasil Dihapus");
+                    } else {
+                        message.sweetError("Informasi", resp.message);
+                    }
+                },
+            });
+            return;
+        }
+
+        row.addClass("remove");
+        row.addClass("d-none");
         $("tr.do_detail_" + do_id).remove();
     },
 

@@ -148,7 +148,8 @@
                                                 $photo_path = $row->photo_path;
                                             }
                                         @endphp
-                                        <tr data_id="{{ $row->id }}">
+                                        <tr data_id="{{ $row->id }}"
+                                            data-unconfirmed="{{ blank($row->status) ? 1 : 0 }}">
                                             <td id="do_number" data_id="{{ $row->delivery_order_id }}">
                                                 {{ $row->do_number }} {!! $row->status == ''
                                                     ? ''

@@ -954,6 +954,74 @@ class PackingListController extends Controller
         return view('web.packing_list.modal.confirmdelete', $data);
     }
 
+    public function deleteDo(Request $request)
+    {
+        $data = $request->all();
+        $company_id = session('id_company');
+        $id = $data['id'] ?? null;
+
+        DB::beginTransaction();
+        try {
+            $packingListDo = PackingListDo::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($id);
+
+            if (empty($packingListDo)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'Data tidak ditemukan',
+                ]);
+            }
+
+            if (!empty($packingListDo->status)) {
+                DB::rollBack();
+
+                return response()->json([
+                    'is_valid' => false,
+                    'message' => 'DO sudah dikonfirmasi, tidak dapat dihapus langsung',
+                ]);
+            }
+
+            $packingListId = $packingListDo->packing_list_id;
+            $deliveryOrderId = $packingListDo->delivery_order_id;
+
+            $remainingDo = PackingListDo::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+                ->where('packing_list_id', $packingListId)
+                ->where('delivery_order_id', $deliveryOrderId)
+                ->where('id', '!=', $id)
+                ->count();
+
+            $packingListDo->delete();
+
+            if ($remainingDo == 0) {
+                PackingListDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
+                    ->where('packing_list_id', $packingListId)
+                    ->where('delivery_order_id', $deliveryOrderId)
+                    ->delete();
+
+                $do = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($deliveryOrderId);
+                if (!empty($do)) {
+                    $do->status = 'CONFIRMED';
+                    $do->save();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'is_valid' => true,
+                'message' => 'DO berhasil dihapus',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'is_valid' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function cancelPl(Request $request)
     {
         $data = $request->all();
