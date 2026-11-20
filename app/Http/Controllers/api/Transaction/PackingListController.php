@@ -605,7 +605,6 @@ class PackingListController extends Controller
                 $so->status = 'PACKED';
                 $so->save();
 
-
                 $details_do = $details->where('do_id', $value['delivery_order_id'])->toArray();
                 if (empty($details_do)) {
                     DB::rollBack();

@@ -77,7 +77,7 @@ class SalesInvoiceController extends Controller
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             if (isset($_POST['start_date']) && $_POST['start_date'] != '') {
@@ -157,7 +157,7 @@ class SalesInvoiceController extends Controller
             ->join('warehouse as w', 'w.id', 'm.warehouse_id')
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             // ->where('m.id', 800)
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
@@ -234,7 +234,8 @@ class SalesInvoiceController extends Controller
             WHERE pld2.delivery_order_id = pld.delivery_order_id
               AND pl2.deleted IS NULL
               AND pl2.packing_date > ?
-        )', ['2026-06-29']);
+        )', ['2026-06-29'])
+            ->distinct();
 
         $datadb = DB::table($this->getTableName() . ' as m')
             ->select([
@@ -265,8 +266,7 @@ class SalesInvoiceController extends Controller
                 $q->on('pl.delivery_order_id', 'do.id');
             })
             ->whereNull('m.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
-            // ->where('m.invoice_number', 'SI08260484')
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
 
         if (isset($_POST)) {
@@ -345,7 +345,7 @@ class SalesInvoiceController extends Controller
             ->leftJoin('term_of_payment as top', 'top.id', 'cc.payment_terms')
             // ->whereNull('m.deleted')
             ->whereIn('m.status', ['CANCELLED', 'CANCELED'])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'desc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -407,7 +407,7 @@ class SalesInvoiceController extends Controller
             ->join('currency as c', 'c.id', 'soh.currency')
             ->whereNull('m.deleted')
             ->whereIn('m.status', ['draft'])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -471,7 +471,7 @@ class SalesInvoiceController extends Controller
             ->where('m.total_amount', '>', 0)
             ->whereNotIn('m.status', ['canceled'])
             ->whereNull('sih.id')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->orderBy('m.id', 'asc');
         if (isset($_POST)) {
             $data['recordsTotal'] = $datadb->get()->count();
@@ -539,7 +539,7 @@ class SalesInvoiceController extends Controller
             ->join('product as p', 'p.id', 'm.product')
             ->whereNull('m.deleted')
             ->whereNull('po.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->whereNotIn('m.status', ['invoiced', 'paid', 'cancelled'])
             ->where('po.vendor', $data['vendor'])
             ->orderBy('m.id', 'desc');
@@ -595,7 +595,7 @@ class SalesInvoiceController extends Controller
         $correctionOriginal = null;
         $correctionBefore = null;
         if (! empty($data['id'])) {
-            $correctionOriginal = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $correctionOriginal = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (! empty($correctionOriginal) && ! empty($this->getInvoiceDeliveryDocuments($correctionOriginal))) {
                 if (! $this->canCorrectInvoice()) {
                     return response()->json([
@@ -627,19 +627,19 @@ class SalesInvoiceController extends Controller
 
             $piutangAcc = AccountMapping::where('module', 'SALES_INVOICE')
                 ->where('account_type', 'piutang usaha')
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->with('account') // kalau kamu pakai relasi
                 ->first();
 
             $penjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
                 ->where('account_type', 'penjualan barang')
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
             $discPenjualanAcc = AccountMapping::where('module', 'SALES_INVOICE')
                 ->where('account_type', 'diskon penjualan')
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->with('account')
                 ->first();
 
@@ -682,7 +682,7 @@ class SalesInvoiceController extends Controller
 
             $data['tax'] = $data['items'][0]['tax'] == '0' || $data['items'][0]['tax'] == '11' ? 1 : $data['items'][0]['tax'];
             $type_pajak = $data['items'][0]['type_tax'];
-            $tax = Tax::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['tax']);
+            $tax = Tax::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['tax']);
             if (empty($tax)) {
                 DB::rollBack();
                 return response()->json([
@@ -691,13 +691,13 @@ class SalesInvoiceController extends Controller
                 ]);
             }
 
-            $ppnAccount = Coa::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($tax->coa_id);
-            $do = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['do_id']);
+            $ppnAccount = Coa::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($tax->coa_id);
+            $do = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['do_id']);
 
             // === HEADER ===
             $header = empty($data['id'])
                 ? new SalesInvoiceHeader()
-                : SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                : SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($data['id'])) {
                 $header->invoice_number = generateNoSI($company_id); // misal helper
@@ -771,7 +771,7 @@ class SalesInvoiceController extends Controller
                 // Skip baris yang ditandai untuk dihapus
                 if (!empty($item['remove']) && $item['remove'] == 1) {
                     if (!empty($item['id'])) {
-                        $exist = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['id']);
+                        $exist = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($item['id']);
                         if ($exist) {
                             // Opsi 2: item yang dihapus setelah DO/PL dibuatkan retur otomatis
                             // agar stok yang sudah keluar gudang kembali tercatat.
@@ -795,10 +795,10 @@ class SalesInvoiceController extends Controller
                             $soIdBatal[] = $item['so_detail_id'];
 
                             // 🔥 Kembalikan stock karena item dibatalkan
-                            $soDetailCancel = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['so_detail_id']);
+                            $soDetailCancel = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($item['so_detail_id']);
                             if ($soDetailCancel) {
                                 $qtyBaseUnitCancel = getSmallestUnit($item['product_id'], $soDetailCancel->unit, $item['qty']);
-                                $productUomLevel1Cancel = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $item['product_id'])->where('level', '1')->first();
+                                $productUomLevel1Cancel = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('product', $item['product_id'])->where('level', '1')->first();
                                 if ($productUomLevel1Cancel) {
                                     if ($header->status == 'PACKED' || $header->status == 'PAID') {
                                         // stockUpdate($hdrId, $header->warehouse_id, $item['product_id'], $productUomLevel1Cancel->unit_tujuan, $qtyBaseUnitCancel['qty_in_base_unit'], $item, 'add', 'sales_invoice_cancel');
@@ -823,7 +823,7 @@ class SalesInvoiceController extends Controller
 
                 $detail = $isNew
                     ? new SalesInvoiceDtl()
-                    : SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['id']);
+                    : SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($item['id']);
 
                 if (!$isNew && $detail) {
                     $oldQty = $detail->qty; // simpan qty lama sebelum di-overwrite
@@ -862,14 +862,14 @@ class SalesInvoiceController extends Controller
 
 
                 // 🔥 Update stock: kurangi stock sesuai qty
-                $soDetailForUnit = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($item['so_detail_id']);
+                $soDetailForUnit = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($item['so_detail_id']);
                 if ($soDetailForUnit) {
                     // Hitung selisih qty supaya tidak double-kurangi saat edit invoice
                     $qtyDiff = $isNew ? $item['qty'] : ($item['qty'] - $oldQty);
 
                     if ($qtyDiff != 0) {
                         $qtyBaseUnit = getSmallestUnit($item['product_id'], $soDetailForUnit->unit, abs($qtyDiff));
-                        $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $item['product_id'])->where('level', '1')->first();
+                        $productUomLevel1 = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('product', $item['product_id'])->where('level', '1')->first();
 
                         if ($productUomLevel1) {
                             if ($header->status == 'PACKED' || $header->status == 'PAID') {
@@ -905,8 +905,8 @@ class SalesInvoiceController extends Controller
 
             $discountHeaderSo = 0;
             $so = empty($data['so_id'])
-                ? SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($do->so_id)
-                : SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['so_id']);
+                ? SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($do->so_id)
+                : SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['so_id']);
             if (empty($so)) {
                 DB::rollBack();
                 return response()->json([
@@ -915,7 +915,7 @@ class SalesInvoiceController extends Controller
                 ]);
             }
             if ($data['id'] == '') {
-                $updateInv = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $hdrId)->first();
+                $updateInv = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $hdrId)->first();
                 if ($so->payment_term == '' || $so->payment_term == 0) {
                     $updateInv->due_date = $data['invoice_date'];
                     $updateInv->save();
@@ -989,7 +989,7 @@ class SalesInvoiceController extends Controller
                     $so_payload['remarks'] = 'KOREKSI INVOICE NO ' . $header->invoice_number;
 
                     // Ambil SO detail, exclude yang dibatal, override qty yang berubah
-                    $soDetails = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('sales_order_id', $so->id)
+                    $soDetails = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('sales_order_id', $so->id)
                         ->select(['*', 'unit as unit_id', 'unit_price as price', DB::raw('qty * unit_price as total_price')])
                         ->whereNull('deleted')
                         ->whereNotIn('id', $soIdBatal)
@@ -1030,21 +1030,21 @@ class SalesInvoiceController extends Controller
                     }
 
                     /*update so old to correction */
-                    $updateOldSo = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($so->id);
+                    $updateOldSo = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($so->id);
                     $oldStatusSo = $updateOldSo->status;
 
                     $updateOldSo->status = 'correction';
                     $updateOldSo->save();
 
                     $newSoId = $resultSo['so_id'];
-                    $sodb = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($newSoId);
+                    $sodb = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($newSoId);
                     $sodb->ref_so_id = $so->id;
                     $sodb->status = $oldStatusSo;
                     $sodb->save();
 
                     /*update do */
                     $doHeaders = DeliveryOrderHeader::where('so_id', $so->id)
-                        ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                        ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                         ->whereNull('deleted')
                         ->first();
                     $doIdHeader = 0;
@@ -1062,11 +1062,11 @@ class SalesInvoiceController extends Controller
 
                         /*update do detail */
                         $doDetail = DeliveryOrderDtl::where('do_id', $doIdHeader)
-                            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                             ->get();
                         foreach ($doDetail as $row) {
                             $soDetailNew = SalesOrderDetail::where('sales_order_id', $newSoId)
-                                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                                 ->where('product_id', $row->product_id)
                                 ->first();
                             if (!empty($soDetailNew)) {
@@ -1095,7 +1095,7 @@ class SalesInvoiceController extends Controller
                         }
                     }
 
-                    $cancelInvoiceOld = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+                    $cancelInvoiceOld = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
                     $dueDate = date('Y-m-d', strtotime($data['invoice_date'] . ' + ' . $so->payment_term . ' days'));
                     if ($newInvoiceId == 0) {
@@ -1105,7 +1105,7 @@ class SalesInvoiceController extends Controller
                             'message' => 'Gagal Process invoice ' . $reference . ' new invoice : ' . $newInvoiceId
                         ]);
                     }
-                    $updateInvoiceHeader = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($newInvoiceId);
+                    $updateInvoiceHeader = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($newInvoiceId);
                     // echo '<pre>';
                     // print_r($updateInvoiceHeader);
                     // die;
@@ -1176,7 +1176,7 @@ class SalesInvoiceController extends Controller
         DB::beginTransaction();
         try {
 
-            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($menu)) {
                 DB::rollBack();
@@ -1207,18 +1207,18 @@ class SalesInvoiceController extends Controller
 
             // Ambil detail
             $items = SalesInvoiceDtl::where('invoice_id', $data['id'])
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->get();
 
-            $do = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($menu->do_id);
+            $do = DeliveryOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($menu->do_id);
             if (empty($do)) {
-                $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($menu->sales_order);
+                $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($menu->sales_order);
                 if ($so) {
                     $so->status = 'draft';
                     $so->save();
                 }
             } else {
-                $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($do->so_id);
+                $so = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($do->so_id);
                 if ($so) {
                     $so->status = 'draft';
                     $so->save();
@@ -1227,14 +1227,14 @@ class SalesInvoiceController extends Controller
 
             foreach ($items as $value) {
 
-                $oldDetail = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($value->id);
+                $oldDetail = SalesInvoiceDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($value->id);
 
                 if ($oldDetail) {
                     // 🔥 Kembalikan stock sebelum soft delete
-                    $soDetailRestore = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($oldDetail->so_detail_id);
+                    $soDetailRestore = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($oldDetail->so_detail_id);
                     if ($soDetailRestore) {
                         $qtyBaseUnitRestore = getSmallestUnit($oldDetail->product_id, $soDetailRestore->unit, $oldDetail->qty);
-                        $productUomLevel1Restore = ProductUom::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('product', $oldDetail->product_id)->where('level', '1')->first();
+                        $productUomLevel1Restore = ProductUom::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('product', $oldDetail->product_id)->where('level', '1')->first();
                         if ($productUomLevel1Restore) {
                             if ($menu->status == 'PACKED' || $menu->status == 'PAID') {
                                 // stockUpdate($menu->id, $menu->warehouse_id, $oldDetail->product_id, $productUomLevel1Restore->unit_tujuan, $qtyBaseUnitRestore['qty_in_base_unit'], (array) $oldDetail, 'add', 'sales_invoice_cancel');
@@ -1256,7 +1256,7 @@ class SalesInvoiceController extends Controller
 
             // Hapus log status DO
             $log = DeliveryOrderStatusLog::where('do_id', $menu->do_id)
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->where('status_to', 'CONFIRMED')
                 ->first();
             if ($log) {
@@ -1286,7 +1286,7 @@ class SalesInvoiceController extends Controller
         DB::beginTransaction();
         try {
 
-            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($menu)) {
                 DB::rollBack();
@@ -1335,7 +1335,7 @@ class SalesInvoiceController extends Controller
 
         DB::beginTransaction();
         try {
-            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($menu)) {
                 DB::rollBack();
@@ -1346,7 +1346,7 @@ class SalesInvoiceController extends Controller
             $salesPaymentDtl = SalesPaymentDtl::where('sales_payment_detail.invoice_id', $menu->id)
                 ->join('sales_payment_header', 'sales_payment_header.id', '=', 'sales_payment_detail.payment_id')
                 ->select(['sales_payment_header.id as payment_id', 'sales_payment_header.payment_code', 'sales_payment_header.verificator_id'])
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_payment_detail.company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_payment_detail.company_id', $company_id))
                 ->whereNull('sales_payment_detail.deleted')
                 ->whereNull('sales_payment_header.deleted')
                 ->get();
@@ -1391,7 +1391,7 @@ class SalesInvoiceController extends Controller
         DB::beginTransaction();
         try {
 
-            $menu = SalesInvoiceTagihan::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = SalesInvoiceTagihan::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
             if (empty($menu)) {
                 DB::rollBack();
                 $result['message'] = 'Data tagihan tidak ditemukan';
@@ -1418,7 +1418,7 @@ class SalesInvoiceController extends Controller
         DB::beginTransaction();
         try {
 
-            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->find($data['id']);
+            $menu = SalesInvoiceHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->find($data['id']);
 
             if (empty($menu)) {
                 DB::rollBack();
@@ -1428,13 +1428,13 @@ class SalesInvoiceController extends Controller
 
             $tgl_tagihan = $data['tgl_tagihan'];
             $tagihan = SalesInvoiceTagihan::where('invoice_id', $data['id'])
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                 ->whereNull('deleted')
                 ->where('tgl_tagih', $tgl_tagihan)
                 ->first();
 
 
-            $sales_order = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('id', $menu->sales_order)->first();
+            $sales_order = SalesOrderHeader::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('id', $menu->sales_order)->first();
             if (empty($sales_order)) {
                 DB::rollBack();
                 $result['message'] = 'Sales Order ' . $menu->sales_order . ' tidak ditemukan';
@@ -1479,7 +1479,7 @@ class SalesInvoiceController extends Controller
             ->leftJoin('delivery_order_header as do', 'do.id', 'm.do_id')
             ->leftJoin('sales_order_headers as so', 'so.id', 'm.sales_order')
             ->join('customer as c', 'c.id', 'm.customer_id')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('m.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('m.company_id', $company_id))
             ->where('m.id', $id);
         $data = $datadb->first();
         $query = DB::getQueryLog();
@@ -1512,7 +1512,7 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $datadb = DeliveryOrderDtl::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('delivery_order_detail.do_id', $data['do_id'])
+        $datadb = DeliveryOrderDtl::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('delivery_order_detail.do_id', $data['do_id'])
             ->select([
                 'delivery_order_detail.*',
                 'u.name as unit_name',
@@ -1549,7 +1549,7 @@ class SalesInvoiceController extends Controller
             ->join('unit as u', 'u.id', 'delivery_order_detail.uom')
             ->whereNull('delivery_order_detail.deleted')
             ->whereNull('sod.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('delivery_order_detail.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('delivery_order_detail.company_id', $company_id))
             // ->whereNull('sod.free_for')
             ->get();
 
@@ -1562,7 +1562,7 @@ class SalesInvoiceController extends Controller
     {
         $data = $request->all();
         $company_id = session('id_company');
-        $datadb = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))->where('sales_order_details.sales_order_id', $data['so_id'])
+        $datadb = SalesOrderDetail::when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))->where('sales_order_details.sales_order_id', $data['so_id'])
             ->select([
                 'sales_order_details.*',
                 'u.name as unit_name',
@@ -1595,7 +1595,7 @@ class SalesInvoiceController extends Controller
             ->join('tax as t', 't.id', 'p.tax_sale')
             ->join('unit as u', 'u.id', 'sales_order_details.unit')
             ->whereNull('sales_order_details.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sales_order_details.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sales_order_details.company_id', $company_id))
             ->get();
 
         $data['data'] = $datadb;
@@ -1637,7 +1637,7 @@ class SalesInvoiceController extends Controller
         if (isset($data['akses'])) {
             if (strtolower($data['akses']) != 'administrator' && strtolower($data['akses']) != 'driver') {
                 $tagihanOther = SalesInvoiceTagihan::where('tgl_tagih', date('Y-m-d'))
-                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+                    ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
                     ->where('salesman_id', $data['users'])
                     ->get();
                 $customers = array_merge($customers, $tagihanOther->pluck('customer_id')->unique()->toArray());
@@ -1684,7 +1684,7 @@ class SalesInvoiceController extends Controller
                 // ->whereIn('sih.status', ['POSTED', 'PARTIAL PAID', 'PACKED', 'DRAFT'])       // hanya invoice yang sudah diposting
                 ->whereNotIn('sih.status', ['CANCELED'])
                 ->whereNull('sih.deleted')
-                ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
+                ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
                 // ->where('sih.invoice_number', 'SI08260683')         // tidak termasuk deleted
                 ->having('outstanding_amount', '>', 0);  // hanya invoice yang masih punya sisa tagihan
 
@@ -1736,7 +1736,7 @@ class SalesInvoiceController extends Controller
                     ->join('unit as u', 'u.id', 'sod.unit')
                     ->where('sid.invoice_id', $invoice->id)
                     ->whereNull('sid.deleted')
-                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sid.company_id', $company_id))
+                    ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sid.company_id', $company_id))
                     ->get();
                 // echo '<pre>';
                 // print_r($invoice->detail_item);
@@ -1780,7 +1780,7 @@ class SalesInvoiceController extends Controller
                     $q->orWhere('after->invoice_number', $data['invoice_number']);
                 }
             })
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->orderByDesc('id')
             ->get();
 
@@ -1861,7 +1861,7 @@ class SalesInvoiceController extends Controller
                 'sid.tax_rate',
                 'sid.type_tax',
             ])
-            ->map(fn ($row) => (array) $row)
+            ->map(fn($row) => (array) $row)
             ->all();
 
         $header = (array) $invoice;
