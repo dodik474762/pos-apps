@@ -122,6 +122,20 @@ let ReportDelivery = {
                     title: "No DO",
                 },
                 {
+                    data: "invoice_number",
+                    title: "Invoice Number",
+                    render: function (data, type, row) {
+                        return data ?? "-";
+                    },
+                },
+                {
+                    data: "invoice_date",
+                    title: "Invoice Date",
+                    render: function (data, type, row) {
+                        return ReportDelivery.formatDateTime(data);
+                    },
+                },
+                {
                     data: "confirm_date",
                     title: "Tanggal Konfirmasi",
                     render: function (data, type, row) {

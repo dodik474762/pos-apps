@@ -44,6 +44,8 @@ class ReportDeliveryController extends Controller
                 'pl_do.photo_path',
                 'doh.do_number',
                 'doh.do_date',
+                'sih.invoice_number',
+                'sih.invoice_date',
                 'c.code as customer_code',
                 'c.nama_customer',
                 'pld.id as detail_id',
@@ -60,6 +62,9 @@ class ReportDeliveryController extends Controller
             ->leftJoin('packing_list_do as pl_do', 'pl_do.packing_list_id', 'pl.id')
             ->leftJoin('delivery_order_header as doh', function ($q) {
                 return $q->on('doh.id', 'pl_do.delivery_order_id')->whereNull('doh.deleted');
+            })
+            ->leftJoin('sales_invoice_header as sih', function ($q) {
+                return $q->on('sih.sales_order', 'doh.so_id')->whereNull('sih.deleted');
             })
             ->leftJoin('packing_list_detail as pld', function ($q) {
                 return $q->on('pld.packing_list_id', 'pl.id')
@@ -89,6 +94,8 @@ class ReportDeliveryController extends Controller
                     ->orWhere('pl.expedition_name', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('doh.do_number', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('doh.do_date', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('sih.invoice_number', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('sih.invoice_date', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('c.code', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('c.nama_customer', 'LIKE', '%' . $keyword . '%')
                     ->orWhere('p.code', 'LIKE', '%' . $keyword . '%')
@@ -117,42 +124,48 @@ class ReportDeliveryController extends Controller
                 $datadb->orderBy('doh.do_number', $dir);
                 break;
             case '5':
-                $datadb->orderBy('pl_do.confirm_date', $dir);
+                $datadb->orderBy('sih.invoice_number', $dir);
                 break;
             case '6':
-                $datadb->orderBy('pld.receive_wh_date', $dir);
+                $datadb->orderBy('sih.invoice_date', $dir);
                 break;
             case '7':
-                $datadb->orderBy('c.nama_customer', $dir);
+                $datadb->orderBy('pl_do.confirm_date', $dir);
                 break;
             case '8':
-                $datadb->orderBy('v.nama_vendor', $dir);
+                $datadb->orderBy('pld.receive_wh_date', $dir);
                 break;
             case '9':
-                $datadb->orderBy('p.code', $dir);
+                $datadb->orderBy('c.nama_customer', $dir);
                 break;
             case '10':
-                $datadb->orderBy('p.name', $dir);
+                $datadb->orderBy('v.nama_vendor', $dir);
                 break;
             case '11':
-                $datadb->orderBy('pld.qty_do', $dir);
+                $datadb->orderBy('p.code', $dir);
                 break;
             case '12':
-                $datadb->orderBy('pld.qty_packed', $dir);
+                $datadb->orderBy('p.name', $dir);
                 break;
             case '13':
-                $datadb->orderBy('pld.qty_received', $dir);
+                $datadb->orderBy('pld.qty_do', $dir);
                 break;
             case '14':
-                $datadb->orderBy('pl.status', $dir);
+                $datadb->orderBy('pld.qty_packed', $dir);
                 break;
             case '15':
-                $datadb->orderBy('pl.driver_name', $dir);
+                $datadb->orderBy('pld.qty_received', $dir);
                 break;
             case '16':
-                $datadb->orderBy('pl.vehicle_no', $dir);
+                $datadb->orderBy('pl.status', $dir);
                 break;
             case '17':
+                $datadb->orderBy('pl.driver_name', $dir);
+                break;
+            case '18':
+                $datadb->orderBy('pl.vehicle_no', $dir);
+                break;
+            case '19':
                 $datadb->orderBy('pl.expedition_name', $dir);
                 break;
             default:

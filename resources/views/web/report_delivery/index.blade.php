@@ -115,6 +115,8 @@
                                                     <th>No PL</th>
                                                     <th>Tanggal DO</th>
                                                     <th>No DO</th>
+                                                    <th>Invoice Number</th>
+                                                    <th>Invoice Date</th>
                                                     <th>Tanggal Konfirmasi</th>
                                                     <th>Tanggal Terima</th>
                                                     <th>Customer</th>
