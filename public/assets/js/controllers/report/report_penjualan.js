@@ -490,6 +490,22 @@ let ReportPenjualan = {
                     },
                 },
                 {
+                    data: "qty_pcs",
+                    title: "QTY (IN PCS)",
+                    render: function (data, type, row) {
+                        let qty = parseFloat(data);
+                        return isNaN(qty) ? 0 : qty;
+                    },
+                },
+                {
+                    data: "qty_karton",
+                    title: "QTY (IN KARTON)",
+                    render: function (data, type, row) {
+                        let qty = parseFloat(data);
+                        return isNaN(qty) ? 0 : qty;
+                    },
+                },
+                {
                     data: "so_date",
                     title: "TIPE TRANS",
                     render: function (data, type, row) {
@@ -901,6 +917,22 @@ let ReportPenjualan = {
                         if (total === 3) return parts[2];
                         if (total === 2) return parts[1];
                         return parts[0];
+                    },
+                },
+                {
+                    data: "qty_pcs",
+                    title: "QTY (IN PCS)",
+                    render: function (data, type, row) {
+                        let qty = parseFloat(data);
+                        return isNaN(qty) ? 0 : qty;
+                    },
+                },
+                {
+                    data: "qty_karton",
+                    title: "QTY (IN KARTON)",
+                    render: function (data, type, row) {
+                        let qty = parseFloat(data);
+                        return isNaN(qty) ? 0 : qty;
                     },
                 },
                 {

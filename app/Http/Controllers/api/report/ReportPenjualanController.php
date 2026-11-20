@@ -200,6 +200,19 @@ class ReportPenjualanController extends Controller
             END as qty_sold
         ";
 
+        // Total kuantitas dalam satuan terkecil (pcs) dan satuan terbesar (karton).
+        // Berbeda dari string qty_sold yang memecah per level satuan, dua kolom ini
+        // menampilkan totalnya saja. Level terbesar dianggap karton, sama seperti
+        // urutan pada qty_sold.
+        $kartonConvSql = "CASE uomf.total_level
+                WHEN 4 THEN uomf.l4
+                WHEN 3 THEN uomf.l3
+                WHEN 2 THEN uomf.l2
+            END";
+        $qtyPcsSql = "CASE WHEN uomu.conv IS NULL THEN NULL ELSE ROUND($q, 2) END as qty_pcs";
+        $qtyKartonSql = "IFNULL(ROUND($q / NULLIF($kartonConvSql, 0), 2), 0) as qty_karton";
+        $kartonConvSelectSql = "$kartonConvSql as karton_conv";
+
         $prorateSql = "
             IFNULL(
                 CASE
@@ -244,6 +257,9 @@ class ReportPenjualanController extends Controller
                 DB::raw('YEAR(sih.invoice_date) as year'),
                 'sih.invoice_number',
                 DB::raw($qtySoldSql),
+                DB::raw($qtyPcsSql),
+                DB::raw($qtyKartonSql),
+                DB::raw($kartonConvSelectSql),
                 'ppi.beban',
                 DB::raw($prorateSql),
                 'sih.invoice_date',
@@ -401,6 +417,11 @@ class ReportPenjualanController extends Controller
                 $returnRow['invoice_number'] = $value['return_number'];
                 $returnRow['qty_sold']       = !empty($value['qty_return_formatted'])
                     ? '-' . $value['qty_return_formatted']
+                    : 0;
+                // retur mengurangi total pcs/karton, qty_return tersimpan di satuan terkecil
+                $returnRow['qty_pcs']        = -1 * (float) $value['qty_return'];
+                $returnRow['qty_karton']     = !empty($value['karton_conv'])
+                    ? -1 * round((float) $value['qty_return'] / (float) $value['karton_conv'], 2)
                     : 0;
                 $returnRow['gross_amount']   = isset($value['return_unit_price'], $value['qty_return'])
                     ? -1 * ($value['return_unit_price'] * $value['qty_return'])

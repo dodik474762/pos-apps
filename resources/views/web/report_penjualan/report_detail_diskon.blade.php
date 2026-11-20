@@ -33,6 +33,8 @@
                 <th>RENTENG</th>
                 <th>PACK</th>
                 <th>PCS</th>
+                <th>QTY (IN PCS)</th>
+                <th>QTY (IN KARTON)</th>
                 <th>TIPE TRANS</th>
                 <th>GROSSAMOUNT</th>
                 <th>LINE DISCOUNT 1</th>
