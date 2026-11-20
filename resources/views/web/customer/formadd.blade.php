@@ -331,7 +331,6 @@
                                 <div>
                                     <input tabindex="12" type="number" id="max_print_invoice"
                                         class="form-control required" error="Max Print Faktur "
-                                        {{ strtolower($akses) != 'superadmin' ? 'readonly' : '' }}
                                         placeholder="Max Print Faktur"
                                         value="{{ isset($data->max_print_invoice) ? $data->max_print_invoice : '1' }}">
                                 </div>
