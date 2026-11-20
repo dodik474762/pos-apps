@@ -102,8 +102,12 @@
                             class="ri-money-dollar-circle-line"></i></span>
                     <p class="kpi-label">Total Laba Bruto</p>
                 </div>
-                <h4 class="kpi-value"><small>IDR</small>{{ number_format($gross_profit, 0, ',', '.') }}</h4>
-                <p class="kpi-meta">Selisih penjualan dan harga pokok</p>
+                <h4 class="kpi-value"><small>IDR</small>{{ number_format($summary_gross_profit['gross_profit'], 0, ',', '.') }}
+                </h4>
+                <p class="kpi-meta">
+                    Penjualan neto <b>{{ number_format($summary_gross_profit['revenue_net'], 0, ',', '.') }}</b>
+                    &middot; HPP <b>{{ number_format($summary_gross_profit['total_cogs'], 0, ',', '.') }}</b>
+                </p>
             </div>
         </div>
     </div>
