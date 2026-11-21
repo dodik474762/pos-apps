@@ -61,7 +61,7 @@ class DashboardController extends Controller
         // exit;
 
         // $data['gross_profit'] = $data['summary_so']['summary'] - $data['summary_po']['summary_po'];
-        $data['summary_gross_profit'] = $this->getSummaryGrossProfit($year);
+        $data['gross_profit'] = $data['summary_invoice']['summary_netto'] - $data['summary_invoice']['total_cogs'];
         $view = view('web.dashboard.index', $data);
 
         $put['group_karyawan'] = $this->getListGroupKaryawan();
@@ -78,7 +78,7 @@ class DashboardController extends Controller
     {
         $company_id = session('id_company');
         $data = DB::table('karyawan_group as kg')->whereNull('kg.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('kg.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('kg.company_id', $company_id))
             ->select(['kg.*', 'dic.keterangan as group_name'])
             ->join('karyawan as kry', 'kry.id', '=', 'kg.karyawan')
             ->join('dictionary as dic', 'dic.term_id', '=', 'kg.group')
@@ -97,7 +97,7 @@ class DashboardController extends Controller
             ->whereYear('po_date', $year)
             ->where('is_active', 1)
             ->whereNull('deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id));
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id));
         $summaryPO = $totalPO->sum('grand_total');
         $jumlahPO = $totalPO->count();
 
@@ -120,13 +120,13 @@ class DashboardController extends Controller
             ->where('total_amount', '>', 0)
             ->whereNull('deleted')
             ->whereIn('status', ['confirmed', 'draft'])
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereExists(function ($q) use ($year, $company_id) {
                 $q->select(DB::raw(1))
                     ->from('sales_invoice_header as sih')
                     ->whereColumn('sih.sales_order', 'sales_order_headers.id')
                     ->whereNull('sih.deleted')
-                    ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
+                    ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
                     ->whereYear('sih.invoice_date', $year);
             });
 
@@ -149,7 +149,7 @@ class DashboardController extends Controller
             ->whereNull('deleted')
             // ->where('invoice_number', 'SI06260204')
             ->whereYear('invoice_date', $year)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereIn('status', self::STATUS_INVOICE);
 
         // total tagihan outstanding: hanya invoice yang masih punya sisa tagihan
@@ -179,7 +179,7 @@ class DashboardController extends Controller
             })
             // ->where('sih.invoice_number', 'SI06260204')
             ->whereNull('sih.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
             ->whereNull('sid.deleted')
             ->whereNull('sid.flag_cancel')
             // ->where('sid.product_id', 120)
@@ -233,78 +233,6 @@ class DashboardController extends Controller
         ];
     }
 
-    /**
-     * Laba bruto = penjualan neto (tanpa PPN) - HPP.
-     *
-     * Basis invoice sama dengan card Total Penjualan supaya angkanya sebanding:
-     * total_amount sudah dipotong diskon header, lalu PPN yang menempel di harga
-     * (type_tax = include) dikeluarkan karena HPP tidak memuat PPN.
-     *
-     * HPP per baris memakai cost master yang berlaku pada tanggal invoice. Bila
-     * produk belum punya cost pada tanggal itu (cost baru diinput belakangan),
-     * dipakai cost master terbaru supaya baris tersebut tidak dihitung HPP = 0.
-     * Cost dikonversi dari satuan cost ke satuan terkecil lewat product_uom, jadi
-     * cost yang tersimpan di satuan selain satuan besar tetap terbaca benar.
-     */
-    public function getSummaryGrossProfit($year = '')
-    {
-        $year = ($year == '') ? date('Y') : $year;
-
-        $company_id = session('id_company');
-        $companyFilter = ($company_id !== null && $company_id !== '')
-            ? ' AND puc.company_id = ' . (int) $company_id
-            : '';
-
-        $summary_netto = DB::table('sales_invoice_header')
-            ->whereNull('deleted')
-            ->whereYear('invoice_date', $year)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
-            ->whereIn('status', self::STATUS_INVOICE)
-            ->sum('total_amount');
-
-        $detail = DB::table('sales_invoice_detail as sid')
-            ->join('sales_invoice_header as sih', 'sih.id', '=', 'sid.invoice_id')
-            ->leftJoin('sales_order_details as sod', 'sod.id', '=', 'sid.so_detail_id')
-            ->leftJoin('product_uom as pu_sold', function ($join) {
-                $join->on('pu_sold.product', '=', 'sid.product_id')
-                    ->on('pu_sold.unit_tujuan', '=', 'sod.unit')
-                    ->whereNull('pu_sold.deleted');
-            })
-            ->whereNull('sih.deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
-            ->whereNull('sid.deleted')
-            ->whereNull('sid.flag_cancel')
-            ->whereYear('sih.invoice_date', $year)
-            ->whereIn('sih.status', self::STATUS_INVOICE)
-            ->selectRaw("
-                SUM(CASE WHEN sid.type_tax = 'include' THEN COALESCE(sid.tax_amount, 0) ELSE 0 END) as tax_include,
-                SUM(
-                    sid.qty
-                    * COALESCE(pu_sold.nilai_konversi_terkecil, 1)
-                    * COALESCE((
-                        SELECT puc.cost / COALESCE(NULLIF(pucu.nilai_konversi_terkecil, 0), 1)
-                        FROM product_uom_cost puc
-                        LEFT JOIN product_uom as pucu ON pucu.id = puc.product_uom
-                        WHERE puc.product = sid.product_id AND puc.is_active = 1{$companyFilter}
-                        ORDER BY (puc.date_start IS NOT NULL AND puc.date_start <= sih.invoice_date) DESC,
-                                 puc.date_start DESC, puc.id DESC
-                        LIMIT 1
-                    ), 0)
-                ) as total_cogs
-            ")
-            ->first();
-
-        $tax_include = $detail->tax_include ?: 0;
-        $total_cogs  = $detail->total_cogs ?: 0;
-        $revenue_net = $summary_netto - $tax_include;
-
-        return [
-            'revenue_net' => $revenue_net,
-            'total_cogs' => $total_cogs,
-            'gross_profit' => $revenue_net - $total_cogs,
-        ];
-    }
-
     public function getInvoiceOutstanding(Request $request)
     {
         $data = $request->all();
@@ -318,7 +246,7 @@ class DashboardController extends Controller
         $outstandingReceivable = DB::table('sales_invoice_header as sih')
             ->whereNull('sih.deleted')
             ->whereYear('sih.invoice_date', $year)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('sih.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('sih.company_id', $company_id))
             ->whereIn('sih.status', self::STATUS_INVOICE)
             ->whereRaw('(sih.total_amount - sih.amount_paid) > 0');
 
@@ -382,7 +310,7 @@ class DashboardController extends Controller
         // penjualan valid per bulan, basisnya sama dengan card Total Penjualan
         $validPerBulan = DB::table('sales_invoice_header')
             ->whereNull('deleted')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->whereIn('status', self::STATUS_INVOICE)
             ->whereYear('invoice_date', $year)
             ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
@@ -395,7 +323,7 @@ class DashboardController extends Controller
                 $q->whereNotNull('deleted')->orWhere('status', 'CANCELED');
             })
             ->whereYear('invoice_date', $year)
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('company_id', $company_id))
             ->selectRaw('MONTH(invoice_date) as bulan, COUNT(*) as total')
             ->groupBy('bulan')
             ->pluck('total', 'bulan');
@@ -431,7 +359,7 @@ class DashboardController extends Controller
             ])
             ->join('customer as c', 'c.id', '=', 'soh.customer_id')
             ->where('soh.platform', 'mobile')
-            ->when($company_id !== null && $company_id !== '', fn ($q) => $q->where('soh.company_id', $company_id))
+            ->when($company_id !== null && $company_id !== '', fn($q) => $q->where('soh.company_id', $company_id))
             ->whereNull('soh.deleted');
         if ($salesman != '') {
             $datadb->where('soh.salesman', $salesman);
